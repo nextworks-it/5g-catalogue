@@ -1,4 +1,5 @@
 swagger: '2.0'
+
 info:
   description: >
     DRAFT - SOL005 - NSD Management Interface IMPORTANT: Please note that this
@@ -14,12 +15,18 @@ info:
   license:
     name: ETSI Forge copyright notice
     url: 'https://forge.etsi.org/etsi-forge-copyright-notice.txt'
+
 consumes:
   - application/json
+  - application/yaml
+
 produces:
   - application/json
+  - application/yaml
+
 paths:
-  /ns_descriptors:
+
+  '/nsd/v1/ns_descriptors':
     get:
       summary: Query NSD Info
       operationId: getNSDsInfo
@@ -37,137 +44,40 @@ paths:
             The response body shall contain a representation of zero or more NS
             descriptors, as defined in clause 5.5.2.2 of GS NFV-SOL 005.
           schema:
-            type: object
-            required:
-              - _links
-              - id
-              - nsdOnboardingState
-              - nsdOperationalState
-              - nsdUsageState
-            properties:
-              id:
-                type: object
-              nsdId:
-                type: object
-              nsdName:
-                type: string
-                description: >-
-                  Name of the onboarded NSD. This information is copied from the
-                  NSD content and shall be present after the NSD content is
-                  on-boarded.
-              nsdVersion:
-                type: object
-              nsdDesigner:
-                type: string
-                description: >-
-                  Designer of the on-boarded NSD. This information
-
-                  is copied from the NSD content and shall be present after the
-                  NSD content is on-boarded.
-              nsdInvariantId:
-                type: object
-              vnfPkgIds:
-                type: object
-              pnfdInfoIds:
-                type: object
-              nestedNsdInfoIds:
-                type: object
-              nsdOnboardingState:
-                type: string
-                description: >-
-                  The enumeration NsdOnboardingStateType shall comply with the
-                  provisions defined in Table 5.5.4.5-1 of GS NFV-SOL 005. It
-                  indicates the onboarding state of the NSD.
-
-
-                  CREATED = The NSD information object is created. UPLOADING =
-                  The associated NSD content is being uploaded. PROCESSING = The
-                  associated NSD content is being processed, e.g. validation.
-                  ONBOARDED = The associated NSD content is on-boarded.
-                enum:
-                  - CREATED
-                  - UPLOADING
-                  - PROCESSING
-                  - ONBOARDED
-              onboardingFailureDetails:
-                type: object
-              nsdOperationalState:
-                type: string
-                description: >-
-                  The enumeration NsdOperationalStateType shall comply with the
-                  provisions defined in Table 5.5.4.3-1 of GS NFV_SOL 005. It
-                  indicates the operational state of the resource.
-
-
-                  ENABLED = The operational state of the resource is enabled.
-                  DISABLED = The operational state of the resource is disabled.
-                enum:
-                  - ENABLED
-                  - DISABLED
-              nsdUsageState:
-                type: string
-                description: >-
-                  The enumeration NsdUsageStateType shall comply with the
-                  provisions defined in Table 5.5.4.4-1 of GS NFV-SOL 005. It
-                  indicates the usage state of the resource.
-
-
-                  IN_USE = The resource is in use.
-
-                  NOT_IN_USE = The resource is not-in-use.
-                enum:
-                  - IN_USE
-                  - NOT_IN_USE
-              userDefinedData:
-                type: object
-              _links:
-                type: object
-                description: Links to resources related to this resource.
-                properties:
-                  self:
-                    type: object
-                  nsd_content:
-                    type: object
-            description: This type represents a response for the query NSD operation.
+            type: array
+            items:
+              type: object
+              $ref: '#/definitions/NsdInfo'
         '400':
           description: >-
             There are two possible scenarios listed below.
 
-
             Error: Invalid attribute-based filtering parameters.
-
 
             The response body shall contain a ProblemDetails structure, in which
             the "detail" attribute should convey more information about the
             error.
-
 
             Error: Invalid attribute selector. The response body shall contain a
             ProblemDetails structure, in which the "detail" attribute should
             convey more information about the error.
     post:
       summary: Create NSD Info
+      operationId: createNsdInfo
       description: >-
         The POST method is used to create a new NS descriptor resource. This
         method shall follow the provisions specified in the Tables 5.4.2.3.1-1
         and 5.4.2.3.1-2 of GS NFV-SOL 005 for URI query parameters, request and
         response data structures, and response codes.
-      consumes: []
+      consumes:
+        - application/json
       parameters:
         - name: body
           in: body
           required: true
           schema:
             type: object
-            required:
-              - CreateNsdInfoRequest
-            properties:
-              CreateNsdInfoRequest:
-                type: object
-                properties:
-                  userDefinedData:
-                    type: object
-                description: This type creates a completely new NS descriptor resource.
+            $ref: '#/definitions/CreateNsdInfoRequest'
             description: >-
               The CreateNsdInfoRequest contains parameters for creating an NS
               descriptor resource, as defined in
@@ -178,116 +88,23 @@ paths:
           description: Status 201
           schema:
             type: object
+            $ref: '#/definitions/NsdInfo'
             description: >-
               An NS descriptor resource was created successfully, as a new NS
               descriptor resource. The response body shall contain a
               representation of the new NS descriptor resource, as defined in
               clause 5.5.2.2 of GS NFV-SOL 005.
-            properties:
-              NsdInfo:
-                type: object
-                required:
-                  - _links
-                  - id
-                  - nsdOnboardingState
-                  - nsdOperationalState
-                  - nsdUsageState
-                properties:
-                  id:
-                    type: object
-                  nsdId:
-                    type: object
-                  nsdName:
-                    type: string
-                    description: >-
-                      Name of the onboarded NSD. This information is copied from
-                      the NSD content and shall be present after the NSD content
-                      is on-boarded.
-                  nsdVersion:
-                    type: object
-                  nsdDesigner:
-                    type: string
-                    description: >-
-                      Designer of the on-boarded NSD. This information
-
-                      is copied from the NSD content and shall be present after
-                      the NSD content is on-boarded.
-                  nsdInvariantId:
-                    type: object
-                  vnfPkgIds:
-                    type: object
-                  pnfdInfoIds:
-                    type: object
-                  nestedNsdInfoIds:
-                    type: object
-                  nsdOnboardingState:
-                    type: string
-                    description: >-
-                      The enumeration NsdOnboardingStateType shall comply with
-                      the provisions defined in Table 5.5.4.5-1 of GS NFV-SOL
-                      005. It indicates the onboarding state of the NSD.
-
-
-                      CREATED = The NSD information object is created. UPLOADING
-                      = The associated NSD content is being uploaded. PROCESSING
-                      = The associated NSD content is being processed, e.g.
-                      validation. ONBOARDED = The associated NSD content is
-                      on-boarded.
-                    enum:
-                      - CREATED
-                      - UPLOADING
-                      - PROCESSING
-                      - ONBOARDED
-                  onboardingFailureDetails:
-                    type: object
-                  nsdOperationalState:
-                    type: string
-                    description: >-
-                      The enumeration NsdOperationalStateType shall comply with
-                      the provisions defined in Table 5.5.4.3-1 of GS NFV_SOL
-                      005. It indicates the operational state of the resource.
-
-
-                      ENABLED = The operational state of the resource is
-                      enabled. DISABLED = The operational state of the resource
-                      is disabled.
-                    enum:
-                      - ENABLED
-                      - DISABLED
-                  nsdUsageState:
-                    type: string
-                    description: >-
-                      The enumeration NsdUsageStateType shall comply with the
-                      provisions defined in Table 5.5.4.4-1 of GS NFV-SOL 005.
-                      It indicates the usage state of the resource.
-
-
-                      IN_USE = The resource is in use.
-
-                      NOT_IN_USE = The resource is not-in-use.
-                    enum:
-                      - IN_USE
-                      - NOT_IN_USE
-                  userDefinedData:
-                    type: object
-                  _links:
-                    type: object
-                    description: Links to resources related to this resource.
-                    properties:
-                      self:
-                        type: object
-                      nsd_content:
-                        type: object
-                description: This type represents a response for the query NSD operation.
           headers:
             Location:
               type: string
               description: >-
                 The HTTP response shall include a "Location" HTTP header that
                 contains the resource URI of the new NS descriptor resource.
-  '/ns_descriptors/{nsdInfoId}':
+
+  '/nsd/v1/ns_descriptors/{nsdInfoId}':
     get:
       summary: Query NSD Info
+      operationId: getNSDInfo
       description: >-
         The GET method reads information about an individual NS descriptor. This
         method shall follow the provisions specified in GS NFV-SOL 005 Tables
@@ -302,99 +119,10 @@ paths:
             defined in clause 5.5.2.2 of GS NFV-SOL 005.
           schema:
             type: object
-            required:
-              - _links
-              - id
-              - nsdOnboardingState
-              - nsdOperationalState
-              - nsdUsageState
-            properties:
-              id:
-                type: object
-              nsdId:
-                type: object
-              nsdName:
-                type: string
-                description: >-
-                  Name of the onboarded NSD. This information is copied from the
-                  NSD content and shall be present after the NSD content is
-                  on-boarded.
-              nsdVersion:
-                type: object
-              nsdDesigner:
-                type: string
-                description: >-
-                  Designer of the on-boarded NSD. This information
-
-                  is copied from the NSD content and shall be present after the
-                  NSD content is on-boarded.
-              nsdInvariantId:
-                type: object
-              vnfPkgIds:
-                type: object
-              pnfdInfoIds:
-                type: object
-              nestedNsdInfoIds:
-                type: object
-              nsdOnboardingState:
-                type: string
-                description: >-
-                  The enumeration NsdOnboardingStateType shall comply with the
-                  provisions defined in Table 5.5.4.5-1 of GS NFV-SOL 005. It
-                  indicates the onboarding state of the NSD.
-
-
-                  CREATED = The NSD information object is created. UPLOADING =
-                  The associated NSD content is being uploaded. PROCESSING = The
-                  associated NSD content is being processed, e.g. validation.
-                  ONBOARDED = The associated NSD content is on-boarded.
-                enum:
-                  - CREATED
-                  - UPLOADING
-                  - PROCESSING
-                  - ONBOARDED
-              onboardingFailureDetails:
-                type: object
-              nsdOperationalState:
-                type: string
-                description: >-
-                  The enumeration NsdOperationalStateType shall comply with the
-                  provisions defined in Table 5.5.4.3-1 of GS NFV_SOL 005. It
-                  indicates the operational state of the resource.
-
-
-                  ENABLED = The operational state of the resource is enabled.
-                  DISABLED = The operational state of the resource is disabled.
-                enum:
-                  - ENABLED
-                  - DISABLED
-              nsdUsageState:
-                type: string
-                description: >-
-                  The enumeration NsdUsageStateType shall comply with the
-                  provisions defined in Table 5.5.4.4-1 of GS NFV-SOL 005. It
-                  indicates the usage state of the resource.
-
-
-                  IN_USE = The resource is in use.
-
-                  NOT_IN_USE = The resource is not-in-use.
-                enum:
-                  - IN_USE
-                  - NOT_IN_USE
-              userDefinedData:
-                type: object
-              _links:
-                type: object
-                description: Links to resources related to this resource.
-                properties:
-                  self:
-                    type: object
-                  nsd_content:
-                    type: object
-            description: This type represents a response for the query NSD operation.
+            $ref: '#/definitions/NsdInfo'
     delete:
       summary: Delete NSD
+      operationId: deleteNSDInfo
       description: >-
         The DELETE method deletes an individual NS descriptor resource. An
         individual NS descriptor resource can only be deleted when there is no
@@ -410,17 +138,11 @@ paths:
           description: >-
             The operation has completed successfully. The response body shall be
             empty.
-          schema:
-            type: object
-            description: >-
-              The operation has completed successfully. The response body shall
-              be empty.
         '409':
           description: Status 409
           schema:
-            required:
-              - ProblemDetails
             type: object
+            $ref: '#/definitions/ProblemDetails'
             description: >-
               Error: The operation cannot be executed currently, due to a
               conflict with the state of the resource. Typically, this is due to
@@ -430,11 +152,9 @@ paths:
               (i.e. usageState = IN_USE). The response body shall contain a
               ProblemDetails structure, in which the "detail" attribute shall
               convey more information about the error.
-            properties:
-              ProblemDetails:
-                type: object
     patch:
       summary: Update NSD Info
+      operationId: updateNSDInfo
       description: >-
         The PATCH method modifies the operational state and/or user defined data
         of an individual NS descriptor resource.  This method can be used to:
@@ -461,52 +181,15 @@ paths:
         5.4.3.3.4-1 and 5.4.3.3.4-2 for URI query parameters,
 
         request and response data structures, and response codes.
-      consumes: []
+      consumes:
+        - application/json
       parameters:
         - name: body
           in: body
           required: true
           schema:
             type: object
-            required:
-              - NsdInfoModifications
-            properties:
-              NsdInfoModifications:
-                type: object
-                properties:
-                  nsdOperationalState:
-                    type: string
-                    description: >-
-                      The enumeration NsdOperationalStateType shall comply with
-                      the provisions defined in Table 5.5.4.3-1 of GS NFV_SOL
-                      005. It indicates the operational state of the resource.
-
-
-                      ENABLED = The operational state of the resource is
-                      enabled. DISABLED = The operational state of the resource
-                      is disabled.
-                    enum:
-                      - ENABLED
-                      - DISABLED
-                  userDefinedData:
-                    type: object
-                    description: >-
-                      Modifications of the "userDefinedData" attribute in
-                      "NsdInfo" data type. See note. If present, these
-                      modifications shall be applied according to the rules of
-                      JSON Merge PATCH (see IETF RFC 7396 [25]).
-
-                      NOTE: At least one of the attributes - nsdOperationalState
-                      and userDefinedData - shall be present.
-                description: >-
-                  This type represents attribute modifications for an individual
-                  NS descriptor resource based on the "NsdInfo" data type. The
-                  attributes of "NsdInfo" that can be modified are included in
-                  the "NsdInfoModifications" data type.
-
-
-                  NOTE: At least one of the attributes - nsdOperationalState and
-                  userDefinedData - shall be present.
+            $ref: '#/definitions/NsdInfoModifications'
             description: >-
               The operation was completed successfully. The response body shall
               contain attribute modifications for an 'Individual NS Descriptor'
@@ -516,36 +199,12 @@ paths:
           description: Status 200
           schema:
             type: object
-            properties:
-              nsdOperationalState:
-                type: string
-                description: >-
-                  The enumeration NsdOperationalStateType shall comply with the
-                  provisions defined in Table 5.5.4.3-1 of GS NFV_SOL 005. It
-                  indicates the operational state of the resource.
-
-
-                  ENABLED = The operational state of the resource is enabled.
-                  DISABLED = The operational state of the resource is disabled.
-                enum:
-                  - ENABLED
-                  - DISABLED
-              userDefinedData:
-                type: object
-                description: >-
-                  Modifications of the "userDefinedData" attribute in "NsdInfo"
-                  data type. See note. If present, these modifications shall be
-                  applied according to the rules of JSON Merge PATCH (see IETF
-                  RFC 7396 [25]).
-
-                  NOTE: At least one of the attributes - nsdOperationalState and
-                  userDefinedData - shall be present.
+            $ref: '#/definitions/NsdInfoModifications'
             description: >-
               This type represents attribute modifications for an individual NS
               descriptor resource based on the "NsdInfo" data type. The
               attributes of "NsdInfo" that can be modified are included in the
               "NsdInfoModifications" data type.
-
 
               NOTE: At least one of the attributes - nsdOperationalState and
               userDefinedData - shall be present.
@@ -553,21 +212,24 @@ paths:
           description: Status 409
           schema:
             type: object
+            $ref: '#/definitions/ProblemDetails'
         '412':
           description: Status 412
           schema:
             type: object
+            $ref: '#/definitions/ProblemDetails'
     parameters:
       - name: nsdInfoId
         in: path
         required: true
         type: string
-  '/ns_descriptors/{nsdInfoId}/nsd_content':
+
+  '/nsd/v1/ns_descriptors/{nsdInfoId}/nsd_content':
     get:
       summary: Get NSD Content
+      operationId: getNSD
       description: >-
         The GET method fetches the content of the NSD.
-
 
         The NSD can be implemented as a single file or as a collection of
         multiple files. If the NSD is implemented in the form of multiple files,
@@ -575,26 +237,21 @@ paths:
         implemented as a single file, either that file or a ZIP file embedding
         that file shall be returned.
 
-
         The selection of the format is controlled by the "Accept" HTTP header
         passed in the GET request:
-
 
         • If the "Accept" header contains only "text/plain" and the NSD is
         implemented as a single file, the file shall be returned; otherwise, an
         error message shall be returned.
 
-
         • If the "Accept" header contains only "application/zip", the single
         file or the multiple files that make up the NSD shall be returned
         embedded in a ZIP file.
-
 
         • If the "Accept" header contains both "text/plain" and
         "application/zip", it is up to the NFVO to choose the format to return
         for a single-file NSD; for a multi-file NSD, a ZIP file shall be
         returned.
-
 
         NOTE: The structure of the NSD zip file is outside the scope of the
         present document.
@@ -658,6 +315,7 @@ paths:
           description: Status 406
           schema:
             type: object
+            $ref: '#/definitions/ProblemDetails'
             description: >-
               If the "Accept" header does not contain at least one name of a
               content type for which the NFVO can provide a representation of
@@ -668,6 +326,7 @@ paths:
           description: Status 409
           schema:
             type: object
+            $ref: '#/definitions/ProblemDetails'
             description: >-
               Error: The operation cannot be executed currently, due to a
               conflict with the state of the resource. Typically, this is due to
@@ -679,6 +338,7 @@ paths:
           description: Status 416
           schema:
             type: object
+            $ref: '#/definitions/ProblemDetails'
             description: >-
               The byte range passed in the "Range" header did not match any
               available byte range in the NSD file (e.g.
@@ -687,6 +347,7 @@ paths:
               ProblemDetails structure.
     put:
       summary: Upload NSD
+      operationId: uploadNSD
       description: >-
         The PUT method is used to upload the content of a NSD. The NSD to be
         uploaded can be implemented as a single file or as a collection of
@@ -702,7 +363,9 @@ paths:
         follow the provisions specified in the Tables 5.4.4.3.3-1 and
         5.4.4.3.3-2 of GS-NFV-SOL 005 for URI query parameters, request and
         response data structures, and response codes.
-      consumes: []
+      consumes:
+        - application/json
+        - application/yaml
       parameters:
         - name: Content-Type
           in: header
@@ -712,9 +375,7 @@ paths:
             The payload body contains a copy of the file representing the NSD or
             a ZIP file that contains the file or multiple files representing the
             NSD, as specified above. The request shall set the "Content-Type"
-            HTTP header as defined
-
-            above.
+            HTTP header as defined above.
         - name: body
           in: body
           required: true
@@ -748,9 +409,11 @@ paths:
         in: path
         required: true
         type: string
-  /pnf_descriptors:
+
+  '/nsd/v1/pnf_descriptors':
     get:
-      summary: Query PFND Info
+      summary: Query PFNDs Info
+      operationId: getPNFDsInfo
       description: >-
         The GET method queries information about multiple PNF descriptor
         resources.
@@ -766,9 +429,7 @@ paths:
 
             See clause 4.3.3 for details.
 
-
             The NFVO shall support this parameter.
-
 
             The following attributes shall be excluded from the PnfdInfo
             structure in the response body if this parameter is provided, or
@@ -785,21 +446,27 @@ paths:
         '200':
           description: Status 200
           schema:
-            type: object
+            type: array
+            items:
+              type: object
+              $ref: '#/definitions/PnfdInfo'
             description: >-
               Information about zero or more PNF descriptors. The response body
               shall contain a representation of zero or more PNF descriptors, as
               defined in clause 5.5.2.2.
     post:
       summary: Create PNFD Info
+      operationId: createPNFDInfo
       description: The POST method is used to create a new PNF descriptor resource.
-      consumes: []
+      consumes:
+        - application/json
       parameters:
         - name: body
           in: body
           required: true
           schema:
             type: object
+            $ref: '#/definitions/PnfdInfo'
             description: |-
               Parameters of creating a PNF descriptor resource, as defined in
               clause 5.5.2.6 of GS NFV-SOL 005.
@@ -808,6 +475,7 @@ paths:
           description: Status 201
           schema:
             type: object
+            $ref: '#/definitions/PnfdInfo'
             description: >-
               A PNF descriptor resource was created successfully, as a new PNF
               descriptor resource. The response body shall contain a
@@ -815,9 +483,11 @@ paths:
               clause 5.5.2.5. The HTTP response shall include a "Location" HTTP
               header that contains the resource URI of the new PNF descriptor
               resource.
-  '/pnf_descriptors/{pnfdInfoId}':
+
+  '/nsd/v1/pnf_descriptors/{pnfdInfoId}':
     get:
       summary: Query PNFD Info
+      operationId: getPNFDInfo
       description: >-
         The GET method reads information about an individual PNF descriptor.
         This method shall follow the provisions specified in the Tables
@@ -830,8 +500,12 @@ paths:
             Information about the individual PNFD descriptor. The response body
             shall contain a representation of the individual PNF descriptor, as
             defined in clause 5.5.2.5 of GS NFV-SOL 005.
+          schema:
+            type: object
+            $ref: '#/definitions/PnfdInfo'
     delete:
       summary: Delete PNFD
+      operationId: deletePNFDInfo
       description: >-
         The DELETE method deletes an individual PNF descriptor resource. An
         individual PNF descriptor resource can only be deleted when there is no
@@ -852,23 +526,21 @@ paths:
             empty.
     patch:
       summary: Update PNFD Info
+      operationId: updatePNFDInfo
       description: >-
         The PATCH method modifies the user defined data of an individual PNF
         descriptor resource. This method shall follow the provisions specified
         in the Tables 5.4.6.3.4-1 and 5.4.6.3.4-2 for URI query parameters,
         request and response data structures, and response codes.
-      consumes: []
+      consumes:
+        - application/json
       parameters:
         - name: body
           in: body
           required: true
           schema:
             type: object
-            required:
-              - userDefinedData
-            properties:
-              userDefinedData:
-                type: object
+            $ref: '#/definitions/PnfdInfoModifications'
             description: >-
               This type represents attribute modifications for an individual PNF
               descriptor resource based on the "PnfdInfo" data type. The
@@ -879,11 +551,7 @@ paths:
           description: Status 200
           schema:
             type: object
-            required:
-              - userDefinedData
-            properties:
-              userDefinedData:
-                type: object
+            $ref: '#/definitions/PnfdInfoModifications'
             description: >-
               This type represents attribute modifications for an individual PNF
               descriptor resource based on the "PnfdInfo" data type. The
@@ -898,25 +566,32 @@ paths:
         in: path
         required: true
         type: string
-  '/pnf_descriptors/{pnfdInfoId}/pnfd_content':
+
+  '/nsd/v1/pnf_descriptors/{pnfdInfoId}/pnfd_content':
     get:
       summary: Get PNFD Content
+      operationId: getPNFD
       description: The GET method fetches the content of the PNFD.
       parameters: []
       responses:
         '200':
+          schema:
+            type: object
           description: >-
             On success, the content of the PNFD is returned. The payload body
             shall contain a copy of the file representing the PNFD. The
             "Content-Type" HTTP header shall be set to "text/plain".
     put:
       summary: Upload PNFD
+      operationId: uploadPNFD
       description: >-
         The PUT method is used to upload the content of a PNFD. This method
         shall follow the provisions specified in the Tables 5.4.7.3.3-1 and
         5.4.7.3.3-2 of GS NFV-SOL 005for URI query parameters, request and
         response data structures, and response codes.
-      consumes: []
+      consumes:
+        - application/json
+        - application/yaml
       parameters:
         - name: Content-Type
           in: header
@@ -942,14 +617,17 @@ paths:
           description: Status 409
           schema:
             type: object
+            $ref: '#/definitions/ProblemDetails'
     parameters:
       - name: pnfdInfoId
         in: path
         required: true
         type: string
-  /subscriptions:
+
+  '/nsd/v1/subscriptions':
     get:
       summary: Query Subscription Information
+      operationId: getSubscriptions
       description: >-
         The GET method queries the list of active subscriptions of the
         functional block that invokes the method. It can be used e.g. for
@@ -969,173 +647,7 @@ paths:
               of the functional block that invokes the method.
             items:
               type: object
-              required:
-                - _links
-                - callbackUri
-                - id
-              properties:
-                id:
-                  type: object
-                filter:
-                  type: object
-                  properties:
-                    notificationTypes:
-                      type: string
-                      description: >-
-                        Match particular notification types. Permitted values:
-                        NsdOnBoardingNotification,
-                        NsdOnboardingFailureNotification, NsdChangeNotification,
-                        NsdDeletionNotification
-
-                        PnfdOnBoardingNotification,
-                        PnfdOnBoardingFailureNotification,
-                        PnfdDeletionNotification.
-
-
-                        The permitted values of the "notificationTypes" ]
-                        attribute are spelled exactly as the names of the
-                        notification types to facilitate automated code
-                        generation systems.
-                      enum:
-                        - NsdOnBoardingNotification
-                        - NsdOnboardingFailureNotification
-                        - NsdChangeNotification
-                        - NsdDeletionNotification
-                        - PnfdOnBoardingNotification
-                        - PnfdOnBoardingFailureNotification
-                        - PnfdDeletionNotification
-                    nsdInfoId:
-                      type: object
-                    nsdId:
-                      type: object
-                    nsdName:
-                      type: string
-                      description: Match the name of the onboarded NSD.
-                    nsdVersion:
-                      type: object
-                    nsdDesigner:
-                      type: string
-                      description: Match the NSD designer of the on-boarded NSD.
-                    nsdInvariantId:
-                      type: object
-                    vnfPkgIds:
-                      type: object
-                    pnfdInfoIds:
-                      type: object
-                    nestedNsdInfoIds:
-                      type: object
-                    nsdOnboardingState:
-                      type: string
-                      description: >-
-                        The enumeration NsdOnboardingStateType shall comply with
-                        the provisions defined in Table 5.5.4.5-1 of GS NFV-SOL
-                        005. It indicates the onboarding state of the NSD.
-
-
-                        CREATED = The NSD information object is created.
-                        UPLOADING = The associated NSD content is being
-                        uploaded. PROCESSING = The associated NSD content is
-                        being processed, e.g. validation. ONBOARDED = The
-                        associated NSD content is on-boarded.
-                      enum:
-                        - CREATED
-                        - UPLOADING
-                        - PROCESSING
-                        - ONBOARDED
-                    nsdOperationalState:
-                      type: string
-                      description: >-
-                        The enumeration NsdOperationalStateType shall comply
-                        with the provisions defined in Table 5.5.4.3-1 of GS
-                        NFV_SOL 005. It indicates the operational state of the
-                        resource.
-
-
-                        ENABLED = The operational state of the resource is
-                        enabled. DISABLED = The operational state of the
-                        resource is disabled.
-                      enum:
-                        - ENABLED
-                        - DISABLED
-                    nsdUsageState:
-                      type: string
-                      description: >-
-                        The enumeration NsdUsageStateType shall comply with the
-                        provisions defined in Table 5.5.4.4-1 of GS NFV-SOL 005.
-                        It indicates the usage state of the resource.
-
-
-                        IN_USE = The resource is in use.
-
-                        NOT_IN_USE = The resource is not-in-use.
-                      enum:
-                        - IN_USE
-                        - NOT_IN_USE
-                    pnfdId:
-                      type: object
-                    pnfdName:
-                      type: string
-                      description: Match the name of the on-boarded PNFD.
-                    pnfdVersion:
-                      type: object
-                    pnfdProvider:
-                      type: string
-                      description: Match the provider of the on-boarded PNFD.
-                    pnfdInvariantId:
-                      type: object
-                    pnfdOnboardingState:
-                      type: string
-                      description: >-
-                        The enumeration PnfdOnboardingStateType shall comply
-                        with the provisions defined in Table 5.5.4.6-1 of GS-NFV
-                        SOL005. It indicates the onboarding state of the
-                        individual PNF descriptor resource.
-
-
-                        CREATED = The PNF descriptor resource is created.
-                        UPLOADING = The associated PNFD content is being
-                        uploaded. PROCESSING = The associated PNFD content is
-                        being processed, e.g. validation. ONBOARDED = The
-                        associated PNFD content is on-boarded.
-                      enum:
-                        - CREATED
-                        - UPLOADING
-                        - PROCESSING
-                        - ONBOARDING
-                    pnfdUsageState:
-                      type: string
-                      description: >-
-                        The enumeration PnfdUsageStateType shall comply with the
-                        provisions defined in Table 5.5.4.7-1 of GS NFV-SOL005.
-                        It indicates the usage state of the resource.
-
-
-                        IN-USE = The resource is in use.
-
-                        NOT_IN_USE = The resource is not-in-use.
-                      enum:
-                        - IN_USE
-                        - NOT_IN_USE
-                  description: >-
-                    This type represents a subscription filter related to
-                    notifications about NSD management. It shall comply with the
-
-                    provisions defined in Table 5.5.3.2-1 of GS NFV-SOL 005. At
-                    a particular nesting level in the filter structure, the
-                    following applies: All attributes shall match in order for
-                    the filter to match (logical "and" between different filter
-                    attributes). If an attribute is an array, the attribute
-                    shall match if at least one of the values in the array
-                    matches (logical "or" between the values of one filter
-                    attribute).
-                callbackUri:
-                  type: object
-                _links:
-                  type: object
-                  description: Links to resources related to this resource.
-                  properties:
-                    self:
-                      type: object
+              $ref: '#/definitions/NsdmSubscription'
               description: >-
                 This type represents a subscription related to notifications
                 about NSD management.
@@ -1173,164 +685,7 @@ paths:
           required: true
           schema:
             type: object
-            required:
-              - callbackUri
-            properties:
-              filter:
-                type: object
-                properties:
-                  notificationTypes:
-                    type: string
-                    description: >-
-                      Match particular notification types. Permitted values:
-                      NsdOnBoardingNotification,
-                      NsdOnboardingFailureNotification, NsdChangeNotification,
-                      NsdDeletionNotification
-
-                      PnfdOnBoardingNotification,
-                      PnfdOnBoardingFailureNotification,
-                      PnfdDeletionNotification.
-
-
-                      The permitted values of the "notificationTypes" ]
-                      attribute are spelled exactly as the names of the
-                      notification types to facilitate automated code generation
-                      systems.
-                    enum:
-                      - NsdOnBoardingNotification
-                      - NsdOnboardingFailureNotification
-                      - NsdChangeNotification
-                      - NsdDeletionNotification
-                      - PnfdOnBoardingNotification
-                      - PnfdOnBoardingFailureNotification
-                      - PnfdDeletionNotification
-                  nsdInfoId:
-                    type: object
-                  nsdId:
-                    type: object
-                  nsdName:
-                    type: string
-                    description: Match the name of the onboarded NSD.
-                  nsdVersion:
-                    type: object
-                  nsdDesigner:
-                    type: string
-                    description: Match the NSD designer of the on-boarded NSD.
-                  nsdInvariantId:
-                    type: object
-                  vnfPkgIds:
-                    type: object
-                  pnfdInfoIds:
-                    type: object
-                  nestedNsdInfoIds:
-                    type: object
-                  nsdOnboardingState:
-                    type: string
-                    description: >-
-                      The enumeration NsdOnboardingStateType shall comply with
-                      the provisions defined in Table 5.5.4.5-1 of GS NFV-SOL
-                      005. It indicates the onboarding state of the NSD.
-
-
-                      CREATED = The NSD information object is created. UPLOADING
-                      = The associated NSD content is being uploaded. PROCESSING
-                      = The associated NSD content is being processed, e.g.
-                      validation. ONBOARDED = The associated NSD content is
-                      on-boarded.
-                    enum:
-                      - CREATED
-                      - UPLOADING
-                      - PROCESSING
-                      - ONBOARDED
-                  nsdOperationalState:
-                    type: string
-                    description: >-
-                      The enumeration NsdOperationalStateType shall comply with
-                      the provisions defined in Table 5.5.4.3-1 of GS NFV_SOL
-                      005. It indicates the operational state of the resource.
-
-
-                      ENABLED = The operational state of the resource is
-                      enabled. DISABLED = The operational state of the resource
-                      is disabled.
-                    enum:
-                      - ENABLED
-                      - DISABLED
-                  nsdUsageState:
-                    type: string
-                    description: >-
-                      The enumeration NsdUsageStateType shall comply with the
-                      provisions defined in Table 5.5.4.4-1 of GS NFV-SOL 005.
-                      It indicates the usage state of the resource.
-
-
-                      IN_USE = The resource is in use.
-
-                      NOT_IN_USE = The resource is not-in-use.
-                    enum:
-                      - IN_USE
-                      - NOT_IN_USE
-                  pnfdId:
-                    type: object
-                  pnfdName:
-                    type: string
-                    description: Match the name of the on-boarded PNFD.
-                  pnfdVersion:
-                    type: object
-                  pnfdProvider:
-                    type: string
-                    description: Match the provider of the on-boarded PNFD.
-                  pnfdInvariantId:
-                    type: object
-                  pnfdOnboardingState:
-                    type: string
-                    description: >-
-                      The enumeration PnfdOnboardingStateType shall comply with
-                      the provisions defined in Table 5.5.4.6-1 of GS-NFV
-                      SOL005. It indicates the onboarding state of the
-                      individual PNF descriptor resource.
-
-
-                      CREATED = The PNF descriptor resource is created.
-                      UPLOADING = The associated PNFD content is being uploaded.
-                      PROCESSING = The associated PNFD content is being
-                      processed, e.g. validation. ONBOARDED = The associated
-                      PNFD content is on-boarded.
-                    enum:
-                      - CREATED
-                      - UPLOADING
-                      - PROCESSING
-                      - ONBOARDING
-                  pnfdUsageState:
-                    type: string
-                    description: >-
-                      The enumeration PnfdUsageStateType shall comply with the
-                      provisions defined in Table 5.5.4.7-1 of GS NFV-SOL005. It
-                      indicates the usage state of the resource.
-
-
-                      IN-USE = The resource is in use.
-
-                      NOT_IN_USE = The resource is not-in-use.
-                    enum:
-                      - IN_USE
-                      - NOT_IN_USE
-                description: >-
-                  This type represents a subscription filter related to
-                  notifications about NSD management. It shall comply with the
-
-                  provisions defined in Table 5.5.3.2-1 of GS NFV-SOL 005. At a
-                  particular nesting level in the filter structure, the
-                  following applies: All attributes shall match in order for the
-                  filter to match (logical "and" between different filter
-                  attributes). If an attribute is an array, the attribute shall
-                  match if at least one of the values in the array matches
-                  (logical "or" between the values of one filter attribute).
-              callbackUri:
-                type: string
-                description: The URI of the endpoint to send the notification to.
-              authentication:
-                type: object
+            $ref: '#/definitions/NsdmSubscriptionRequest'
             description: >-
               This type represents a subscription request related to
               notifications about NSD management.
@@ -1339,171 +694,7 @@ paths:
           description: Status 201
           schema:
             type: object
-            required:
-              - _links
-              - callbackUri
-              - id
-            properties:
-              id:
-                type: object
-              filter:
-                type: object
-                properties:
-                  notificationTypes:
-                    type: string
-                    description: >-
-                      Match particular notification types. Permitted values:
-                      NsdOnBoardingNotification,
-                      NsdOnboardingFailureNotification, NsdChangeNotification,
-                      NsdDeletionNotification
-
-                      PnfdOnBoardingNotification,
-                      PnfdOnBoardingFailureNotification,
-                      PnfdDeletionNotification.
-
-
-                      The permitted values of the "notificationTypes" ]
-                      attribute are spelled exactly as the names of the
-                      notification types to facilitate automated code generation
-                      systems.
-                    enum:
-                      - NsdOnBoardingNotification
-                      - NsdOnboardingFailureNotification
-                      - NsdChangeNotification
-                      - NsdDeletionNotification
-                      - PnfdOnBoardingNotification
-                      - PnfdOnBoardingFailureNotification
-                      - PnfdDeletionNotification
-                  nsdInfoId:
-                    type: object
-                  nsdId:
-                    type: object
-                  nsdName:
-                    type: string
-                    description: Match the name of the onboarded NSD.
-                  nsdVersion:
-                    type: object
-                  nsdDesigner:
-                    type: string
-                    description: Match the NSD designer of the on-boarded NSD.
-                  nsdInvariantId:
-                    type: object
-                  vnfPkgIds:
-                    type: object
-                  pnfdInfoIds:
-                    type: object
-                  nestedNsdInfoIds:
-                    type: object
-                  nsdOnboardingState:
-                    type: string
-                    description: >-
-                      The enumeration NsdOnboardingStateType shall comply with
-                      the provisions defined in Table 5.5.4.5-1 of GS NFV-SOL
-                      005. It indicates the onboarding state of the NSD.
-
-
-                      CREATED = The NSD information object is created. UPLOADING
-                      = The associated NSD content is being uploaded. PROCESSING
-                      = The associated NSD content is being processed, e.g.
-                      validation. ONBOARDED = The associated NSD content is
-                      on-boarded.
-                    enum:
-                      - CREATED
-                      - UPLOADING
-                      - PROCESSING
-                      - ONBOARDED
-                  nsdOperationalState:
-                    type: string
-                    description: >-
-                      The enumeration NsdOperationalStateType shall comply with
-                      the provisions defined in Table 5.5.4.3-1 of GS NFV_SOL
-                      005. It indicates the operational state of the resource.
-
-
-                      ENABLED = The operational state of the resource is
-                      enabled. DISABLED = The operational state of the resource
-                      is disabled.
-                    enum:
-                      - ENABLED
-                      - DISABLED
-                  nsdUsageState:
-                    type: string
-                    description: >-
-                      The enumeration NsdUsageStateType shall comply with the
-                      provisions defined in Table 5.5.4.4-1 of GS NFV-SOL 005.
-                      It indicates the usage state of the resource.
-
-
-                      IN_USE = The resource is in use.
-
-                      NOT_IN_USE = The resource is not-in-use.
-                    enum:
-                      - IN_USE
-                      - NOT_IN_USE
-                  pnfdId:
-                    type: object
-                  pnfdName:
-                    type: string
-                    description: Match the name of the on-boarded PNFD.
-                  pnfdVersion:
-                    type: object
-                  pnfdProvider:
-                    type: string
-                    description: Match the provider of the on-boarded PNFD.
-                  pnfdInvariantId:
-                    type: object
-                  pnfdOnboardingState:
-                    type: string
-                    description: >-
-                      The enumeration PnfdOnboardingStateType shall comply with
-                      the provisions defined in Table 5.5.4.6-1 of GS-NFV
-                      SOL005. It indicates the onboarding state of the
-                      individual PNF descriptor resource.
-
-
-                      CREATED = The PNF descriptor resource is created.
-                      UPLOADING = The associated PNFD content is being uploaded.
-                      PROCESSING = The associated PNFD content is being
-                      processed, e.g. validation. ONBOARDED = The associated
-                      PNFD content is on-boarded.
-                    enum:
-                      - CREATED
-                      - UPLOADING
-                      - PROCESSING
-                      - ONBOARDING
-                  pnfdUsageState:
-                    type: string
-                    description: >-
-                      The enumeration PnfdUsageStateType shall comply with the
-                      provisions defined in Table 5.5.4.7-1 of GS NFV-SOL005. It
-                      indicates the usage state of the resource.
-
-
-                      IN-USE = The resource is in use.
-
-                      NOT_IN_USE = The resource is not-in-use.
-                    enum:
-                      - IN_USE
-                      - NOT_IN_USE
-                description: >-
-                  This type represents a subscription filter related to
-                  notifications about NSD management. It shall comply with the
-
-                  provisions defined in Table 5.5.3.2-1 of GS NFV-SOL 005. At a
-                  particular nesting level in the filter structure, the
-                  following applies: All attributes shall match in order for the
-                  filter to match (logical "and" between different filter
-                  attributes). If an attribute is an array, the attribute shall
-                  match if at least one of the values in the array matches
-                  (logical "or" between the values of one filter attribute).
-              callbackUri:
-                type: object
-              _links:
-                type: object
-                description: Links to resources related to this resource.
-                properties:
-                  self:
-                    type: object
+            $ref: '#/definitions/NsdmSubscription'
             description: >-
               This type represents a subscription related to notifications about
               NSD management.
@@ -1513,9 +704,11 @@ paths:
               description: |-
                 The HTTP response shall include a "Location:"
                 HTTP header that points to the created subscription resource.
-  '/subscriptions/{subscriptionId}':
+
+  '/nsd/v1/subscriptions/{subscriptionId}':
     get:
       summary: Query Subscription Information
+      operationId: getSubscription
       description: >-
         The GET method retrieves information about a subscription by reading an
         individual subscription resource. This method shall support the URI
@@ -1527,176 +720,13 @@ paths:
           description: Status 200
           schema:
             type: object
-            required:
-              - _links
-              - callbackUri
-              - id
-            properties:
-              id:
-                type: object
-              filter:
-                type: object
-                properties:
-                  notificationTypes:
-                    type: string
-                    description: >-
-                      Match particular notification types. Permitted values:
-                      NsdOnBoardingNotification,
-                      NsdOnboardingFailureNotification, NsdChangeNotification,
-                      NsdDeletionNotification
-
-                      PnfdOnBoardingNotification,
-                      PnfdOnBoardingFailureNotification,
-                      PnfdDeletionNotification.
-
-
-                      The permitted values of the "notificationTypes" ]
-                      attribute are spelled exactly as the names of the
-                      notification types to facilitate automated code generation
-                      systems.
-                    enum:
-                      - NsdOnBoardingNotification
-                      - NsdOnboardingFailureNotification
-                      - NsdChangeNotification
-                      - NsdDeletionNotification
-                      - PnfdOnBoardingNotification
-                      - PnfdOnBoardingFailureNotification
-                      - PnfdDeletionNotification
-                  nsdInfoId:
-                    type: object
-                  nsdId:
-                    type: object
-                  nsdName:
-                    type: string
-                    description: Match the name of the onboarded NSD.
-                  nsdVersion:
-                    type: object
-                  nsdDesigner:
-                    type: string
-                    description: Match the NSD designer of the on-boarded NSD.
-                  nsdInvariantId:
-                    type: object
-                  vnfPkgIds:
-                    type: object
-                  pnfdInfoIds:
-                    type: object
-                  nestedNsdInfoIds:
-                    type: object
-                  nsdOnboardingState:
-                    type: string
-                    description: >-
-                      The enumeration NsdOnboardingStateType shall comply with
-                      the provisions defined in Table 5.5.4.5-1 of GS NFV-SOL
-                      005. It indicates the onboarding state of the NSD.
-
-
-                      CREATED = The NSD information object is created. UPLOADING
-                      = The associated NSD content is being uploaded. PROCESSING
-                      = The associated NSD content is being processed, e.g.
-                      validation. ONBOARDED = The associated NSD content is
-                      on-boarded.
-                    enum:
-                      - CREATED
-                      - UPLOADING
-                      - PROCESSING
-                      - ONBOARDED
-                  nsdOperationalState:
-                    type: string
-                    description: >-
-                      The enumeration NsdOperationalStateType shall comply with
-                      the provisions defined in Table 5.5.4.3-1 of GS NFV_SOL
-                      005. It indicates the operational state of the resource.
-
-
-                      ENABLED = The operational state of the resource is
-                      enabled. DISABLED = The operational state of the resource
-                      is disabled.
-                    enum:
-                      - ENABLED
-                      - DISABLED
-                  nsdUsageState:
-                    type: string
-                    description: >-
-                      The enumeration NsdUsageStateType shall comply with the
-                      provisions defined in Table 5.5.4.4-1 of GS NFV-SOL 005.
-                      It indicates the usage state of the resource.
-
-
-                      IN_USE = The resource is in use.
-
-                      NOT_IN_USE = The resource is not-in-use.
-                    enum:
-                      - IN_USE
-                      - NOT_IN_USE
-                  pnfdId:
-                    type: object
-                  pnfdName:
-                    type: string
-                    description: Match the name of the on-boarded PNFD.
-                  pnfdVersion:
-                    type: object
-                  pnfdProvider:
-                    type: string
-                    description: Match the provider of the on-boarded PNFD.
-                  pnfdInvariantId:
-                    type: object
-                  pnfdOnboardingState:
-                    type: string
-                    description: >-
-                      The enumeration PnfdOnboardingStateType shall comply with
-                      the provisions defined in Table 5.5.4.6-1 of GS-NFV
-                      SOL005. It indicates the onboarding state of the
-                      individual PNF descriptor resource.
-
-
-                      CREATED = The PNF descriptor resource is created.
-                      UPLOADING = The associated PNFD content is being uploaded.
-                      PROCESSING = The associated PNFD content is being
-                      processed, e.g. validation. ONBOARDED = The associated
-                      PNFD content is on-boarded.
-                    enum:
-                      - CREATED
-                      - UPLOADING
-                      - PROCESSING
-                      - ONBOARDING
-                  pnfdUsageState:
-                    type: string
-                    description: >-
-                      The enumeration PnfdUsageStateType shall comply with the
-                      provisions defined in Table 5.5.4.7-1 of GS NFV-SOL005. It
-                      indicates the usage state of the resource.
-
-
-                      IN-USE = The resource is in use.
-
-                      NOT_IN_USE = The resource is not-in-use.
-                    enum:
-                      - IN_USE
-                      - NOT_IN_USE
-                description: >-
-                  This type represents a subscription filter related to
-                  notifications about NSD management. It shall comply with the
-
-                  provisions defined in Table 5.5.3.2-1 of GS NFV-SOL 005. At a
-                  particular nesting level in the filter structure, the
-                  following applies: All attributes shall match in order for the
-                  filter to match (logical "and" between different filter
-                  attributes). If an attribute is an array, the attribute shall
-                  match if at least one of the values in the array matches
-                  (logical "or" between the values of one filter attribute).
-              callbackUri:
-                type: object
-              _links:
-                type: object
-                description: Links to resources related to this resource.
-                properties:
-                  self:
-                    type: object
+            $ref: '#/definitions/NsdmSubscription'
             description: >-
               This type represents a subscription related to notifications about
               NSD management.
     delete:
       summary: Terminate Subscription
+      operationId: deleteSubscription
       description: >-
         The DELETE method terminates an individual subscription. This method
         shall support the URI query parameters, request and response data
@@ -1713,590 +743,47 @@ paths:
         in: path
         required: true
         type: string
+
+
 definitions:
-  NsdInfoModifications:
-    type: object
-    properties:
-      nsdOperationalState:
-        type: string
-        description: >-
-          The enumeration NsdOperationalStateType shall comply with the
-          provisions defined in Table 5.5.4.3-1 of GS NFV_SOL 005. It indicates
-          the operational state of the resource.
 
-
-          ENABLED = The operational state of the resource is enabled. DISABLED =
-          The operational state of the resource is disabled.
-        enum:
-          - ENABLED
-          - DISABLED
-      userDefinedData:
-        type: object
-        description: >-
-          Modifications of the "userDefinedData" attribute in "NsdInfo" data
-          type. See note. If present, these modifications shall be applied
-          according to the rules of JSON Merge PATCH (see IETF RFC 7396 [25]).
-
-          NOTE: At least one of the attributes - nsdOperationalState and
-          userDefinedData - shall be present.
-    description: >-
-      This type represents attribute modifications for an individual NS
-      descriptor resource based on the "NsdInfo" data type. The attributes of
-      "NsdInfo" that can be modified are included in the "NsdInfoModifications"
-      data type.
-
-
-      NOTE: At least one of the attributes - nsdOperationalState and
-      userDefinedData - shall be present.
-  nsdOperationalState:
-    type: array
-    description: >-
-      New value of the "nsdOperationalState" attribute in "NsdInfo" data type.
-      See note.
-
-      Permitted values: ENABLED, DISABLED
-
-
-      How do I add cardinality?
-    items:
-      type: object
-      properties:
-        nsdOperationalState:
-          type: string
-          description: >-
-            The enumeration NsdOperationalStateType shall comply with the
-            provisions defined in Table 5.5.4.3-1 of GS NFV_SOL 005. It
-            indicates the operational state of the resource.
-
-
-            ENABLED = The operational state of the resource is enabled. DISABLED
-            = The operational state of the resource is disabled.
-          enum:
-            - ENABLED
-            - DISABLED
-        userDefinedData:
-          type: object
-          description: >-
-            Modifications of the "userDefinedData" attribute in "NsdInfo" data
-            type. See note. If present, these modifications shall be applied
-            according to the rules of JSON Merge PATCH (see IETF RFC 7396 [25]).
-
-            NOTE: At least one of the attributes - nsdOperationalState and
-            userDefinedData - shall be present.
-      description: >-
-        This type represents attribute modifications for an individual NS
-        descriptor resource based on the "NsdInfo" data type. The attributes of
-        "NsdInfo" that can be modified are included in the
-        "NsdInfoModifications" data type.
-
-
-        NOTE: At least one of the attributes - nsdOperationalState and
-        userDefinedData - shall be present.
-  userDefinedData:
-    type: object
-    properties:
-      nsdOperationalState:
-        type: string
-        description: >-
-          The enumeration NsdOperationalStateType shall comply with the
-          provisions defined in Table 5.5.4.3-1 of GS NFV_SOL 005. It indicates
-          the operational state of the resource.
-
-
-          ENABLED = The operational state of the resource is enabled. DISABLED =
-          The operational state of the resource is disabled.
-        enum:
-          - ENABLED
-          - DISABLED
-      userDefinedData:
-        type: object
-        description: >-
-          Modifications of the "userDefinedData" attribute in "NsdInfo" data
-          type. See note. If present, these modifications shall be applied
-          according to the rules of JSON Merge PATCH (see IETF RFC 7396 [25]).
-
-          NOTE: At least one of the attributes - nsdOperationalState and
-          userDefinedData - shall be present.
-    description: >-
-      This type represents attribute modifications for an individual NS
-      descriptor resource based on the "NsdInfo" data type. The attributes of
-      "NsdInfo" that can be modified are included in the "NsdInfoModifications"
-      data type.
-
-
-      NOTE: At least one of the attributes - nsdOperationalState and
-      userDefinedData - shall be present.
-  NsdmSubscription:
-    type: object
-    required:
-      - _links
-      - callbackUri
-      - id
-    properties:
-      id:
-        type: object
-      filter:
-        type: object
-        properties:
-          notificationTypes:
-            type: string
-            description: >-
-              Match particular notification types. Permitted values:
-              NsdOnBoardingNotification, NsdOnboardingFailureNotification,
-              NsdChangeNotification, NsdDeletionNotification
-
-              PnfdOnBoardingNotification, PnfdOnBoardingFailureNotification,
-              PnfdDeletionNotification.
-
-
-              The permitted values of the "notificationTypes" ] attribute are
-              spelled exactly as the names of the notification types to
-              facilitate automated code generation systems.
-            enum:
-              - NsdOnBoardingNotification
-              - NsdOnboardingFailureNotification
-              - NsdChangeNotification
-              - NsdDeletionNotification
-              - PnfdOnBoardingNotification
-              - PnfdOnBoardingFailureNotification
-              - PnfdDeletionNotification
-          nsdInfoId:
-            type: object
-          nsdId:
-            type: object
-          nsdName:
-            type: string
-            description: Match the name of the onboarded NSD.
-          nsdVersion:
-            type: object
-          nsdDesigner:
-            type: string
-            description: Match the NSD designer of the on-boarded NSD.
-          nsdInvariantId:
-            type: object
-          vnfPkgIds:
-            type: object
-          pnfdInfoIds:
-            type: object
-          nestedNsdInfoIds:
-            type: object
-          nsdOnboardingState:
-            type: string
-            description: >-
-              The enumeration NsdOnboardingStateType shall comply with the
-              provisions defined in Table 5.5.4.5-1 of GS NFV-SOL 005. It
-              indicates the onboarding state of the NSD.
-
-
-              CREATED = The NSD information object is created. UPLOADING = The
-              associated NSD content is being uploaded. PROCESSING = The
-              associated NSD content is being processed, e.g. validation.
-              ONBOARDED = The associated NSD content is on-boarded.
-            enum:
-              - CREATED
-              - UPLOADING
-              - PROCESSING
-              - ONBOARDED
-          nsdOperationalState:
-            type: string
-            description: >-
-              The enumeration NsdOperationalStateType shall comply with the
-              provisions defined in Table 5.5.4.3-1 of GS NFV_SOL 005. It
-              indicates the operational state of the resource.
-
-
-              ENABLED = The operational state of the resource is enabled.
-              DISABLED = The operational state of the resource is disabled.
-            enum:
-              - ENABLED
-              - DISABLED
-          nsdUsageState:
-            type: string
-            description: >-
-              The enumeration NsdUsageStateType shall comply with the provisions
-              defined in Table 5.5.4.4-1 of GS NFV-SOL 005. It indicates the
-              usage state of the resource.
-
-
-              IN_USE = The resource is in use.
-
-              NOT_IN_USE = The resource is not-in-use.
-            enum:
-              - IN_USE
-              - NOT_IN_USE
-          pnfdId:
-            type: object
-          pnfdName:
-            type: string
-            description: Match the name of the on-boarded PNFD.
-          pnfdVersion:
-            type: object
-          pnfdProvider:
-            type: string
-            description: Match the provider of the on-boarded PNFD.
-          pnfdInvariantId:
-            type: object
-          pnfdOnboardingState:
-            type: string
-            description: >-
-              The enumeration PnfdOnboardingStateType shall comply with the
-              provisions defined in Table 5.5.4.6-1 of GS-NFV SOL005. It
-              indicates the onboarding state of the individual PNF descriptor
-              resource.
-
-
-              CREATED = The PNF descriptor resource is created. UPLOADING = The
-              associated PNFD content is being uploaded. PROCESSING = The
-              associated PNFD content is being processed, e.g. validation.
-              ONBOARDED = The associated PNFD content is on-boarded.
-            enum:
-              - CREATED
-              - UPLOADING
-              - PROCESSING
-              - ONBOARDING
-          pnfdUsageState:
-            type: string
-            description: >-
-              The enumeration PnfdUsageStateType shall comply with the
-              provisions defined in Table 5.5.4.7-1 of GS NFV-SOL005. It
-              indicates the usage state of the resource.
-
-
-              IN-USE = The resource is in use.
-
-              NOT_IN_USE = The resource is not-in-use.
-            enum:
-              - IN_USE
-              - NOT_IN_USE
-        description: >-
-          This type represents a subscription filter related to notifications
-          about NSD management. It shall comply with the
-
-          provisions defined in Table 5.5.3.2-1 of GS NFV-SOL 005. At a
-          particular nesting level in the filter structure, the following
-          applies: All attributes shall match in order for the filter to match
-          (logical "and" between different filter attributes). If an attribute
-          is an array, the attribute shall match if at least one of the values
-          in the array matches (logical "or" between the values of one filter
-          attribute).
-      callbackUri:
-        type: object
-      _links:
-        type: object
-        description: Links to resources related to this resource.
-        properties:
-          self:
-            type: object
-    description: >-
-      This type represents a subscription related to notifications about NSD
-      management.
-  NsdmSubscriptionRequest:
-    type: object
-    required:
-      - callbackUri
-    properties:
-      filter:
-        type: object
-        properties:
-          notificationTypes:
-            type: string
-            description: >-
-              Match particular notification types. Permitted values:
-              NsdOnBoardingNotification, NsdOnboardingFailureNotification,
-              NsdChangeNotification, NsdDeletionNotification
-
-              PnfdOnBoardingNotification, PnfdOnBoardingFailureNotification,
-              PnfdDeletionNotification.
-
-
-              The permitted values of the "notificationTypes" ] attribute are
-              spelled exactly as the names of the notification types to
-              facilitate automated code generation systems.
-            enum:
-              - NsdOnBoardingNotification
-              - NsdOnboardingFailureNotification
-              - NsdChangeNotification
-              - NsdDeletionNotification
-              - PnfdOnBoardingNotification
-              - PnfdOnBoardingFailureNotification
-              - PnfdDeletionNotification
-          nsdInfoId:
-            type: object
-          nsdId:
-            type: object
-          nsdName:
-            type: string
-            description: Match the name of the onboarded NSD.
-          nsdVersion:
-            type: object
-          nsdDesigner:
-            type: string
-            description: Match the NSD designer of the on-boarded NSD.
-          nsdInvariantId:
-            type: object
-          vnfPkgIds:
-            type: object
-          pnfdInfoIds:
-            type: object
-          nestedNsdInfoIds:
-            type: object
-          nsdOnboardingState:
-            type: string
-            description: >-
-              The enumeration NsdOnboardingStateType shall comply with the
-              provisions defined in Table 5.5.4.5-1 of GS NFV-SOL 005. It
-              indicates the onboarding state of the NSD.
-
-
-              CREATED = The NSD information object is created. UPLOADING = The
-              associated NSD content is being uploaded. PROCESSING = The
-              associated NSD content is being processed, e.g. validation.
-              ONBOARDED = The associated NSD content is on-boarded.
-            enum:
-              - CREATED
-              - UPLOADING
-              - PROCESSING
-              - ONBOARDED
-          nsdOperationalState:
-            type: string
-            description: >-
-              The enumeration NsdOperationalStateType shall comply with the
-              provisions defined in Table 5.5.4.3-1 of GS NFV_SOL 005. It
-              indicates the operational state of the resource.
-
-
-              ENABLED = The operational state of the resource is enabled.
-              DISABLED = The operational state of the resource is disabled.
-            enum:
-              - ENABLED
-              - DISABLED
-          nsdUsageState:
-            type: string
-            description: >-
-              The enumeration NsdUsageStateType shall comply with the provisions
-              defined in Table 5.5.4.4-1 of GS NFV-SOL 005. It indicates the
-              usage state of the resource.
-
-
-              IN_USE = The resource is in use.
-
-              NOT_IN_USE = The resource is not-in-use.
-            enum:
-              - IN_USE
-              - NOT_IN_USE
-          pnfdId:
-            type: object
-          pnfdName:
-            type: string
-            description: Match the name of the on-boarded PNFD.
-          pnfdVersion:
-            type: object
-          pnfdProvider:
-            type: string
-            description: Match the provider of the on-boarded PNFD.
-          pnfdInvariantId:
-            type: object
-          pnfdOnboardingState:
-            type: string
-            description: >-
-              The enumeration PnfdOnboardingStateType shall comply with the
-              provisions defined in Table 5.5.4.6-1 of GS-NFV SOL005. It
-              indicates the onboarding state of the individual PNF descriptor
-              resource.
-
-
-              CREATED = The PNF descriptor resource is created. UPLOADING = The
-              associated PNFD content is being uploaded. PROCESSING = The
-              associated PNFD content is being processed, e.g. validation.
-              ONBOARDED = The associated PNFD content is on-boarded.
-            enum:
-              - CREATED
-              - UPLOADING
-              - PROCESSING
-              - ONBOARDING
-          pnfdUsageState:
-            type: string
-            description: >-
-              The enumeration PnfdUsageStateType shall comply with the
-              provisions defined in Table 5.5.4.7-1 of GS NFV-SOL005. It
-              indicates the usage state of the resource.
-
-
-              IN-USE = The resource is in use.
-
-              NOT_IN_USE = The resource is not-in-use.
-            enum:
-              - IN_USE
-              - NOT_IN_USE
-        description: >-
-          This type represents a subscription filter related to notifications
-          about NSD management. It shall comply with the
-
-          provisions defined in Table 5.5.3.2-1 of GS NFV-SOL 005. At a
-          particular nesting level in the filter structure, the following
-          applies: All attributes shall match in order for the filter to match
-          (logical "and" between different filter attributes). If an attribute
-          is an array, the attribute shall match if at least one of the values
-          in the array matches (logical "or" between the values of one filter
-          attribute).
-      callbackUri:
-        type: string
-        description: The URI of the endpoint to send the notification to.
-      authentication:
-        type: object
-    description: >-
-      This type represents a subscription request related to notifications about
-      NSD management.
   Identifier:
     type: object
-  NsdmNotificationsFilter:
-    type: object
-    properties:
-      notificationTypes:
-        type: string
-        description: >-
-          Match particular notification types. Permitted values:
-          NsdOnBoardingNotification, NsdOnboardingFailureNotification,
-          NsdChangeNotification, NsdDeletionNotification
 
-          PnfdOnBoardingNotification, PnfdOnBoardingFailureNotification,
-          PnfdDeletionNotification.
-
-
-          The permitted values of the "notificationTypes" ] attribute are
-          spelled exactly as the names of the notification types to facilitate
-          automated code generation systems.
-        enum:
-          - NsdOnBoardingNotification
-          - NsdOnboardingFailureNotification
-          - NsdChangeNotification
-          - NsdDeletionNotification
-          - PnfdOnBoardingNotification
-          - PnfdOnBoardingFailureNotification
-          - PnfdDeletionNotification
-      nsdInfoId:
-        type: object
-      nsdId:
-        type: object
-      nsdName:
-        type: string
-        description: Match the name of the onboarded NSD.
-      nsdVersion:
-        type: object
-      nsdDesigner:
-        type: string
-        description: Match the NSD designer of the on-boarded NSD.
-      nsdInvariantId:
-        type: object
-      vnfPkgIds:
-        type: object
-      pnfdInfoIds:
-        type: object
-      nestedNsdInfoIds:
-        type: object
-      nsdOnboardingState:
-        type: string
-        description: >-
-          The enumeration NsdOnboardingStateType shall comply with the
-          provisions defined in Table 5.5.4.5-1 of GS NFV-SOL 005. It indicates
-          the onboarding state of the NSD.
-
-
-          CREATED = The NSD information object is created. UPLOADING = The
-          associated NSD content is being uploaded. PROCESSING = The associated
-          NSD content is being processed, e.g. validation. ONBOARDED = The
-          associated NSD content is on-boarded.
-        enum:
-          - CREATED
-          - UPLOADING
-          - PROCESSING
-          - ONBOARDED
-      nsdOperationalState:
-        type: string
-        description: >-
-          The enumeration NsdOperationalStateType shall comply with the
-          provisions defined in Table 5.5.4.3-1 of GS NFV_SOL 005. It indicates
-          the operational state of the resource.
-
-
-          ENABLED = The operational state of the resource is enabled. DISABLED =
-          The operational state of the resource is disabled.
-        enum:
-          - ENABLED
-          - DISABLED
-      nsdUsageState:
-        type: string
-        description: >-
-          The enumeration NsdUsageStateType shall comply with the provisions
-          defined in Table 5.5.4.4-1 of GS NFV-SOL 005. It indicates the usage
-          state of the resource.
-
-
-          IN_USE = The resource is in use.
-
-          NOT_IN_USE = The resource is not-in-use.
-        enum:
-          - IN_USE
-          - NOT_IN_USE
-      pnfdId:
-        type: object
-      pnfdName:
-        type: string
-        description: Match the name of the on-boarded PNFD.
-      pnfdVersion:
-        type: object
-      pnfdProvider:
-        type: string
-        description: Match the provider of the on-boarded PNFD.
-      pnfdInvariantId:
-        type: object
-      pnfdOnboardingState:
-        type: string
-        description: >-
-          The enumeration PnfdOnboardingStateType shall comply with the
-          provisions defined in Table 5.5.4.6-1 of GS-NFV SOL005. It indicates
-          the onboarding state of the individual PNF descriptor resource.
-
-
-          CREATED = The PNF descriptor resource is created. UPLOADING = The
-          associated PNFD content is being uploaded. PROCESSING = The associated
-          PNFD content is being processed, e.g. validation. ONBOARDED = The
-          associated PNFD content is on-boarded.
-        enum:
-          - CREATED
-          - UPLOADING
-          - PROCESSING
-          - ONBOARDING
-      pnfdUsageState:
-        type: string
-        description: >-
-          The enumeration PnfdUsageStateType shall comply with the provisions
-          defined in Table 5.5.4.7-1 of GS NFV-SOL005. It indicates the usage
-          state of the resource.
-
-
-          IN-USE = The resource is in use.
-
-          NOT_IN_USE = The resource is not-in-use.
-        enum:
-          - IN_USE
-          - NOT_IN_USE
-    description: >-
-      This type represents a subscription filter related to notifications about
-      NSD management. It shall comply with the
-
-      provisions defined in Table 5.5.3.2-1 of GS NFV-SOL 005. At a particular
-      nesting level in the filter structure, the following applies: All
-      attributes shall match in order for the filter to match (logical "and"
-      between different filter attributes). If an attribute is an array, the
-      attribute shall match if at least one of the values in the array matches
-      (logical "or" between the values of one filter attribute).
   Uri:
-    type: object
+   type: object
+
   Link:
     type: object
+
   SubscriptionAuthentication:
     type: object
+
+  ProblemDetails:
+    type: object
+    properties:
+      type:
+        type: string
+        format: uri
+      title:
+        type: string
+      status:
+        type: integer
+      detail:
+        type: string
+      instance:
+        type: string
+        format: uri
+    additionalProperties: true
+    required:
+      - status
+      - detail
+
+  KeyValuePairs:
+    type: object
+    additionalProperties:
+      type: string
+
   NsdOperationalStateType:
     type: string
     description: >-
@@ -2305,131 +792,35 @@ definitions:
       state of the resource.
 
 
-      ENABLED = The operational state of the resource is enabled. DISABLED = The
-      operational state of the resource is disabled.
+      ENABLED = The operational state of the resource is enabled.
+      DISABLED = The operational state of the resource is disabled.
     enum:
       - ENABLED
       - DISABLED
-  NsdInfo:
-    type: object
-    required:
-      - _links
-      - id
-      - nsdOnboardingState
-      - nsdOperationalState
-      - nsdUsageState
-    properties:
-      id:
-        type: object
-      nsdId:
-        type: object
-      nsdName:
-        type: string
-        description: >-
-          Name of the onboarded NSD. This information is copied from the NSD
-          content and shall be present after the NSD content is on-boarded.
-      nsdVersion:
-        type: object
-      nsdDesigner:
-        type: string
-        description: >-
-          Designer of the on-boarded NSD. This information
 
-          is copied from the NSD content and shall be present after the NSD
-          content is on-boarded.
-      nsdInvariantId:
-        type: object
-      vnfPkgIds:
-        type: object
-      pnfdInfoIds:
-        type: object
-      nestedNsdInfoIds:
-        type: object
-      nsdOnboardingState:
-        type: string
-        description: >-
-          The enumeration NsdOnboardingStateType shall comply with the
-          provisions defined in Table 5.5.4.5-1 of GS NFV-SOL 005. It indicates
-          the onboarding state of the NSD.
-
-
-          CREATED = The NSD information object is created. UPLOADING = The
-          associated NSD content is being uploaded. PROCESSING = The associated
-          NSD content is being processed, e.g. validation. ONBOARDED = The
-          associated NSD content is on-boarded.
-        enum:
-          - CREATED
-          - UPLOADING
-          - PROCESSING
-          - ONBOARDED
-      onboardingFailureDetails:
-        type: object
-      nsdOperationalState:
-        type: string
-        description: >-
-          The enumeration NsdOperationalStateType shall comply with the
-          provisions defined in Table 5.5.4.3-1 of GS NFV_SOL 005. It indicates
-          the operational state of the resource.
-
-
-          ENABLED = The operational state of the resource is enabled. DISABLED =
-          The operational state of the resource is disabled.
-        enum:
-          - ENABLED
-          - DISABLED
-      nsdUsageState:
-        type: string
-        description: >-
-          The enumeration NsdUsageStateType shall comply with the provisions
-          defined in Table 5.5.4.4-1 of GS NFV-SOL 005. It indicates the usage
-          state of the resource.
-
-
-          IN_USE = The resource is in use.
-
-          NOT_IN_USE = The resource is not-in-use.
-        enum:
-          - IN_USE
-          - NOT_IN_USE
-      userDefinedData:
-        type: object
-      _links:
-        type: object
-        description: Links to resources related to this resource.
-        properties:
-          self:
-            type: object
-          nsd_content:
-            type: object
-    description: This type represents a response for the query NSD operation.
-  Version:
-    type: object
   NsdOnboardingStateType:
     type: string
     description: >-
-      The enumeration NsdOnboardingStateType shall comply with the provisions
-      defined in Table 5.5.4.5-1 of GS NFV-SOL 005. It indicates the onboarding
-      state of the NSD.
+      The enumeration NsdOnboardingStateType shall comply with the
+      provisions defined in Table 5.5.4.5-1 of GS NFV-SOL 005. It
+      indicates the onboarding state of the NSD.
 
-
-      CREATED = The NSD information object is created. UPLOADING = The
-      associated NSD content is being uploaded. PROCESSING = The associated NSD
-      content is being processed, e.g. validation. ONBOARDED = The associated
-      NSD content is on-boarded.
+      CREATED = The NSD information object is created. UPLOADING =
+      The associated NSD content is being uploaded. PROCESSING = The
+      associated NSD content is being processed, e.g. validation.
+      ONBOARDED = The associated NSD content is on-boarded.
     enum:
       - CREATED
       - UPLOADING
       - PROCESSING
       - ONBOARDED
-  ProblemDetails:
-    type: object
+
   NsdUsageStateType:
     type: string
     description: >-
-      The enumeration NsdUsageStateType shall comply with the provisions defined
-      in Table 5.5.4.4-1 of GS NFV-SOL 005. It indicates the usage state of the
-      resource.
-
+      The enumeration NsdUsageStateType shall comply with the
+      provisions defined in Table 5.5.4.4-1 of GS NFV-SOL 005. It
+      indicates the usage state of the resource.
 
       IN_USE = The resource is in use.
 
@@ -2437,108 +828,13 @@ definitions:
     enum:
       - IN_USE
       - NOT_IN_USE
-  KeyValuePairs:
-    type: object
-  CreateNsdInfoRequest:
-    type: object
-    properties:
-      userDefinedData:
-        type: object
-    description: This type creates a completely new NS descriptor resource.
-  PnfdInfoModifications:
-    type: object
-    required:
-      - userDefinedData
-    properties:
-      userDefinedData:
-        type: object
-    description: >-
-      This type represents attribute modifications for an individual PNF
-      descriptor resource based on the "PnfdInfo" data type. The attributes of
-      "PnfdInfo" that can be modified are included in the
-      "PnfdInfoModifications" data type.
-  PnfdInfo:
-    type: object
-    required:
-      - _links
-      - id
-      - pnfdOnboardingState
-      - pnfdUsageState
-    properties:
-      id:
-        type: object
-      pnfdId:
-        type: object
-      pnfdName:
-        type: string
-        description: >-
-          Name of the onboarded PNFD. This information is copied from the PNFD
-          content and shall be present after the PNFD content is on-boarded.
-      pnfdVersion:
-        type: object
-      pnfdProvider:
-        type: string
-        description: >-
-          Provider of the onboarded PNFD. This information is copied from the
-          PNFD content and shall be present after the PNFD content is onboarded.
-      pnfdInvariantId:
-        type: object
-      pnfdOnboardingState:
-        type: string
-        description: >-
-          The enumeration PnfdOnboardingStateType shall comply with the
-          provisions defined in Table 5.5.4.6-1 of GS-NFV SOL005. It indicates
-          the onboarding state of the individual PNF descriptor resource.
 
-
-          CREATED = The PNF descriptor resource is created. UPLOADING = The
-          associated PNFD content is being uploaded. PROCESSING = The associated
-          PNFD content is being processed, e.g. validation. ONBOARDED = The
-          associated PNFD content is on-boarded.
-        enum:
-          - CREATED
-          - UPLOADING
-          - PROCESSING
-          - ONBOARDING
-      onboardingFailureDetails:
-        type: object
-      pnfdUsageState:
-        type: string
-        description: >-
-          The enumeration PnfdUsageStateType shall comply with the provisions
-          defined in Table 5.5.4.7-1 of GS NFV-SOL005. It indicates the usage
-          state of the resource.
-
-
-          IN-USE = The resource is in use.
-
-          NOT_IN_USE = The resource is not-in-use.
-        enum:
-          - IN_USE
-          - NOT_IN_USE
-      userDefinedData:
-        type: object
-        description: >-
-          User defined data for the individual PNF descriptor resource. This
-          attribute can be modified with the PATCH method.
-      _links:
-        required:
-          - pnfd_content
-          - self
-        type: object
-        description: Links to resources related to this resource.
-        properties:
-          self:
-            type: object
-          pnfd_content:
-            type: object
-    description: This type represents a response for the query PNFD operation.
   PnfdOnboardingStateType:
     type: string
     description: >-
-      The enumeration PnfdOnboardingStateType shall comply with the provisions
-      defined in Table 5.5.4.6-1 of GS-NFV SOL005. It indicates the onboarding
-      state of the individual PNF descriptor resource.
+      The enumeration PnfdOnboardingStateType shall comply with the
+      provisions defined in Table 5.5.4.6-1 of GS-NFV SOL005. It indicates
+      the onboarding state of the individual PNF descriptor resource.
 
 
       CREATED = The PNF descriptor resource is created. UPLOADING = The
@@ -2550,12 +846,13 @@ definitions:
       - UPLOADING
       - PROCESSING
       - ONBOARDING
+
   PnfdUsageStateType:
     type: string
     description: >-
       The enumeration PnfdUsageStateType shall comply with the provisions
-      defined in Table 5.5.4.7-1 of GS NFV-SOL005. It indicates the usage state
-      of the resource.
+      defined in Table 5.5.4.7-1 of GS NFV-SOL005. It indicates the usage
+      state of the resource.
 
 
       IN-USE = The resource is in use.
@@ -2564,12 +861,333 @@ definitions:
     enum:
       - IN_USE
       - NOT_IN_USE
+
+  NsdInfoModifications:
+    type: object
+    properties:
+      nsdOperationalState:
+        type: string
+        $ref: '#/definitions/NsdOperationalStateType'
+      userDefinedData:
+        type: object
+        $ref: '#/definitions/KeyValuePairs'
+
+  NsdInfo:
+    type: object
+    required:
+      - _links
+      - id
+      - nsdOnboardingState
+      - nsdOperationalState
+      - nsdUsageState
+    properties:
+      id:
+        type: string
+        format: uuid
+      nsdId:
+        type: string
+        format: uuid
+      nsdName:
+        type: string
+        description: >-
+          Name of the onboarded NSD. This information is copied from the
+          NSD content and shall be present after the NSD content is
+          on-boarded.
+      nsdVersion:
+        type: string
+      nsdDesigner:
+        type: string
+        description: >-
+          Designer of the on-boarded NSD. This information is copied from the
+          NSD content and shall be present after the NSD content is on-boarded.
+      nsdInvariantId:
+        type: string
+        format: uuid
+      vnfPkgIds:
+        type: array
+        items:
+          type: string
+          format: uuid
+      pnfdInfoIds:
+        type: array
+        items:
+          type: string
+          format: uuid
+      nestedNsdInfoIds:
+        type: array
+        items:
+          type: string
+          format: uuid
+      nsdOnboardingState:
+        type: string
+        $ref: '#/definitions/NsdOnboardingStateType'
+      onboardingFailureDetails:
+        type: string
+        $ref: '#/definitions/ProblemDetails'
+      nsdOperationalState:
+        type: string
+        $ref: '#/definitions/NsdOperationalStateType'
+      nsdUsageState:
+        type: string
+        $ref: '#/definitions/NsdUsageStateType'
+      userDefinedData:
+        type: object
+        $ref: '#/definitions/KeyValuePairs'
+      _links:
+        type: string
+        format: uri
+        description: Links to resources related to this resource.
+      self:
+        type: string
+        format: uri
+      nsd_content:
+        type: string
+        format: uri
+    description: This type represents a response for the query NSD operation.
+
+  CreateNsdInfoRequest:
+    type: object
+    properties:
+      userDefinedData:
+        type: object
+        $ref: '#/definitions/KeyValuePairs'
+    description: This type creates a completely new NS descriptor resource.
+
+  PnfdInfoModifications:
+    type: object
+    required:
+      - userDefinedData
+    properties:
+      userDefinedData:
+        type: object
+        $ref: '#/definitions/KeyValuePairs'
+    description: >-
+      This type represents attribute modifications for an individual PNF
+      descriptor resource based on the "PnfdInfo" data type. The attributes of
+      "PnfdInfo" that can be modified are included in the
+      "PnfdInfoModifications" data type.
+
+  PnfdInfo:
+    type: object
+    required:
+      - _links
+      - id
+      - pnfdOnboardingState
+      - pnfdUsageState
+    properties:
+      id:
+        type: string
+        format: uuid
+      pnfdId:
+        type: string
+        format: uuid
+      pnfdName:
+        type: string
+        description: >-
+          Name of the onboarded PNFD. This information is copied from the PNFD
+          content and shall be present after the PNFD content is on-boarded.
+      pnfdVersion:
+        type: string
+      pnfdProvider:
+        type: string
+        description: >-
+          Provider of the onboarded PNFD. This information is copied from the
+          PNFD content and shall be present after the PNFD content is onboarded.
+      pnfdInvariantId:
+        type: string
+        format: uuid
+      pnfdOnboardingState:
+        type: string
+        $ref: '#/definitions/PnfdOnboardingStateType'
+      onboardingFailureDetails:
+        type: string
+        $ref: '#/definitions/ProblemDetails'
+      pnfdUsageState:
+        type: string
+        $ref: '#/definitions/PnfdUsageStateType'
+      userDefinedData:
+        type: object
+        $ref: '#/definitions/KeyValuePairs'
+      _links:
+        type: string
+        format: uri
+        description: Links to resources related to this resource.
+      pnfd_content:
+        type: string
+        format: uri
+      self:
+        type: string
+        format: uri
+    description: This type represents a response for the query PNFD operation.
+
+  NotificationType:
+    type: string
+    description: >-
+      Match particular notification types. Permitted values:
+      NsdOnBoardingNotification, NsdOnboardingFailureNotification,
+      NsdChangeNotification, NsdDeletionNotification
+
+      PnfdOnBoardingNotification, PnfdOnBoardingFailureNotification,
+      PnfdDeletionNotification.
+
+
+      The permitted values of the "notificationTypes" ] attribute are
+      spelled exactly as the names of the notification types to facilitate
+      automated code generation systems.
+    enum:
+      - NsdOnBoardingNotification
+      - NsdOnboardingFailureNotification
+      - NsdChangeNotification
+      - NsdDeletionNotification
+      - PnfdOnBoardingNotification
+      - PnfdOnBoardingFailureNotification
+      - PnfdDeletionNotification
+
+  NsdmNotificationsFilter:
+    type: object
+    properties:
+      notificationTypes:
+        type: array
+        items:
+          type: string
+          $ref: '#/definitions/NotificationType'
+      nsdInfoId:
+        type: string
+        format: uuid
+      nsdId:
+        type: string
+        format: uuid
+      nsdName:
+        type: string
+        description: Match the name of the onboarded NSD.
+      nsdVersion:
+        type: string
+      nsdDesigner:
+        type: string
+        description: Match the NSD designer of the on-boarded NSD.
+      nsdInvariantId:
+        type: string
+        format: uuid
+      vnfPkgIds:
+        type: array
+        items:
+          type: string
+          format: uuid
+      pnfdInfoIds:
+        type: array
+        items:
+          type: string
+          format: uuid
+      nestedNsdInfoIds:
+        type: array
+        items:
+          type: string
+          format: uuid
+      nsdOnboardingState:
+        type: string
+        $ref: '#/definitions/NsdOnboardingStateType'
+      nsdOperationalState:
+        type: string
+        $ref: '#/definitions/NsdOperationalStateType'
+      nsdUsageState:
+        type: string
+        $ref: '#/definitions/NsdUsageStateType'
+      pnfdId:
+        type: string
+        format: uuid
+      pnfdName:
+        type: string
+        description: Match the name of the on-boarded PNFD.
+      pnfdVersion:
+        type: string
+      pnfdProvider:
+        type: string
+        description: Match the provider of the on-boarded PNFD.
+      pnfdInvariantId:
+        type: string
+        format: uuid
+      pnfdOnboardingState:
+        type: string
+        $ref: '#/definitions/PnfdOnboardingStateType'
+      pnfdUsageState:
+        type: string
+        $ref: '#/definitions/PnfdUsageStateType'
+    description: >-
+      This type represents a subscription filter related to notifications about
+      NSD management. It shall comply with the
+
+      provisions defined in Table 5.5.3.2-1 of GS NFV-SOL 005. At a particular
+      nesting level in the filter structure, the following applies: All
+      attributes shall match in order for the filter to match (logical "and"
+      between different filter attributes). If an attribute is an array, the
+      attribute shall match if at least one of the values in the array matches
+      (logical "or" between the values of one filter attribute).
+
+  NsdmSubscription:
+    type: object
+    required:
+      - _links
+      - callbackUri
+      - id
+    properties:
+      id:
+        type: string
+        format: uuid
+      filter:
+        type: object
+        $ref: '#/definitions/NsdmNotificationsFilter'
+        description: >-
+          This type represents a subscription filter related to notifications
+          about NSD management. It shall comply with the
+
+          provisions defined in Table 5.5.3.2-1 of GS NFV-SOL 005. At a
+          particular nesting level in the filter structure, the following
+          applies: All attributes shall match in order for the filter to match
+          (logical "and" between different filter attributes). If an attribute
+          is an array, the attribute shall match if at least one of the values
+          in the array matches (logical "or" between the values of one filter
+          attribute).
+      callbackUri:
+        type: string
+        format: uri
+      _links:
+        type: string
+        format: uri
+        description: Links to resources related to this resource.
+      self:
+        type: string
+        format: uri
+    description: >-
+      This type represents a subscription related to notifications about NSD
+      management.
+
+  NsdmSubscriptionRequest:
+    type: object
+    required:
+      - callbackUri
+    properties:
+      filter:
+        type: object
+        $ref: '#/definitions/NsdmNotificationsFilter'
+      callbackUri:
+        type: string
+        format: uri
+        description: The URI of the endpoint to send the notification to.
+      authentication:
+        type: object
+        $ref: '#/definitions/SubscriptionAuthentication'
+    description: >-
+      This type represents a subscription request related to notifications about
+      NSD management.
+
   CreatePnfdInfoRequest:
     type: object
     properties:
       userDefinedData:
         type: object
+        $ref: '#/definitions/KeyValuePairs'
     description: This type creates a new PNF descriptor resource.
+
   NsdmLinks:
     type: object
     required:
@@ -2577,12 +1195,15 @@ definitions:
       - subscription
     properties:
       nsdInfo:
-        type: object
+        type: string
+        format: uri
       subscription:
-        type: object
+        type: string
+        format: uri
     description: >-
       This type represents the links to resources that an NSD management
       notification can contain.
+
   NsdOnboardingNotification:
     type: object
     required:
@@ -2594,32 +1215,30 @@ definitions:
       - timeStamp
     properties:
       id:
-        type: object
+        type: string
+        format: uuid
       notificationType:
         type: string
+        $ref: '#/definitions/NotificationType'
         description: >-
           Discriminator for the different notification types. Shall be set to
           "NsdOnboardingNotification" for this notification type.
       subscriptionId:
-        type: object
+        type: string
+        format: uuid
       timeStamp:
         type: string
         format: date-time
         description: Date-time of the generation of the notification.
       nsdInfoId:
-        type: object
+        type: string
+        format: uuid
       nsdId:
-        type: object
+        type: string
+        format: uuid
       _links:
         type: object
-        required:
-          - nsdInfo
-          - subscription
-        properties:
-          nsdInfo:
-            type: object
-          subscription:
-            type: object
+        $ref: '#/definitions/NsdmLinks'
         description: >-
           This type represents the links to resources that an NSD management
           notification can contain.
@@ -2629,6 +1248,7 @@ definitions:
       provisions defined in Table 5.5.2.9-1. The support of this notification is
       mandatory. The notification shall be triggered by the NFVO when the
       "nsdOnboardingState" attribute of a new NSD has changed to "ONBOARDED".
+
   NsdOnboardingFailureNotification:
     type: object
     required:
@@ -2640,34 +1260,33 @@ definitions:
       - timeStamp
     properties:
       id:
-        type: object
+        type: string
+        format: uuid
       notificationType:
         type: string
+        $ref: '#/definitions/NotificationType'
         description: >-
           Discriminator for the different notification types. Shall be set to
           "NsdOnboardingFailureNotification" for this notification type.
       subscriptionId:
-        type: object
+        type: string
+        format: uuid
       timeStamp:
         type: string
         format: date-time
         description: Date-time of the generation of the notification.
       nsdInfoId:
-        type: object
+        type: string
+        format: uuid
       nsdId:
-        type: object
+        type: string
+        format: uuid
       onboardingFailureDetails:
         type: object
+        $ref: '#/definitions/ProblemDetails'
       _links:
         type: object
-        required:
-          - nsdInfo
-          - subscription
-        properties:
-          nsdInfo:
-            type: object
-          subscription:
-            type: object
+        $ref: '#/definitions/NsdmLinks'
         description: >-
           This type represents the links to resources that an NSD management
           notification can contain.
@@ -2677,6 +1296,7 @@ definitions:
       provisions defined in Table 5.5.2.10-1. The support of this notification
       is mandatory. The notification shall be triggered by the NFVO when the
       on-boarding of an NSD has failed.
+
   NsdChangeNotification:
     type: object
     required:
@@ -2689,24 +1309,30 @@ definitions:
       - timeStamp
     properties:
       id:
-        type: object
+        type: string
+        format: uuid
       notificationType:
         type: string
+        $ref: '#/definitions/NotificationType'
         description: >-
           Discriminator for the different notification types. Shall be set to
           "NsdChangeNotification" for this notification type.
       subscriptionId:
-        type: object
+        type: string
+        format: uuid
       timeStamp:
         type: string
         format: date-time
         description: Date-time of the generation of the notification.
       nsdInfoId:
-        type: object
+        type: string
+        format: uuid
       nsdId:
-        type: object
+        type: string
+        format: uuid
       nsdOperationalState:
         type: string
+        $ref: '#/definitions/NsdOperationalStateType'
         description: >-
           The enumeration NsdOperationalStateType shall comply with the
           provisions defined in Table 5.5.4.3-1 of GS NFV_SOL 005. It indicates
@@ -2715,19 +1341,9 @@ definitions:
 
           ENABLED = The operational state of the resource is enabled. DISABLED =
           The operational state of the resource is disabled.
-        enum:
-          - ENABLED
-          - DISABLED
       _links:
         type: object
-        required:
-          - nsdInfo
-          - subscription
-        properties:
-          nsdInfo:
-            type: object
-          subscription:
-            type: object
+        $ref: '#/definitions/NsdmLinks'
         description: >-
           This type represents the links to resources that an NSD management
           notification can contain.
@@ -2740,6 +1356,7 @@ definitions:
       this notification is mandatory. The notification shall be triggered by the
       NFVO when the value of the "nsdOperationalState" attribute has changed,
       and the "nsdOperationalState" attribute has the value "ONBOARDED".
+
   NsdDeletionNotification:
     type: object
     required:
@@ -2751,32 +1368,30 @@ definitions:
       - timeStamp
     properties:
       id:
-        type: object
+        type: string
+        format: uuid
       notificationType:
         type: string
+        $ref: '#/definitions/NotificationType'
         description: >-
           Discriminator for the different notification types. Shall be set to
           "NsdDeletionNotification " for this notification type.
       subscriptionId:
-        type: object
+        type: string
+        format: uuid
       timeStamp:
         type: string
         format: date-time
         description: Date-time of the generation of the notification.
       nsdInfoId:
-        type: object
+        type: string
+        format: uuid
       nsdId:
-        type: object
+        type: string
+        format: uuid
       _links:
         type: object
-        required:
-          - nsdInfo
-          - subscription
-        properties:
-          nsdInfo:
-            type: object
-          subscription:
-            type: object
+        $ref: '#/definitions/NsdmLinks'
         description: >-
           This type represents the links to resources that an NSD management
           notification can contain.
@@ -2786,6 +1401,7 @@ definitions:
       comply with the provisions defined in Table 5.5.2.12-1. The support of
       this notification is mandatory. The notification shall be triggered by the
       NFVO when it has deleted an on-boarded NSD.
+
   PnfdmLinks:
     type: object
     required:
@@ -2793,12 +1409,15 @@ definitions:
       - subscription
     properties:
       pnfdInfo:
-        type: object
+        type: string
+        format: uri
       subscription:
-        type: object
+        type: string
+        format: uri
     description: >-
       This type represents the links to resources that a PNFD management
       notification can contain.
+
   PnfdOnboardingNotification:
     type: object
     required:
@@ -2810,32 +1429,30 @@ definitions:
       - timeStamp
     properties:
       id:
-        type: object
+        type: string
+        format: uri
       notificationType:
         type: string
+        $ref: '#/definitions/NotificationType'
         description: >-
           Discriminator for the different notification types. Shall be set to
           "PnfdOnboardingNotification" for this notification type.
       subscriptionId:
-        type: object
+        type: string
+        format: uuid
       timeStamp:
         type: string
         format: date-time
         description: Date-time of the generation of the notification.
       pnfdInfoId:
-        type: object
+        type: string
+        format: uuid
       pnfdId:
-        type: object
+        type: string
+        format: uuid
       _links:
         type: object
-        required:
-          - pnfdInfo
-          - subscription
-        properties:
-          pnfdInfo:
-            type: object
-          subscription:
-            type: object
+        $ref: '#/definitions/PnfdmLinks'
         description: >-
           This type represents the links to resources that a PNFD management
           notification can contain.
@@ -2846,6 +1463,7 @@ definitions:
       PNFD. It shall comply with the provisions defined in Table 5.5.2.13-1. The
       support of this notification is mandatory. The notification is triggered
       when a new PNFD is on-boarded.
+
   PnfdOnboardingFailureNotification:
     type: object
     required:
@@ -2857,34 +1475,33 @@ definitions:
       - timeStamp
     properties:
       id:
-        type: object
+        type: string
+        format: uuid
       notificationType:
         type: string
+        $ref: '#/definitions/NotificationType'
         description: >-
           Discriminator for the different notification types. Shall be set to
           "PnfdOnboardingFailureNotification" for this notification type.
       subscriptionId:
-        type: object
+        type: string
+        format: uuid
       timeStamp:
         type: string
         format: date-time
         description: Date-time of the generation of the notification.
       pnfdInfoId:
-        type: object
+        type: string
+        format: uuid
       pnfdId:
-        type: object
+        type: string
+        format: uuid
       onboardingFailureDetails:
         type: object
+        $ref: '#/definitions/ProblemDetails'
       _links:
         type: object
-        required:
-          - pnfdInfo
-          - subscription
-        properties:
-          pnfdInfo:
-            type: object
-          subscription:
-            type: object
+        $ref: '#/definitions/PnfdmLinks'
         description: >-
           This type represents the links to resources that a PNFD management
           notification can contain.
@@ -2892,6 +1509,7 @@ definitions:
       This type represents a PNFD management notification, which informs the
       receiver of the failure of on-boarding a
        PNFD. It shall comply with the provisions defined in Table 5.5.2.14-1. The support of this notification is mandatory. The notification is triggered when the on-boarding of a PNFD fails.
+
   PnfdDeletionNotification:
     type: object
     required:
@@ -2910,29 +1528,26 @@ definitions:
           notifications shall have the same value.
       notificationType:
         type: string
+        $ref: '#/definitions/NotificationType'
         description: >-
           Discriminator for the different notification types. Shall be set to
           "PnfdDeletionNotification " for this notification type.
       subscriptionId:
-        type: object
+        type: string
+        format: uuid
       timeStamp:
         type: string
         format: date-time
         description: Date-time of the generation of the notification.
       pnfdInfoId:
-        type: object
+        type: string
+        format: uuid
       pnfdId:
-        type: object
+        type: string
+        format: uuid
       _links:
         type: object
-        required:
-          - pnfdInfo
-          - subscription
-        properties:
-          pnfdInfo:
-            type: object
-          subscription:
-            type: object
+        $ref: '#/definitions/PnfdmLinks'
         description: >-
           This type represents the links to resources that a PNFD management
           notification can contain.
@@ -2942,3 +1557,4 @@ definitions:
       comply with the provisions defined in Table 5.5.2.15-1. The support of
       this notification is mandatory. The notification is triggered when an
       on-boarded PNFD is deleted.
+
