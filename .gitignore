@@ -29,3 +29,6 @@ nbbuild/
 #dist/
 nbdist/
 .nb-gradle/
+
+#### SWAGGER CODEGEN ###
+swagger-codegen
