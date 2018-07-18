@@ -16,10 +16,6 @@ info:
     name: ETSI Forge copyright notice
     url: 'https://forge.etsi.org/etsi-forge-copyright-notice.txt'
 
-consumes:
-  - application/json
-  - application/yaml
-
 produces:
   - application/json
   - application/yaml
@@ -61,6 +57,17 @@ paths:
             Error: Invalid attribute selector. The response body shall contain a
             ProblemDetails structure, in which the "detail" attribute should
             convey more information about the error.
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '404':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '500':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
     post:
       summary: Create NSD Info
       operationId: createNsdInfo
@@ -80,9 +87,7 @@ paths:
             $ref: '#/definitions/CreateNsdInfoRequest'
             description: >-
               The CreateNsdInfoRequest contains parameters for creating an NS
-              descriptor resource, as defined in
-
-              clause 5.5.2.4 of GS NFV-SOL 005.
+              descriptor resource, as defined in clause 5.5.2.4 of GS NFV-SOL 005.
       responses:
         '201':
           description: Status 201
@@ -100,6 +105,10 @@ paths:
               description: >-
                 The HTTP response shall include a "Location" HTTP header that
                 contains the resource URI of the new NS descriptor resource.
+        '500':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
 
   '/nsd/v1/ns_descriptors/{nsdInfoId}':
     get:
@@ -120,6 +129,22 @@ paths:
           schema:
             type: object
             $ref: '#/definitions/NsdInfo'
+        '400':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '404':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '409':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '500':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
     delete:
       summary: Delete NSD
       operationId: deleteNSDInfo
@@ -152,6 +177,10 @@ paths:
               (i.e. usageState = IN_USE). The response body shall contain a
               ProblemDetails structure, in which the "detail" attribute shall
               convey more information about the error.
+          '500':
+            schema:
+              type: object
+              $ref: '#/definitions/ProblemDetails'
     patch:
       summary: Update NSD Info
       operationId: updateNSDInfo
@@ -160,27 +189,18 @@ paths:
         of an individual NS descriptor resource.  This method can be used to:
 
         1) Enable a previously disabled individual NS descriptor resource,
-        allowing again its use for instantiation of new
-
-        network service with this descriptor. The usage state (i.e.
-        "IN_USE/NOT_IN_USE") shall not change as a
-
-        result.
+        allowing again its use for instantiation of new network service with this descriptor.
+        The usage state (i.e. "IN_USE/NOT_IN_USE") shall not change as a result.
 
         2) Disable a previously enabled individual NS descriptor resource,
-        preventing any further use for instantiation of
-
-        new network service(s) with this descriptor. The usage state (i.e.
-        "IN_USE/NOT_IN_USE") shall not change
-
-        as a result.
+        preventing any further use for instantiation of new network service(s) with this descriptor.
+        The usage state (i.e. "IN_USE/NOT_IN_USE") shall not change as a result.
 
         3) Modify the user defined data of an individual NS descriptor resource.
 
         This method shall follow the provisions specified in the Tables
-        5.4.3.3.4-1 and 5.4.3.3.4-2 for URI query parameters,
-
-        request and response data structures, and response codes.
+        5.4.3.3.4-1 and 5.4.3.3.4-2 for URI query parameters, request and response data structures,
+        and response codes.
       consumes:
         - application/json
       parameters:
@@ -208,6 +228,10 @@ paths:
 
               NOTE: At least one of the attributes - nsdOperationalState and
               userDefinedData - shall be present.
+        '404':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
         '409':
           description: Status 409
           schema:
@@ -215,6 +239,10 @@ paths:
             $ref: '#/definitions/ProblemDetails'
         '412':
           description: Status 412
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '500':
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
@@ -255,14 +283,18 @@ paths:
 
         NOTE: The structure of the NSD zip file is outside the scope of the
         present document.
+      produces:
+        - application/json
+        - application/yaml
+        - application/zip
       parameters:
-        - name: Accept
-          in: header
-          required: true
-          type: string
-          description: >-
-            The request shall contain the appropriate entries in the "Accept"
-            HTTP header as defined above.
+#        - name: Accept
+#          in: header
+#          required: true
+#          type: string
+#          description: >-
+#            The request shall contain the appropriate entries in the "Accept"
+#            HTTP header as defined above.
         - name: Range
           in: header
           required: false
@@ -311,6 +343,10 @@ paths:
               type: string
             Content-Type:
               type: string
+        '404':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
         '406':
           description: Status 406
           schema:
@@ -345,6 +381,10 @@ paths:
 
               "access after end of file"). The response body may contain a
               ProblemDetails structure.
+        '500':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
     put:
       summary: Upload NSD
       operationId: uploadNSD
@@ -366,6 +406,7 @@ paths:
       consumes:
         - application/json
         - application/yaml
+        - application/zip
       parameters:
         - name: Content-Type
           in: header
@@ -395,6 +436,10 @@ paths:
           description: >-
             The NSD content was successfully uploaded and validated (synchronous
             mode). The response body shall be empty.
+        '404':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
         '409':
           description: >-
             Error: The operation cannot be executed currently, due to a conflict
@@ -404,6 +449,7 @@ paths:
             "detail" attribute shall convey more information about the error.
           schema:
             type: object
+            $ref: '#/definitions/ProblemDetails'
     parameters:
       - name: nsdInfoId
         in: path
@@ -454,6 +500,14 @@ paths:
               Information about zero or more PNF descriptors. The response body
               shall contain a representation of zero or more PNF descriptors, as
               defined in clause 5.5.2.2.
+        '400':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '500':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
     post:
       summary: Create PNFD Info
       operationId: createPNFDInfo
@@ -483,6 +537,14 @@ paths:
               clause 5.5.2.5. The HTTP response shall include a "Location" HTTP
               header that contains the resource URI of the new PNF descriptor
               resource.
+        '400':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '500':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
 
   '/nsd/v1/pnf_descriptors/{pnfdInfoId}':
     get:
@@ -503,6 +565,18 @@ paths:
           schema:
             type: object
             $ref: '#/definitions/PnfdInfo'
+        '400':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '404':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '500':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
     delete:
       summary: Delete PNFD
       operationId: deletePNFDInfo
@@ -524,6 +598,18 @@ paths:
           description: >-
             The operation has completed successfully. The response body shall be
             empty.
+        '400':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '404':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '500':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
     patch:
       summary: Update PNFD Info
       operationId: updatePNFDInfo
@@ -557,10 +643,23 @@ paths:
               descriptor resource based on the "PnfdInfo" data type. The
               attributes of "PnfdInfo" that can be modified are included in the
               "PnfdInfoModifications" data type.
+        '400':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '404':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
         '412':
           description: Status 412
           schema:
             type: object
+            $ref: '#/definitions/ProblemDetails'
+        '500':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
     parameters:
       - name: pnfdInfoId
         in: path
@@ -572,6 +671,10 @@ paths:
       summary: Get PNFD Content
       operationId: getPNFD
       description: The GET method fetches the content of the PNFD.
+      produces:
+        - application/json
+        - application/yaml
+        - application/zip
       parameters: []
       responses:
         '200':
@@ -581,6 +684,18 @@ paths:
             On success, the content of the PNFD is returned. The payload body
             shall contain a copy of the file representing the PNFD. The
             "Content-Type" HTTP header shall be set to "text/plain".
+        '400':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '404':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '500':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
     put:
       summary: Upload PNFD
       operationId: uploadPNFD
@@ -613,8 +728,20 @@ paths:
           description: >-
             The PNFD content was successfully uploaded and validated. The
             response body shall be empty.
+        '400':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '404':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
         '409':
           description: Status 409
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '500':
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
@@ -651,19 +778,28 @@ paths:
               description: >-
                 This type represents a subscription related to notifications
                 about NSD management.
-        '303':
-          description: >-
-            A subscription with the same callbackURI and the same filter already
-            exits and the policy of the NFVO is to not create redundant
-            subscriptions. The response body shall be empty.
-          headers:
-            Location:
-              type: string
-              description: >-
-                The HTTP response shall include a "Location" HTTP header that
-                contains the resource URI of the existing subscription resource.
+#        '303':
+#          description: >-
+#            A subscription with the same callbackURI and the same filter already
+#            exits and the policy of the NFVO is to not create redundant
+#            subscriptions. The response body shall be empty.
+#          headers:
+#            Location:
+#              type: string
+#              description: >-
+#                The HTTP response shall include a "Location" HTTP header that
+#                contains the resource URI of the existing subscription resource.
+        '400':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '500':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
     post:
       summary: Subscribe
+      operationId: createSubscription
       description: >-
         The POST method creates a new subscription. This method shall support
         the URI query parameters, request and response data structures, and
@@ -704,6 +840,28 @@ paths:
               description: |-
                 The HTTP response shall include a "Location:"
                 HTTP header that points to the created subscription resource.
+        '303':
+          description: >-
+            A subscription with the same callbackURI and the same filter already
+            exits and the policy of the NFVO is to not create redundant
+            subscriptions. The response body shall be empty.
+          headers:
+            Location:
+              type: string
+              description: >-
+                The HTTP response shall include a "Location" HTTP header that
+                contains the resource URI of the existing subscription resource.
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '400':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '500':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
 
   '/nsd/v1/subscriptions/{subscriptionId}':
     get:
@@ -724,6 +882,18 @@ paths:
             description: >-
               This type represents a subscription related to notifications about
               NSD management.
+        '400':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '404':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '500':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
     delete:
       summary: Terminate Subscription
       operationId: deleteSubscription
@@ -738,6 +908,18 @@ paths:
           description: >-
             The subscription resource was deleted successfully. The response
             body shall be empty.
+        '400':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '404':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '500':
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
     parameters:
       - name: subscriptionId
         in: path
@@ -747,14 +929,14 @@ paths:
 
 definitions:
 
-  Identifier:
-    type: object
-
-  Uri:
-   type: object
-
-  Link:
-    type: object
+#  Identifier:
+#    type: object
+#
+#  Uri:
+#   type: object
+#
+#  Link:
+#    type: object
 
   SubscriptionAuthentication:
     type: object
