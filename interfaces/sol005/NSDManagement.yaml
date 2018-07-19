@@ -60,11 +60,8 @@ paths:
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
-        '404':
-          schema:
-            type: object
-            $ref: '#/definitions/ProblemDetails'
         '500':
+          description: Status 500
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
@@ -105,7 +102,13 @@ paths:
               description: >-
                 The HTTP response shall include a "Location" HTTP header that
                 contains the resource URI of the new NS descriptor resource.
+        '400':
+          description: Status 400
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
         '500':
+          description: Status 500
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
@@ -130,18 +133,22 @@ paths:
             type: object
             $ref: '#/definitions/NsdInfo'
         '400':
+          description: Status 400
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
         '404':
+          description: Status 404
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
         '409':
+          description: Status 409
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
         '500':
+          description: Status 500
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
@@ -163,6 +170,11 @@ paths:
           description: >-
             The operation has completed successfully. The response body shall be
             empty.
+        '404':
+          description: Status 404
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
         '409':
           description: Status 409
           schema:
@@ -177,10 +189,11 @@ paths:
               (i.e. usageState = IN_USE). The response body shall contain a
               ProblemDetails structure, in which the "detail" attribute shall
               convey more information about the error.
-          '500':
-            schema:
-              type: object
-              $ref: '#/definitions/ProblemDetails'
+        '500':
+          description: Status 500
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
     patch:
       summary: Update NSD Info
       operationId: updateNSDInfo
@@ -228,7 +241,13 @@ paths:
 
               NOTE: At least one of the attributes - nsdOperationalState and
               userDefinedData - shall be present.
+        '400':
+          description: Status 400
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
         '404':
+          description: Status 404
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
@@ -243,6 +262,7 @@ paths:
             type: object
             $ref: '#/definitions/ProblemDetails'
         '500':
+          description: Status 500
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
@@ -344,6 +364,7 @@ paths:
             Content-Type:
               type: string
         '404':
+          description: Status 404
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
@@ -382,6 +403,7 @@ paths:
               "access after end of file"). The response body may contain a
               ProblemDetails structure.
         '500':
+          description: Status 500
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
@@ -436,7 +458,13 @@ paths:
           description: >-
             The NSD content was successfully uploaded and validated (synchronous
             mode). The response body shall be empty.
+        '400':
+          description: Status 400
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
         '404':
+          description: Status 404
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
@@ -447,6 +475,11 @@ paths:
             that the NsdOnboardingState has a value other than CREATED. The
             response body shall contain a ProblemDetails structure, in which the
             "detail" attribute shall convey more information about the error.
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '500':
+          description: Status 500
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
@@ -501,10 +534,12 @@ paths:
               shall contain a representation of zero or more PNF descriptors, as
               defined in clause 5.5.2.2.
         '400':
+          description: Status 400
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
         '500':
+          description: Status 500
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
@@ -538,10 +573,12 @@ paths:
               header that contains the resource URI of the new PNF descriptor
               resource.
         '400':
+          description: Status 400
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
         '500':
+          description: Status 500
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
@@ -566,14 +603,22 @@ paths:
             type: object
             $ref: '#/definitions/PnfdInfo'
         '400':
+          description: Status 400
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
         '404':
+          description: Status 404
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '409':
+          description: Status 409
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
         '500':
+          description: Status 500
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
@@ -599,14 +644,17 @@ paths:
             The operation has completed successfully. The response body shall be
             empty.
         '400':
+          description: Status 400
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
         '404':
+          description: Status 404
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
         '500':
+          description: Status 500
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
@@ -644,10 +692,17 @@ paths:
               attributes of "PnfdInfo" that can be modified are included in the
               "PnfdInfoModifications" data type.
         '400':
+          description: Status 400
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
         '404':
+          description: Status 404
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '409':
+          description: Status 409
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
@@ -657,6 +712,7 @@ paths:
             type: object
             $ref: '#/definitions/ProblemDetails'
         '500':
+          description: Status 500
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
@@ -685,14 +741,22 @@ paths:
             shall contain a copy of the file representing the PNFD. The
             "Content-Type" HTTP header shall be set to "text/plain".
         '400':
+          description: Status 400
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '409':
+          description: Status 409
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
         '404':
+          description: Status 404
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
         '500':
+          description: Status 500
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
@@ -729,10 +793,12 @@ paths:
             The PNFD content was successfully uploaded and validated. The
             response body shall be empty.
         '400':
+          descriprion: Status 400
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
         '404':
+          description: Status 404
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
@@ -742,6 +808,7 @@ paths:
             type: object
             $ref: '#/definitions/ProblemDetails'
         '500':
+          description: Status 500
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
@@ -790,10 +857,12 @@ paths:
 #                The HTTP response shall include a "Location" HTTP header that
 #                contains the resource URI of the existing subscription resource.
         '400':
+          description: Status 400
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
         '500':
+          description: Status 500
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
@@ -855,10 +924,12 @@ paths:
             type: object
             $ref: '#/definitions/ProblemDetails'
         '400':
+          description: Status 400
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
         '500':
+          description: Status 500
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
@@ -883,14 +954,17 @@ paths:
               This type represents a subscription related to notifications about
               NSD management.
         '400':
+          description: Status 400
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
         '404':
+          description: Status 404
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
         '500':
+          description: Status 500
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
@@ -909,14 +983,17 @@ paths:
             The subscription resource was deleted successfully. The response
             body shall be empty.
         '400':
+          description: Status 400
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
         '404':
+          description: Status 404
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
         '500':
+          description: 500
           schema:
             type: object
             $ref: '#/definitions/ProblemDetails'
