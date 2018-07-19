@@ -43,7 +43,7 @@ function compileAPIs()
     log "GENERATING SOL005 APIs"
     cd apigen/sol005nsdmanagement
     mvn clean package
-    cd ..
+    cd ../../
 }
 
 function runAPIs()
@@ -51,7 +51,7 @@ function runAPIs()
     log "RUNNING SOL005 APIs AS A MODULE"
     cd apigen/sol005nsdmanagement
     mvn spring-boot:run 
-    cd ..
+    cd ../../
 }
 
 
