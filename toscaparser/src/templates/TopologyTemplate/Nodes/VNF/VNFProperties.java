@@ -24,15 +24,21 @@ import java.util.*;
 /** Created by rvl on 19.08.16. */
 public class VNFProperties {
 
-  private String vendor = null;
-  private String ID = null;
-  private String version = "";
-  private String vnfPackageLocation;
-  private ArrayList<HashMap<String, String>> deploymentFlavour;
-  private VNFConfigurations configurations = null;
-  private String endpoint = null;
-  private String type = null;
-  private Map<String, String> metadata;
+  private String descriptor_id;
+  private String descriptor_version;
+  private String provider;
+  private String product_name;
+  private String software_version;
+  private String product_info_name;
+  private String product_info_description;
+  private ArrayList<String> vnfm_info;
+  private ArrayList<String> localization_languages;
+  private String default_localization_language;
+  private VNFConfigurableProperties configurable_properties;
+  private VNFInfoModifiableAttributes modifiable_attributes;
+  private String flavour_id;
+  private String flavour_description;
+
 
   public VNFProperties() {}
 
@@ -41,107 +47,180 @@ public class VNFProperties {
 
     Map<String, Object> propertiesMap = (Map<String, Object>) properties;
 
-    if (propertiesMap.containsKey("vendor")) {
-      vendor = (String) propertiesMap.get("vendor");
+    if (propertiesMap.containsKey("descriptor_id")) {
+      this.descriptor_id = (String) propertiesMap.get("descriptor_id");
     }
-    if (propertiesMap.containsKey("version")) {
-      version = String.valueOf(propertiesMap.get("version"));
+
+    if (propertiesMap.containsKey("descriptor_version")) {
+      this.descriptor_version = (String) propertiesMap.get("descriptor_version");
     }
-    if (propertiesMap.containsKey("vnfPackageLocation")) {
-      vnfPackageLocation = (String) propertiesMap.get("vnfPackageLocation");
+
+    if (propertiesMap.containsKey("provider")) {
+      this.provider = (String) propertiesMap.get("provider");
     }
-    if (propertiesMap.containsKey("deploymentFlavour")) {
-      deploymentFlavour =
-          (ArrayList<HashMap<String, String>>) propertiesMap.get("deploymentFlavour");
+
+    if (propertiesMap.containsKey("product_name")) {
+      this.product_name = (String) propertiesMap.get("product_name");
     }
-    if (propertiesMap.containsKey("ID")) {
-      ID = (String) propertiesMap.get("ID");
+
+    if (propertiesMap.containsKey("software_version")) {
+      this.software_version = (String) propertiesMap.get("software_version");
     }
-    if (propertiesMap.containsKey("configurations")) {
-      configurations = new VNFConfigurations(propertiesMap.get("configurations"));
+
+    if (propertiesMap.containsKey("product_info_name")) {
+      this.product_info_name = (String) propertiesMap.get("product_info_name");
     }
-    if (propertiesMap.containsKey("endpoint")) {
-      endpoint = (String) propertiesMap.get("endpoint");
+
+    if (propertiesMap.containsKey("product_info_description")) {
+      this.product_info_description = (String) propertiesMap.get("product_info_description");
     }
-    if (propertiesMap.containsKey("type")) {
-      type = (String) propertiesMap.get("type");
+
+    if (propertiesMap.containsKey("vnfm_info")) {
+      this.vnfm_info = (ArrayList<String>) propertiesMap.get("vnfm_info");
     }
-    /*if (propertiesMap.containsKey("auto_scale_policy")) {
-      auto_scale_policy = new VNFAutoscaling(propertiesMap.get("auto_scale_policy"));
-    }*/
-    if (propertiesMap.containsKey("metadata")) {
-      metadata = (Map<String, String>) propertiesMap.get("metadata");
+
+    if (propertiesMap.containsKey("localization_languages")) {
+      this.localization_languages = (ArrayList<String>) propertiesMap.get("localization_languages");
     }
+
+    if (propertiesMap.containsKey("default_localization_language")) {
+      this.default_localization_language = (String) propertiesMap.get("default_localization_language");
+    }
+
+    if (propertiesMap.containsKey("configurable_properties")) {
+      this.configurable_properties = (VNFConfigurableProperties) propertiesMap.get("configurable_properties");
+    }
+
+    if (propertiesMap.containsKey("modifiable_attributes")) {
+      this.modifiable_attributes = (VNFInfoModifiableAttributes) propertiesMap.get("modifiable_attributes");
+    }
+
+    if (propertiesMap.containsKey("flavour_id")) {
+      this.flavour_id = (String) propertiesMap.get("flavour_id");
+    }
+
+    if (propertiesMap.containsKey("flavour_description")) {
+      this.flavour_description = (String) propertiesMap.get("flavour_description");
+    }
+
   }
 
-  public String getVendor() {
-    return vendor;
+  public String getDescriptor_id() {
+    return descriptor_id;
   }
 
-  public void setVendor(String vendor) {
-    this.vendor = vendor;
+  public void setDescriptor_id(String descriptor_id) {
+    this.descriptor_id = descriptor_id;
   }
 
-  public String getID() {
-    return ID;
+  public String getDescriptor_version() {
+    return descriptor_version;
   }
 
-  public void setID(String ID) {
-    this.ID = ID;
+  public void setDescriptor_version(String descriptor_version) {
+    this.descriptor_version = descriptor_version;
   }
 
-  public String getVersion() {
-    return version;
+  public String getProvider() {
+    return provider;
   }
 
-  public void setVersion(String version) {
-    this.version = version;
+  public void setProvider(String provider) {
+    this.provider = provider;
   }
 
-  public String getVnfPackageLocation() {
-    return vnfPackageLocation;
+  public String getProduct_name() {
+    return product_name;
   }
 
-  public void setVnfPackageLocation(String vnfPackageLocation) {
-    this.vnfPackageLocation = vnfPackageLocation;
+  public void setProduct_name(String product_name) {
+    this.product_name = product_name;
   }
 
-  public ArrayList<HashMap<String, String>> getDeploymentFlavour() {
-    return deploymentFlavour;
+  public String getSoftware_version() {
+    return software_version;
   }
 
-  public void setDeploymentFlavour(ArrayList<HashMap<String, String>> deploymentFlavour) {
-    this.deploymentFlavour = deploymentFlavour;
+  public void setSoftware_version(String software_version) {
+    this.software_version = software_version;
   }
 
-  public VNFConfigurations getConfigurations() {
-    return configurations;
+  public String getProduct_info_name() {
+    return product_info_name;
   }
 
-  public void setConfigurations(VNFConfigurations configurations) {
-    this.configurations = configurations;
+  public void setProduct_info_name(String product_info_name) {
+    this.product_info_name = product_info_name;
   }
 
-  public String getEndpoint() {
-    return endpoint;
+  public String getProduct_info_description() {
+    return product_info_description;
   }
 
-  public void setEndpoint(String endpoint) {
-    this.endpoint = endpoint;
+  public void setProduct_info_description(String product_info_description) {
+    this.product_info_description = product_info_description;
   }
 
-  public String getType() {
-    return type;
+  public ArrayList<String> getVnfm_info() {
+    return vnfm_info;
   }
 
-  public void setType(String type) {
-    this.type = type;
+  public void setVnfm_info(ArrayList<String> vnfm_info) {
+    this.vnfm_info = vnfm_info;
+  }
+
+  public ArrayList<String> getLocalization_languages() {
+    return localization_languages;
+  }
+
+  public void setLocalization_languages(ArrayList<String> localization_languages) {
+    this.localization_languages = localization_languages;
+  }
+
+  public String getDefault_localization_language() {
+    return default_localization_language;
+  }
+
+  public void setDefault_localization_language(String default_localization_language) {
+    this.default_localization_language = default_localization_language;
+  }
+
+  public VNFConfigurableProperties getConfigurable_properties() {
+    return configurable_properties;
+  }
+
+  public void setConfigurable_properties(VNFConfigurableProperties configurable_properties) {
+    this.configurable_properties = configurable_properties;
+  }
+
+  public VNFInfoModifiableAttributes getModifiable_attributes() {
+    return modifiable_attributes;
+  }
+
+  public void setModifiable_attributes(VNFInfoModifiableAttributes modifiable_attributes) {
+    this.modifiable_attributes = modifiable_attributes;
+  }
+
+  public String getFlavour_id() {
+    return flavour_id;
+  }
+
+  public void setFlavour_id(String flavour_id) {
+    this.flavour_id = flavour_id;
+  }
+
+  public String getFlavour_description() {
+    return flavour_description;
+  }
+
+  public void setFlavour_description(String flavour_description) {
+    this.flavour_description = flavour_description;
   }
 
   @Override
   public String toString() {
 
-    return "VNFP : "
+    /*return "VNFP : "
         + "\n"
         + "id : "
         + getID()
@@ -157,14 +236,7 @@ public class VNFProperties {
         + "\n"
         + "depl flavour : "
         + deploymentFlavour
-        + "\n";
-  }
-
-  public Map<String, String> getMetadata() {
-    return metadata;
-  }
-
-  public void setMetadata(Map<String, String> metadata) {
-    this.metadata = metadata;
+        + "\n";*/
+    return "";
   }
 }
