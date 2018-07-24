@@ -15,7 +15,7 @@
  *
  */
 
-package exceptions;
+package it.nextworks.nfvmano.catalogue.common.exceptions;
 
 /** Created by dbo on 01/02/16. */
 public class NotFoundException extends Exception {

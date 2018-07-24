@@ -1,15 +1,15 @@
-package io.swagger.model;
+package it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements;
 
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import io.swagger.model.KeyValuePairs;
-import io.swagger.model.PnfdLinksType;
-import io.swagger.model.PnfdOnboardingStateType;
-import io.swagger.model.PnfdUsageStateType;
-import io.swagger.model.ProblemDetails;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdLinksType;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnboardingStateType;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdUsageStateType;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.ProblemDetails;
 import java.util.UUID;
 import org.springframework.validation.annotation.Validated;
 import javax.validation.Valid;

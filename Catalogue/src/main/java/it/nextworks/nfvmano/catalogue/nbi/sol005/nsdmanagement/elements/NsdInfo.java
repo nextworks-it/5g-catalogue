@@ -1,16 +1,16 @@
-package io.swagger.model;
+package it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements;
 
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import io.swagger.model.KeyValuePairs;
-import io.swagger.model.NsdLinksType;
-import io.swagger.model.NsdOnboardingStateType;
-import io.swagger.model.NsdOperationalStateType;
-import io.swagger.model.NsdUsageStateType;
-import io.swagger.model.ProblemDetails;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdLinksType;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboardingStateType;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOperationalStateType;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdUsageStateType;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.ProblemDetails;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;

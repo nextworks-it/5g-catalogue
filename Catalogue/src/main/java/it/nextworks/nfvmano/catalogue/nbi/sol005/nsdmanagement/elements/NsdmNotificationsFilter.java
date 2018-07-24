@@ -1,16 +1,16 @@
-package io.swagger.model;
+package it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements;
 
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import io.swagger.model.NotificationType;
-import io.swagger.model.NsdOnboardingStateType;
-import io.swagger.model.NsdOperationalStateType;
-import io.swagger.model.NsdUsageStateType;
-import io.swagger.model.PnfdOnboardingStateType;
-import io.swagger.model.PnfdUsageStateType;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NotificationType;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboardingStateType;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOperationalStateType;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdUsageStateType;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnboardingStateType;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdUsageStateType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;

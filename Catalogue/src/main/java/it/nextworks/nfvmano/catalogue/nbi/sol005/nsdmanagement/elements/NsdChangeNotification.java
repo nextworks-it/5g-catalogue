@@ -1,13 +1,13 @@
-package io.swagger.model;
+package it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements;
 
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import io.swagger.model.NotificationType;
-import io.swagger.model.NsdOperationalStateType;
-import io.swagger.model.NsdmLinks;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NotificationType;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOperationalStateType;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdmLinks;
 import java.util.UUID;
 import org.threeten.bp.OffsetDateTime;
 import org.springframework.validation.annotation.Validated;

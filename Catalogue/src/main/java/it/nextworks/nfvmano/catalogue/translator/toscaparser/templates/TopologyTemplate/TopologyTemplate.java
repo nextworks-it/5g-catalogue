@@ -17,7 +17,7 @@
 
 package it.nextworks.nfvmano.catalogue.translator.toscaparser.templates.TopologyTemplate;
 
-import it.nextworks.nfvmano.catalogue.translator.toscaparser.exceptions.NotFoundException;
+import it.nextworks.nfvmano.catalogue.common.exceptions.NotFoundException;
 import it.nextworks.nfvmano.catalogue.translator.toscaparser.templates.TopologyTemplate.Nodes.CP.CPNodeTemplate;
 import it.nextworks.nfvmano.catalogue.translator.toscaparser.templates.TopologyTemplate.Nodes.NS.NSNodeTemplate;
 import it.nextworks.nfvmano.catalogue.translator.toscaparser.templates.TopologyTemplate.Nodes.NodeTemplate;

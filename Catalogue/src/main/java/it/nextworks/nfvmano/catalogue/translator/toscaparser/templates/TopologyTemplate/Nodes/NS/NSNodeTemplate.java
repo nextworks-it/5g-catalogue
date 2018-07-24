@@ -1,6 +1,6 @@
 package it.nextworks.nfvmano.catalogue.translator.toscaparser.templates.TopologyTemplate.Nodes.NS;
 
-import it.nextworks.nfvmano.catalogue.translator.toscaparser.exceptions.NotFoundException;
+import it.nextworks.nfvmano.catalogue.common.exceptions.NotFoundException;
 import it.nextworks.nfvmano.catalogue.translator.toscaparser.templates.TopologyTemplate.Nodes.NodeTemplate;
 
 public class NSNodeTemplate {

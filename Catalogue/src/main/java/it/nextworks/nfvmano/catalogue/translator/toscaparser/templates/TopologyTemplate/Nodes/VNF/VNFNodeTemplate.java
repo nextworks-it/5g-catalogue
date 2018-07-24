@@ -17,7 +17,7 @@
 
 package it.nextworks.nfvmano.catalogue.translator.toscaparser.templates.TopologyTemplate.Nodes.VNF;
 
-import it.nextworks.nfvmano.catalogue.translator.toscaparser.exceptions.NotFoundException;
+import it.nextworks.nfvmano.catalogue.common.exceptions.NotFoundException;
 import it.nextworks.nfvmano.catalogue.translator.toscaparser.templates.TopologyTemplate.Nodes.NodeTemplate;
 
 import java.util.Map;

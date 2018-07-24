@@ -42,7 +42,7 @@ public class FileUtilities {
 
 	private static final Logger log = LoggerFactory.getLogger(FileUtilities.class);
 	
-	@Value("${timeo.localTmpDir}")
+	@Value("${catalogue.localTmpDir}")
 	private String localTmpDir;
 	
 	public FileUtilities() { }
