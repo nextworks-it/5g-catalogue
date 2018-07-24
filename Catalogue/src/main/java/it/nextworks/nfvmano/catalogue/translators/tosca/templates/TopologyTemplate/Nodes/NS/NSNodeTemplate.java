@@ -1,7 +1,7 @@
 package it.nextworks.nfvmano.catalogue.translators.tosca.templates.TopologyTemplate.Nodes.NS;
 
 import it.nextworks.nfvmano.catalogue.common.exceptions.NotFoundException;
-import it.nextworks.nfvmano.catalogue.translators.tosca.templates.TopologyTemplate.Nodes.NodeTemplate;
+import it.nextworks.nfvmano.catalogue.translators.tosca.templates.TopologyTemplate.Nodes.Node;
 
 public class NSNodeTemplate {
 
@@ -14,7 +14,7 @@ public class NSNodeTemplate {
 	public NSNodeTemplate() {
 	}
 
-	public NSNodeTemplate(NodeTemplate nodeTemplate, String nodeName) throws NotFoundException {
+	public NSNodeTemplate(Node nodeTemplate, String nodeName) throws NotFoundException {
 
 		this.name = nodeName;
 		this.type = nodeTemplate.getType();

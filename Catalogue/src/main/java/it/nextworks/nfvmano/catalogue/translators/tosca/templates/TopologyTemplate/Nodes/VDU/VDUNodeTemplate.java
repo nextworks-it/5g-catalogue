@@ -21,7 +21,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import it.nextworks.nfvmano.catalogue.translators.tosca.templates.TopologyTemplate.Nodes.NodeTemplate;
+import it.nextworks.nfvmano.catalogue.translators.tosca.templates.TopologyTemplate.Nodes.Node;
 
 @SuppressWarnings({ "unsafe", "unchecked" })
 public class VDUNodeTemplate {
@@ -31,7 +31,7 @@ public class VDUNodeTemplate {
 	private Set<String> artifacts = new LinkedHashSet<>();
 	private VDUProperties properties;
 
-	public VDUNodeTemplate(NodeTemplate nodeTemplate, String name) {
+	public VDUNodeTemplate(Node nodeTemplate, String name) {
 
 		this.name = name;
 		this.type = nodeTemplate.getType();

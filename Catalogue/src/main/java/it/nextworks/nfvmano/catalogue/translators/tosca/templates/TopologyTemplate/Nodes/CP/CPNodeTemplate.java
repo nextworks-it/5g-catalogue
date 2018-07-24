@@ -17,7 +17,7 @@
 
 package it.nextworks.nfvmano.catalogue.translators.tosca.templates.TopologyTemplate.Nodes.CP;
 
-import it.nextworks.nfvmano.catalogue.translators.tosca.templates.TopologyTemplate.Nodes.NodeTemplate;
+import it.nextworks.nfvmano.catalogue.translators.tosca.templates.TopologyTemplate.Nodes.Node;
 
 /** Created by rvl on 17.08.16. */
 public class CPNodeTemplate {
@@ -27,7 +27,7 @@ public class CPNodeTemplate {
 	private CPProperties properties = null;
 	private CPRequirements requirements = null;
 
-	public CPNodeTemplate(NodeTemplate nodeTemplate) {
+	public CPNodeTemplate(Node nodeTemplate, String nodeName) {
 		this.type = nodeTemplate.getType();
 
 		if (nodeTemplate.getProperties() != null) {

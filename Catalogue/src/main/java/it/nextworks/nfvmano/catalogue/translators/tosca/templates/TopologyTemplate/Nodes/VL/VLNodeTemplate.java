@@ -22,7 +22,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import it.nextworks.nfvmano.catalogue.translators.tosca.templates.TopologyTemplate.Nodes.NodeTemplate;
+import it.nextworks.nfvmano.catalogue.translators.tosca.templates.TopologyTemplate.Nodes.Node;
 
 @SuppressWarnings({ "unsafe", "unchecked" })
 public class VLNodeTemplate {
@@ -32,7 +32,7 @@ public class VLNodeTemplate {
 	private String vendor = "";
 	private Set<String> qos;
 
-	public VLNodeTemplate(NodeTemplate vl, String name) {
+	public VLNodeTemplate(Node vl, String name) {
 
 		this.name = name;
 

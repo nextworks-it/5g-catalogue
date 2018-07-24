@@ -20,12 +20,12 @@ package it.nextworks.nfvmano.catalogue.translators.tosca.templates;
 import it.nextworks.nfvmano.catalogue.translators.tosca.templates.TopologyTemplate.TopologyTemplate;
 
 /** Created by rvl on 17.08.16. */
-public class VNFDTemplate {
+public class VNFD {
 
 	private String tosca_definitions_version;
 	private String tosca_default_namespace;
 	private String description = "";
-	private TOSCAMetadata metadata;
+	private Metadata metadata;
 	private Object node_types = null;
 	private TopologyTemplate topology_template;
 
@@ -53,11 +53,11 @@ public class VNFDTemplate {
 		this.description = description;
 	}
 
-	public TOSCAMetadata getMetadata() {
+	public Metadata getMetadata() {
 		return metadata;
 	}
 
-	public void setMetadata(TOSCAMetadata metadata) {
+	public void setMetadata(Metadata metadata) {
 		this.metadata = metadata;
 	}
 

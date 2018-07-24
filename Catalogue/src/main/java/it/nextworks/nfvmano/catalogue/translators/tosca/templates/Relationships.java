@@ -20,7 +20,7 @@ package it.nextworks.nfvmano.catalogue.translators.tosca.templates;
 import java.util.ArrayList;
 
 /** Created by rvl on 22.08.16. */
-public class RelationshipsTemplate {
+public class Relationships {
 
 	private String type;
 	private String source;
