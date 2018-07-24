@@ -16,6 +16,7 @@
 package it.nextworks.nfvmano.catalogue.plugins.mano;
 
 import it.nextworks.nfvmano.catalogue.plugins.Plugin;
+import it.nextworks.nfvmano.catalogue.plugins.PluginType;
 
 public abstract class MANOPlugin extends Plugin {
 
@@ -23,7 +24,7 @@ public abstract class MANOPlugin extends Plugin {
 	MANO mano;
 	
 	public MANOPlugin(MANOType manoType, MANO mano) {
-		super();
+		super(mano.getManoId(), PluginType.MANO);
 		this.manoType = manoType;
 		this.mano = mano;
 	}
