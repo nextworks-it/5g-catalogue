@@ -20,14 +20,14 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 
 public class PluginsManager {
-	
-private static final Logger log = LoggerFactory.getLogger(PluginsManager.class);
-	
+
+	private static final Logger log = LoggerFactory.getLogger(PluginsManager.class);
+
 	public Map<String, MANOPlugin> manoDrivers = new HashMap<>();
-	
+
 	@Value("${catalogue.defaultMANOType}")
 	private String defaultMANOType;
-	
+
 	@Autowired
 	MANORepository MANORepository;
 
@@ -37,7 +37,7 @@ private static final Logger log = LoggerFactory.getLogger(PluginsManager.class);
 
 	@PostConstruct
 	public void initPlugins() {
-		
+
 		log.debug("Initializing MANO plugins");
 		List<MANO> manos = MANORepository.findAll();
 		for (MANO mano : manos) {
@@ -50,15 +50,15 @@ private static final Logger log = LoggerFactory.getLogger(PluginsManager.class);
 		}
 		log.debug("MANO plugins initialized");
 	}
-	
+
 	public void addMANO(MANO mano) throws MalformattedElementException {
 		MANOPlugin manoPlugin = buildMANOPlugin(mano);
 		manoDrivers.put(mano.getManoId(), manoPlugin);
 		log.debug("Loaded plugin for MANO " + mano.getManoId());
-		
-		//TODO: notify MANO plugin creation
+
+		// TODO: notify MANO plugin creation
 	}
-	
+
 	private MANOPlugin buildMANOPlugin(MANO mano) throws MalformattedElementException {
 		if (mano.getManoType().equals(MANOType.DUMMY)) {
 			return new DummyMANOPlugin(mano.getManoType(), mano);

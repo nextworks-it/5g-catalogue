@@ -1,10 +1,10 @@
 package it.nextworks.nfvmano.catalogue.plugins;
 
 public abstract class Plugin {
-	
+
 	private String pluginId;
 	private PluginType pluginType;
-	
+
 	public Plugin(String pluginId, PluginType pluginType) {
 		this.pluginId = pluginId;
 		this.pluginType = pluginType;

@@ -22,7 +22,7 @@ public abstract class MANOPlugin extends Plugin {
 
 	MANOType manoType;
 	MANO mano;
-	
+
 	public MANOPlugin(MANOType manoType, MANO mano) {
 		super(mano.getManoId(), PluginType.MANO);
 		this.manoType = manoType;

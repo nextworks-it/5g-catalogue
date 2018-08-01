@@ -16,7 +16,5 @@
 package it.nextworks.nfvmano.catalogue.plugins.mano;
 
 public enum MANOType {
-	OSM,
-	TIMEO,
-	DUMMY
+	OSM, TIMEO, DUMMY
 }

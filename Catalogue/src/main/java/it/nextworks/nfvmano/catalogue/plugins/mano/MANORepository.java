@@ -22,5 +22,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MANORepository extends JpaRepository<MANO, Long> {
 	Optional<MANO> findByManoId(String manoId);
+
 	List<MANO> findByManoType(MANOType manoType);
 }

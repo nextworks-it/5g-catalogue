@@ -19,11 +19,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class OpenSourceMANOPlugin extends MANOPlugin {
-	
+
 	private static final Logger log = LoggerFactory.getLogger(OpenSourceMANOPlugin.class);
 
 	public OpenSourceMANOPlugin(MANOType manoType, MANO mano) {
 		super(manoType, mano);
 		// TODO Auto-generated constructor stub
-	}	
+	}
 }
