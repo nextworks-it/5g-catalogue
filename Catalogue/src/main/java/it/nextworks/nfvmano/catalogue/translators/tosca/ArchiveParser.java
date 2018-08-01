@@ -45,10 +45,10 @@ public class ArchiveParser {
 	}
 
 	public DescriptorTemplate archiveToDescriptors(MultipartFile file) throws IOException {
-		
+
 		if (!file.isEmpty()) {
 			byte[] bytes = file.getBytes();
-			
+
 			InputStream input = new ByteArrayInputStream(bytes);
 			parseArchive(input);
 		}

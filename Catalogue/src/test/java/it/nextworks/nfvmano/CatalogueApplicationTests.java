@@ -27,5 +27,4 @@ public class CatalogueApplicationTests {
 	@Test
 	public void contextLoads() {
 	}
-
 }
