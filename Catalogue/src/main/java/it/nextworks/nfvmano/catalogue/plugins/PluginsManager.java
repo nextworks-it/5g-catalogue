@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANORepository;
@@ -25,12 +26,15 @@ private static final Logger log = LoggerFactory.getLogger(PluginsManager.class);
 	
 	public Map<String, MANOPlugin> manoDrivers = new HashMap<>();
 	
+	@Value("${kafka.bootstrap-servers}")
+	private String bootstrapServers;
+	
 	@Value("${catalogue.defaultMANOType}")
 	private String defaultMANOType;
 	
 	@Autowired
-	MANORepository MANORepository;
-
+	private MANORepository MANORepository;
+	
 	public PluginsManager() {
 
 	}
@@ -61,9 +65,9 @@ private static final Logger log = LoggerFactory.getLogger(PluginsManager.class);
 	
 	private MANOPlugin buildMANOPlugin(MANO mano) throws MalformattedElementException {
 		if (mano.getManoType().equals(MANOType.DUMMY)) {
-			return new DummyMANOPlugin(mano.getManoType(), mano);
+			return new DummyMANOPlugin(mano.getManoType(), mano, bootstrapServers);
 		} else if (mano.getManoType().equals(MANOType.OSM)) {
-			return new OpenSourceMANOPlugin(mano.getManoType(), mano);
+			return new OpenSourceMANOPlugin(mano.getManoType(), mano, bootstrapServers);
 		} else {
 			throw new MalformattedElementException("Unsupported MANO type. Skipping.");
 		}

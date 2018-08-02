@@ -20,11 +20,11 @@ import it.nextworks.nfvmano.catalogue.plugins.PluginType;
 
 public abstract class MANOPlugin extends Plugin {
 
-	MANOType manoType;
-	MANO mano;
+	protected MANOType manoType;
+	protected MANO mano;
 	
-	public MANOPlugin(MANOType manoType, MANO mano) {
-		super(mano.getManoId(), PluginType.MANO);
+	public MANOPlugin(MANOType manoType, MANO mano, String kafkaBootstrapServers) {
+		super(mano.getManoId(), PluginType.MANO, kafkaBootstrapServers);
 		this.manoType = manoType;
 		this.mano = mano;
 	}
