@@ -91,14 +91,14 @@
 
 		<dependency>
 			<groupId>it.nextworks.nfvmano</groupId>
-			<artifactId>NfvManoLibsCommon</artifactId>
-			<version>0.0.2-SNAPSHOT</version>
+			<artifactId>NfvManoLibsSol001Common</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
 			<groupId>it.nextworks.nfvmano</groupId>
-			<artifactId>NfvManoLibsDescriptors</artifactId>
-			<version>0.0.2-SNAPSHOT</version>
+			<artifactId>NfvManoLibsSol001Descriptors</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 
 		<!--dependency>
