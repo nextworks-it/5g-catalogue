@@ -24,8 +24,6 @@ import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 import org.springframework.kafka.listener.MessageListener;
 import org.springframework.kafka.listener.config.ContainerProperties;
@@ -77,7 +75,7 @@ public class DummyMANOPlugin extends MANOPlugin {
 		    					break;
 		    			}
 		    		} catch (Exception e) {
-		    			log.error("Error while receiving message from kafka bus: ", e.getMessage());
+		    			log.error("Error while receiving message from kafka bus: " + e.getMessage());
 		    		}
 		        }
 	
@@ -86,7 +84,7 @@ public class DummyMANOPlugin extends MANOPlugin {
 		    container.start();
 		    
 		} catch (Exception e) {
-			log.error("Cannot initialize Kafka listener container service for consumer dummy-mano ", mano.getManoId());
+			log.error("Cannot initialize Kafka listener container service for consumer dummy-mano " + mano.getManoId());
 		}
 	}
 	
@@ -95,6 +93,8 @@ public class DummyMANOPlugin extends MANOPlugin {
 	    props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
 	    props.put(ConsumerConfig.GROUP_ID_CONFIG, kafkaGroupId);
 	    props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
+	    props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, 500);
+	    props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
 	    props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class);
 	    props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 	    return props;
