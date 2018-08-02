@@ -22,8 +22,12 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
 
 	private static final Logger log = LoggerFactory.getLogger(OpenSourceMANOPlugin.class);
 
-	public OpenSourceMANOPlugin(MANOType manoType, MANO mano) {
-		super(manoType, mano);
+	public OpenSourceMANOPlugin(MANOType manoType, MANO mano, String kafkaBootstrapServers) {
+		super(manoType, mano, kafkaBootstrapServers);
 		// TODO Auto-generated constructor stub
+	}	
+	
+	public void init() {
+		//TODO: put here logic to init kafka listener
 	}
 }
