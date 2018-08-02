@@ -10,34 +10,36 @@ import javax.validation.constraints.*;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
- * The enumeration NsdUsageStateType shall comply with the provisions defined in Table 5.5.4.4-1 of GS NFV-SOL 005. It indicates the usage state of the resource. IN_USE = The resource is in use. NOT_IN_USE = The resource is not-in-use.
+ * The enumeration NsdUsageStateType shall comply with the provisions defined in
+ * Table 5.5.4.4-1 of GS NFV-SOL 005. It indicates the usage state of the
+ * resource. IN_USE = The resource is in use. NOT_IN_USE = The resource is
+ * not-in-use.
  */
 public enum NsdUsageStateType {
-  
-  IN_USE("IN_USE"),
-  
-  NOT_IN_USE("NOT_IN_USE");
 
-  private String value;
+	IN_USE("IN_USE"),
 
-  NsdUsageStateType(String value) {
-    this.value = value;
-  }
+	NOT_IN_USE("NOT_IN_USE");
 
-  @Override
-  @JsonValue
-  public String toString() {
-    return String.valueOf(value);
-  }
+	private String value;
 
-  @JsonCreator
-  public static NsdUsageStateType fromValue(String text) {
-    for (NsdUsageStateType b : NsdUsageStateType.values()) {
-      if (String.valueOf(b.value).equals(text)) {
-        return b;
-      }
-    }
-    return null;
-  }
+	NsdUsageStateType(String value) {
+		this.value = value;
+	}
+
+	@Override
+	@JsonValue
+	public String toString() {
+		return String.valueOf(value);
+	}
+
+	@JsonCreator
+	public static NsdUsageStateType fromValue(String text) {
+		for (NsdUsageStateType b : NsdUsageStateType.values()) {
+			if (String.valueOf(b.value).equals(text)) {
+				return b;
+			}
+		}
+		return null;
+	}
 }
-

@@ -16,67 +16,65 @@ import javax.validation.constraints.*;
 @Validated
 @javax.annotation.Generated(value = "io.swagger.codegen.languages.SpringCodegen", date = "2018-07-23T16:31:35.952+02:00")
 
-public class NsdmLinksType   {
-  @JsonProperty("self")
-  private String self = null;
+public class NsdmLinksType {
+	@JsonProperty("self")
+	private String self = null;
 
-  public NsdmLinksType self(String self) {
-    this.self = self;
-    return this;
-  }
+	public NsdmLinksType self(String self) {
+		this.self = self;
+		return this;
+	}
 
-  /**
-   * Get self
-   * @return self
-  **/
-  @ApiModelProperty(value = "")
+	/**
+	 * Get self
+	 * 
+	 * @return self
+	 **/
+	@ApiModelProperty(value = "")
 
+	public String getSelf() {
+		return self;
+	}
 
-  public String getSelf() {
-    return self;
-  }
+	public void setSelf(String self) {
+		this.self = self;
+	}
 
-  public void setSelf(String self) {
-    this.self = self;
-  }
+	@Override
+	public boolean equals(java.lang.Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		NsdmLinksType nsdmLinksType = (NsdmLinksType) o;
+		return Objects.equals(this.self, nsdmLinksType.self);
+	}
 
+	@Override
+	public int hashCode() {
+		return Objects.hash(self);
+	}
 
-  @Override
-  public boolean equals(java.lang.Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    NsdmLinksType nsdmLinksType = (NsdmLinksType) o;
-    return Objects.equals(this.self, nsdmLinksType.self);
-  }
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("class NsdmLinksType {\n");
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(self);
-  }
+		sb.append("    self: ").append(toIndentedString(self)).append("\n");
+		sb.append("}");
+		return sb.toString();
+	}
 
-  @Override
-  public String toString() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("class NsdmLinksType {\n");
-    
-    sb.append("    self: ").append(toIndentedString(self)).append("\n");
-    sb.append("}");
-    return sb.toString();
-  }
-
-  /**
-   * Convert the given object to string with each line indented by 4 spaces
-   * (except the first line).
-   */
-  private String toIndentedString(java.lang.Object o) {
-    if (o == null) {
-      return "null";
-    }
-    return o.toString().replace("\n", "\n    ");
-  }
+	/**
+	 * Convert the given object to string with each line indented by 4 spaces
+	 * (except the first line).
+	 */
+	private String toIndentedString(java.lang.Object o) {
+		if (o == null) {
+			return "null";
+		}
+		return o.toString().replace("\n", "\n    ");
+	}
 }
-

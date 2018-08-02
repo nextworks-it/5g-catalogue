@@ -35,7 +35,7 @@ import it.nextworks.nfvmano.catalogue.messages.CatalogueMessageType;
 import it.nextworks.nfvmano.catalogue.plugins.utils.PluginKafkaConsumerUtils;
 
 public class DummyMANOPlugin extends MANOPlugin {
-	
+
 	private static final Logger log = LoggerFactory.getLogger(DummyMANOPlugin.class);
 	
 	public DummyMANOPlugin(MANOType manoType, MANO mano, String kafkaBootstrapServers) {

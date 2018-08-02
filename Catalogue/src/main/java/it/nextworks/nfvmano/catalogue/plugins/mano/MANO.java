@@ -25,12 +25,12 @@ public class MANO {
 	@Id
 	@GeneratedValue
 	private Long id;
-	
+
 	private String manoId;
 	private MANOType manoType;
-		
+
 	public MANO() {
-		//JPA only
+		// JPA only
 	}
 
 	public MANO(String manoId, MANOType manoType) {

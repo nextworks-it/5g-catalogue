@@ -14,236 +14,248 @@ import javax.validation.Valid;
 import javax.validation.constraints.*;
 
 /**
- * This type represents an NSD management notification, which informs the receiver of the successful on-boarding of an NSD. It shall comply with the provisions defined in Table 5.5.2.9-1. The support of this notification is mandatory. The notification shall be triggered by the NFVO when the \&quot;nsdOnboardingState\&quot; attribute of a new NSD has changed to \&quot;ONBOARDED\&quot;.
+ * This type represents an NSD management notification, which informs the
+ * receiver of the successful on-boarding of an NSD. It shall comply with the
+ * provisions defined in Table 5.5.2.9-1. The support of this notification is
+ * mandatory. The notification shall be triggered by the NFVO when the
+ * \&quot;nsdOnboardingState\&quot; attribute of a new NSD has changed to
+ * \&quot;ONBOARDED\&quot;.
  */
 @ApiModel(description = "This type represents an NSD management notification, which informs the receiver of the successful on-boarding of an NSD. It shall comply with the provisions defined in Table 5.5.2.9-1. The support of this notification is mandatory. The notification shall be triggered by the NFVO when the \"nsdOnboardingState\" attribute of a new NSD has changed to \"ONBOARDED\".")
 @Validated
 @javax.annotation.Generated(value = "io.swagger.codegen.languages.SpringCodegen", date = "2018-07-23T16:31:35.952+02:00")
 
-public class NsdOnboardingNotification   {
-  @JsonProperty("id")
-  private UUID id = null;
+public class NsdOnboardingNotification {
+	@JsonProperty("id")
+	private UUID id = null;
 
-  @JsonProperty("notificationType")
-  private NotificationType notificationType = null;
+	@JsonProperty("notificationType")
+	private NotificationType notificationType = null;
 
-  @JsonProperty("subscriptionId")
-  private UUID subscriptionId = null;
+	@JsonProperty("subscriptionId")
+	private UUID subscriptionId = null;
 
-  @JsonProperty("timeStamp")
-  private OffsetDateTime timeStamp = null;
+	@JsonProperty("timeStamp")
+	private OffsetDateTime timeStamp = null;
 
-  @JsonProperty("nsdInfoId")
-  private UUID nsdInfoId = null;
+	@JsonProperty("nsdInfoId")
+	private UUID nsdInfoId = null;
 
-  @JsonProperty("nsdId")
-  private UUID nsdId = null;
+	@JsonProperty("nsdId")
+	private UUID nsdId = null;
 
-  @JsonProperty("_links")
-  private NsdmLinks links = null;
+	@JsonProperty("_links")
+	private NsdmLinks links = null;
 
-  public NsdOnboardingNotification id(UUID id) {
-    this.id = id;
-    return this;
-  }
+	public NsdOnboardingNotification id(UUID id) {
+		this.id = id;
+		return this;
+	}
 
-  /**
-   * Get id
-   * @return id
-  **/
-  @ApiModelProperty(required = true, value = "")
-  @NotNull
+	/**
+	 * Get id
+	 * 
+	 * @return id
+	 **/
+	@ApiModelProperty(required = true, value = "")
+	@NotNull
 
-  @Valid
+	@Valid
 
-  public UUID getId() {
-    return id;
-  }
+	public UUID getId() {
+		return id;
+	}
 
-  public void setId(UUID id) {
-    this.id = id;
-  }
+	public void setId(UUID id) {
+		this.id = id;
+	}
 
-  public NsdOnboardingNotification notificationType(NotificationType notificationType) {
-    this.notificationType = notificationType;
-    return this;
-  }
+	public NsdOnboardingNotification notificationType(NotificationType notificationType) {
+		this.notificationType = notificationType;
+		return this;
+	}
 
-  /**
-   * Discriminator for the different notification types. Shall be set to \"NsdOnboardingNotification\" for this notification type.
-   * @return notificationType
-  **/
-  @ApiModelProperty(required = true, value = "Discriminator for the different notification types. Shall be set to \"NsdOnboardingNotification\" for this notification type.")
-  @NotNull
+	/**
+	 * Discriminator for the different notification types. Shall be set to
+	 * \"NsdOnboardingNotification\" for this notification type.
+	 * 
+	 * @return notificationType
+	 **/
+	@ApiModelProperty(required = true, value = "Discriminator for the different notification types. Shall be set to \"NsdOnboardingNotification\" for this notification type.")
+	@NotNull
 
-  @Valid
+	@Valid
 
-  public NotificationType getNotificationType() {
-    return notificationType;
-  }
+	public NotificationType getNotificationType() {
+		return notificationType;
+	}
 
-  public void setNotificationType(NotificationType notificationType) {
-    this.notificationType = notificationType;
-  }
+	public void setNotificationType(NotificationType notificationType) {
+		this.notificationType = notificationType;
+	}
 
-  public NsdOnboardingNotification subscriptionId(UUID subscriptionId) {
-    this.subscriptionId = subscriptionId;
-    return this;
-  }
+	public NsdOnboardingNotification subscriptionId(UUID subscriptionId) {
+		this.subscriptionId = subscriptionId;
+		return this;
+	}
 
-  /**
-   * Get subscriptionId
-   * @return subscriptionId
-  **/
-  @ApiModelProperty(value = "")
+	/**
+	 * Get subscriptionId
+	 * 
+	 * @return subscriptionId
+	 **/
+	@ApiModelProperty(value = "")
 
-  @Valid
+	@Valid
 
-  public UUID getSubscriptionId() {
-    return subscriptionId;
-  }
+	public UUID getSubscriptionId() {
+		return subscriptionId;
+	}
 
-  public void setSubscriptionId(UUID subscriptionId) {
-    this.subscriptionId = subscriptionId;
-  }
+	public void setSubscriptionId(UUID subscriptionId) {
+		this.subscriptionId = subscriptionId;
+	}
 
-  public NsdOnboardingNotification timeStamp(OffsetDateTime timeStamp) {
-    this.timeStamp = timeStamp;
-    return this;
-  }
+	public NsdOnboardingNotification timeStamp(OffsetDateTime timeStamp) {
+		this.timeStamp = timeStamp;
+		return this;
+	}
 
-  /**
-   * Date-time of the generation of the notification.
-   * @return timeStamp
-  **/
-  @ApiModelProperty(required = true, value = "Date-time of the generation of the notification.")
-  @NotNull
+	/**
+	 * Date-time of the generation of the notification.
+	 * 
+	 * @return timeStamp
+	 **/
+	@ApiModelProperty(required = true, value = "Date-time of the generation of the notification.")
+	@NotNull
 
-  @Valid
+	@Valid
 
-  public OffsetDateTime getTimeStamp() {
-    return timeStamp;
-  }
+	public OffsetDateTime getTimeStamp() {
+		return timeStamp;
+	}
 
-  public void setTimeStamp(OffsetDateTime timeStamp) {
-    this.timeStamp = timeStamp;
-  }
+	public void setTimeStamp(OffsetDateTime timeStamp) {
+		this.timeStamp = timeStamp;
+	}
 
-  public NsdOnboardingNotification nsdInfoId(UUID nsdInfoId) {
-    this.nsdInfoId = nsdInfoId;
-    return this;
-  }
+	public NsdOnboardingNotification nsdInfoId(UUID nsdInfoId) {
+		this.nsdInfoId = nsdInfoId;
+		return this;
+	}
 
-  /**
-   * Get nsdInfoId
-   * @return nsdInfoId
-  **/
-  @ApiModelProperty(required = true, value = "")
-  @NotNull
+	/**
+	 * Get nsdInfoId
+	 * 
+	 * @return nsdInfoId
+	 **/
+	@ApiModelProperty(required = true, value = "")
+	@NotNull
 
-  @Valid
+	@Valid
 
-  public UUID getNsdInfoId() {
-    return nsdInfoId;
-  }
+	public UUID getNsdInfoId() {
+		return nsdInfoId;
+	}
 
-  public void setNsdInfoId(UUID nsdInfoId) {
-    this.nsdInfoId = nsdInfoId;
-  }
+	public void setNsdInfoId(UUID nsdInfoId) {
+		this.nsdInfoId = nsdInfoId;
+	}
 
-  public NsdOnboardingNotification nsdId(UUID nsdId) {
-    this.nsdId = nsdId;
-    return this;
-  }
+	public NsdOnboardingNotification nsdId(UUID nsdId) {
+		this.nsdId = nsdId;
+		return this;
+	}
 
-  /**
-   * Get nsdId
-   * @return nsdId
-  **/
-  @ApiModelProperty(required = true, value = "")
-  @NotNull
+	/**
+	 * Get nsdId
+	 * 
+	 * @return nsdId
+	 **/
+	@ApiModelProperty(required = true, value = "")
+	@NotNull
 
-  @Valid
+	@Valid
 
-  public UUID getNsdId() {
-    return nsdId;
-  }
+	public UUID getNsdId() {
+		return nsdId;
+	}
 
-  public void setNsdId(UUID nsdId) {
-    this.nsdId = nsdId;
-  }
+	public void setNsdId(UUID nsdId) {
+		this.nsdId = nsdId;
+	}
 
-  public NsdOnboardingNotification links(NsdmLinks links) {
-    this.links = links;
-    return this;
-  }
+	public NsdOnboardingNotification links(NsdmLinks links) {
+		this.links = links;
+		return this;
+	}
 
-  /**
-   * This type represents the links to resources that an NSD management notification can contain.
-   * @return links
-  **/
-  @ApiModelProperty(required = true, value = "This type represents the links to resources that an NSD management notification can contain.")
-  @NotNull
+	/**
+	 * This type represents the links to resources that an NSD management
+	 * notification can contain.
+	 * 
+	 * @return links
+	 **/
+	@ApiModelProperty(required = true, value = "This type represents the links to resources that an NSD management notification can contain.")
+	@NotNull
 
-  @Valid
+	@Valid
 
-  public NsdmLinks getLinks() {
-    return links;
-  }
+	public NsdmLinks getLinks() {
+		return links;
+	}
 
-  public void setLinks(NsdmLinks links) {
-    this.links = links;
-  }
+	public void setLinks(NsdmLinks links) {
+		this.links = links;
+	}
 
+	@Override
+	public boolean equals(java.lang.Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		NsdOnboardingNotification nsdOnboardingNotification = (NsdOnboardingNotification) o;
+		return Objects.equals(this.id, nsdOnboardingNotification.id)
+				&& Objects.equals(this.notificationType, nsdOnboardingNotification.notificationType)
+				&& Objects.equals(this.subscriptionId, nsdOnboardingNotification.subscriptionId)
+				&& Objects.equals(this.timeStamp, nsdOnboardingNotification.timeStamp)
+				&& Objects.equals(this.nsdInfoId, nsdOnboardingNotification.nsdInfoId)
+				&& Objects.equals(this.nsdId, nsdOnboardingNotification.nsdId)
+				&& Objects.equals(this.links, nsdOnboardingNotification.links);
+	}
 
-  @Override
-  public boolean equals(java.lang.Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    NsdOnboardingNotification nsdOnboardingNotification = (NsdOnboardingNotification) o;
-    return Objects.equals(this.id, nsdOnboardingNotification.id) &&
-        Objects.equals(this.notificationType, nsdOnboardingNotification.notificationType) &&
-        Objects.equals(this.subscriptionId, nsdOnboardingNotification.subscriptionId) &&
-        Objects.equals(this.timeStamp, nsdOnboardingNotification.timeStamp) &&
-        Objects.equals(this.nsdInfoId, nsdOnboardingNotification.nsdInfoId) &&
-        Objects.equals(this.nsdId, nsdOnboardingNotification.nsdId) &&
-        Objects.equals(this.links, nsdOnboardingNotification.links);
-  }
+	@Override
+	public int hashCode() {
+		return Objects.hash(id, notificationType, subscriptionId, timeStamp, nsdInfoId, nsdId, links);
+	}
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(id, notificationType, subscriptionId, timeStamp, nsdInfoId, nsdId, links);
-  }
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("class NsdOnboardingNotification {\n");
 
-  @Override
-  public String toString() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("class NsdOnboardingNotification {\n");
-    
-    sb.append("    id: ").append(toIndentedString(id)).append("\n");
-    sb.append("    notificationType: ").append(toIndentedString(notificationType)).append("\n");
-    sb.append("    subscriptionId: ").append(toIndentedString(subscriptionId)).append("\n");
-    sb.append("    timeStamp: ").append(toIndentedString(timeStamp)).append("\n");
-    sb.append("    nsdInfoId: ").append(toIndentedString(nsdInfoId)).append("\n");
-    sb.append("    nsdId: ").append(toIndentedString(nsdId)).append("\n");
-    sb.append("    links: ").append(toIndentedString(links)).append("\n");
-    sb.append("}");
-    return sb.toString();
-  }
+		sb.append("    id: ").append(toIndentedString(id)).append("\n");
+		sb.append("    notificationType: ").append(toIndentedString(notificationType)).append("\n");
+		sb.append("    subscriptionId: ").append(toIndentedString(subscriptionId)).append("\n");
+		sb.append("    timeStamp: ").append(toIndentedString(timeStamp)).append("\n");
+		sb.append("    nsdInfoId: ").append(toIndentedString(nsdInfoId)).append("\n");
+		sb.append("    nsdId: ").append(toIndentedString(nsdId)).append("\n");
+		sb.append("    links: ").append(toIndentedString(links)).append("\n");
+		sb.append("}");
+		return sb.toString();
+	}
 
-  /**
-   * Convert the given object to string with each line indented by 4 spaces
-   * (except the first line).
-   */
-  private String toIndentedString(java.lang.Object o) {
-    if (o == null) {
-      return "null";
-    }
-    return o.toString().replace("\n", "\n    ");
-  }
+	/**
+	 * Convert the given object to string with each line indented by 4 spaces
+	 * (except the first line).
+	 */
+	private String toIndentedString(java.lang.Object o) {
+		if (o == null) {
+			return "null";
+		}
+		return o.toString().replace("\n", "\n    ");
+	}
 }
-
