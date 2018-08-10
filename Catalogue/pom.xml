@@ -103,11 +103,11 @@
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 
-		<dependency>
+		<!-- dependency>
 			<groupId>it.nextworks.nfvmano</groupId>
 			<artifactId>NfvManoLibsSol001Descriptors</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
+		</dependency -->
 
 		<!--dependency>
 			<groupId>it.nextworks.nfvmano</groupId>

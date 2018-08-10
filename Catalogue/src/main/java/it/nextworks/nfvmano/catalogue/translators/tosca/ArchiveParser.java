@@ -10,12 +10,12 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import it.nextworks.nfvmano.libs.descriptors.common.templates.DescriptorTemplate;
+//import it.nextworks.nfvmano.libs.descriptors.common.templates.DescriptorTemplate;
 
 @Service
 public class ArchiveParser {
 
-	@SuppressWarnings("resource")
+	/*@SuppressWarnings("resource")
 	private void parseArchive(InputStream archive) throws IOException {
 		ZipEntry entry;
 		try (ZipInputStream zipStream = new ZipInputStream(archive)) {
@@ -54,5 +54,5 @@ public class ArchiveParser {
 		}
 
 		return null;
-	}
+	}*/
 }

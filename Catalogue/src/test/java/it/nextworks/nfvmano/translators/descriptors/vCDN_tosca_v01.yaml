@@ -1,5 +1,5 @@
-tosca_definitions_version: tosca_simple_profile_for_nfv_1_0_0
-tosca_default_namespace: test
+toscaDefinitionsVersion: tosca_simple_profile_for_nfv_1_0_0
+toscaDefaultNamespace: test
 description: UC3 vCache Network Descriptor
 
 metadata:
@@ -7,9 +7,9 @@ metadata:
  vendor: Nextworks
  version: v0.1
 
-topology_template:
+topologyTemplate:
 
- node_templates:
+ nodeTemplates:
 
   vCDN_NS:
    type: tosca.nodes.nfv.NS
