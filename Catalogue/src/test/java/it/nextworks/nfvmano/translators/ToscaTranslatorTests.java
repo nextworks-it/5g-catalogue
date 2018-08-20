@@ -45,10 +45,11 @@ public class ToscaTranslatorTests {
 				System.out.println(ReflectionToStringBuilder.toString(node.getValue(), ToStringStyle.MULTI_LINE_STYLE));
 			}
 			
-			/*try {
+			try {
 				List<NSNode> nsNodes = descriptorTemplate.getTopologyTemplate().getNSNodes();
 				
 				for (NSNode nsNode : nsNodes) {
+
 					System.out.println(ReflectionToStringBuilder.toString(nsNode, ToStringStyle.MULTI_LINE_STYLE));
 					
 					NSProperties nsProperties = nsNode.getProperties();
@@ -62,6 +63,7 @@ public class ToscaTranslatorTests {
 				System.out.println(ReflectionToStringBuilder.toString(nsVirtualLinks, ToStringStyle.MULTI_LINE_STYLE));
 				
 				for (NsVirtualLinkNode nsVLink : nsVirtualLinks) {
+					
 					System.out.println(ReflectionToStringBuilder.toString(nsVLink, ToStringStyle.MULTI_LINE_STYLE));
 					
 					NsVirtualLinkProperties nsVLinkProperties = nsVLink.getProperties();
@@ -70,7 +72,7 @@ public class ToscaTranslatorTests {
 			} catch (MalformattedElementException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}*/
+			}
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
