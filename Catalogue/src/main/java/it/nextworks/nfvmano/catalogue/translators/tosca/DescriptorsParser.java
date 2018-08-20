@@ -10,12 +10,12 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
-//import it.nextworks.nfvmano.libs.descriptors.common.templates.DescriptorTemplate;
+import it.nextworks.nfvmano.libs.descriptors.common.templates.DescriptorTemplate;
 
 @Service
 public class DescriptorsParser {
 
-	/*public static DescriptorTemplate fileToDescriptorTemplate(String fileName)
+	public static DescriptorTemplate fileToDescriptorTemplate(String fileName)
 			throws JsonParseException, JsonMappingException, IOException {
 
 		ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
@@ -33,5 +33,5 @@ public class DescriptorsParser {
 		DescriptorTemplate descriptorTemplate = mapper.readValue(descriptor, DescriptorTemplate.class);
 
 		return descriptorTemplate;
-	}*/
+	}
 }

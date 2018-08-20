@@ -21,10 +21,10 @@ topologyTemplate:
     invariantId: afcd9ca2-1d10-467e-990e-a0226a946ee4
    capabilities:
    requirements:
-    virtualLink: [management, cache, origin, user]
+    virtualLinks: [management, cache, origin, user]
 
   management:
-   type: tosca.nodes.nfv.nsvirtuallink
+   type: tosca.nodes.nfv.NsVirtualLink
    properties:
     provider: Nextworks
     version: v0.1
@@ -37,12 +37,12 @@ topologyTemplate:
       leaf: 10000
     connectivityType:
      layerProtocol: IPV4
-     flowPatter: LINE
+     flowPattern: LINE
     serviceAvailability:
      level: LEVEL_1
 
   cache:
-   type: tosca.nodes.nfv.nsvirtuallink
+   type: tosca.nodes.nfv.NsVirtualLink
    properties:
     provider: Nextworks
     version: v0.1
@@ -55,12 +55,12 @@ topologyTemplate:
       leaf: 10000
     connectivityType:
      layerProtocol: IPV4
-     flowPatter: LINE
+     flowPattern: LINE
     serviceAvailability:
      level: LEVEL_1
 
   origin:
-   type: tosca.nodes.nfv.nsvirtuallink
+   type: tosca.nodes.nfv.NsVirtualLink
    properties:
     provider: Nextworks
     version: v0.1
@@ -73,12 +73,12 @@ topologyTemplate:
       leaf: 10000
     connectivityType:
      layerProtocol: IPV4
-     flowPatter: LINE
+     flowPattern: LINE
     serviceAvailability:
      level: LEVEL_1
 
   user:
-   type: tosca.nodes.nfv.nsvirtuallink
+   type: tosca.nodes.nfv.NsVirtualLink
    properties:
     provider: Nextworks
     version: v0.1
@@ -91,7 +91,7 @@ topologyTemplate:
       leaf: 10000
     connectivityType:
      layerProtocol: IPV4
-     flowPatter: LINE
+     flowPattern: LINE
     serviceAvailability:
      level: LEVEL_1
      
