@@ -1,6 +1,7 @@
 package it.nextworks.nfvmano.catalogue.plugins.mano.osm;
 
 import it.nextworks.nfvmano.catalogue.OperationFailedException;
+import it.nextworks.nfvmano.catalogue.messages.NsdDeletionNotificationMessage;
 import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import org.junit.BeforeClass;
@@ -57,7 +58,7 @@ public class OpenSourceMANOPluginTest {
 
     @Test
     @Ignore  // As above
-    public void testacceptOnboardNotf() throws InterruptedException, OperationFailedException {
+    public void testacceptOnboardNotf() throws InterruptedException {
         init();
         plugin.acceptNsdOnBoardingNotification(new NsdOnBoardingNotificationMessage(
                 "test_info_id",
@@ -75,6 +76,20 @@ public class OpenSourceMANOPluginTest {
         init();
         plugin.deleteNsd("cirros_2vnf_ns", "test_delete_nsd");
         plugin.deleteVnfd("cirros_vnf", "test_delete_vnf");
+        Thread.sleep(2000);
+        assertFalse(plugin.getVnfdIdList().contains("VNFD cirros_vnf"));
+        assertFalse(plugin.getNsdIdList().contains("NSD cirros_2vnf_ns"));
+    }
+
+
+    @Test
+    @Ignore  // As above
+    public void testacceptDeleteNotf() throws InterruptedException {
+        init();
+        plugin.acceptNsdDeletionNotification(new NsdDeletionNotificationMessage(
+                "test_info_id",
+                "test_nsd_id"
+        ));
         Thread.sleep(2000);
         assertFalse(plugin.getVnfdIdList().contains("VNFD cirros_vnf"));
         assertFalse(plugin.getNsdIdList().contains("NSD cirros_2vnf_ns"));
