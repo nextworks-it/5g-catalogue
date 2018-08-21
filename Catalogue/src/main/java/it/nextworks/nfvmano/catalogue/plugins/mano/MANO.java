@@ -18,9 +18,11 @@ package it.nextworks.nfvmano.catalogue.plugins.mano;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 
 @Entity
-public class MANO {
+public abstract class MANO {
 
 	@Id
 	@GeneratedValue

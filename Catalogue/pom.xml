@@ -26,6 +26,14 @@
 		<springfox-version>2.5.0</springfox-version>
 	</properties>
 
+	<!-- for OSM plugin -->
+	<repositories>
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
+	</repositories>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -96,7 +104,6 @@
 		</dependency>
 	    
 
-
 		<dependency>
 			<groupId>it.nextworks.nfvmano</groupId>
 			<artifactId>NfvManoLibsSol001Common</artifactId>
@@ -145,6 +152,13 @@
 	        <groupId>org.apache.commons</groupId>
 	        <artifactId>commons-lang3</artifactId>
 	        </dependency>
+
+		<!-- Dependencies for OSM plugin -->
+		<dependency>
+			<groupId>com.github.girtel</groupId>
+			<artifactId>J-OSMClient</artifactId>
+			<version>master-1.1-gedaa134-33</version>
+		</dependency>
 	</dependencies>
 
 	<build>

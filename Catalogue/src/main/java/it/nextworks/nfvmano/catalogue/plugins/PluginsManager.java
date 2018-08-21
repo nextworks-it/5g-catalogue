@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANORepository;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
-import it.nextworks.nfvmano.catalogue.plugins.mano.OpenSourceMANOPlugin;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OpenSourceMANOPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.DummyMANOPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;

@@ -5,15 +5,10 @@ public abstract class Plugin {
 	protected String pluginId;
 	protected PluginType pluginType;
 	//KAFKA config attributes
-	protected String kafkaBootstrapServers;
-	protected String kafkaGroupId;
 	
-	public Plugin(String pluginId, PluginType pluginType, String kafkaBootstrapServers) {
+	public Plugin(String pluginId, PluginType pluginType) {
 		this.pluginId = pluginId;
 		this.pluginType = pluginType;
-		this.kafkaBootstrapServers = kafkaBootstrapServers;
-		//IMPORTANT - KAFKA config: we set group id equal to pluginId (assuming pluginId is unique)
-		this.kafkaGroupId = pluginId;
 	}
 
 	public String getPluginId() {
@@ -32,14 +27,6 @@ public abstract class Plugin {
 		this.pluginType = pluginType;
 	}
 
-	public String getKafkaBootstrapServers() {
-		return kafkaBootstrapServers;
-	}
-
-	public String getKafkaGroupId() {
-		return kafkaGroupId;
-	}
-	
 	public abstract void init();
 	
 }
