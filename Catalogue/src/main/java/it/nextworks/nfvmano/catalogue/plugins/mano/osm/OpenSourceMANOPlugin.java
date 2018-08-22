@@ -38,8 +38,6 @@ import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 public class OpenSourceMANOPlugin extends MANOPlugin {
@@ -62,8 +60,6 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
 		}
 		osm = (OSMMano) mano;
 	}
-
-	private final Executor callbacks = Executors.newCachedThreadPool();
 
 	@Override
 	public void init() {

@@ -1,7 +1,6 @@
 package it.nextworks.nfvmano.catalogue.plugins.mano;
 
 import javax.persistence.Entity;
-import javax.persistence.Table;
 
 /**
  * Created by Marco Capitani on 21/08/18.
