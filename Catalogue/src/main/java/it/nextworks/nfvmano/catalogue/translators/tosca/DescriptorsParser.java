@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
-import it.nextworks.nfvmano.libs.descriptors.common.templates.DescriptorTemplate;
+import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 
 @Service
 public class DescriptorsParser {

@@ -10,7 +10,7 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import it.nextworks.nfvmano.libs.descriptors.common.templates.DescriptorTemplate;
+import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 
 @Service
 public class ArchiveParser {

@@ -12,8 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
-import it.nextworks.nfvmano.libs.descriptors.common.templates.DescriptorTemplate;
-import it.nextworks.nfvmano.libs.descriptors.common.templates.Node;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSProperties;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSRequirements;
@@ -21,6 +19,8 @@ import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NsVirtualLink.NsVirtualLi
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NsVirtualLink.NsVirtualLinkProperties;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.Sap.SapNode;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.Sap.SapProperties;
+import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
+import it.nextworks.nfvmano.libs.descriptors.templates.Node;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFCapabilities;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFProperties;
