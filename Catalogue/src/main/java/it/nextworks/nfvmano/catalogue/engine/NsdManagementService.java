@@ -10,7 +10,6 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
@@ -23,6 +22,7 @@ import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
 import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
+import it.nextworks.nfvmano.libs.common.exceptions.NotPermittedOperationException;
 
 @Service
 public class NsdManagementService {
@@ -52,16 +52,33 @@ public class NsdManagementService {
 		return nsdInfo;
 	}
 	
-	public void deleteNsdInfo(String nsdInfoId) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, MethodNotImplementedException {
+	public void deleteNsdInfo(String nsdInfoId) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
 		log.debug("Processing request to delete an NSD info.");
 		
-		Optional<NsdInfoResource> optional = nsdInfoRepo.findById(UUID.fromString(nsdInfoId));
+		if (nsdInfoId == null) throw new MalformattedElementException("Invalid NSD info ID.");
 		
-		if (optional.isPresent()) {
-			log.debug("Found NSD info resource with id: " + nsdInfoId);
-			nsdInfoRepo.deleteById(UUID.fromString(nsdInfoId));
-			log.debug("Deleted NSD info resource with id: " + nsdInfoId);
+		try {
+			UUID id = UUID.fromString(nsdInfoId);
+
+			Optional<NsdInfoResource> optional = nsdInfoRepo.findById(id);
+
+			if (optional.isPresent()) {
+				log.debug("Found NSD info resource with id: " + nsdInfoId);
+				optional.get().isDeletable();
+				nsdInfoRepo.deleteById(id);
+				log.debug("Deleted NSD info resource with id: " + nsdInfoId);
+				
+				//TODO: remove NSD content
+				
+			} else {
+				log.debug("NSD info resource with id " + nsdInfoId + "not found.");
+				throw new NotExistingEntityException("NSD info resource with id " + nsdInfoId + "not found.");
+			}
+		} catch (IllegalArgumentException e) {
+			log.error("Wrong ID format: " + nsdInfoId);
+			throw new MalformattedElementException("Wrong ID format: " + nsdInfoId);
 		}
+		
 	}
 
 	public Object getNsd(String nsdInfoId) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, MethodNotImplementedException {
@@ -72,17 +89,24 @@ public class NsdManagementService {
 	public NsdInfo getNsdInfo(String nsdInfoId) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, MethodNotImplementedException {
 		log.debug("Processing request to get an NSD info.");
 		
-		Optional<NsdInfoResource> optional = nsdInfoRepo.findById(UUID.fromString(nsdInfoId));
-		
-		if (optional.isPresent()) {
-			NsdInfoResource nsdInfoResource = optional.get();
-			log.debug("Found NSD info resource with id: " + nsdInfoId);
-			NsdInfo nsdInfo = buildNsdInfo(nsdInfoResource);
-			log.debug("Created NSD info with id: " + nsdInfoId);
-			return nsdInfo;
-		} else {
-			log.debug("NSD info resource with id " + nsdInfoId + "not found.");
-			return null;
+		try {
+			UUID id = UUID.fromString(nsdInfoId);
+
+			Optional<NsdInfoResource> optional = nsdInfoRepo.findById(id);
+
+			if (optional.isPresent()) {
+				NsdInfoResource nsdInfoResource = optional.get();
+				log.debug("Found NSD info resource with id: " + nsdInfoId);
+				NsdInfo nsdInfo = buildNsdInfo(nsdInfoResource);
+				log.debug("Built NSD info with id: " + nsdInfoId);
+				return nsdInfo;
+			} else {
+				log.debug("NSD info resource with id " + nsdInfoId + "not found.");
+				throw new NotExistingEntityException("NSD info resource with id " + nsdInfoId + "not found.");
+			}
+		} catch (IllegalArgumentException e) {
+			log.error("Wrong ID format: " + nsdInfoId);
+			throw new MalformattedElementException("Wrong ID format: " + nsdInfoId);
 		}
 	}
 	
@@ -95,6 +119,7 @@ public class NsdManagementService {
 		for (NsdInfoResource nsdInfoResource : nsdInfoResources) {
 			NsdInfo nsdInfo = buildNsdInfo(nsdInfoResource);
 			nsdInfos.add(nsdInfo);
+			log.debug("Added NSD info " + nsdInfoResource.getId());
 		}
 		return nsdInfos;
 	}
@@ -129,4 +154,5 @@ public class NsdManagementService {
 		nsdInfo.setVnfPkgIds(nsdInfoResource.getVnfPkgIds());
 		return nsdInfo;
 	}
+	
 }

@@ -12,6 +12,4 @@ public interface NsdInfoRepository extends JpaRepository<NsdInfoResource, UUID> 
 
 	Optional<NsdInfoResource> findById(UUID id);
 	
-	List<NsdInfoResource> findAll();
-	
 }

@@ -69,7 +69,7 @@ public interface NsdApi {
 			@ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class) })
 	@RequestMapping(value = "/nsd/v1/ns_descriptors/{nsdInfoId}", produces = { "application/json",
 			"application/yaml" }, method = RequestMethod.DELETE)
-	ResponseEntity<Void> deleteNSDInfo(
+	ResponseEntity<?> deleteNSDInfo(
 			@ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId);
 
 	@ApiOperation(value = "Delete PNFD", nickname = "deletePNFDInfo", notes = "The DELETE method deletes an individual PNF descriptor resource. An individual PNF descriptor resource can only be deleted when there is no NS instance using it or there is NSD referencing it. To delete all PNFD versions identified by a particular value of the \"pnfdInvariantId\" attribute, the procedure is to first use the GET method with filter \"pnfdInvariantId\" towards the PNF descriptors resource to find all versions of the PNFD. Then, the client uses the DELETE method described in this clause to delete each PNFD version individually. This method shall follow the provisions specified in the Tables 5.4.6.3.5-1 and 5.4.6.3.5-2 of GS NFV-SOL 005 for URI query parameters, request and response data structures, and response codes.", tags = {})
@@ -117,7 +117,7 @@ public interface NsdApi {
 			@ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class) })
 	@RequestMapping(value = "/nsd/v1/ns_descriptors/{nsdInfoId}", produces = { "application/json",
 			"application/yaml" }, method = RequestMethod.GET)
-	ResponseEntity<NsdInfo> getNSDInfo(
+	ResponseEntity<?> getNSDInfo(
 			@ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId);
 
 	@ApiOperation(value = "Query NSD Info", nickname = "getNSDsInfo", notes = "The GET method queries information about multiple NS descriptor resources. This method shall follow the provisions specified in the Tables 5.4.2.3.2-1 and 5.4.2.3.2-2 of GS NFV-SOL 005 for URI query parameters, request and response data structures, and response codes.", response = NsdInfo.class, responseContainer = "List", tags = {})
@@ -127,7 +127,7 @@ public interface NsdApi {
 			@ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class) })
 	@RequestMapping(value = "/nsd/v1/ns_descriptors", produces = { "application/json",
 			"application/yaml" }, method = RequestMethod.GET)
-	ResponseEntity<List<NsdInfo>> getNSDsInfo();
+	ResponseEntity<?> getNSDsInfo();
 
 	@ApiOperation(value = "Get PNFD Content", nickname = "getPNFD", notes = "The GET method fetches the content of the PNFD.", response = Object.class, tags = {})
 	@ApiResponses(value = {

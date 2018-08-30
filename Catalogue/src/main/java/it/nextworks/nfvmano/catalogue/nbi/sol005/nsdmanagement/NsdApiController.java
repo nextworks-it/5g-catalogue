@@ -1,5 +1,6 @@
 package it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement;
 
+import it.nextworks.nfvmano.catalogue.common.Utilities;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementService;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.CreateNsdInfoRequest;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdInfo;
@@ -8,9 +9,10 @@ import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdmSubs
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdmSubscriptionRequest;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdInfo;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdInfoModifications;
-import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.ProblemDetails;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
-import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
+import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
+import it.nextworks.nfvmano.libs.common.exceptions.NotPermittedOperationException;
 import io.swagger.annotations.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -113,10 +115,29 @@ public class NsdApiController implements NsdApi {
 		return new ResponseEntity<NsdmSubscription>(HttpStatus.NOT_IMPLEMENTED);
 	}
 
-	public ResponseEntity<Void> deleteNSDInfo(
+	public ResponseEntity<?> deleteNSDInfo(
 			@ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId) {
 		String accept = request.getHeader("Accept");
-		return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
+		log.debug("Processing REST request to delete NSD info " + nsdInfoId);
+		try {
+			nsdManagementService.deleteNsdInfo(nsdInfoId);
+			log.debug("NSD info removed");
+			return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
+		} catch (NotExistingEntityException e) {
+			log.error("NSD info " + nsdInfoId + " not found");
+			return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(), "NSD info " + nsdInfoId + " not found"), HttpStatus.NOT_FOUND);
+		} catch (NotPermittedOperationException e) {
+			log.error("NSD info " +  nsdInfoId + " cannot be removed: " + e.getMessage());
+			return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(), "NSD info " +  nsdInfoId + " cannot be removed: " + e.getMessage()), HttpStatus.CONFLICT);
+		} catch (MalformattedElementException e) {
+			log.error("NSD info " + nsdInfoId + " cannot be removed: not acceptable NSD Info ID format");
+			return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(), "NSD info " + nsdInfoId + " cannot be removed: not acceptable NSD Info ID format"), 
+					HttpStatus.BAD_REQUEST);
+		} catch (Exception e) {
+			log.error("NSD info " + nsdInfoId + " cannot be removed: general internal error.");
+			return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(), "NSD info " + nsdInfoId + " cannot be removed: general internal error."), 
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	public ResponseEntity<Void> deletePNFDInfo(
@@ -148,9 +169,10 @@ public class NsdApiController implements NsdApi {
 		return new ResponseEntity<Object>(HttpStatus.NOT_IMPLEMENTED);
 	}
 
-	public ResponseEntity<NsdInfo> getNSDInfo(
+	public ResponseEntity<?> getNSDInfo(
 			@ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId) {
 		String accept = request.getHeader("Accept");
+		/*
 		if (accept != null && accept.contains("application/json")) {
 			try {
 				return new ResponseEntity<NsdInfo>(objectMapper.readValue(
@@ -163,10 +185,32 @@ public class NsdApiController implements NsdApi {
 		}
 
 		return new ResponseEntity<NsdInfo>(HttpStatus.NOT_IMPLEMENTED);
+		*/
+		log.debug("Processing REST request to retrieve NSD info " + nsdInfoId);
+		if (accept != null && accept.contains("application/json")) {
+			try {
+				NsdInfo nsdInfo = nsdManagementService.getNsdInfo(nsdInfoId);
+				log.debug("NSD info retrieved");
+				return new ResponseEntity<NsdInfo>(nsdInfo, HttpStatus.OK);
+			} catch (NotExistingEntityException e) {
+				log.error("NSD info " + nsdInfoId + " not found");
+				return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(), "NSD info " + nsdInfoId + " not found"), HttpStatus.NOT_FOUND);
+			} catch (MalformattedElementException e) {
+				log.error("NSD info " + nsdInfoId + " cannot be found: not acceptable NSD Info ID format");
+				return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(), "NSD info " + nsdInfoId + " cannot be found: not acceptable NSD Info ID format"), 
+						HttpStatus.BAD_REQUEST);
+			} catch (Exception e) {
+				log.error("NSD info " + nsdInfoId + " cannot be retrieved: general internal error.");
+				return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(), "NSD info " + nsdInfoId + " cannot be retrieved: general internal error."), 
+						HttpStatus.INTERNAL_SERVER_ERROR);
+			}
+		} else return new ResponseEntity<String>("Unacceptable ACCEPT header type.", HttpStatus.BAD_REQUEST);
 	}
 
-	public ResponseEntity<List<NsdInfo>> getNSDsInfo() {
+	public ResponseEntity<?> getNSDsInfo() {
+		log.debug("Processing REST request to retrieve all NSD infos.");
 		String accept = request.getHeader("Accept");
+		/*
 		if (accept != null && accept.contains("application/json")) {
 			try {
 				return new ResponseEntity<List<NsdInfo>>(objectMapper.readValue(
@@ -179,6 +223,18 @@ public class NsdApiController implements NsdApi {
 		}
 
 		return new ResponseEntity<List<NsdInfo>>(HttpStatus.NOT_IMPLEMENTED);
+		*/
+		//TODO: process URI parameters for filters and attributes. At the moment it returns all the NSD infos.
+		if (accept != null && accept.contains("application/json")) {
+			try {
+				List<NsdInfo> nsdInfos = nsdManagementService.getAllNsdInfos();
+				log.debug("NSD infos retrieved");
+				return new ResponseEntity<List<NsdInfo>>(nsdInfos, HttpStatus.OK);
+			} catch (Exception e) {
+				log.error("General exception while retrieving set of NSD infos: " + e.getMessage());
+				return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(), "General exception while retrieving set of NSD infos: " + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+			}
+		} else return new ResponseEntity<String>("Unacceptable ACCEPT header type.", HttpStatus.BAD_REQUEST);
 	}
 
 	public ResponseEntity<Object> getPNFD(
