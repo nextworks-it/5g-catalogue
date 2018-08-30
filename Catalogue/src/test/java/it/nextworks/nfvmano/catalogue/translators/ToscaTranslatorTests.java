@@ -76,18 +76,18 @@ public class ToscaTranslatorTests {
 			String currentDirectory;
 			File file = new File("");
 			currentDirectory = file.getAbsolutePath();
-			currentDirectory = currentDirectory.concat("/src/test/java/it/nextworks/nfvmano/translators/descriptors/");
+			currentDirectory = currentDirectory.concat("/src/test/java/it/nextworks/nfvmano/catalogue/translators/descriptors/");
 			DescriptorTemplate descriptorTemplate = descriptorParser
 					.fileToDescriptorTemplate(currentDirectory + "vCDN_tosca_v01.yaml");
 			System.out.println(ReflectionToStringBuilder.toString(descriptorTemplate, ToStringStyle.MULTI_LINE_STYLE));
 			
-			try {
+			/*try {
 				String id = StoreNSDescriptorTemplate(descriptorTemplate);
 				System.out.println("NS DESCRIPTOR GENERATED ID: " + id);
 			} catch (AlreadyExistingEntityException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
-			}
+			}*/
 
 			Map<String, Node> nodes = descriptorTemplate.getTopologyTemplate().getNodeTemplates();
 

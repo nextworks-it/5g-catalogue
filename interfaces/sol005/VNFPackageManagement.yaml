@@ -1,0 +1,65 @@
+swagger: '2.0'
+
+info:
+  version: 2.4.1
+  title: DRAFT - SOL005 - VNF Package Management Interface
+  description: >
+    DRAFT - SOL005 - VNF Package Management Interface IMPORTANT: Please note
+    that this file might be not aligned to the current version of the ETSI Group
+    Specification it refers to and has not been approved by the ETSI NFV ISG. In
+    case of discrepancies the published ETSI Group Specification takes
+    precedence. Please report bugs to
+    https://forge.etsi.org/bugzilla/buglist.cgi?component=Nfv-Openapis
+  license:
+    name: ETSI Forge copyright notice
+    url: 'https://forge.etsi.org/etsi-forge-copyright-notice.txt'
+  contact:
+    name: NFV-SOL WG
+    
+externalDocs:
+  description: ETSI GS NFV-SOL 005 V2.4.1
+  url: >-
+    http://www.etsi.org/deliver/etsi_gs/NFV-SOL/001_099/005/02.04.01_60/gs_NFV-SOL005v020401p.pdf
+    
+produces:
+  - application/json
+  - application/yaml
+
+paths:
+  
+  '/vnfpkgm/v1/vnf_packages':
+    post:
+      summary: Create VNF Package Info
+      operationId: createVNFPkgInfo
+      consumes:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            $ref: '#/definitions/CreateVnfPkgInfoRequest'
+      responses:
+        '201':
+          description: Status 201
+          schema:
+            type: object
+            $ref: '#/definitions/VnfPkgInfo'
+          headers:
+            location: string
+        '400':
+          description: Status 400
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'
+        '500':
+          description: Status 500
+          schema:
+            type: object
+            $ref: '#/definitions/ProblemDetails'           
+          
+    get:
+      summary: Query VNF Package Info
+      operationId: queryVNFPkgInfo
+      

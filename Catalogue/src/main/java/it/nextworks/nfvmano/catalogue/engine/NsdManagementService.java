@@ -1,8 +1,10 @@
 package it.nextworks.nfvmano.catalogue.engine;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -51,8 +53,15 @@ public class NsdManagementService {
 	}
 	
 	public void deleteNsdInfo(String nsdInfoId) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, MethodNotImplementedException {
-		//TODO:
-		throw new MethodNotImplementedException();
+		log.debug("Processing request to delete an NSD info.");
+		
+		Optional<NsdInfoResource> optional = nsdInfoRepo.findById(UUID.fromString(nsdInfoId));
+		
+		if (optional.isPresent()) {
+			log.debug("Found NSD info resource with id: " + nsdInfoId);
+			nsdInfoRepo.deleteById(UUID.fromString(nsdInfoId));
+			log.debug("Deleted NSD info resource with id: " + nsdInfoId);
+		}
 	}
 
 	public Object getNsd(String nsdInfoId) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, MethodNotImplementedException {
@@ -61,13 +70,33 @@ public class NsdManagementService {
 	}
 	
 	public NsdInfo getNsdInfo(String nsdInfoId) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, MethodNotImplementedException {
-		//TODO:
-		throw new MethodNotImplementedException();
+		log.debug("Processing request to get an NSD info.");
+		
+		Optional<NsdInfoResource> optional = nsdInfoRepo.findById(UUID.fromString(nsdInfoId));
+		
+		if (optional.isPresent()) {
+			NsdInfoResource nsdInfoResource = optional.get();
+			log.debug("Found NSD info resource with id: " + nsdInfoId);
+			NsdInfo nsdInfo = buildNsdInfo(nsdInfoResource);
+			log.debug("Created NSD info with id: " + nsdInfoId);
+			return nsdInfo;
+		} else {
+			log.debug("NSD info resource with id " + nsdInfoId + "not found.");
+			return null;
+		}
 	}
 	
 	public List<NsdInfo> getAllNsdInfos() throws FailedOperationException, MethodNotImplementedException {
-		//TODO:
-		throw new MethodNotImplementedException();
+		log.debug("Processing request to get all NSD infos.");
+		
+		List<NsdInfoResource> nsdInfoResources = nsdInfoRepo.findAll();
+		List<NsdInfo> nsdInfos = new ArrayList<>();
+		
+		for (NsdInfoResource nsdInfoResource : nsdInfoResources) {
+			NsdInfo nsdInfo = buildNsdInfo(nsdInfoResource);
+			nsdInfos.add(nsdInfo);
+		}
+		return nsdInfos;
 	}
 	
 	public void uploadNsd(String nsdInfoId, Object nsd) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, MethodNotImplementedException {

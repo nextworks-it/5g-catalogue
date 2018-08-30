@@ -1,5 +1,6 @@
 package it.nextworks.nfvmano.catalogue.repos;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -10,5 +11,7 @@ import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
 public interface NsdInfoRepository extends JpaRepository<NsdInfoResource, UUID> {
 
 	Optional<NsdInfoResource> findById(UUID id);
+	
+	List<NsdInfoResource> findAll();
 	
 }
