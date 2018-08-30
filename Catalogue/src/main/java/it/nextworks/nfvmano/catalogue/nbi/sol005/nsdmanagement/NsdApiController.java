@@ -1,5 +1,6 @@
 package it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement;
 
+import it.nextworks.nfvmano.catalogue.engine.NsdManagementService;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.CreateNsdInfoRequest;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdInfo;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdInfoModifications;
@@ -7,10 +8,14 @@ import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdmSubs
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdmSubscriptionRequest;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdInfo;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdInfoModifications;
+import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
+import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
+import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
 import io.swagger.annotations.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -34,6 +39,9 @@ public class NsdApiController implements NsdApi {
 	private final ObjectMapper objectMapper;
 
 	private final HttpServletRequest request;
+	
+	@Autowired
+	NsdManagementService nsdManagementService;
 
 	@org.springframework.beans.factory.annotation.Autowired
 	public NsdApiController(ObjectMapper objectMapper, HttpServletRequest request) {
@@ -45,6 +53,18 @@ public class NsdApiController implements NsdApi {
 			@ApiParam(value = "", required = true) @Valid @RequestBody CreateNsdInfoRequest body) {
 		String accept = request.getHeader("Accept");
 		if (accept != null && accept.contains("application/json")) {
+			log.debug("Processing REST request to create an NSD info");
+			try {
+				NsdInfo nsdInfo = nsdManagementService.createNsdInfo(body);
+				return new ResponseEntity<NsdInfo>(nsdInfo, HttpStatus.CREATED);
+			} catch (MalformattedElementException e) {
+				return new ResponseEntity<NsdInfo>(HttpStatus.BAD_REQUEST);
+			} catch (Exception e) {
+				log.error("Exception while creating NSD info: " + e.getMessage());
+				return new ResponseEntity<NsdInfo>(HttpStatus.INTERNAL_SERVER_ERROR);
+			}
+			
+			/*
 			try {
 				return new ResponseEntity<NsdInfo>(objectMapper.readValue(
 						"{  \"nsdOnboardingState\" : { },  \"vnfPkgIds\" : [ \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" ],  \"_links\" : {    \"self\" : \"http://example.com/aeiou\",    \"nsd_content\" : \"http://example.com/aeiou\"  },  \"nestedNsdInfoIds\" : [ \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" ],  \"nsdUsageState\" : { },  \"pnfdInfoIds\" : [ \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" ],  \"nsdInvariantId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"nsdDesigner\" : \"nsdDesigner\",  \"nsdVersion\" : \"nsdVersion\",  \"onboardingFailureDetails\" : {    \"instance\" : \"http://example.com/aeiou\",    \"detail\" : \"detail\",    \"type\" : \"http://example.com/aeiou\",    \"title\" : \"title\",    \"status\" : 0  },  \"nsdId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"nsdName\" : \"nsdName\",  \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"nsdOperationalState\" : { },  \"userDefinedData\" : { }}",
@@ -53,9 +73,10 @@ public class NsdApiController implements NsdApi {
 				log.error("Couldn't serialize response for content type application/json", e);
 				return new ResponseEntity<NsdInfo>(HttpStatus.INTERNAL_SERVER_ERROR);
 			}
-		}
+			*/
+		} else return new ResponseEntity<NsdInfo>(HttpStatus.BAD_REQUEST);
 
-		return new ResponseEntity<NsdInfo>(HttpStatus.NOT_IMPLEMENTED);
+		//return new ResponseEntity<NsdInfo>(HttpStatus.NOT_IMPLEMENTED);
 	}
 
 	public ResponseEntity<PnfdInfo> createPNFDInfo(
