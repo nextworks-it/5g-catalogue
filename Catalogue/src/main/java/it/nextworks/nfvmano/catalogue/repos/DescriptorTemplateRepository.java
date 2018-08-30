@@ -8,4 +8,6 @@ import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 
 public interface DescriptorTemplateRepository extends JpaRepository<DescriptorTemplate, Long> {
 	Optional<DescriptorTemplate> findById(Long id);
+	
+	Optional<DescriptorTemplate> findByMetadataDescriptorId(String descriptorId);
 }
