@@ -3,8 +3,6 @@ package it.nextworks.nfvmano.catalogue.engine;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URLConnection;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,10 +15,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.core.io.Resource;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 
 import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.CreateNsdInfoRequest;
@@ -30,6 +27,7 @@ import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdLinks
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboardingStateType;
 import it.nextworks.nfvmano.catalogue.repos.NsdContentType;
 import it.nextworks.nfvmano.catalogue.repos.NsdInfoRepository;
+import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
@@ -49,6 +47,9 @@ public class NsdManagementService {
 	
 	@Autowired
 	private DbPersistencyHandler dbWrapper;
+	
+	@Autowired
+	private FileSystemStorageService storageService;
 	
 	public NsdManagementService() {	}
 	
@@ -117,20 +118,32 @@ public class NsdManagementService {
 		UUID nsdId = nsdInfo.getNsdId();
 		log.debug("Internal NSD ID: " + nsdId);
 		
+		/*
 		DescriptorTemplate nsd = dbWrapper.getNsd(nsdId);
 		log.debug("Got NSD content.");
+		*/
 		
 		NsdContentType ct = nsdInfo.getNsdContentType();
 		switch (ct) {
 		case YAML: {
-			try {
-				String nsdString = DescriptorsParser.descriptorTemplateToString(nsd);
-				log.debug("NSD content translated into YAML format");
-				return nsdString;
+			//try {
+				List<String> nsdFilenames = nsdInfo.getNsdFilename();
+				if (nsdFilenames.size() != 1) {
+					log.error("Found zero or more than one file for NSD in YAML format. Error.");
+					throw new FailedOperationException("Found more than one file for NSD in YAML format. Error.");
+				}
+				String nsdFilename = nsdFilenames.get(0);
+				return storageService.loadAsResource(nsdFilename);
+			
+				/*
+				//String nsdString = DescriptorsParser.descriptorTemplateToString(nsd);
+				//log.debug("NSD content translated into YAML format");
+				//return nsdString;
 			} catch (JsonProcessingException e) {
 				log.error("Error while translating descriptor");
 				throw new FailedOperationException("Error while translating descriptor: " + e.getMessage());
 			}
+			*/
 		}
 
 		default: {
@@ -209,6 +222,8 @@ public class NsdManagementService {
 			
 				//UUID nsdId = dbWrapper.createNsd(dt);
 				// generate nsdId
+				
+				String nsdFilename = storageService.store(nsd);
 				UUID nsdId = UUID.randomUUID();
 				
 				log.debug("Updating NSD info");
@@ -222,6 +237,7 @@ public class NsdManagementService {
 				nsdInfo.setNsdName(nsdName);
 				nsdInfo.setNsdVersion(dt.getMetadata().getVersion());
 				nsdInfo.setNsdContentType(NsdContentType.YAML);
+				nsdInfo.addNsdFilename(nsdFilename);
 				nsdInfoRepo.saveAndFlush(nsdInfo);
 				log.debug("NSD info updated");
 				//TODO: send notification

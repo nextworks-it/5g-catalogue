@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.core.io.Resource;
 
 import javax.validation.Valid;
 import javax.servlet.http.HttpServletRequest;
@@ -167,7 +168,8 @@ public class NsdApiController implements NsdApi {
 		
 		try {
 			Object nsd = nsdManagementService.getNsd(nsdInfoId);
-			return new ResponseEntity<String>((String)nsd, HttpStatus.OK);
+			//TODO: here it needs to check the type of entity that is returned
+			return new ResponseEntity<Resource>((Resource)nsd, HttpStatus.OK);
 		} catch (NotExistingEntityException e) {
 			log.error("NSD for NSD info ID " + nsdInfoId + " not found");
 			return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(), "NSD for NSD info ID " + nsdInfoId + " not found: " + e.getMessage()), HttpStatus.NOT_FOUND);

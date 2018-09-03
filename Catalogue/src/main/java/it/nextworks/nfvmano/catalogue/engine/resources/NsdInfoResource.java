@@ -58,6 +58,10 @@ public class NsdInfoResource {
 	private UUID nsdInvariantId;
 	
 	private NsdContentType nsdContentType;
+	
+	@ElementCollection
+	@Fetch(FetchMode.SELECT)
+	private List<String> nsdFilename = new ArrayList<>();
 
 	
 	@ElementCollection
@@ -264,6 +268,19 @@ public class NsdInfoResource {
 	 */
 	public void setNsdContentType(NsdContentType nsdContentType) {
 		this.nsdContentType = nsdContentType;
+	}
+	
+	
+
+	/**
+	 * @return the nsdFilename
+	 */
+	public List<String> getNsdFilename() {
+		return nsdFilename;
+	}
+	
+	public void addNsdFilename(String filename) {
+		this.nsdFilename.add(filename);
 	}
 
 	public void isDeletable() throws NotPermittedOperationException {
