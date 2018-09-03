@@ -112,7 +112,56 @@ topologyTemplate:
           ipAddressType: IPv4
           numberOfIpAddress: 1
           
+  testSap2:
+   type: tosca.nodes.nfv.Sap
+   properties:
+    sapAddressAssignment: true
+    layerProtocol: IPV4
+    role: ROOT
+    description: test Sap CP
+    protocolData:
+     - associatedLayerProtocol: IPV4
+       addressData:
+        addressType: IP_ADDRESS
+        l3AddressData:
+          ipAddressAssignment: true
+          floatingIpActivated: true
+          ipAddressType: IPv4
+          numberOfIpAddress: 1
+          
   testVNF:
+   type: tosca.nodes.nfv.VNF
+   properties:
+    descriptorId: VNF_TEST_001
+    descriptorVersion: v0.1
+    provider: Nextworks
+    productName: vCache
+    softwareVersion: v5.3
+    productInfoName: Virtual Cache
+    productInfoDescription: vCache based on ATS
+    vnfmInfo:
+     - juju
+    localizationLanguages:
+     - ENG
+    defaultLocalizationLanguage: ENG
+    configurableProperties:
+     isAutoscaleEnabled: false
+     isAutohealEnabled: false
+    modifiableAttributes:
+     extension:
+      test: test
+    flavourId: vCacheDf_001
+    flavourDescription: vCache Edge DF
+   requirements:
+    virtualLink:
+     - management
+     - user
+     - cache
+   capabilities:
+    monitoringParameter:
+     - cpuLoad
+     
+  testVNF2:
    type: tosca.nodes.nfv.VNF
    properties:
     descriptorId: VNF_TEST_001
