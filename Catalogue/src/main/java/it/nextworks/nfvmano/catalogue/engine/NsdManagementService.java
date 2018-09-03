@@ -1,6 +1,10 @@
 package it.nextworks.nfvmano.catalogue.engine;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URLConnection;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -182,20 +187,30 @@ public class NsdManagementService {
 		return nsdInfos;
 	}
 	
-	public synchronized void uploadNsd(String nsdInfoId, String nsd, NsdContentType nsdContentType) throws FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
+	public synchronized void uploadNsd(String nsdInfoId, MultipartFile nsd, NsdContentType nsdContentType) throws Exception, FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
 		log.debug("Processing request to upload NSD content for NSD info " + nsdInfoId);
 		NsdInfoResource nsdInfo = getNsdInfoResource(nsdInfoId);
 		if (nsdInfo.getNsdOnboardingState() != NsdOnboardingStateType.CREATED) {
 			log.error("NSD info " + nsdInfoId + " not in CREATED onboarding state.");
 			throw new NotPermittedOperationException("NSD info " + nsdInfoId + " not in CREATED onboarding state.");
 		}
+		//convert to File
+		File file =	convertToFile(nsd);
+
 		switch (nsdContentType) {
+		case ZIP: {
+			log.error("Unsupported content type: " + nsdContentType.toString());
+			throw new MethodNotImplementedException("Unsupported content type: " + nsdContentType.toString());
+		}
 		case YAML: {
-			log.debug("Input NSD: \n" + nsd);
 			try {
-				DescriptorTemplate dt = DescriptorsParser.stringToDescriptorTemplate(nsd);
-				log.debug("NSD parsed");
-				UUID nsdId = dbWrapper.createNsd(dt);
+				DescriptorTemplate dt = DescriptorsParser.fileToDescriptorTemplate(file);
+				log.debug("NSD succssfully parsed - its content is: \n" + DescriptorsParser.descriptorTemplateToString(dt));
+			
+				//UUID nsdId = dbWrapper.createNsd(dt);
+				// generate nsdId
+				UUID nsdId = UUID.randomUUID();
+				
 				log.debug("Updating NSD info");
 				nsdInfo.setNsdId(nsdId);
 				//TODO: here it is actually onboarded only locally and just in the DB. To be updated when we will implement also the package uploading
@@ -248,6 +263,16 @@ public class NsdManagementService {
 		nsdInfo.setUserDefinedData(kvp);
 		nsdInfo.setVnfPkgIds(nsdInfoResource.getVnfPkgIds());
 		return nsdInfo;
+	}
+	
+	private File convertToFile(MultipartFile multipart) throws Exception {
+	    File convFile = new File(multipart.getOriginalFilename());
+	    convFile.createNewFile();
+	    FileOutputStream fos = new FileOutputStream(convFile);
+	    fos.write(multipart.getBytes());
+	    fos.close();
+	    
+	    return convFile;
 	}
 	
 }
