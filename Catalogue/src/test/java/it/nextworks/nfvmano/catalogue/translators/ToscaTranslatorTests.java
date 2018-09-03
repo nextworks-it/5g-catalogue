@@ -17,179 +17,144 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import it.nextworks.nfvmano.catalogue.repos.DescriptorTemplateRepository;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
-import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSProperties;
-import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSRequirements;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NsVirtualLink.NsVirtualLinkNode;
-import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NsVirtualLink.NsVirtualLinkProperties;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.Sap.SapNode;
-import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.Sap.SapProperties;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
+import it.nextworks.nfvmano.libs.descriptors.templates.Metadata;
 import it.nextworks.nfvmano.libs.descriptors.templates.Node;
-import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFCapabilities;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
-import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFProperties;
-import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFRequirements;
 import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
 
 public class ToscaTranslatorTests {
 
 	@Autowired
 	DescriptorsParser descriptorParser;
-	
+
 	@Autowired
 	DescriptorTemplateRepository descriptorTemplateRepository;
-	
+
+	@SuppressWarnings("unused")
 	private String StoreNSDescriptorTemplate(DescriptorTemplate input) throws AlreadyExistingEntityException {
-		
+
 		String descriptorId = input.getMetadata().getDescriptorId();
 		String vendor = input.getMetadata().getVendor();
 		String version = input.getMetadata().getVersion();
-		
-		DescriptorTemplate output = new DescriptorTemplate(
-				input.getToscaDefinitionsVersion(),
-				input.getToscaDefaultNamespace(),
-				input.getDescription(),
-				input.getMetadata(),
+
+		DescriptorTemplate output = new DescriptorTemplate(input.getToscaDefinitionsVersion(),
+				input.getToscaDefaultNamespace(), input.getDescription(), input.getMetadata(),
 				input.getTopologyTemplate());
-		
+
 		System.out.println(ReflectionToStringBuilder.toString(output, ToStringStyle.MULTI_LINE_STYLE));
-		
+
 		try {
 			descriptorTemplateRepository.saveAndFlush(output);
 		} catch (NullPointerException e) {
 			e.printStackTrace();
 		}
-		
-		Optional<DescriptorTemplate> optionalDT = descriptorTemplateRepository.findByMetadataDescriptorIdAndMetadataVendorAndMetadataVersion(descriptorId, vendor, version);
+
+		Optional<DescriptorTemplate> optionalDT = descriptorTemplateRepository
+				.findByMetadataDescriptorIdAndMetadataVendorAndMetadataVersion(descriptorId, vendor, version);
 		UUID id = null;
-		
+
 		if (optionalDT.isPresent()) {
 			id = ((DescriptorTemplate) optionalDT.get()).getId();
 		}
-		
-		
+
 		return String.valueOf(id);
 	}
-	
-	static String readFile(String path, Charset encoding) 
-			throws IOException 
-	{
+
+	static String readFile(String path, Charset encoding) throws IOException {
 		byte[] encoded = Files.readAllBytes(Paths.get(path));
 		return new String(encoded, encoding);
 	}
 
-	
+	// @Ignore
 	@SuppressWarnings("static-access")
 	@Test
 	public void parseStringDescriptor() throws Exception {
-		File file = new File("");
-		String currentDirectory = file.getAbsolutePath();
-		currentDirectory = currentDirectory.concat("/src/test/java/it/nextworks/nfvmano/catalogue/translators/descriptors/");
-		String path = currentDirectory + "vCDN_tosca_v01.yaml";
+		ClassLoader classLoader = getClass().getClassLoader();
+		File nsd = new File(classLoader.getResource("vCDN_tosca_v02.yaml").getFile());
+		ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+
+		String nsd_string = readFile(nsd.getAbsolutePath(), StandardCharsets.UTF_8);
+
+		System.out.println("===============================================================================================");
+		System.out.println("NSD from FILE: ");
+		System.out.println(nsd_string);
+		System.out.println("===============================================================================================");
 		
-		String nsd = readFile(path, StandardCharsets.UTF_8);
-		
-		System.out.println("=====================================================================================================");
-		System.out.println(nsd);
-		
-		DescriptorTemplate dt = descriptorParser.stringToDescriptorTemplate(nsd);
-		
-		System.out.println("Successfull parsing.");
-		System.out.println(ReflectionToStringBuilder.toString(dt, ToStringStyle.MULTI_LINE_STYLE));
+		DescriptorTemplate dt = descriptorParser.stringToDescriptorTemplate(nsd_string);
+		System.out.println("Successfull parsing. Parsed NSD: ");
+		System.out.println(mapper.writeValueAsString(dt));
 	}
 
-	@Ignore
+	// @Ignore
 	@SuppressWarnings("static-access")
 	@Test
 	public void parseFileDescriptor() {
 
 		try {
 
-			String currentDirectory;
-			File file = new File("");
-			currentDirectory = file.getAbsolutePath();
-			currentDirectory = currentDirectory.concat("/src/test/java/it/nextworks/nfvmano/catalogue/translators/descriptors/");
-			DescriptorTemplate descriptorTemplate = descriptorParser
-					.fileToDescriptorTemplate(currentDirectory + "vCDN_tosca_v01.yaml");
-			System.out.println(ReflectionToStringBuilder.toString(descriptorTemplate, ToStringStyle.MULTI_LINE_STYLE));
+			ClassLoader classLoader = getClass().getClassLoader();
+			File nsd = new File(classLoader.getResource("vCDN_tosca_v02.yaml").getFile());
+			ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+
+			DescriptorTemplate descriptorTemplate = descriptorParser.fileToDescriptorTemplate(nsd.getAbsolutePath());		
+			Metadata metadata = descriptorTemplate.getMetadata();
 			
-			/*try {
-				String id = StoreNSDescriptorTemplate(descriptorTemplate);
-				System.out.println("NS DESCRIPTOR GENERATED ID: " + id);
-			} catch (AlreadyExistingEntityException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}*/
+			System.out.println("===============================================================================================");
+			System.out.println("Descriptor Metadata");
+			System.out.println(mapper.writeValueAsString(metadata));
+			System.out.println("===============================================================================================");
 
+			System.out.println("Descriptor Nodes");
 			Map<String, Node> nodes = descriptorTemplate.getTopologyTemplate().getNodeTemplates();
-
 			for (Map.Entry<String, Node> node : nodes.entrySet()) {
-				System.out.println("\nNODE -----> " + node.getKey());
-				System.out.println(ReflectionToStringBuilder.toString(node.getValue(), ToStringStyle.MULTI_LINE_STYLE));
+				System.out.println(node.getKey());
 			}
+			System.out.println("===============================================================================================");
 
 			try {
 				List<NSNode> nsNodes = descriptorTemplate.getTopologyTemplate().getNSNodes();
 
+				System.out.println("NS Nodes");
 				for (NSNode nsNode : nsNodes) {
-
-					System.out.println(ReflectionToStringBuilder.toString(nsNode, ToStringStyle.MULTI_LINE_STYLE));
-
-					NSProperties nsProperties = nsNode.getProperties();
-					System.out
-							.println(ReflectionToStringBuilder.toString(nsProperties, ToStringStyle.MULTI_LINE_STYLE));
-
-					NSRequirements nsRequirements = nsNode.getRequirements();
-					System.out.println(
-							ReflectionToStringBuilder.toString(nsRequirements, ToStringStyle.MULTI_LINE_STYLE));
+					System.out.println(mapper.writeValueAsString(nsNode));
 				}
+				System.out.println("===============================================================================================");
 
 				List<NsVirtualLinkNode> nsVirtualLinks = descriptorTemplate.getTopologyTemplate()
 						.getNsVirtualLinkNodes();
-				System.out.println(ReflectionToStringBuilder.toString(nsVirtualLinks, ToStringStyle.MULTI_LINE_STYLE));
 
-				for (NsVirtualLinkNode nsVLink : nsVirtualLinks) {
-
-					System.out.println(ReflectionToStringBuilder.toString(nsVLink, ToStringStyle.MULTI_LINE_STYLE));
-
-					NsVirtualLinkProperties nsVLinkProperties = nsVLink.getProperties();
-					System.out.println(
-							ReflectionToStringBuilder.toString(nsVLinkProperties, ToStringStyle.MULTI_LINE_STYLE));
+				System.out.println("NS Virtual Link Nodes");
+				for (NsVirtualLinkNode nsVLinkNode : nsVirtualLinks) {
+					System.out.println(mapper.writeValueAsString(nsVLinkNode));
 				}
+				System.out.println("===============================================================================================");
 
-				/*List<SapNode> sapNodes = descriptorTemplate.getTopologyTemplate().getSapNodes();
+				List<SapNode> sapNodes = descriptorTemplate.getTopologyTemplate().getSapNodes();
 
+				System.out.println("SAP Nodes");
 				for (SapNode sapNode : sapNodes) {
-
-					System.out.println(ReflectionToStringBuilder.toString(sapNode, ToStringStyle.MULTI_LINE_STYLE));
-
-					SapProperties sapProperties = sapNode.getProperties();
-					System.out
-							.println(ReflectionToStringBuilder.toString(sapProperties, ToStringStyle.MULTI_LINE_STYLE));
+					System.out.println(mapper.writeValueAsString(sapNode));
 				}
+				System.out.println("===============================================================================================");
 				
 				List<VNFNode> vnfNodes = descriptorTemplate.getTopologyTemplate().getVNFNodes();
 
+				System.out.println("VNF Nodes");
 				for (VNFNode vnfNode : vnfNodes) {
+					System.out.println(mapper.writeValueAsString(vnfNode));
+				}
+				System.out.println("===============================================================================================");
 
-					System.out.println(ReflectionToStringBuilder.toString(vnfNode, ToStringStyle.MULTI_LINE_STYLE));
-
-					VNFProperties vnfProperties = vnfNode.getProperties();
-					System.out
-							.println(ReflectionToStringBuilder.toString(vnfProperties, ToStringStyle.MULTI_LINE_STYLE));
-
-					VNFRequirements vnfRequirements = vnfNode.getRequirements();
-					System.out.println(
-							ReflectionToStringBuilder.toString(vnfRequirements, ToStringStyle.MULTI_LINE_STYLE));
-					
-					VNFCapabilities vnfCapabilities = vnfNode.getCapabilities();
-					System.out.println(
-							ReflectionToStringBuilder.toString(vnfCapabilities, ToStringStyle.MULTI_LINE_STYLE));
-				}*/
 			} catch (MalformattedElementException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
