@@ -10,6 +10,8 @@ import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdmSubs
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdInfo;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdInfoModifications;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.ProblemDetails;
+import it.nextworks.nfvmano.catalogue.repos.NsdContentType;
+import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
 import it.nextworks.nfvmano.libs.common.exceptions.NotPermittedOperationException;
@@ -152,10 +154,29 @@ public class NsdApiController implements NsdApi {
 		return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
 	}
 
-	public ResponseEntity<Object> getNSD(
+	public ResponseEntity<?> getNSD(
 			@ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
 			@ApiParam(value = "The request may contain a \"Range\" HTTP header to obtain single range of bytes from the NSD file. This can be used to continue an aborted transmission.  If the NFVO does not support range requests, the NFVO shall ignore the 'Range\" header, process the GET request, and return the whole NSD file with a 200 OK response (rather than returning a 4xx error status code).") @RequestHeader(value = "Range", required = false) String range) {
 		String accept = request.getHeader("Accept");
+		
+		//TODO: consistency between accept values and input format when onboarding should be better checked. 
+		//TODO: probably we should select the format based on the accept values. At the moment the format is selected based on the original input type, 
+		//that is maintained in the DB.
+		log.debug("Processing REST request to retrieve NSD for NSD info ID " + nsdInfoId);
+		
+		try {
+			Object nsd = nsdManagementService.getNsd(nsdInfoId);
+			return new ResponseEntity<String>((String)nsd, HttpStatus.OK);
+		} catch (NotExistingEntityException e) {
+			log.error("NSD for NSD info ID " + nsdInfoId + " not found");
+			return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(), "NSD for NSD info ID " + nsdInfoId + " not found: " + e.getMessage()), HttpStatus.NOT_FOUND);
+		} catch (NotPermittedOperationException e) {
+			return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(), "NSD for NSD info ID " + nsdInfoId + " not found: " + e.getMessage()), HttpStatus.CONFLICT);
+		} catch (Exception e) {
+			return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(), "NSD for NSD info ID " + nsdInfoId + " not found: " + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		
+		/*
 		if (accept != null && accept.contains("application/json")) {
 			try {
 				return new ResponseEntity<Object>(objectMapper.readValue("\"{}\"", Object.class),
@@ -167,6 +188,7 @@ public class NsdApiController implements NsdApi {
 		}
 
 		return new ResponseEntity<Object>(HttpStatus.NOT_IMPLEMENTED);
+		*/
 	}
 
 	public ResponseEntity<?> getNSDInfo(
@@ -358,11 +380,45 @@ public class NsdApiController implements NsdApi {
 		return new ResponseEntity<PnfdInfoModifications>(HttpStatus.NOT_IMPLEMENTED);
 	}
 
-	public ResponseEntity<Object> uploadNSD(
+	public ResponseEntity<?> uploadNSD(
 			@ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
-			@ApiParam(value = "", required = true) @Valid @RequestBody Object body,
+			@ApiParam(value = "", required = true) @Valid @RequestBody String body,
+			//@ApiParam(value = "", required = true) @Valid @RequestBody Object body,
 			@ApiParam(value = "The payload body contains a copy of the file representing the NSD or a ZIP file that contains the file or multiple files representing the NSD, as specified above. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType) {
 		String accept = request.getHeader("Accept");
+		log.debug("Processing REST request for Uploading NSD content in NSD info " + nsdInfoId + " with body " + body.toString());
+		
+		if (contentType.equals("application/zip")) {
+			//TODO: to be implemented later on
+			return  new ResponseEntity<String>("Unable to parse ZIP file.", HttpStatus.NOT_IMPLEMENTED);
+		} else if (contentType.equals("application/json")) {
+			//TODO: to be implemented later on
+			return  new ResponseEntity<String>("Unable to parse JSON file.", HttpStatus.NOT_IMPLEMENTED);
+		} else if ( (contentType.equals("text/plain")) || (contentType.equals("application/x-yaml")) ) {
+			try {
+				//nsdManagementService.uploadNsd(nsdInfoId, (String)body, NsdContentType.YAML);
+				nsdManagementService.uploadNsd(nsdInfoId, body, NsdContentType.YAML);
+				log.debug("Upload processing done");
+				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+				//TODO: check if we need to introduce the asynchronous mode
+			} catch (NotPermittedOperationException | AlreadyExistingEntityException e) {
+				log.error("Impossible to upload NSD: " + e.getMessage());
+				return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(), "Impossible to upload NSD: " + e.getMessage()), HttpStatus.CONFLICT);
+			} catch (MalformattedElementException e) {
+				log.error("Impossible to upload NSD: " + e.getMessage());
+				return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(), "Impossible to upload NSD: " + e.getMessage()), HttpStatus.BAD_REQUEST);
+			} catch (NotExistingEntityException e) {
+				log.error("Impossible to upload NSD: " + e.getMessage());
+				return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(), "Impossible to upload NSD: " + e.getMessage()), HttpStatus.NOT_FOUND);
+			} catch (Exception e) {
+				log.error("General exception while uploading NSD content.");
+				return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(), "General exception while uploading NSD content: " + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+			}
+		} else {
+			log.error("Unacceptable content type: " + contentType);
+			return new ResponseEntity<String>("Unacceptable content type: " + contentType, HttpStatus.BAD_REQUEST);
+		}
+		/*
 		if (accept != null && accept.contains("application/json")) {
 			try {
 				return new ResponseEntity<Object>(objectMapper.readValue("\"{}\"", Object.class),
@@ -374,6 +430,7 @@ public class NsdApiController implements NsdApi {
 		}
 
 		return new ResponseEntity<Object>(HttpStatus.NOT_IMPLEMENTED);
+		*/
 	}
 
 	public ResponseEntity<Void> uploadPNFD(

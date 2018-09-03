@@ -104,8 +104,8 @@ public interface NsdApi {
 			@ApiResponse(code = 416, message = "Status 416", response = ProblemDetails.class),
 			@ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class) })
 	@RequestMapping(value = "/nsd/v1/ns_descriptors/{nsdInfoId}/nsd_content", produces = { "application/json",
-			"application/yaml", "application/zip" }, method = RequestMethod.GET)
-	ResponseEntity<Object> getNSD(@ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
+			"application/x-yaml", "application/zip" }, method = RequestMethod.GET)
+	ResponseEntity<?> getNSD(@ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
 			@ApiParam(value = "The request may contain a \"Range\" HTTP header to obtain single range of bytes from the NSD file. This can be used to continue an aborted transmission.  If the NFVO does not support range requests, the NFVO shall ignore the 'Range\" header, process the GET request, and return the whole NSD file with a 200 OK response (rather than returning a 4xx error status code).") @RequestHeader(value = "Range", required = false) String range);
 
 	@ApiOperation(value = "Query NSD Info", nickname = "getNSDInfo", notes = "The GET method reads information about an individual NS descriptor. This method shall follow the provisions specified in GS NFV-SOL 005 Tables 5.4.3.3.2-1 and 5.4.3.3.2-2 of GS NFV-SOL 005 for URI query parameters, request and response data structures, and response codes.", response = NsdInfo.class, tags = {})
@@ -216,11 +216,14 @@ public interface NsdApi {
 			@ApiResponse(code = 404, message = "Status 404", response = ProblemDetails.class),
 			@ApiResponse(code = 409, message = "Error: The operation cannot be executed currently, due to a conflict with the state of the resource. Typically, this is due to the fact that the NsdOnboardingState has a value other than CREATED. The response body shall contain a ProblemDetails structure, in which the \"detail\" attribute shall convey more information about the error.", response = ProblemDetails.class),
 			@ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class) })
-	@RequestMapping(value = "/nsd/v1/ns_descriptors/{nsdInfoId}/nsd_content", produces = { "application/json",
-			"application/yaml" }, consumes = { "application/json", "application/yaml",
+	@RequestMapping(value = "/nsd/v1/ns_descriptors/{nsdInfoId}/nsd_content",
+			headers = {"content-type=application/json", "content-type=application/x-yaml", "content-type=application/zip", "content-type=text/plain"},
+			produces = { "application/json",
+			"application/x-yaml" }, consumes = { "application/json", "application/x-yaml",
 					"application/zip" }, method = RequestMethod.PUT)
-	ResponseEntity<Object> uploadNSD(@ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
-			@ApiParam(value = "", required = true) @Valid @RequestBody Object body,
+	ResponseEntity<?> uploadNSD(@ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
+			//@ApiParam(value = "", required = true) @Valid @RequestBody Object body,
+			@ApiParam(value = "", required = true) @Valid @RequestBody String body,
 			@ApiParam(value = "The payload body contains a copy of the file representing the NSD or a ZIP file that contains the file or multiple files representing the NSD, as specified above. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType);
 
 	@ApiOperation(value = "Upload PNFD", nickname = "uploadPNFD", notes = "The PUT method is used to upload the content of a PNFD. This method shall follow the provisions specified in the Tables 5.4.7.3.3-1 and 5.4.7.3.3-2 of GS NFV-SOL 005for URI query parameters, request and response data structures, and response codes.", tags = {})

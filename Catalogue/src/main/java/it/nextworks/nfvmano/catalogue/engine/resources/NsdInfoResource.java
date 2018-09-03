@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboardingStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOperationalStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdUsageStateType;
+import it.nextworks.nfvmano.catalogue.repos.NsdContentType;
 import it.nextworks.nfvmano.libs.common.exceptions.NotPermittedOperationException;
 
 @Entity
@@ -55,6 +56,8 @@ public class NsdInfoResource {
 	private String nsdDesigner;
 
 	private UUID nsdInvariantId;
+	
+	private NsdContentType nsdContentType;
 
 	
 	@ElementCollection
@@ -69,6 +72,7 @@ public class NsdInfoResource {
 		nsdOnboardingState = NsdOnboardingStateType.CREATED;
 		nsdOperationalState = NsdOperationalStateType.DISABLED;
 		nsdUsageState = NsdUsageStateType.NOT_IN_USE;
+		nsdContentType = NsdContentType.UNSPECIFIED;
 	}
 
 	/**
@@ -246,6 +250,22 @@ public class NsdInfoResource {
 		this.nsdInvariantId = nsdInvariantId;
 	}
 	
+	
+	
+	/**
+	 * @return the nsdContentType
+	 */
+	public NsdContentType getNsdContentType() {
+		return nsdContentType;
+	}
+
+	/**
+	 * @param nsdContentType the nsdContentType to set
+	 */
+	public void setNsdContentType(NsdContentType nsdContentType) {
+		this.nsdContentType = nsdContentType;
+	}
+
 	public void isDeletable() throws NotPermittedOperationException {
 		if (nsdOperationalState != NsdOperationalStateType.DISABLED) throw new NotPermittedOperationException("NSD info " + this.id + " cannot be deleted because not DISABLED");
 		if (nsdUsageState != NsdUsageStateType.NOT_IN_USE) throw new NotPermittedOperationException("NSD info " + this.id + " cannot be deleted because IN USE");

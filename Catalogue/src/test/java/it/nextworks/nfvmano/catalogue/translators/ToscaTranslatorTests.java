@@ -2,12 +2,18 @@ package it.nextworks.nfvmano.catalogue.translators;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -40,6 +46,8 @@ public class ToscaTranslatorTests {
 	private String StoreNSDescriptorTemplate(DescriptorTemplate input) throws AlreadyExistingEntityException {
 		
 		String descriptorId = input.getMetadata().getDescriptorId();
+		String vendor = input.getMetadata().getVendor();
+		String version = input.getMetadata().getVersion();
 		
 		DescriptorTemplate output = new DescriptorTemplate(
 				input.getToscaDefinitionsVersion(),
@@ -56,8 +64,8 @@ public class ToscaTranslatorTests {
 			e.printStackTrace();
 		}
 		
-		Optional<DescriptorTemplate> optionalDT = descriptorTemplateRepository.findByMetadataDescriptorId(descriptorId);
-		Long id = null;
+		Optional<DescriptorTemplate> optionalDT = descriptorTemplateRepository.findByMetadataDescriptorIdAndMetadataVendorAndMetadataVersion(descriptorId, vendor, version);
+		UUID id = null;
 		
 		if (optionalDT.isPresent()) {
 			id = ((DescriptorTemplate) optionalDT.get()).getId();
@@ -66,7 +74,35 @@ public class ToscaTranslatorTests {
 		
 		return String.valueOf(id);
 	}
+	
+	static String readFile(String path, Charset encoding) 
+			throws IOException 
+	{
+		byte[] encoded = Files.readAllBytes(Paths.get(path));
+		return new String(encoded, encoding);
+	}
 
+	
+	@SuppressWarnings("static-access")
+	@Test
+	public void parseStringDescriptor() throws Exception {
+		File file = new File("");
+		String currentDirectory = file.getAbsolutePath();
+		currentDirectory = currentDirectory.concat("/src/test/java/it/nextworks/nfvmano/catalogue/translators/descriptors/");
+		String path = currentDirectory + "vCDN_tosca_v01.yaml";
+		
+		String nsd = readFile(path, StandardCharsets.UTF_8);
+		
+		System.out.println("=====================================================================================================");
+		System.out.println(nsd);
+		
+		DescriptorTemplate dt = descriptorParser.stringToDescriptorTemplate(nsd);
+		
+		System.out.println("Successfull parsing.");
+		System.out.println(ReflectionToStringBuilder.toString(dt, ToStringStyle.MULTI_LINE_STYLE));
+	}
+
+	@Ignore
 	@SuppressWarnings("static-access")
 	@Test
 	public void parseFileDescriptor() {

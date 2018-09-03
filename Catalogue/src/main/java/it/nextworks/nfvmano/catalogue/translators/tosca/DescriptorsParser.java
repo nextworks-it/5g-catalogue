@@ -6,6 +6,7 @@ import java.io.IOException;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -33,5 +34,12 @@ public class DescriptorsParser {
 		DescriptorTemplate descriptorTemplate = mapper.readValue(descriptor, DescriptorTemplate.class);
 
 		return descriptorTemplate;
+	}
+	
+	public static String descriptorTemplateToString(DescriptorTemplate descriptor) 
+			throws JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+		String dt = mapper.writeValueAsString(descriptor);
+		return dt;
 	}
 }
