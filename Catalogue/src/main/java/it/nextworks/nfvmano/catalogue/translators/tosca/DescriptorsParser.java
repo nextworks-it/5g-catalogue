@@ -25,6 +25,16 @@ public class DescriptorsParser {
 
 		return descriptorTemplate;
 	}
+	
+	public static DescriptorTemplate fileToDescriptorTemplate(File file)
+			throws JsonParseException, JsonMappingException, IOException {
+
+		ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+
+		DescriptorTemplate descriptorTemplate = mapper.readValue(file, DescriptorTemplate.class);
+
+		return descriptorTemplate;
+	}
 
 	public static DescriptorTemplate stringToDescriptorTemplate(String descriptor)
 			throws JsonParseException, JsonMappingException, IOException {

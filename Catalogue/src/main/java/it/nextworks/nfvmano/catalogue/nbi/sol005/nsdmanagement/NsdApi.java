@@ -217,13 +217,14 @@ public interface NsdApi {
 			@ApiResponse(code = 409, message = "Error: The operation cannot be executed currently, due to a conflict with the state of the resource. Typically, this is due to the fact that the NsdOnboardingState has a value other than CREATED. The response body shall contain a ProblemDetails structure, in which the \"detail\" attribute shall convey more information about the error.", response = ProblemDetails.class),
 			@ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class) })
 	@RequestMapping(value = "/nsd/v1/ns_descriptors/{nsdInfoId}/nsd_content",
-			headers = {"content-type=application/json", "content-type=application/x-yaml", "content-type=application/zip", "content-type=text/plain"},
+			//headers = {"content-type=multipart/form-data", "content-type=application/json", "content-type=application/x-yaml", "content-type=application/zip", "content-type=text/plain"},
 			produces = { "application/json",
 			"application/x-yaml" }, consumes = { "application/json", "application/x-yaml",
-					"application/zip" }, method = RequestMethod.PUT)
+					"application/zip" , "multipart/form-data"}, method = RequestMethod.PUT)
 	ResponseEntity<?> uploadNSD(@ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
 			//@ApiParam(value = "", required = true) @Valid @RequestBody Object body,
-			@ApiParam(value = "", required = true) @Valid @RequestBody String body,
+			//@ApiParam(value = "", required = true) @Valid @RequestBody String body,
+			@ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
 			@ApiParam(value = "The payload body contains a copy of the file representing the NSD or a ZIP file that contains the file or multiple files representing the NSD, as specified above. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType);
 
 	@ApiOperation(value = "Upload PNFD", nickname = "uploadPNFD", notes = "The PUT method is used to upload the content of a PNFD. This method shall follow the provisions specified in the Tables 5.4.7.3.3-1 and 5.4.7.3.3-2 of GS NFV-SOL 005for URI query parameters, request and response data structures, and response codes.", tags = {})

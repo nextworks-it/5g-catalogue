@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import javax.servlet.http.HttpServletRequest;
@@ -382,22 +383,33 @@ public class NsdApiController implements NsdApi {
 
 	public ResponseEntity<?> uploadNSD(
 			@ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
-			@ApiParam(value = "", required = true) @Valid @RequestBody String body,
+			@ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
+			//@ApiParam(value = "", required = true) @Valid @RequestBody String body,
 			//@ApiParam(value = "", required = true) @Valid @RequestBody Object body,
 			@ApiParam(value = "The payload body contains a copy of the file representing the NSD or a ZIP file that contains the file or multiple files representing the NSD, as specified above. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType) {
-		String accept = request.getHeader("Accept");
-		log.debug("Processing REST request for Uploading NSD content in NSD info " + nsdInfoId + " with body " + body.toString());
-		
-		if (contentType.equals("application/zip")) {
+	
+		log.debug("Processing REST request for Uploading NSD content in NSD info " + nsdInfoId);
+		if (body.isEmpty()) {
+			return new ResponseEntity<String>("Error message: File is empty!", HttpStatus.BAD_REQUEST);
+		}
+
+		if (!contentType.startsWith("multipart/form-data")) {
 			//TODO: to be implemented later on
-			return  new ResponseEntity<String>("Unable to parse ZIP file.", HttpStatus.NOT_IMPLEMENTED);
-		} else if (contentType.equals("application/json")) {
-			//TODO: to be implemented later on
-			return  new ResponseEntity<String>("Unable to parse JSON file.", HttpStatus.NOT_IMPLEMENTED);
-		} else if ( (contentType.equals("text/plain")) || (contentType.equals("application/x-yaml")) ) {
+			return new ResponseEntity<String>("Unable to parse content " + contentType, HttpStatus.NOT_IMPLEMENTED);
+		} else {
 			try {
+				NsdContentType type = null;
+				log.debug("NSD content file name is: " + body.getOriginalFilename());
+				if (body.getOriginalFilename().endsWith("zip")) {
+					type = NsdContentType.ZIP;
+				} else if (body.getOriginalFilename().endsWith("yaml")) {
+					type = NsdContentType.YAML;
+				} else {
+					//TODO: to be implemented later on
+					return new ResponseEntity<String>("Unable to parse file type that is not .zip or .yaml", HttpStatus.NOT_IMPLEMENTED);
+				}
 				//nsdManagementService.uploadNsd(nsdInfoId, (String)body, NsdContentType.YAML);
-				nsdManagementService.uploadNsd(nsdInfoId, body, NsdContentType.YAML);
+				nsdManagementService.uploadNsd(nsdInfoId, body, type);
 				log.debug("Upload processing done");
 				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 				//TODO: check if we need to introduce the asynchronous mode
@@ -414,9 +426,6 @@ public class NsdApiController implements NsdApi {
 				log.error("General exception while uploading NSD content.");
 				return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(), "General exception while uploading NSD content: " + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
 			}
-		} else {
-			log.error("Unacceptable content type: " + contentType);
-			return new ResponseEntity<String>("Unacceptable content type: " + contentType, HttpStatus.BAD_REQUEST);
 		}
 		/*
 		if (accept != null && accept.contains("application/json")) {
