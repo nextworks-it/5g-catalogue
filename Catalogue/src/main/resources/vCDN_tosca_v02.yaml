@@ -36,7 +36,7 @@ topologyTemplate:
       root: 100000
       leaf: 10000
     connectivityType:
-     layerProtocol: IPV4
+     layerProtocols: [IPV4]
      flowPattern: LINE
     serviceAvailability:
      level: LEVEL_1
@@ -54,7 +54,7 @@ topologyTemplate:
       root: 100000
       leaf: 10000
     connectivityType:
-     layerProtocol: IPV4
+     layerProtocols: [IPV4]
      flowPattern: LINE
     serviceAvailability:
      level: LEVEL_1
@@ -72,7 +72,7 @@ topologyTemplate:
       root: 100000
       leaf: 10000
     connectivityType:
-     layerProtocol: IPV4
+     layerProtocols: [IPV4]
      flowPattern: LINE
     serviceAvailability:
      level: LEVEL_1
@@ -90,7 +90,7 @@ topologyTemplate:
       root: 100000
       leaf: 10000
     connectivityType:
-     layerProtocol: IPV4
+     layerProtocols: [IPV4]
      flowPattern: LINE
     serviceAvailability:
      level: LEVEL_1
