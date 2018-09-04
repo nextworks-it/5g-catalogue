@@ -19,7 +19,16 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
+
 @Entity
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "manoType", visible = true)
+@JsonSubTypes({ @JsonSubTypes.Type(value = OSMMano.class, name = "OSM"),
+		@JsonSubTypes.Type(value = DummyMano.class, name = "DUMMY") })
 public abstract class MANO {
 
 	@Id
@@ -38,19 +47,17 @@ public abstract class MANO {
 		this.manoType = manoType;
 	}
 
+	public Long getId() {
+		return id;
+	}
+
+	@JsonProperty("manoId")
 	public String getManoId() {
 		return manoId;
 	}
 
-	public void setManoId(String manoId) {
-		this.manoId = manoId;
-	}
-
+	@JsonProperty("manoType")
 	public MANOType getManoType() {
 		return manoType;
-	}
-
-	public void setManoType(MANOType manoType) {
-		this.manoType = manoType;
 	}
 }

@@ -75,7 +75,7 @@ public class ToscaTranslatorTests {
 		return new String(encoded, encoding);
 	}
 
-	// @Ignore
+	@Ignore
 	@SuppressWarnings("static-access")
 	@Test
 	public void parseStringDescriptor() throws Exception {
@@ -95,7 +95,7 @@ public class ToscaTranslatorTests {
 		System.out.println(mapper.writeValueAsString(dt));
 	}
 
-	// @Ignore
+	@Ignore
 	@SuppressWarnings("static-access")
 	@Test
 	public void parseFileDescriptor() {
