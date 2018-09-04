@@ -3,21 +3,24 @@ package it.nextworks.nfvmano.catalogue.engine;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.core.io.Resource;
+import org.springframework.mock.web.MockMultipartFile;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.CreateNsdInfoRequest;
@@ -50,6 +53,9 @@ public class NsdManagementService {
 	
 	@Autowired
 	private FileSystemStorageService storageService;
+	
+	@Autowired
+	private NotificationManager notificationManager;
 	
 	public NsdManagementService() {	}
 	
@@ -206,43 +212,56 @@ public class NsdManagementService {
 		if (nsdInfo.getNsdOnboardingState() != NsdOnboardingStateType.CREATED) {
 			log.error("NSD info " + nsdInfoId + " not in CREATED onboarding state.");
 			throw new NotPermittedOperationException("NSD info " + nsdInfoId + " not in CREATED onboarding state.");
-		}
+		}		
+		
 		//convert to File
-		File file =	convertToFile(nsd);
-
+		File inputFile = convertToFile(nsd);
+		
+		String nsdFilename = null;
+		DescriptorTemplate dt = null;
+		
 		switch (nsdContentType) {
 		case ZIP: {
-			log.error("Unsupported content type: " + nsdContentType.toString());
-			throw new MethodNotImplementedException("Unsupported content type: " + nsdContentType.toString());
+			try {
+				log.info("NSD file is in format: zip");
+				
+				//TODO: assume for now one single file into the zip
+				MultipartFile nsdMpFile = extractNsdFile(inputFile);
+				//convert to File
+				File nsdFile = convertToFile(nsdMpFile);
+				dt = DescriptorsParser.fileToDescriptorTemplate(nsdFile);
+
+				log.debug("NSD succssfully parsed - its content is: \n" + DescriptorsParser.descriptorTemplateToString(dt));
+				
+				nsdFilename = storageService.store(nsdMpFile);
+				
+				// change nsdContentType to YAML as nsd file is no more zip from now on
+				nsdContentType = NsdContentType.YAML;
+				
+				log.debug("NSD file successfully stored");
+				
+			} catch (IOException e) {
+				log.error("Error while parsing NSD in zip format: " + e.getMessage());
+				throw new MalformattedElementException("Error while parsing NSD.");
+			} catch (Exception e) {
+				log.error("Error while parsing NSD in zip format: " + e.getMessage());
+				throw new MalformattedElementException(e.getMessage());
+			}
+			break;
 		}
 		case YAML: {
 			try {
-				DescriptorTemplate dt = DescriptorsParser.fileToDescriptorTemplate(file);
+				log.info("NSD file is in format: yaml");
+				
+				dt = DescriptorsParser.fileToDescriptorTemplate(inputFile);
 				log.debug("NSD succssfully parsed - its content is: \n" + DescriptorsParser.descriptorTemplateToString(dt));
-			
-				//UUID nsdId = dbWrapper.createNsd(dt);
-				// generate nsdId
 				
-				String nsdFilename = storageService.store(nsd);
-				UUID nsdId = UUID.randomUUID();
+				nsdFilename = storageService.store(nsd);
 				
-				log.debug("Updating NSD info");
-				nsdInfo.setNsdId(nsdId);
-				//TODO: here it is actually onboarded only locally and just in the DB. To be updated when we will implement also the package uploading
-				nsdInfo.setNsdOnboardingState(NsdOnboardingStateType.ONBOARDED);
-				nsdInfo.setNsdDesigner(dt.getMetadata().getVendor());
-				nsdInfo.setNsdInvariantId(UUID.fromString(dt.getMetadata().getDescriptorId()));
-				String nsdName = dt.getTopologyTemplate().getNSNodes().get(0).getProperties().getName();
-				log.debug("NSD name: " + nsdName);
-				nsdInfo.setNsdName(nsdName);
-				nsdInfo.setNsdVersion(dt.getMetadata().getVersion());
-				nsdInfo.setNsdContentType(NsdContentType.YAML);
-				nsdInfo.addNsdFilename(nsdFilename);
-				nsdInfoRepo.saveAndFlush(nsdInfo);
-				log.debug("NSD info updated");
-				//TODO: send notification
+				log.debug("NSD file successfully stored");
+
 			} catch (IOException e) {
-				log.error("Error while parsing NSD: " + e.getMessage());
+				log.error("Error while parsing NSD in yaml format: " + e.getMessage());
 				throw new MalformattedElementException("Error while parsing NSD.");
 			}
 			break;
@@ -253,6 +272,33 @@ public class NsdManagementService {
 			throw new MethodNotImplementedException("Unsupported content type: " + nsdContentType.toString());
 		}
 		}
+		
+		if (nsdFilename == null ||
+			dt == null) {
+			throw new FailedOperationException("Invalid internal structures");
+		}
+		
+		UUID nsdId = UUID.randomUUID();
+		
+		log.debug("Updating NSD info");
+		nsdInfo.setNsdId(nsdId);
+		//TODO: here it is actually onboarded only locally and just in the DB. To be updated when we will implement also the package uploading
+		nsdInfo.setNsdOnboardingState(NsdOnboardingStateType.ONBOARDED);
+		nsdInfo.setNsdDesigner(dt.getMetadata().getVendor());
+		nsdInfo.setNsdInvariantId(UUID.fromString(dt.getMetadata().getDescriptorId()));
+		String nsdName = dt.getTopologyTemplate().getNSNodes().get(0).getProperties().getName();
+		log.debug("NSD name: " + nsdName);
+		nsdInfo.setNsdName(nsdName);
+		nsdInfo.setNsdVersion(dt.getMetadata().getVersion());
+		nsdInfo.setNsdContentType(nsdContentType);
+		nsdInfo.addNsdFilename(nsdFilename);
+		nsdInfoRepo.saveAndFlush(nsdInfo);
+		log.debug("NSD info updated");
+		
+		//send notification over kafka bus
+		notificationManager.nsdOnBoardingNotification(nsdInfo.getId().toString(), nsdId.toString());
+		
+		log.debug("NSD content uploaded and nsdOnBoardingNotification delivered");
 	}
 	
 	private NsdInfo buildNsdInfo (NsdInfoResource nsdInfoResource) {
@@ -283,12 +329,49 @@ public class NsdManagementService {
 	
 	private File convertToFile(MultipartFile multipart) throws Exception {
 	    File convFile = new File(multipart.getOriginalFilename());
+	    log.debug("dd " + multipart.getOriginalFilename());
 	    convFile.createNewFile();
 	    FileOutputStream fos = new FileOutputStream(convFile);
 	    fos.write(multipart.getBytes());
 	    fos.close();
-	    
+	    log.debug("ee");
 	    return convFile;
 	}
 	
+	private MultipartFile extractNsdFile(File file) throws IOException{
+		
+		MultipartFile archivedNsd = null;
+				
+		ZipFile zipFile = new ZipFile(file);
+		if (zipFile.size() == 0) {
+			throw new IOException("The zip archive does not contain any entries.");
+		}
+		if (zipFile.size() > 1) {
+			throw new IOException("The zip archive contains more than one entry.");
+		}
+		Enumeration<? extends ZipEntry> entries = zipFile.entries();
+		
+		while (entries.hasMoreElements()) {						
+			ZipEntry entry = entries.nextElement();
+			if (!entry.isDirectory() && entry.getName().endsWith(".yaml")) {
+				// it is the NSD
+				log.debug("File inside zip: " + entry.getName());
+				
+				if (archivedNsd != null) {
+					log.error("Archive validation failed: multiple NSDs in the zip");
+					throw new IOException("Multiple NSDs in the zip");
+				}
+				InputStream zipIn = zipFile.getInputStream(entry);
+				archivedNsd = new MockMultipartFile(entry.getName(), entry.getName(), null, zipIn);
+			    //found (ASSUME one single .yaml in the zip)
+			    break;
+			}												
+		}
+		if (archivedNsd == null) {
+			throw new IOException("The zip archive does not contain nsd file.");
+		}
+		zipFile.close();
+		log.debug("cc");
+		return archivedNsd;
+	}
 }

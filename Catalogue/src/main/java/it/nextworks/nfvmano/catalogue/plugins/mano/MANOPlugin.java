@@ -15,6 +15,7 @@
 */
 package it.nextworks.nfvmano.catalogue.plugins.mano;
 
+import it.nextworks.nfvmano.catalogue.common.ConfigurationParameters;
 import it.nextworks.nfvmano.catalogue.messages.CatalogueMessage;
 import it.nextworks.nfvmano.catalogue.messages.CatalogueMessageType;
 import it.nextworks.nfvmano.catalogue.messages.NsdChangeNotificationMessage;
@@ -81,7 +82,7 @@ public abstract class MANOPlugin
 				.setBeanId(connectorID)
 				.setKafkaBootstrapServers(kafkaBootstrapServers)
 				.setKafkaGroupId(connectorID)
-				.addTopic("onboard")
+				.addTopic(ConfigurationParameters.kafkaOnboardingNotificationsTopicQueueExchange)
 				.setFunctor(functor)
 				.build();
 	}
