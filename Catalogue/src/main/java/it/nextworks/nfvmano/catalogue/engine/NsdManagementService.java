@@ -139,7 +139,7 @@ public class NsdManagementService {
 					throw new FailedOperationException("Found more than one file for NSD in YAML format. Error.");
 				}
 				String nsdFilename = nsdFilenames.get(0);
-				return storageService.loadAsResource(nsdFilename);
+				return storageService.loadNsdAsResource(nsdInfo, nsdFilename);
 			
 				/*
 				//String nsdString = DescriptorsParser.descriptorTemplateToString(nsd);
@@ -220,25 +220,36 @@ public class NsdManagementService {
 		String nsdFilename = null;
 		DescriptorTemplate dt = null;
 		
+		//pre-set nsdinfo attributes to properly store NSDs
+		UUID nsdId = UUID.randomUUID();
+		nsdInfo.setNsdId(nsdId);
+		
 		switch (nsdContentType) {
 		case ZIP: {
 			try {
 				log.info("NSD file is in format: zip");
 				
-				//TODO: assume for now one single file into the zip
+				//TODO: assuming for now one single file into the zip
 				MultipartFile nsdMpFile = extractNsdFile(inputFile);
 				//convert to File
 				File nsdFile = convertToFile(nsdMpFile);
+
 				dt = DescriptorsParser.fileToDescriptorTemplate(nsdFile);
 
-				log.debug("NSD succssfully parsed - its content is: \n" + DescriptorsParser.descriptorTemplateToString(dt));
-				
-				nsdFilename = storageService.store(nsdMpFile);
+				log.debug("NSD succssfully parsed - its content is: \n" + DescriptorsParser.descriptorTemplateToString(dt));				
+				//pre-set nsdinfo attributes to properly store NSDs
+				nsdInfo.setNsdVersion(dt.getMetadata().getVersion());
+
+				nsdFilename = storageService.storeNsd(nsdInfo, nsdMpFile);
 				
 				// change nsdContentType to YAML as nsd file is no more zip from now on
 				nsdContentType = NsdContentType.YAML;
 				
 				log.debug("NSD file successfully stored");
+				//clean tmp files
+				if (!nsdFile.delete()) {
+					log.warn("Could not delete temporary NSD zip content file");
+				}
 				
 			} catch (IOException e) {
 				log.error("Error while parsing NSD in zip format: " + e.getMessage());
@@ -255,8 +266,10 @@ public class NsdManagementService {
 				
 				dt = DescriptorsParser.fileToDescriptorTemplate(inputFile);
 				log.debug("NSD succssfully parsed - its content is: \n" + DescriptorsParser.descriptorTemplateToString(dt));
+				//pre-set nsdinfo attributes to properly store NSDs
+				nsdInfo.setNsdVersion(dt.getMetadata().getVersion());
 				
-				nsdFilename = storageService.store(nsd);
+				nsdFilename = storageService.storeNsd(nsdInfo, nsd);
 				
 				log.debug("NSD file successfully stored");
 
@@ -277,11 +290,9 @@ public class NsdManagementService {
 			dt == null) {
 			throw new FailedOperationException("Invalid internal structures");
 		}
-		
-		UUID nsdId = UUID.randomUUID();
-		
+				
 		log.debug("Updating NSD info");
-		nsdInfo.setNsdId(nsdId);
+		//nsdInfo.setNsdId(nsdId);
 		//TODO: here it is actually onboarded only locally and just in the DB. To be updated when we will implement also the package uploading
 		nsdInfo.setNsdOnboardingState(NsdOnboardingStateType.ONBOARDED);
 		nsdInfo.setNsdDesigner(dt.getMetadata().getVendor());
@@ -289,11 +300,16 @@ public class NsdManagementService {
 		String nsdName = dt.getTopologyTemplate().getNSNodes().get(0).getProperties().getName();
 		log.debug("NSD name: " + nsdName);
 		nsdInfo.setNsdName(nsdName);
-		nsdInfo.setNsdVersion(dt.getMetadata().getVersion());
+		//nsdInfo.setNsdVersion(dt.getMetadata().getVersion());
 		nsdInfo.setNsdContentType(nsdContentType);
 		nsdInfo.addNsdFilename(nsdFilename);
 		nsdInfoRepo.saveAndFlush(nsdInfo);
 		log.debug("NSD info updated");
+		
+		//clean tmp files
+		if (!inputFile.delete()) {
+			log.warn("Could not delete temporary NSD content file");
+		}
 		
 		//send notification over kafka bus
 		notificationManager.nsdOnBoardingNotification(nsdInfo.getId().toString(), nsdId.toString());
@@ -329,12 +345,10 @@ public class NsdManagementService {
 	
 	private File convertToFile(MultipartFile multipart) throws Exception {
 	    File convFile = new File(multipart.getOriginalFilename());
-	    log.debug("dd " + multipart.getOriginalFilename());
 	    convFile.createNewFile();
 	    FileOutputStream fos = new FileOutputStream(convFile);
 	    fos.write(multipart.getBytes());
 	    fos.close();
-	    log.debug("ee");
 	    return convFile;
 	}
 	
@@ -371,7 +385,6 @@ public class NsdManagementService {
 			throw new IOException("The zip archive does not contain nsd file.");
 		}
 		zipFile.close();
-		log.debug("cc");
 		return archivedNsd;
 	}
 }
