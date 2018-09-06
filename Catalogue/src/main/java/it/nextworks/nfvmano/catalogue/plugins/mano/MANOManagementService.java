@@ -60,6 +60,9 @@ public class MANOManagementService {
 		
 		log.debug("Loading MANO info from DB.");
 		List<MANO> manos = manoRepository.findAll();
+		
+		if (manos.isEmpty())
+			log.debug("No MANO info stored in DB.");
 
 		for (MANO mano : manos) {
 			try {

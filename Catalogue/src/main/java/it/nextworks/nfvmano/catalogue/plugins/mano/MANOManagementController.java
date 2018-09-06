@@ -57,5 +57,4 @@ public class MANOManagementController {
 		
 		return new ResponseEntity<String>(createdManoId, HttpStatus.CREATED);
 	}
-
 }
