@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import it.nextworks.nfvmano.catalogue.plugins.PluginsManager;
 import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
@@ -23,7 +24,7 @@ public class MANOManagementController {
 	private static final Logger log = LoggerFactory.getLogger(MANOManagementController.class);
 	
 	@Autowired
-	private MANOManagementService manoService;
+	private PluginsManager pluginsManager;
 	
 	public MANOManagementController() {
 
@@ -46,7 +47,7 @@ public class MANOManagementController {
 		String createdManoId;
 		
 		try {
-			createdManoId = manoService.createMANOPlugin(mano);
+			createdManoId = pluginsManager.createMANOPlugin(mano);
 		} catch (AlreadyExistingEntityException e) {
 			return new ResponseEntity<String>("MANO already present in DB", HttpStatus.CONFLICT);
 		} catch (MethodNotImplementedException e) {
