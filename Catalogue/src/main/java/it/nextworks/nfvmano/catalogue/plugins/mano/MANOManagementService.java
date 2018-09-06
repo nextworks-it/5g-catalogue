@@ -78,7 +78,7 @@ public class MANOManagementService {
 
 		ObjectMapper mapper = new ObjectMapper();
 
-		if (resources != null) {
+		/*if (resources != null) {
 			for (int i = 0; i < resources.length; i++) {
 				if (resources[i].isFile()) {
 					try {
@@ -101,7 +101,7 @@ public class MANOManagementService {
 					}
 				}
 			}
-		}
+		}*/
 	}
 
 	public String createMANOPlugin(MANO mano)

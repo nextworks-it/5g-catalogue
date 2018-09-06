@@ -425,7 +425,7 @@ public class NsdApiController implements NsdApi {
 				log.error("Impossible to upload NSD: " + e.getMessage());
 				return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(), "Impossible to upload NSD: " + e.getMessage()), HttpStatus.NOT_FOUND);
 			} catch (Exception e) {
-				log.error("General exception while uploading NSD content.");
+				log.error("General exception while uploading NSD content: " + e.getMessage());
 				return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(), "General exception while uploading NSD content: " + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 		}
