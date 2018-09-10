@@ -37,7 +37,7 @@ public class PluginsManager {
 	private static final Logger log = LoggerFactory.getLogger(PluginsManager.class);
 
 	public Map<String, MANOPlugin> manoDrivers = new HashMap<>();
-	
+
 	private Resource[] resources;
 
 	@Value("${kafka.bootstrap-servers}")
@@ -45,23 +45,26 @@ public class PluginsManager {
 
 	@Value("${catalogue.defaultMANOType}")
 	private String defaultMANOType;
-	
+
 	@Value("${catalogue.manoPluginsConfigurations}")
 	private String configurationsDir;
 
+	@Value("${catalogue.skipMANOPluginsConfig}")
+	private boolean skipMANOConfig;
+
 	@Autowired
 	private MANORepository MANORepository;
-	
+
 	public PluginsManager() {
 
 	}
 
 	@PostConstruct
 	public void initPlugins() {
-		
+
 		log.debug("Loading MANO info from DB.");
 		List<MANO> manos = MANORepository.findAll();
-		
+
 		if (manos.isEmpty())
 			log.debug("No MANO info stored in DB.");
 
@@ -75,30 +78,34 @@ public class PluginsManager {
 			}
 		}
 
-		resources = loadConfigurations();
+		if (!skipMANOConfig) {
+			resources = loadConfigurations();
 
-		ObjectMapper mapper = new ObjectMapper();
+			ObjectMapper mapper = new ObjectMapper();
 
-		if (resources != null) {
-			for (int i = 0; i < resources.length; i++) {
-				if (resources[i].isFile()) {
-					try {
-						File tmp = resources[i].getFile();
-						log.debug("Loading MANO configuration from config file #" + i + ".");
-						MANO newMano = mapper.readValue(tmp, MANO.class);
-						log.debug("Successfully loaded configuration for MANO with manoId: " + newMano.getManoId());
+			if (resources != null) {
+				for (int i = 0; i < resources.length; i++) {
+					if (resources[i].isFile()) {
 						try {
-							log.debug("Creating MANO Plugin with manoId " + newMano.getManoId() + " from configuration file.");
-							createMANOPlugin(newMano);
-						} catch (AlreadyExistingEntityException e) {
-							log.error("MANO with manoId " + newMano.getManoId() + " already present in DB.");
-						} catch (MethodNotImplementedException e) {
-							log.error("Unsupported MANO type for MANO with manoId: " + newMano.getManoId());
-						} catch (MalformattedElementException e) {
-							log.error("Malformatted MANO with manoId " + newMano.getManoId() + ": " + e.getMessage());
+							File tmp = resources[i].getFile();
+							log.debug("Loading MANO configuration from config file #" + i + ".");
+							MANO newMano = mapper.readValue(tmp, MANO.class);
+							log.debug("Successfully loaded configuration for MANO with manoId: " + newMano.getManoId());
+							try {
+								log.debug("Creating MANO Plugin with manoId " + newMano.getManoId()
+										+ " from configuration file.");
+								createMANOPlugin(newMano);
+							} catch (AlreadyExistingEntityException e) {
+								log.error("MANO with manoId " + newMano.getManoId() + " already present in DB.");
+							} catch (MethodNotImplementedException e) {
+								log.error("Unsupported MANO type for MANO with manoId: " + newMano.getManoId());
+							} catch (MalformattedElementException e) {
+								log.error(
+										"Malformatted MANO with manoId " + newMano.getManoId() + ": " + e.getMessage());
+							}
+						} catch (IOException e) {
+							log.error("Unable to retrieve MANO configuration file: " + e.getMessage());
 						}
-					} catch (IOException e) {
-						log.error("Unable to retrieve MANO configuration file: " + e.getMessage());
 					}
 				}
 			}
@@ -108,14 +115,14 @@ public class PluginsManager {
 	public void addMANO(MANO mano) throws MalformattedElementException {
 		try {
 			MANOPlugin manoPlugin = buildMANOPlugin(mano);
-			
-			//Init kafka consumer
+
+			// Init kafka consumer
 			manoPlugin.init();
-			
+
 			manoDrivers.put(mano.getManoId(), manoPlugin);
-			
+
 			log.debug("Loaded plugin for MANO " + mano.getManoId());
-	
+
 			// TODO: notify MANO plugin creation
 		} catch (Exception e) {
 			log.error("Failed to add MANO plugin: " + e.getMessage());
@@ -131,7 +138,7 @@ public class PluginsManager {
 			throw new MalformattedElementException("Unsupported MANO type. Skipping.");
 		}
 	}
-	
+
 	public String createMANOPlugin(MANO mano)
 			throws AlreadyExistingEntityException, MethodNotImplementedException, MalformattedElementException {
 		String manoId = mano.getManoId();
@@ -160,14 +167,14 @@ public class PluginsManager {
 			} catch (MalformattedElementException e) {
 				log.error("Unsupported MANO type.");
 			}
-			log.debug("OSM MANO with manoId " + manoId + "successfully instantiated.");
+			log.debug("OSM MANO with manoId " + manoId + " successfully instantiated.");
 			return String.valueOf(createdMano.getId());
 		default:
 			log.error("Unsupported MANO type.");
 			throw new MethodNotImplementedException("Unsupported MANO type.");
 		}
 	}
-	
+
 	private Resource[] loadConfigurations() {
 		ResourceLoader resourceLoader = new DefaultResourceLoader();
 		Resource[] resources = null;

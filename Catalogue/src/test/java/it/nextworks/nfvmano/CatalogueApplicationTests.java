@@ -19,6 +19,9 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.DummyMano;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OpenSourceMANOPlugin;
+
+import java.util.UUID;
+
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,6 +36,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
+import it.nextworks.nfvmano.catalogue.messages.ScopeType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.DummyMANOPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
@@ -69,7 +73,7 @@ public class CatalogueApplicationTests {
         Thread.sleep(1500);
 
         NsdOnBoardingNotificationMessage msg =
-                new NsdOnBoardingNotificationMessage("test-nsd-info", "test-nsd");
+                new NsdOnBoardingNotificationMessage("test-nsd-info", "test-nsd", UUID.fromString("7a4cea43-e29d-423b-9ac8-9f0110ede94e"), ScopeType.LOCAL);
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
@@ -110,7 +114,7 @@ public class CatalogueApplicationTests {
         Thread.sleep(1500);
 
         NsdOnBoardingNotificationMessage msg =
-                new NsdOnBoardingNotificationMessage("test-nsd-info", "test-nsd");
+                new NsdOnBoardingNotificationMessage("test-nsd-info", "test-nsd", UUID.fromString("7a4cea43-e29d-423b-9ac8-9f0110ede94e"), ScopeType.LOCAL);
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
@@ -158,7 +162,7 @@ public class CatalogueApplicationTests {
         Thread.sleep(1500);
 
         NsdOnBoardingNotificationMessage msg =
-                new NsdOnBoardingNotificationMessage("test-nsd-info", "test-nsd");
+                new NsdOnBoardingNotificationMessage("test-nsd-info", "test-nsd", UUID.fromString("7a4cea43-e29d-423b-9ac8-9f0110ede94e"), ScopeType.LOCAL);
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);

@@ -9,6 +9,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
@@ -28,10 +29,14 @@ import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValue
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdInfo;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdLinksType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboardingStateType;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOperationalStateType;
+import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
+import it.nextworks.nfvmano.catalogue.plugins.mano.MANORepository;
 import it.nextworks.nfvmano.catalogue.repos.NsdContentType;
 import it.nextworks.nfvmano.catalogue.repos.NsdInfoRepository;
 import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
+import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
@@ -57,8 +62,21 @@ public class NsdManagementService {
 	@Autowired
 	private NotificationManager notificationManager;
 	
+	@Autowired
+	private MANORepository MANORepository;
+	
+	private Map<String, Map<String, OperationStatus>> operationIdToConsumersAck = new HashMap<>();
+	
 	public NsdManagementService() {	}
 	
+	void updateOperationIdToConsumersMap(UUID operationId, OperationStatus opStatus, String manoId) {
+		
+		Map<String, OperationStatus> manoIdToOpAck = operationIdToConsumersAck.get(operationId.toString());
+		
+		manoIdToOpAck.put(manoId, opStatus);
+		operationIdToConsumersAck.put(operationId.toString(), manoIdToOpAck);
+	}
+	 
 	public NsdInfo createNsdInfo(CreateNsdInfoRequest request) throws FailedOperationException, MalformattedElementException, MethodNotImplementedException {
 		log.debug("Processing request to create a new NSD info.");
 		KeyValuePairs kvp = request.getUserDefinedData();
@@ -294,7 +312,8 @@ public class NsdManagementService {
 		log.debug("Updating NSD info");
 		//nsdInfo.setNsdId(nsdId);
 		//TODO: here it is actually onboarded only locally and just in the DB. To be updated when we will implement also the package uploading
-		nsdInfo.setNsdOnboardingState(NsdOnboardingStateType.ONBOARDED);
+		nsdInfo.setNsdOnboardingState(NsdOnboardingStateType.PROCESSING);
+		nsdInfo.setNsdOperationalState(NsdOperationalStateType.ENABLED);
 		nsdInfo.setNsdDesigner(dt.getMetadata().getVendor());
 		nsdInfo.setNsdInvariantId(UUID.fromString(dt.getMetadata().getDescriptorId()));
 		String nsdName = dt.getTopologyTemplate().getNSNodes().get(0).getProperties().getName();
@@ -303,18 +322,81 @@ public class NsdManagementService {
 		//nsdInfo.setNsdVersion(dt.getMetadata().getVersion());
 		nsdInfo.setNsdContentType(nsdContentType);
 		nsdInfo.addNsdFilename(nsdFilename);
-		nsdInfoRepo.saveAndFlush(nsdInfo);
-		log.debug("NSD info updated");
 		
 		//clean tmp files
 		if (!inputFile.delete()) {
 			log.warn("Could not delete temporary NSD content file");
 		}
 		
+		//TODO: request to Policy Manager for retrieving the MANO Plugins list,
+		// now all plugins are expected to be consumers
+		
+		UUID operationId = UUID.randomUUID();
+		
+		List<MANO> manos = MANORepository.findAll();
+		Map<String, OperationStatus> manoToOnboardingState = new HashMap<>();
+		for (MANO mano : manos) {
+			manoToOnboardingState.put(mano.getManoId(), OperationStatus.SENT);
+			
+		}
+		nsdInfo.setAcknowledgedOnboardOpConsumers(manoToOnboardingState);
+		operationIdToConsumersAck.put(operationId.toString(), manoToOnboardingState);
+		
+		nsdInfoRepo.saveAndFlush(nsdInfo);
+		log.debug("NSD info updated");
+		
 		//send notification over kafka bus
-		notificationManager.nsdOnBoardingNotification(nsdInfo.getId().toString(), nsdId.toString());
+		notificationManager.sendNsdOnBoardingNotification(nsdInfo.getId().toString(), nsdId.toString(), operationId);
 		
 		log.debug("NSD content uploaded and nsdOnBoardingNotification delivered");
+	}
+	
+	public synchronized void updateNsdInfoOnboardingStatus(String nsdInfoId, String manoId, OperationStatus opStatus) {
+		
+		log.debug("Retrieving nsdInfoResource {} from DB for updating with onboarding status info for plugin {}.", nsdInfoId, manoId);
+		Optional<NsdInfoResource> optionalNsdInfoResource = nsdInfoRepo.findById(UUID.fromString(nsdInfoId));
+		
+		if (optionalNsdInfoResource.isPresent()) {
+			NsdInfoResource nsdInfoResource = optionalNsdInfoResource.get();
+			
+			NsdInfoResource targetNsdInfoResource = new NsdInfoResource();
+			Map<String, OperationStatus> ackMap = nsdInfoResource.getAcknowledgedOnboardOpConsumers();
+			ackMap.put(manoId, opStatus);
+			targetNsdInfoResource.setAcknowledgedOnboardOpConsumers(ackMap);
+			targetNsdInfoResource.setNestedNsdInfoIds(nsdInfoResource.getNestedNsdInfoIds());
+			targetNsdInfoResource.setNsdContentType(nsdInfoResource.getNsdContentType());
+			targetNsdInfoResource.setNsdDesigner(nsdInfoResource.getNsdDesigner());
+			targetNsdInfoResource.setNsdId(nsdInfoResource.getNsdId());
+			targetNsdInfoResource.setNsdInvariantId(nsdInfoResource.getNsdInvariantId());
+			targetNsdInfoResource.setNsdName(nsdInfoResource.getNsdName());
+			targetNsdInfoResource.setNsdOperationalState(nsdInfoResource.getNsdOperationalState());
+			targetNsdInfoResource.setNsdUsageState(nsdInfoResource.getNsdUsageState());
+			targetNsdInfoResource.setNsdVersion(nsdInfoResource.getNsdVersion());
+			targetNsdInfoResource.setPnfdInfoIds(nsdInfoResource.getPnfdInfoIds());
+			targetNsdInfoResource.setUserDefinedData(nsdInfoResource.getUserDefinedData());
+			targetNsdInfoResource.setVnfPkgIds(nsdInfoResource.getVnfPkgIds());
+			
+			log.debug("Checking NSD with nsdInfoId {} onboarding state.", nsdInfoId);
+			targetNsdInfoResource.setNsdOnboardingState(checkNsdOnboardingState(nsdInfoId, ackMap));
+			
+			log.debug("Updating NsdInfoResource {}.", nsdInfoId);
+			nsdInfoRepo.saveAndFlush(targetNsdInfoResource);
+		}
+	}
+	
+	private NsdOnboardingStateType checkNsdOnboardingState(String nsdInfoId, Map<String, OperationStatus> ackMap) {
+		
+		for (Entry<String, OperationStatus> entry : ackMap.entrySet()) {
+			if (entry.getValue() == OperationStatus.FAILED) {
+				log.error("NSD with nsdInfoId {} onboarding failed for mano with manoId {}.", nsdInfoId, entry.getKey());
+				
+				//TODO: Decide how to handle MANO onboarding failures.
+			} else if (entry.getValue() == OperationStatus.SENT || entry.getValue() == OperationStatus.RECEIVED || entry.getValue() == OperationStatus.PROCESSING) {
+				log.debug("NSD with nsdInfoId {} onboarding still in progress for mano with manoId {}.");
+				return NsdOnboardingStateType.PROCESSING;
+			}
+		}
+		return NsdOnboardingStateType.ONBOARDED;
 	}
 	
 	private NsdInfo buildNsdInfo (NsdInfoResource nsdInfoResource) {
@@ -352,6 +434,7 @@ public class NsdManagementService {
 	    return convFile;
 	}
 	
+	@SuppressWarnings("resource")
 	private MultipartFile extractNsdFile(File file) throws IOException{
 		
 		MultipartFile archivedNsd = null;

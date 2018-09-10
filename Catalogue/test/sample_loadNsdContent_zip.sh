@@ -1,6 +1,3 @@
 #!/bin/bash
 
-curl -X POST -v -F file=@vnf-test.tar http://localhost:8081/app-catalogue/app-packages
-#curl -v -X PUT --data-binary @vCDN_tosca_v01.yaml http://localhost:8083/nsd/v1/ns_descriptors/XXXXXXX/nsd_content --header "Content-Type:application/x-yaml" --header "Accept:application/json"
-
-curl -v -X GET http://localhost:8083/nsd/v1/ns_descriptors/XXXXXXX/nsd_content --header "Content-Type:application/x-yaml" --header "Accept:application/x-yaml"
+curl -X PUT -v -F file=@vCDN_tosca_v02a.zip http://localhost:8083/nsd/v1/ns_descriptors/58c25769-567d-4e68-87d7-e13c28fb1a84/nsd_content --header "Accept:application/json"

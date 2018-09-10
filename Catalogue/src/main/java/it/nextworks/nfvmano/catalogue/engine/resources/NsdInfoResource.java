@@ -18,8 +18,13 @@ import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboa
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOperationalStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdUsageStateType;
 import it.nextworks.nfvmano.catalogue.repos.NsdContentType;
+import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.NotPermittedOperationException;
 
+/**
+ * @author nextworks
+ *
+ */
 @Entity
 public class NsdInfoResource {
 
@@ -61,11 +66,13 @@ public class NsdInfoResource {
 	@Fetch(FetchMode.SELECT)
 	private List<String> nsdFilename = new ArrayList<>();
 
-	
 	@ElementCollection
 	@Fetch(FetchMode.SELECT)
 	private Map<String, String> userDefinedData = new HashMap<>();
 	
+	@ElementCollection
+	@Fetch(FetchMode.SELECT)
+	private Map<String, OperationStatus> acknowledgedOnboardOpConsumers = new HashMap<>();
 	
 	public NsdInfoResource() { }
 	
@@ -252,8 +259,6 @@ public class NsdInfoResource {
 		this.nsdInvariantId = nsdInvariantId;
 	}
 	
-	
-	
 	/**
 	 * @return the nsdContentType
 	 */
@@ -268,8 +273,6 @@ public class NsdInfoResource {
 		this.nsdContentType = nsdContentType;
 	}
 	
-	
-
 	/**
 	 * @return the nsdFilename
 	 */
@@ -279,6 +282,17 @@ public class NsdInfoResource {
 	
 	public void addNsdFilename(String filename) {
 		this.nsdFilename.add(filename);
+	}
+		
+	/**
+	 * @return the acknowledgedOnboardOpConsumers
+	 */
+	public Map<String, OperationStatus> getAcknowledgedOnboardOpConsumers() {
+		return acknowledgedOnboardOpConsumers;
+	}
+
+	public void setAcknowledgedOnboardOpConsumers(Map<String, OperationStatus> acknowledgedOnboardOpConsumers) {
+		this.acknowledgedOnboardOpConsumers = acknowledgedOnboardOpConsumers;
 	}
 
 	public void isDeletable() throws NotPermittedOperationException {

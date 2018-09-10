@@ -12,9 +12,9 @@ public interface NsdNotificationsConsumerInterface {
      * This method is called when a new NSD is on-boarded, after all the steps are done.
      * REF IFA 013 v2.4.1 - 8.2.6
      *
-     * @param notification notification about the on-boarding of a new NSD
+     * @param castMsg notification about the on-boarding of a new NSD
      */
-    void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification);
+    void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage castMsg);
 
     /**
      * This method is called when there is a change of state in an on-boarded NSD.

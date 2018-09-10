@@ -1,7 +1,11 @@
 package it.nextworks.nfvmano.catalogue.messages;
 
+import java.util.UUID;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 
 public class NsdDeletionNotificationMessage extends CatalogueMessage {
 
@@ -11,8 +15,10 @@ public class NsdDeletionNotificationMessage extends CatalogueMessage {
 	@JsonCreator
 	public NsdDeletionNotificationMessage(
 			@JsonProperty("nsdInfoId") String nsdInfoId,
-			@JsonProperty("nsdId") String nsdId
+			@JsonProperty("nsdId") String nsdId,
+			@JsonProperty("scope") ScopeType scope
 	) {
+		super(UUID.randomUUID(), scope, OperationStatus.SENT);
 		this.nsdInfoId = nsdInfoId;
 		this.nsdId = nsdId;
 		this.type = CatalogueMessageType.NSD_DELETION_NOTIFICATION;
