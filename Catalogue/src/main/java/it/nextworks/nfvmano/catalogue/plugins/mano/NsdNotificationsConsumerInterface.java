@@ -5,6 +5,7 @@ import it.nextworks.nfvmano.catalogue.messages.NsdDeletionNotificationMessage;
 import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdDeletionNotification;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnboardingNotification;
+import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
 
 public interface NsdNotificationsConsumerInterface {
 
@@ -22,31 +23,35 @@ public interface NsdNotificationsConsumerInterface {
      * REF IFA 013 v2.4.1 - 8.2.7
      *
      * @param notification notification about the state change of an NSD
+     * @throws MethodNotImplementedException 
      */
-    void acceptNsdChangeNotification(NsdChangeNotificationMessage notification);
+    void acceptNsdChangeNotification(NsdChangeNotificationMessage notification) throws MethodNotImplementedException;
 
     /**
      * This method is called when an on-boarded NSD is deleted.
      * REF IFA 013 v2.4.1 - 8.2.8
      *
      * @param notification notification about the deletion of an existing NSD
+     * @throws MethodNotImplementedException 
      */
-    void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification);
+    void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification) throws MethodNotImplementedException;
 
     /**
      * This method is called when a new PNFD is on-boarded, after all the on-boarding steps are done.
      * REF IFA 013 v2.4.1 - 8.2.9
      *
      * @param notification notification about the on-boarding of a PNFD
+     * @throws MethodNotImplementedException 
      */
-    void acceptPnfdOnBoardingNotification(PnfdOnboardingNotification notification); // TODO use catalogueMsg
+    void acceptPnfdOnBoardingNotification(PnfdOnboardingNotification notification) throws MethodNotImplementedException; // TODO use catalogueMsg
 
     /**
      * This method is called when an on-boarded PNFD is deleted.
      * REF IFA 013 v2.4.1 - 8.2.10
      *
      * @param notification notification about the deletion of an existing PNFD
+     * @throws MethodNotImplementedException 
      */
-    void acceptPnfdDeletionNotification(PnfdDeletionNotification notification); // TODO use catalogueMsg
+    void acceptPnfdDeletionNotification(PnfdDeletionNotification notification) throws MethodNotImplementedException; // TODO use catalogueMsg
 
 }

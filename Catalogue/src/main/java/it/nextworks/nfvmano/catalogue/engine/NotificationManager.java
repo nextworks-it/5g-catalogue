@@ -28,12 +28,14 @@ import it.nextworks.nfvmano.catalogue.messages.ScopeType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdDeletionNotification;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnboardingNotification;
 import it.nextworks.nfvmano.catalogue.plugins.KafkaConnector;
+import it.nextworks.nfvmano.catalogue.plugins.mano.NsdNotificationsConsumerInterface;
+import it.nextworks.nfvmano.catalogue.plugins.mano.NsdNotificationsProducerInterface;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
 
 @Service
-public class NotificationManager {
+public class NotificationManager implements NsdNotificationsConsumerInterface, NsdNotificationsProducerInterface {
 
 	private static final Logger log = LoggerFactory.getLogger(NotificationManager.class);
 
@@ -70,7 +72,8 @@ public class NotificationManager {
 				.build();
 	}
 
-	void sendNsdOnBoardingNotification(String nsdInfoId, String nsdId, UUID operationId)
+	@Override
+	public void sendNsdOnBoardingNotification(String nsdInfoId, String nsdId, UUID operationId)
 			throws FailedOperationException, MalformattedElementException, MethodNotImplementedException {
 		try {
 			log.info("Sending nsdOnBoardingNotification for NSD " + nsdId);
@@ -101,23 +104,28 @@ public class NotificationManager {
 		}
 	}
 
-	void sendNsdChangeNotification(NsdChangeNotificationMessage notification) throws MethodNotImplementedException {
-		throw new MethodNotImplementedException("nsdChangeNotification method not implemented");
+	@Override
+	public void sendNsdChangeNotification(NsdChangeNotificationMessage notification) throws MethodNotImplementedException {
+		throw new MethodNotImplementedException("sendNsdChangeNotification method not implemented");
 	}
 
-	void sendNsdDeletionNotification(NsdDeletionNotificationMessage notification) throws MethodNotImplementedException {
-		throw new MethodNotImplementedException("nsdDeletionNotification method not implemented");
+	@Override
+	public void sendNsdDeletionNotification(NsdDeletionNotificationMessage notification) throws MethodNotImplementedException {
+		throw new MethodNotImplementedException("sendNsdDeletionNotification method not implemented");
 	}
 
-	void sendPnfdOnBoardingNotification(PnfdOnboardingNotification notification) throws MethodNotImplementedException {
-		throw new MethodNotImplementedException("pnfdOnBoardingNotification method not implemented");
+	@Override
+	public void sendPnfdOnBoardingNotification(PnfdOnboardingNotification notification) throws MethodNotImplementedException {
+		throw new MethodNotImplementedException("sendPnfdOnBoardingNotification method not implemented");
 	}
 
-	void sendPnfdDeletionNotification(PnfdDeletionNotification notification) throws MethodNotImplementedException {
-		throw new MethodNotImplementedException("pnfdDeletionNotification method not implemented");
+	@Override
+	public void sendPnfdDeletionNotification(PnfdDeletionNotification notification) throws MethodNotImplementedException {
+		throw new MethodNotImplementedException("sendPnfdDeletionNotification method not implemented");
 	}
 
-	void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) {
+	@Override
+	public void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) {
 		log.info("Received NSD onboarding notification for NSD {} with info id {}, from plugin {}.",
 				notification.getNsdId(), notification.getNsdInfoId(), notification.getManoId());
 		
@@ -139,5 +147,25 @@ public class NotificationManager {
 
 		log.debug("NsdInfoResource successfully updated with plugin {} operation status {} for operation {}.",
 				notification.getManoId(), notification.getOpStatus(), notification.getOperationId().toString());
+	}
+
+	@Override
+	public void acceptNsdChangeNotification(NsdChangeNotificationMessage notification) throws MethodNotImplementedException {
+		throw new MethodNotImplementedException("acceptNsdChangeNotification method not implemented");
+	}
+
+	@Override
+	public void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification) throws MethodNotImplementedException {
+		throw new MethodNotImplementedException("acceptNsdDeletionNotification method not implemented");
+	}
+
+	@Override
+	public void acceptPnfdOnBoardingNotification(PnfdOnboardingNotification notification) throws MethodNotImplementedException {
+		throw new MethodNotImplementedException("acceptPnfdOnBoardingNotification method not implemented");
+	}
+
+	@Override
+	public void acceptPnfdDeletionNotification(PnfdDeletionNotification notification) throws MethodNotImplementedException {
+		throw new MethodNotImplementedException("acceptPnfdDeletionNotification method not implemented");
 	}
 }

@@ -24,17 +24,22 @@ import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
 import it.nextworks.nfvmano.catalogue.plugins.KafkaConnector;
 import it.nextworks.nfvmano.catalogue.plugins.Plugin;
 import it.nextworks.nfvmano.catalogue.plugins.PluginType;
-import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
+import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class MANOPlugin
 		extends Plugin
 		implements NsdNotificationsConsumerInterface, VnfdNotificationsConsumerInterface
 {
 
+	private static final Logger log = LoggerFactory.getLogger(MANOPlugin.class);
+	
 	protected MANOType manoType;
 	protected MANO mano;
 	protected KafkaConnector connector;
@@ -56,26 +61,42 @@ public abstract class MANOPlugin
 				CatalogueMessageType.NSD_CHANGE_NOTIFICATION,
 				msg -> {
 					NsdChangeNotificationMessage castMsg = (NsdChangeNotificationMessage) msg;
-					acceptNsdChangeNotification(castMsg);
+					try {
+						acceptNsdChangeNotification(castMsg);
+					} catch (MethodNotImplementedException e) {
+						log.error("Method not yet implemented: " + e.getMessage());
+					}
 				}
 		);
 		functor.put(
 				CatalogueMessageType.NSD_DELETION_NOTIFICATION,
 				msg -> {
                     NsdDeletionNotificationMessage castMsg = (NsdDeletionNotificationMessage) msg;
-					acceptNsdDeletionNotification(castMsg);
+					try {
+						acceptNsdDeletionNotification(castMsg);
+					} catch (MethodNotImplementedException e) {
+						log.error("Method not yet implemented: " + e.getMessage());
+					}
 				}
 		);
 		functor.put(
 				CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION,
 				msg -> {
-					acceptPnfdOnBoardingNotification(null);
+					try {
+						acceptPnfdOnBoardingNotification(null);
+					} catch (MethodNotImplementedException e) {
+						log.error("Method not yet implemented: " + e.getMessage());
+					}
 				}
 		);
 		functor.put(
 				CatalogueMessageType.PNFD_DELETION_NOTIFICATION,
 				msg -> {
-					acceptPnfdDeletionNotification(null);
+					try {
+						acceptPnfdDeletionNotification(null);
+					} catch (MethodNotImplementedException e) {
+						log.error("Method not yet implemented: " + e.getMessage());
+					}
 				}
 		);
 		connector = KafkaConnector.Builder()
