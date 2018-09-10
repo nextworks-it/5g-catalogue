@@ -29,15 +29,19 @@ import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 
 public class CatalogueMessage {
 
-    CatalogueMessageType type;
-    UUID operationId;
-    ScopeType scope;
-    OperationStatus opStatus;
+    private CatalogueMessageType type;
+    private UUID operationId;
+    private ScopeType scope;
+    private OperationStatus opStatus;
     
     @JsonCreator
-    public CatalogueMessage(@JsonProperty("operationId") UUID operationId, 
+    public CatalogueMessage(
+            @JsonProperty("type") CatalogueMessageType type,
+            @JsonProperty("operationId") UUID operationId,
     		@JsonProperty("scope") ScopeType scope,
-    		@JsonProperty("opStatus") OperationStatus opStatus) {
+    		@JsonProperty("opStatus") OperationStatus opStatus
+    ) {
+        this.type = type;
     	this.operationId = operationId;
     	this.scope = scope;
     	this.opStatus = opStatus;
@@ -61,9 +65,5 @@ public class CatalogueMessage {
     @JsonProperty("opStatus")
 	public OperationStatus getOpStatus() {
 		return opStatus;
-	}
-
-	public void setOpStatus(OperationStatus opStatus) {
-		this.opStatus = opStatus;
 	}
 }

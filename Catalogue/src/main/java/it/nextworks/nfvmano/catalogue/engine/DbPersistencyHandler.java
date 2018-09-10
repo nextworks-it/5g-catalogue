@@ -1,6 +1,7 @@
 package it.nextworks.nfvmano.catalogue.engine;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -61,8 +62,6 @@ public class DbPersistencyHandler {
 		log.debug("Topology template saved");
 		
 		TopologyTemplate topologySource = source.getTopologyTemplate();
-		List<NsVirtualLinkNode> nsVirtualLinks = topologySource.getNsVirtualLinkNodes();
-		List<NSNode> nsNodes = topologySource.getNSNodes(); 
 		
 		//TODO: save the rest of the NSD
 		
@@ -92,7 +91,7 @@ public class DbPersistencyHandler {
 	private void validateNsdFormat(DescriptorTemplate source) throws MalformattedElementException {
 		TopologyTemplate topologySource = source.getTopologyTemplate();
 		if (topologySource == null) throw new MalformattedElementException("NSD descriptor template without topology template");
-		List<NSNode> nsNodes = topologySource.getNSNodes();
+		Map<String, NSNode> nsNodes = topologySource.getNSNodes();
 		if ((nsNodes == null) || (nsNodes.size() != 1)) throw new MalformattedElementException("NS node template not available or multiple."); 
 	}
 

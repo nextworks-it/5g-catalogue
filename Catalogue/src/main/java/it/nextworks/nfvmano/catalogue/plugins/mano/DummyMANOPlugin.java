@@ -15,26 +15,55 @@
 */
 package it.nextworks.nfvmano.catalogue.plugins.mano;
 
+import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
 import it.nextworks.nfvmano.catalogue.messages.NsdChangeNotificationMessage;
 import it.nextworks.nfvmano.catalogue.messages.NsdDeletionNotificationMessage;
 import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
+import it.nextworks.nfvmano.catalogue.messages.ScopeType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdDeletionNotification;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnboardingNotification;
+import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
 
 public class DummyMANOPlugin extends MANOPlugin {
 
 	private static final Logger log = LoggerFactory.getLogger(DummyMANOPlugin.class);
 
-	public DummyMANOPlugin(MANOType manoType, MANO mano, String kafkaBootstrapServers) {
-		super(manoType, mano, kafkaBootstrapServers);
+	public DummyMANOPlugin(
+			MANOType manoType,
+			MANO mano,
+			String kafkaBootstrapServers,
+			NsdManagementInterface service,
+			String localTopic,
+			String remoteTopic,
+			KafkaTemplate<String, String> kafkaTemplate
+	) {
+		super(
+				manoType,
+				mano,
+				kafkaBootstrapServers,
+				service,
+				localTopic,
+				remoteTopic,
+				kafkaTemplate
+		);
 	}
 
 	@Override
 	public void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) {
 		log.info("Received NSD onboarding notification.");
 		log.debug("Body: {}", notification);
+		NsdOnBoardingNotificationMessage response = new NsdOnBoardingNotificationMessage(
+				notification.getNsdInfoId(),
+				notification.getNsdId(),
+				notification.getOperationId(),
+				ScopeType.REMOTE,
+				OperationStatus.SUCCESSFULLY_DONE,
+				mano.getManoId()
+		);
+		sendNotification(response);
 	}
 
 	@Override
