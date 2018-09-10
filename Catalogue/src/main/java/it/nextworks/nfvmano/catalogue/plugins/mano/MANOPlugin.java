@@ -82,7 +82,7 @@ public abstract class MANOPlugin
 				.setBeanId(connectorID)
 				.setKafkaBootstrapServers(kafkaBootstrapServers)
 				.setKafkaGroupId(connectorID)
-				.addTopic(ConfigurationParameters.kafkaOnboardingNotificationsTopicQueueExchange)
+				.addTopic(ConfigurationParameters.kafkaLocalOnboardingNotificationsTopicQueueExchange)
 				.setFunctor(functor)
 				.build();
 	}

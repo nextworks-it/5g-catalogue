@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,6 +30,7 @@ import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.Sap.SapNode;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import it.nextworks.nfvmano.libs.descriptors.templates.Metadata;
 import it.nextworks.nfvmano.libs.descriptors.templates.Node;
+import it.nextworks.nfvmano.libs.descriptors.templates.SubstitutionMapping;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
 
@@ -95,7 +97,7 @@ public class ToscaTranslatorTests {
 		System.out.println(mapper.writeValueAsString(dt));
 	}
 
-	@Ignore
+	//@Ignore
 	@SuppressWarnings("static-access")
 	@Test
 	public void parseFileDescriptor() {
@@ -103,7 +105,7 @@ public class ToscaTranslatorTests {
 		try {
 
 			ClassLoader classLoader = getClass().getClassLoader();
-			File nsd = new File(classLoader.getResource("vCDN_tosca_v02.yaml").getFile());
+			File nsd = new File(classLoader.getResource("vCDN_tosca_v03.yaml").getFile());
 			ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
 			DescriptorTemplate descriptorTemplate = descriptorParser.fileToDescriptorTemplate(nsd.getAbsolutePath());		
@@ -112,6 +114,11 @@ public class ToscaTranslatorTests {
 			System.out.println("===============================================================================================");
 			System.out.println("Descriptor Metadata");
 			System.out.println(mapper.writeValueAsString(metadata));
+			System.out.println("===============================================================================================");
+			
+			System.out.println("Substitution Mapping");
+			SubstitutionMapping subMapping = descriptorTemplate.getTopologyTemplate().getSubstituitionMapping();
+			System.out.println(mapper.writeValueAsString(subMapping));
 			System.out.println("===============================================================================================");
 
 			System.out.println("Descriptor Nodes");
@@ -122,36 +129,36 @@ public class ToscaTranslatorTests {
 			System.out.println("===============================================================================================");
 
 			try {
-				List<NSNode> nsNodes = descriptorTemplate.getTopologyTemplate().getNSNodes();
+				Map<String, NSNode> nsNodes = descriptorTemplate.getTopologyTemplate().getNSNodes();
 
 				System.out.println("NS Nodes");
-				for (NSNode nsNode : nsNodes) {
-					System.out.println(mapper.writeValueAsString(nsNode));
+				for (Entry<String, NSNode> nsNode : nsNodes.entrySet()) {
+					System.out.println(mapper.writeValueAsString(nsNode.getValue()));
 				}
 				System.out.println("===============================================================================================");
 
-				List<NsVirtualLinkNode> nsVirtualLinks = descriptorTemplate.getTopologyTemplate()
+				Map<String, NsVirtualLinkNode> nsVirtualLinks = descriptorTemplate.getTopologyTemplate()
 						.getNsVirtualLinkNodes();
 
 				System.out.println("NS Virtual Link Nodes");
-				for (NsVirtualLinkNode nsVLinkNode : nsVirtualLinks) {
-					System.out.println(mapper.writeValueAsString(nsVLinkNode));
+				for (Entry<String, NsVirtualLinkNode> nsVLinkNode : nsVirtualLinks.entrySet()) {
+					System.out.println(mapper.writeValueAsString(nsVLinkNode.getValue()));
 				}
 				System.out.println("===============================================================================================");
 
-				List<SapNode> sapNodes = descriptorTemplate.getTopologyTemplate().getSapNodes();
+				Map<String, SapNode> sapNodes = descriptorTemplate.getTopologyTemplate().getSapNodes();
 
 				System.out.println("SAP Nodes");
-				for (SapNode sapNode : sapNodes) {
-					System.out.println(mapper.writeValueAsString(sapNode));
+				for (Entry<String, SapNode> sapNode : sapNodes.entrySet()) {
+					System.out.println(mapper.writeValueAsString(sapNode.getValue()));
 				}
 				System.out.println("===============================================================================================");
 				
-				List<VNFNode> vnfNodes = descriptorTemplate.getTopologyTemplate().getVNFNodes();
+				Map<String, VNFNode> vnfNodes = descriptorTemplate.getTopologyTemplate().getVNFNodes();
 
 				System.out.println("VNF Nodes");
-				for (VNFNode vnfNode : vnfNodes) {
-					System.out.println(mapper.writeValueAsString(vnfNode));
+				for (Entry<String, VNFNode> vnfNode : vnfNodes.entrySet()) {
+					System.out.println(mapper.writeValueAsString(vnfNode.getValue()));
 				}
 				System.out.println("===============================================================================================");
 
