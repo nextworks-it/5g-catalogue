@@ -76,6 +76,7 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 
 		setConnector(KafkaConnector.Builder().setBeanId(connectorId).setKafkaBootstrapServers(server)
 				.setKafkaGroupId(connectorId).addTopic(topicQueueExchange).setFunctor(functor).build());
+		connector.init();
 		log.debug("Kafka connector initialized.");
 	}
 

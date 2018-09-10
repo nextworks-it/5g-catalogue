@@ -46,6 +46,12 @@ public class NotificationManagerTests {
 			String json = mapper.writeValueAsString(msg);
 			System.out.println("REMOTE ON-BOARDING MSG: " + json);
 			kafkaTemplate.send(ConfigurationParameters.kafkaRemoteOnboardingNotificationsTopicQueueExchange, json);
+			try {
+				Thread.sleep(2000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			if (notificationManager == null) {
 				System.out.println("================= Error : null notification service");
 			}
