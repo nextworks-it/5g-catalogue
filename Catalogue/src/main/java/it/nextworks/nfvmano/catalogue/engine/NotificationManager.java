@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 
 import javax.annotation.PostConstruct;
 
+import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-import it.nextworks.nfvmano.catalogue.common.ConfigurationParameters;
 import it.nextworks.nfvmano.catalogue.messages.CatalogueMessage;
 import it.nextworks.nfvmano.catalogue.messages.CatalogueMessageType;
 import it.nextworks.nfvmano.catalogue.messages.NsdChangeNotificationMessage;
@@ -51,6 +51,12 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 	@Value("${kafka.bootstrap-servers}")
 	private String kafkaBootstrapServers;
 
+	@Value("${kafkatopic.local.nsd}")
+	private String localNsdNotificationTopic;
+
+	@Value("${kafkatopic.remote.nsd}")
+	private String remoteNsdNotificationTopic;
+
 	@Autowired
 	private NsdManagementService nsdMgmtService;
 
@@ -61,9 +67,11 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 	@PostConstruct
 	public void init() {
 		log.debug("Initializing notification manager.");
-		initializeKafkaConnector("ENGINE_NOTIFICATION_MANAGER", kafkaBootstrapServers,
-				ConfigurationParameters.kafkaRemoteOnboardingNotificationsTopicQueueExchange);
-
+		initializeKafkaConnector(
+				"ENGINE_NOTIFICATION_MANAGER",
+				kafkaBootstrapServers,
+				remoteNsdNotificationTopic
+		);
 	}
 
 	private void initializeKafkaConnector(String connectorId, String server, String topicQueueExchange) {
@@ -74,8 +82,14 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 			acceptNsdOnBoardingNotification(castMsg);
 		});
 
-		setConnector(KafkaConnector.Builder().setBeanId(connectorId).setKafkaBootstrapServers(server)
-				.setKafkaGroupId(connectorId).addTopic(topicQueueExchange).setFunctor(functor).build());
+		setConnector(
+				KafkaConnector.Builder()
+						.setBeanId(connectorId)
+						.setKafkaBootstrapServers(server)
+						.setKafkaGroupId(connectorId)
+						.addTopic(topicQueueExchange)
+						.setFunctor(functor)
+						.build());
 		connector.init();
 		log.debug("Kafka connector initialized.");
 	}
@@ -86,8 +100,13 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 		try {
 			log.info("Sending nsdOnBoardingNotification for NSD " + nsdId);
 
-			NsdOnBoardingNotificationMessage msg = new NsdOnBoardingNotificationMessage(nsdInfoId, nsdId, operationId,
-					ScopeType.LOCAL);
+			NsdOnBoardingNotificationMessage msg = new NsdOnBoardingNotificationMessage(
+			        nsdInfoId,
+                    nsdId,
+					operationId,
+                    ScopeType.LOCAL,
+                    OperationStatus.SENT
+            );
 
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
@@ -96,16 +115,15 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 			String json = mapper.writeValueAsString(msg);
 
 			log.debug("Sending json message over kafka bus on topic "
-					+ ConfigurationParameters.kafkaLocalOnboardingNotificationsTopicQueueExchange + "\n" + json);
+					+ localNsdNotificationTopic + "\n" + json);
 
 			if (skipKafka) {
 				log.debug(" ---- TEST MODE: skipping post to kafka bus -----");
 			} else {
-				kafkaTemplate.send(ConfigurationParameters.kafkaLocalOnboardingNotificationsTopicQueueExchange, json);
+				kafkaTemplate.send(localNsdNotificationTopic, json);
 
 				log.debug("Message sent.");
 			}
-
 		} catch (Exception e) {
 			log.error("Error while posting NsdOnBoardingNotificationMessage to Kafka bus");
 			throw new FailedOperationException(e.getMessage());

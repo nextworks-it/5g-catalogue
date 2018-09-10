@@ -8,6 +8,8 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
+import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
+import it.nextworks.nfvmano.catalogue.engine.NsdManagementService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,7 @@ import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.ResourcePatternUtils;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,6 +54,18 @@ public class PluginsManager {
 
 	@Value("${catalogue.skipMANOPluginsConfig}")
 	private boolean skipMANOConfig;
+
+	@Value("${kafkatopic.local.nsd}")
+	private String localNsdNotificationTopic;
+
+	@Value("${kafkatopic.remote.nsd}")
+	private String remoteNsdNotificationTopic;
+
+	@Autowired
+	private KafkaTemplate<String, String> kafkaTemplate;
+
+	@Autowired
+	private NsdManagementService service;
 
 	@Autowired
 	private MANORepository MANORepository;
@@ -131,9 +146,25 @@ public class PluginsManager {
 
 	private MANOPlugin buildMANOPlugin(MANO mano) throws MalformattedElementException {
 		if (mano.getManoType().equals(MANOType.DUMMY)) {
-			return new DummyMANOPlugin(mano.getManoType(), mano, bootstrapServers);
+			return new DummyMANOPlugin(
+					mano.getManoType(),
+					mano,
+					bootstrapServers,
+					service,
+					localNsdNotificationTopic,
+					remoteNsdNotificationTopic,
+					kafkaTemplate
+			);
 		} else if (mano.getManoType().equals(MANOType.OSM)) {
-			return new OpenSourceMANOPlugin(mano.getManoType(), mano, bootstrapServers);
+			return new OpenSourceMANOPlugin(
+					mano.getManoType(),
+					mano,
+					bootstrapServers,
+					service,
+					localNsdNotificationTopic,
+					remoteNsdNotificationTopic,
+					kafkaTemplate
+			);
 		} else {
 			throw new MalformattedElementException("Unsupported MANO type. Skipping.");
 		}

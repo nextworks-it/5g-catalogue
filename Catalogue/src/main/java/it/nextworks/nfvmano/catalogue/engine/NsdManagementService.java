@@ -15,6 +15,7 @@ import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import it.nextworks.nfvmano.catalogue.storage.StorageServiceInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +47,7 @@ import it.nextworks.nfvmano.libs.common.exceptions.NotPermittedOperationExceptio
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 
 @Service
-public class NsdManagementService {
+public class NsdManagementService implements NsdManagementInterface {
 	
 	private static final Logger log = LoggerFactory.getLogger(NsdManagementService.class);
 	
@@ -57,7 +58,7 @@ public class NsdManagementService {
 	private DbPersistencyHandler dbWrapper;
 	
 	@Autowired
-	private FileSystemStorageService storageService;
+	private StorageServiceInterface storageService;
 	
 	@Autowired
 	private NotificationManager notificationManager;
@@ -68,7 +69,7 @@ public class NsdManagementService {
 	private Map<String, Map<String, NotificationResource>> operationIdToConsumersAck = new HashMap<>();
 	
 	public NsdManagementService() {	}
-	
+
 	void updateOperationIdToConsumersMap(UUID operationId, OperationStatus opStatus, String manoId, String nsdInfoId) {
 		Map<String, NotificationResource> manoIdToOpAck = new HashMap<>();
 		if (operationIdToConsumersAck.containsKey(operationId.toString())) {
@@ -76,9 +77,11 @@ public class NsdManagementService {
 		}
 		NotificationResource notificationResource = new NotificationResource();
 		manoIdToOpAck.put(manoId, notificationResource);
+
 		operationIdToConsumersAck.put(operationId.toString(), manoIdToOpAck);
 	}
-	 
+
+	@Override
 	public NsdInfo createNsdInfo(CreateNsdInfoRequest request) throws FailedOperationException, MalformattedElementException, MethodNotImplementedException {
 		log.debug("Processing request to create a new NSD info.");
 		KeyValuePairs kvp = request.getUserDefinedData();
@@ -97,6 +100,7 @@ public class NsdManagementService {
 		return nsdInfo;
 	}
 	
+	@Override
 	public synchronized void deleteNsdInfo(String nsdInfoId) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
 		log.debug("Processing request to delete an NSD info.");
 		
@@ -134,6 +138,7 @@ public class NsdManagementService {
 		
 	}
 
+	@Override
 	public Object getNsd(String nsdInfoId) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
 		log.debug("Processing request to retrieve an NSD content for NSD info " + nsdInfoId);
 		NsdInfoResource nsdInfo = getNsdInfoResource(nsdInfoId);
@@ -180,9 +185,9 @@ public class NsdManagementService {
 		
 	}
 	
+	@Override
 	public NsdInfo getNsdInfo(String nsdInfoId) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, MethodNotImplementedException {
 		log.debug("Processing request to get an NSD info.");
-		
 		NsdInfoResource nsdInfoResource = getNsdInfoResource(nsdInfoId);
 		log.debug("Found NSD info resource with id: " + nsdInfoId);
 		NsdInfo nsdInfo = buildNsdInfo(nsdInfoResource);
@@ -212,6 +217,7 @@ public class NsdManagementService {
 		}
 	}
 	
+	@Override
 	public List<NsdInfo> getAllNsdInfos() throws FailedOperationException, MethodNotImplementedException {
 		log.debug("Processing request to get all NSD infos.");
 		
@@ -225,8 +231,8 @@ public class NsdManagementService {
 		}
 		return nsdInfos;
 	}
-	
-	@SuppressWarnings("unlikely-arg-type")
+
+	@Override
 	public synchronized void uploadNsd(String nsdInfoId, MultipartFile nsd, NsdContentType nsdContentType) throws Exception, FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
 		log.debug("Processing request to upload NSD content for NSD info " + nsdInfoId);
 		NsdInfoResource nsdInfo = getNsdInfoResource(nsdInfoId);

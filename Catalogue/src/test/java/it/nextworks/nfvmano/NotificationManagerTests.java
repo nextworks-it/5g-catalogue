@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -30,12 +31,19 @@ public class NotificationManagerTests {
 	@Autowired
 	private NotificationManager notificationManager;
 
+	@Value("${kafkatopic.remote.nsd}")
+	private String remoteNsdNotificationTopic;
+
 	@Test
 	public void acceptNsdRemoteOnboardingNotification() {
-		NsdOnBoardingNotificationMessage msg = new NsdOnBoardingNotificationMessage(UUID.randomUUID().toString(),
-				UUID.randomUUID().toString(), UUID.randomUUID(), ScopeType.REMOTE);
-		msg.setPluginId("NXWOSMR3.3");
-		msg.setOpStatus(OperationStatus.SUCCESSFULLY_DONE);
+		NsdOnBoardingNotificationMessage msg = new NsdOnBoardingNotificationMessage(
+				UUID.randomUUID().toString(),
+				UUID.randomUUID().toString(),
+				UUID.randomUUID(),
+				ScopeType.REMOTE,
+				OperationStatus.SUCCESSFULLY_DONE,
+				"NXWOSMR3.3"
+		);
 		
 		ObjectMapper mapper = new ObjectMapper();
 		
@@ -45,7 +53,7 @@ public class NotificationManagerTests {
 		try {
 			String json = mapper.writeValueAsString(msg);
 			System.out.println("REMOTE ON-BOARDING MSG: " + json);
-			kafkaTemplate.send(ConfigurationParameters.kafkaRemoteOnboardingNotificationsTopicQueueExchange, json);
+			kafkaTemplate.send(remoteNsdNotificationTopic, json);
 			try {
 				Thread.sleep(2000);
 			} catch (InterruptedException e) {

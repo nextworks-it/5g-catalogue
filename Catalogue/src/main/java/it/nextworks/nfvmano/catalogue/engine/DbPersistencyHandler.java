@@ -62,10 +62,11 @@ public class DbPersistencyHandler {
 		log.debug("Topology template saved");
 		
 		TopologyTemplate topologySource = source.getTopologyTemplate();
+
 		@SuppressWarnings("unused")
 		Map<String, NsVirtualLinkNode> nsVirtualLinks = topologySource.getNsVirtualLinkNodes();
-		Map<String, NSNode> nsNodes = topologySource.getNSNodes(); 
-		
+		Map<String, NSNode> nsNodes = topologySource.getNSNodes();
+
 		//TODO: save the rest of the NSD
 		
 		UUID nsdId = target.getId();

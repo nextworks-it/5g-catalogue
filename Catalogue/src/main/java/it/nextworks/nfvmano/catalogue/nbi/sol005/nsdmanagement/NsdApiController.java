@@ -1,7 +1,7 @@
 package it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement;
 
 import it.nextworks.nfvmano.catalogue.common.Utilities;
-import it.nextworks.nfvmano.catalogue.engine.NsdManagementService;
+import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.CreateNsdInfoRequest;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdInfo;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdInfoModifications;
@@ -47,9 +47,9 @@ public class NsdApiController implements NsdApi {
 	private final HttpServletRequest request;
 	
 	@Autowired
-	NsdManagementService nsdManagementService;
+	NsdManagementInterface nsdManagementService;
 
-	@org.springframework.beans.factory.annotation.Autowired
+	@Autowired
 	public NsdApiController(ObjectMapper objectMapper, HttpServletRequest request) {
 		this.objectMapper = objectMapper;
 		this.request = request;

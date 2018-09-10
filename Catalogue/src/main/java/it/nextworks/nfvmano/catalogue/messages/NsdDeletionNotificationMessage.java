@@ -18,10 +18,9 @@ public class NsdDeletionNotificationMessage extends CatalogueMessage {
 			@JsonProperty("nsdId") String nsdId,
 			@JsonProperty("scope") ScopeType scope
 	) {
-		super(UUID.randomUUID(), scope, OperationStatus.SENT);
+		super(CatalogueMessageType.NSD_DELETION_NOTIFICATION, UUID.randomUUID(), scope, OperationStatus.SENT);
 		this.nsdInfoId = nsdInfoId;
 		this.nsdId = nsdId;
-		this.type = CatalogueMessageType.NSD_DELETION_NOTIFICATION;
 	}
 
 	@JsonProperty("nsdInfoId")

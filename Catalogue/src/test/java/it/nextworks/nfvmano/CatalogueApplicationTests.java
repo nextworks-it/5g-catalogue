@@ -22,6 +22,7 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OpenSourceMANOPlugin;
 
 import java.util.UUID;
 
+import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,6 +52,12 @@ public class CatalogueApplicationTests {
     @Value("${kafka.bootstrap-servers}")
     private String kafkaBootstrapServers;
 
+    @Value("${kafkatopic.local.nsd}")
+    private String localNsdNotificationTopic;
+
+    @Value("${kafkatopic.remote.nsd}")
+    private String remoteNsdNotificationTopic;
+
     @Test
     public void contextLoads() {
     }
@@ -66,14 +73,28 @@ public class CatalogueApplicationTests {
         MANO mano = new DummyMano("test-dummy", MANOType.DUMMY);
 
         //create dummy mano plugin
-        DummyMANOPlugin plugin = new DummyMANOPlugin(MANOType.DUMMY, mano, kafkaBootstrapServers);
+        DummyMANOPlugin plugin = new DummyMANOPlugin(
+                MANOType.DUMMY,
+                mano,
+                kafkaBootstrapServers,
+                null,
+                localNsdNotificationTopic,
+                remoteNsdNotificationTopic,
+                kafkaTemplate
+        );
         plugin.init();
 
         System.out.println("\nWait for consumer to setup ... \n");
         Thread.sleep(1500);
 
         NsdOnBoardingNotificationMessage msg =
-                new NsdOnBoardingNotificationMessage("test-nsd-info", "test-nsd", UUID.fromString("7a4cea43-e29d-423b-9ac8-9f0110ede94e"), ScopeType.LOCAL);
+                new NsdOnBoardingNotificationMessage(
+                        "test-nsd-info",
+                        "test-nsd",
+                        UUID.fromString("7a4cea43-e29d-423b-9ac8-9f0110ede94e"),
+                        ScopeType.LOCAL,
+                        OperationStatus.SENT
+                );
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
@@ -107,14 +128,29 @@ public class CatalogueApplicationTests {
         );
 
         //create osm mano plugin
-        MANOPlugin plugin = new OpenSourceMANOPlugin(MANOType.OSM, mano, kafkaBootstrapServers);
+        MANOPlugin plugin = new OpenSourceMANOPlugin(
+                MANOType.OSM,
+                mano,
+                kafkaBootstrapServers,
+                null,
+                localNsdNotificationTopic,
+                remoteNsdNotificationTopic,
+                kafkaTemplate
+        );
         plugin.init();
 
         System.out.println("\nWait for consumer to setup ... \n");
         Thread.sleep(1500);
 
         NsdOnBoardingNotificationMessage msg =
-                new NsdOnBoardingNotificationMessage("test-nsd-info", "test-nsd", UUID.fromString("7a4cea43-e29d-423b-9ac8-9f0110ede94e"), ScopeType.LOCAL);
+                new NsdOnBoardingNotificationMessage(
+                        "test-nsd-info",
+                        "test-nsd",
+                        UUID.fromString("7a4cea43-e29d-423b-9ac8-9f0110ede94e"),
+                        ScopeType.LOCAL,
+                        OperationStatus.SENT
+                );
+
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
@@ -142,7 +178,15 @@ public class CatalogueApplicationTests {
         MANO mano = new DummyMano("test-dummy", MANOType.DUMMY);
 
         //create dummy mano plugin
-        DummyMANOPlugin plugin = new DummyMANOPlugin(MANOType.DUMMY, mano, kafkaBootstrapServers);
+        DummyMANOPlugin plugin = new DummyMANOPlugin(
+                MANOType.DUMMY,
+                mano,
+                kafkaBootstrapServers,
+                null,
+                localNsdNotificationTopic,
+                remoteNsdNotificationTopic,
+                kafkaTemplate
+        );
         plugin.init();
 
         //create osm MANO
@@ -155,14 +199,29 @@ public class CatalogueApplicationTests {
         );
 
         //create osm mano plugin
-        MANOPlugin osmPlugin = new OpenSourceMANOPlugin(MANOType.OSM, osmMano, kafkaBootstrapServers);
+        MANOPlugin osmPlugin = new OpenSourceMANOPlugin(
+                MANOType.OSM,
+                osmMano,
+                kafkaBootstrapServers,
+                null,
+                localNsdNotificationTopic,
+                remoteNsdNotificationTopic,
+                kafkaTemplate
+        );
         osmPlugin.init();
 
         System.out.println("\nWait for consumer to setup ... \n");
         Thread.sleep(1500);
 
         NsdOnBoardingNotificationMessage msg =
-                new NsdOnBoardingNotificationMessage("test-nsd-info", "test-nsd", UUID.fromString("7a4cea43-e29d-423b-9ac8-9f0110ede94e"), ScopeType.LOCAL);
+                new NsdOnBoardingNotificationMessage(
+                        "test-nsd-info",
+                        "test-nsd",
+                        UUID.fromString("7a4cea43-e29d-423b-9ac8-9f0110ede94e"),
+                        ScopeType.LOCAL,
+                        OperationStatus.SENT
+                );
+
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);

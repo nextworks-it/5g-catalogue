@@ -26,11 +26,10 @@ public class NsdChangeNotificationMessage extends CatalogueMessage {
             @JsonProperty("operationalState") NsdOperationalStateType operationalState,
             @JsonProperty("scope") ScopeType scope
     ) {
-    	super(UUID.randomUUID(), scope, OperationStatus.SENT);
+    	super(CatalogueMessageType.NSD_CHANGE_NOTIFICATION, UUID.randomUUID(), scope, OperationStatus.SENT);
         this.nsdInfoId = nsdInfoId;
         this.nsdId = nsdId;
         this.operationalState = operationalState;
-        this.type = CatalogueMessageType.NSD_CHANGE_NOTIFICATION;
     }
 
     @JsonProperty("nsdInfoId")

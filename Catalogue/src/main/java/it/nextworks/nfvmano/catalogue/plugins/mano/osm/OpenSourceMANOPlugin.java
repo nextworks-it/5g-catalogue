@@ -20,7 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.girtel.osmclient.OSMClient;
 import com.girtel.osmclient.OSMComponent;
 import com.girtel.osmclient.utils.HTTPResponse;
-import it.nextworks.nfvmano.catalogue.OperationFailedException;
+import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
 import it.nextworks.nfvmano.catalogue.messages.NsdChangeNotificationMessage;
 import it.nextworks.nfvmano.catalogue.messages.NsdDeletionNotificationMessage;
 import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
@@ -29,8 +29,18 @@ import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnbo
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.elements.NsdBuilder;
+import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
+import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
+import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
+import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
+import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
+import it.nextworks.nfvmano.libs.common.exceptions.NotPermittedOperationException;
+import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.Resource;
+import org.springframework.kafka.core.KafkaTemplate;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,8 +63,24 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
 	private OSMClient osmClient;
 	private final OSMMano osm;
 
-	public OpenSourceMANOPlugin(MANOType manoType, MANO mano, String kafkaBootstrapServers) {
-		super(manoType, mano, kafkaBootstrapServers);
+	public OpenSourceMANOPlugin(
+			MANOType manoType,
+			MANO mano,
+			String kafkaBootstrapServers,
+			NsdManagementInterface service,
+			String localTopic,
+			String remoteTopic,
+			KafkaTemplate<String, String> kafkaTemplate
+	) {
+		super(
+				manoType,
+				mano,
+				kafkaBootstrapServers,
+				service,
+				localTopic,
+				remoteTopic,
+				kafkaTemplate
+		);
 		if (MANOType.OSM != manoType) {
 			throw new IllegalArgumentException("OSM plugin requires an OSM type MANO");
 		}
@@ -67,10 +93,10 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
 		initOsmConnection();
 	}
 
-	public void initOsmConnection() {
+	void initOsmConnection() {
 		osmClient = new OSMClient(osm.getIpAddress(), osm.getUsername(), osm.getPassword(), osm.getProject());
 		log.info(
-				"OSM instance ad {}, user {}, project {} connected.",
+				"OSM instance addr {}, user {}, project {} connected.",
 				osm.getIpAddress(),
 				osm.getUsername(),
 				osm.getProject()
@@ -85,6 +111,9 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
 		);
 		log.debug("Body: {}", notification);
 		try {
+			DescriptorTemplate descriptorTemplate = retrieveTemplate(notification.getNsdInfoId());
+			NsdBuilder nsdBuilder = new NsdBuilder();
+			//
 			List<String> tIds = new LinkedList<>();
 			for (String vnfFileName : VNF_FILE_NAMES) {
 				File vnf = loadFile(vnfFileName);
@@ -98,7 +127,7 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
 					notification.getNsdInfoId()
 			);
 			log.debug("tId: {}", tId);
-		} catch (OperationFailedException e) {
+		} catch (Exception e) {
 			log.error("Could not onboard NSD: %s", e.getMessage());
 			log.debug("Error details: ", e);
 		}
@@ -126,7 +155,7 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
 					notification.getNsdId(),
 					notification.getNsdInfoId()
 			);
-		} catch (OperationFailedException e) {
+		} catch (Exception e) {
 			log.error("Could not delete NSD: %s", e.getMessage());
 			log.debug("Error details: ", e);
 		}
@@ -144,6 +173,25 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
 		log.debug("Body: {}", notification);
 	}
 
+	private DescriptorTemplate retrieveTemplate(String nsdInfoId)
+			throws
+			FailedOperationException,
+			MalformattedElementException,
+			NotExistingEntityException,
+			MethodNotImplementedException,
+			NotPermittedOperationException,
+			IOException
+	{
+		Object nsd = service.getNsd(nsdInfoId);
+		if (!(Resource.class.isAssignableFrom(nsd.getClass()))) {
+			throw new MethodNotImplementedException(
+					String.format("NSD storage type %s unsupported.", nsd.getClass().getSimpleName())
+			);
+		}
+		Resource resource = (Resource) nsd;
+		return DescriptorsParser.fileToDescriptorTemplate(resource.getFile());
+	}
+
 	private File loadFile(String filename) {
 		ClassLoader classLoader = getClass().getClassLoader();
 		URL resource = classLoader.getResource(filename);
@@ -153,19 +201,19 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
 		return new File(resource.getFile());
 	}
 
-	String onBoardPackage(File file, String opId) throws OperationFailedException {
+	String onBoardPackage(File file, String opId) throws FailedOperationException {
 		log.info("Onboarding package, opId: {}.", opId);
 		HTTPResponse httpResponse = osmClient.uploadPackage(file);
 		return parseResponseReturning(httpResponse, opId, true);
 	}
 
-	void deleteNsd(String nsdId, String opId) throws OperationFailedException {
+	void deleteNsd(String nsdId, String opId) throws FailedOperationException {
 		log.info("Deleting nsd {}, opId: {}.", nsdId, opId);
 		HTTPResponse httpResponse = osmClient.deleteNSD(nsdId);
 		parseResponse(httpResponse, opId);
 	}
 
-	void deleteVnfd(String vnfdId, String opId) throws OperationFailedException {
+	void deleteVnfd(String vnfdId, String opId) throws FailedOperationException {
 		log.info("Deleting vnfd {}, opId: {}.", vnfdId, opId);
 		HTTPResponse httpResponse = osmClient.deleteVNFD(vnfdId);
 		parseResponse(httpResponse, opId);
@@ -181,18 +229,18 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
 		return osmClient.getVNFDList().stream().map(OSMComponent::toString).collect(Collectors.toList());
 	}
 
-	private void parseResponse(HTTPResponse httpResponse, String opId) throws OperationFailedException {
+	private void parseResponse(HTTPResponse httpResponse, String opId) throws FailedOperationException {
 		parseResponseReturning(httpResponse, opId, false);
 		// Ignoring the return value
 	}
 
 	private String parseResponseReturning(HTTPResponse httpResponse, String opId, boolean transaction)
-			throws OperationFailedException {
+			throws FailedOperationException {
 		if ((httpResponse.getCode() >= 300) || (httpResponse.getCode() < 200)) {
 			log.error("Unexpected response code {}: {}. OpId",
 					httpResponse.getCode(), httpResponse.getMessage(), opId);
 			log.debug("Response content: {}.", httpResponse.getContent());
-			throw new OperationFailedException(
+			throw new FailedOperationException(
 					String.format("Unexpected code from MANO: %s", httpResponse.getCode())
 			);
 		}
@@ -207,7 +255,7 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
 			} catch (IOException e) {
 				log.error("Could not read transaction ID from response: {}.", e.getMessage());
 				log.debug("Exception details: ", e);
-				throw new OperationFailedException("Could not read transaction ID from MANO response");
+				throw new FailedOperationException("Could not read transaction ID from MANO response");
 			}
 		}
 		// else, return the content, which will probably go unused.

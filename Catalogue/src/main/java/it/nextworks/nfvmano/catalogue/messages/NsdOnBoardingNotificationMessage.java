@@ -16,20 +16,35 @@ public class NsdOnBoardingNotificationMessage extends CatalogueMessage {
 	
 	@JsonInclude(Include.NON_NULL)
 	private String pluginId;
-	
-	
+
 	@JsonCreator
 	public NsdOnBoardingNotificationMessage(
 			@JsonProperty("nsdInfoId") String nsdInfoId,
 			@JsonProperty("nsdId") String nsdId,
 			@JsonProperty("operationId") UUID operationId,
-			@JsonProperty("scope") ScopeType scope
+			@JsonProperty("scope") ScopeType scope,
+            @JsonProperty("operationStatus") OperationStatus opStatus,
+			@JsonProperty("notifierId") String manoId
 	) {
-		super(operationId, scope, OperationStatus.SENT);
+		super(CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION, operationId, scope, opStatus);
 		this.nsdInfoId = nsdInfoId;
 		this.nsdId = nsdId;
-		this.type = CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION;
+		this.pluginId = manoId;
 	}
+
+    @JsonCreator
+    public NsdOnBoardingNotificationMessage(
+            @JsonProperty("nsdInfoId") String nsdInfoId,
+            @JsonProperty("nsdId") String nsdId,
+            @JsonProperty("operationId") UUID operationId,
+            @JsonProperty("scope") ScopeType scope,
+            @JsonProperty("operationStatus") OperationStatus opStatus
+    ) {
+        super(CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION, operationId, scope, opStatus);
+        this.nsdInfoId = nsdInfoId;
+        this.nsdId = nsdId;
+        this.pluginId = null;
+    }
 
 	@JsonProperty("nsdInfoId")
 	public String getNsdInfoId() {
@@ -44,9 +59,5 @@ public class NsdOnBoardingNotificationMessage extends CatalogueMessage {
 	@JsonProperty("pluginId")
 	public String getPluginId() {
 		return pluginId;
-	}
-
-	public void setPluginId(String manoId) {
-		this.pluginId = manoId;
 	}
 }

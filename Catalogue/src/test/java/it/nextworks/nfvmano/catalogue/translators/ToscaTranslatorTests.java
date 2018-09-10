@@ -81,7 +81,7 @@ public class ToscaTranslatorTests {
 	@Test
 	public void parseStringDescriptor() throws Exception {
 		ClassLoader classLoader = getClass().getClassLoader();
-		File nsd = new File(classLoader.getResource("vCDN_tosca_v02.yaml").getFile());
+		File nsd = new File(classLoader.getResource("vCDN_tosca_v03.yaml").getFile());
 		ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
 		String nsd_string = readFile(nsd.getAbsolutePath(), StandardCharsets.UTF_8);
