@@ -33,6 +33,7 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.NsdNotificationsProducerInter
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
+import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
 
 @Service
 public class NotificationManager implements NsdNotificationsConsumerInterface, NsdNotificationsProducerInterface {
@@ -54,22 +55,28 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 	private NsdManagementService nsdMgmtService;
 
 	public NotificationManager() {
+		log.debug("Building notification manager.");
 	}
 
 	@PostConstruct
 	public void init() {
+		log.debug("Initializing notification manager.");
+		initializeKafkaConnector("ENGINE_NOTIFICATION_MANAGER", kafkaBootstrapServers,
+				ConfigurationParameters.kafkaRemoteOnboardingNotificationsTopicQueueExchange);
+
+	}
+
+	private void initializeKafkaConnector(String connectorId, String server, String topicQueueExchange) {
+		log.debug("Initializing Kafka connector with: \nconnectorId: " + connectorId + "\nkafkaServer: " + server + "\ntopic: " + topicQueueExchange);
 		Map<CatalogueMessageType, Consumer<CatalogueMessage>> functor = new HashMap<>();
 		functor.put(CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION, msg -> {
 			NsdOnBoardingNotificationMessage castMsg = (NsdOnBoardingNotificationMessage) msg;
 			acceptNsdOnBoardingNotification(castMsg);
 		});
 
-		String connectorId = "ENGINE_NOTIFICATION_MANAGER";
-
-		connector = KafkaConnector.Builder().setBeanId(connectorId).setKafkaBootstrapServers(kafkaBootstrapServers)
-				.setKafkaGroupId(connectorId)
-				.addTopic(ConfigurationParameters.kafkaRemoteOnboardingNotificationsTopicQueueExchange).setFunctor(functor)
-				.build();
+		setConnector(KafkaConnector.Builder().setBeanId(connectorId).setKafkaBootstrapServers(server)
+				.setKafkaGroupId(connectorId).addTopic(topicQueueExchange).setFunctor(functor).build());
+		log.debug("Kafka connector initialized.");
 	}
 
 	@Override
@@ -78,8 +85,8 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 		try {
 			log.info("Sending nsdOnBoardingNotification for NSD " + nsdId);
 
-			NsdOnBoardingNotificationMessage msg = new NsdOnBoardingNotificationMessage(nsdInfoId, nsdId,
-					operationId, ScopeType.LOCAL);
+			NsdOnBoardingNotificationMessage msg = new NsdOnBoardingNotificationMessage(nsdInfoId, nsdId, operationId,
+					ScopeType.LOCAL);
 
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
@@ -105,67 +112,91 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 	}
 
 	@Override
-	public void sendNsdChangeNotification(NsdChangeNotificationMessage notification) throws MethodNotImplementedException {
+	public void sendNsdChangeNotification(NsdChangeNotificationMessage notification)
+			throws MethodNotImplementedException {
 		throw new MethodNotImplementedException("sendNsdChangeNotification method not implemented");
 	}
 
 	@Override
-	public void sendNsdDeletionNotification(NsdDeletionNotificationMessage notification) throws MethodNotImplementedException {
+	public void sendNsdDeletionNotification(NsdDeletionNotificationMessage notification)
+			throws MethodNotImplementedException {
 		throw new MethodNotImplementedException("sendNsdDeletionNotification method not implemented");
 	}
 
 	@Override
-	public void sendPnfdOnBoardingNotification(PnfdOnboardingNotification notification) throws MethodNotImplementedException {
+	public void sendPnfdOnBoardingNotification(PnfdOnboardingNotification notification)
+			throws MethodNotImplementedException {
 		throw new MethodNotImplementedException("sendPnfdOnBoardingNotification method not implemented");
 	}
 
 	@Override
-	public void sendPnfdDeletionNotification(PnfdDeletionNotification notification) throws MethodNotImplementedException {
+	public void sendPnfdDeletionNotification(PnfdDeletionNotification notification)
+			throws MethodNotImplementedException {
 		throw new MethodNotImplementedException("sendPnfdDeletionNotification method not implemented");
 	}
 
 	@Override
 	public void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) {
 		log.info("Received NSD onboarding notification for NSD {} with info id {}, from plugin {}.",
-				notification.getNsdId(), notification.getNsdInfoId(), notification.getManoId());
-		
+				notification.getNsdId(), notification.getNsdInfoId(), notification.getPluginId());
+
 		switch (notification.getScope()) {
 		case REMOTE:
-			log.debug("Updating consumers internal mapping for plugin {}.", notification.getManoId());
-			
-			nsdMgmtService.updateOperationIdToConsumersMap(notification.getOperationId(), notification.getOpStatus(),
-					notification.getManoId());
+
 			log.debug("Updating NsdInfoResource with plugin {} operation status {} for operation {}.",
-					notification.getManoId(), notification.getOpStatus(), notification.getOperationId().toString());
-			nsdMgmtService.updateNsdInfoOnboardingStatus(notification.getNsdInfoId(), notification.getManoId(),
-					notification.getOpStatus());
+					notification.getPluginId(), notification.getOpStatus(), notification.getOperationId().toString());
+			try {
+				nsdMgmtService.updateNsdInfoOnboardingStatus(notification.getNsdInfoId(), notification.getPluginId(),
+						notification.getOpStatus());
+				log.debug("Updating consumers internal mapping for plugin {}.", notification.getPluginId());
+
+				nsdMgmtService.updateOperationIdToConsumersMap(notification.getOperationId(),
+						notification.getOpStatus(), notification.getPluginId(), notification.getNsdInfoId());
+				log.debug("NsdInfoResource successfully updated with plugin {} operation status {} for operation {}.",
+						notification.getPluginId(), notification.getOpStatus(),
+						notification.getOperationId().toString());
+			} catch (NotExistingEntityException e) {
+				log.error(e.getMessage());
+			}
+			break;
 		case LOCAL:
 			log.error("Nsd LOCAL onboarding notification not handled here, REMOTE onboarding message expected.");
+			break;
 		case GLOBAL:
 			log.error("Nsd GLOBAL onboarding notification not handled here, REMOTE onboarding message expected.");
+			break;
 		}
-
-		log.debug("NsdInfoResource successfully updated with plugin {} operation status {} for operation {}.",
-				notification.getManoId(), notification.getOpStatus(), notification.getOperationId().toString());
 	}
 
 	@Override
-	public void acceptNsdChangeNotification(NsdChangeNotificationMessage notification) throws MethodNotImplementedException {
+	public void acceptNsdChangeNotification(NsdChangeNotificationMessage notification)
+			throws MethodNotImplementedException {
 		throw new MethodNotImplementedException("acceptNsdChangeNotification method not implemented");
 	}
 
 	@Override
-	public void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification) throws MethodNotImplementedException {
+	public void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification)
+			throws MethodNotImplementedException {
 		throw new MethodNotImplementedException("acceptNsdDeletionNotification method not implemented");
 	}
 
 	@Override
-	public void acceptPnfdOnBoardingNotification(PnfdOnboardingNotification notification) throws MethodNotImplementedException {
+	public void acceptPnfdOnBoardingNotification(PnfdOnboardingNotification notification)
+			throws MethodNotImplementedException {
 		throw new MethodNotImplementedException("acceptPnfdOnBoardingNotification method not implemented");
 	}
 
 	@Override
-	public void acceptPnfdDeletionNotification(PnfdDeletionNotification notification) throws MethodNotImplementedException {
+	public void acceptPnfdDeletionNotification(PnfdDeletionNotification notification)
+			throws MethodNotImplementedException {
 		throw new MethodNotImplementedException("acceptPnfdDeletionNotification method not implemented");
+	}
+
+	public KafkaConnector getConnector() {
+		return connector;
+	}
+
+	public void setConnector(KafkaConnector connector) {
+		this.connector = connector;
 	}
 }

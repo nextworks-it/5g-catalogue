@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.mock.web.MockMultipartFile;
 
-
+import it.nextworks.nfvmano.catalogue.engine.resources.NotificationResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.CreateNsdInfoRequest;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
@@ -65,15 +65,17 @@ public class NsdManagementService {
 	@Autowired
 	private MANORepository MANORepository;
 	
-	private Map<String, Map<String, OperationStatus>> operationIdToConsumersAck = new HashMap<>();
+	private Map<String, Map<String, NotificationResource>> operationIdToConsumersAck = new HashMap<>();
 	
 	public NsdManagementService() {	}
 	
-	void updateOperationIdToConsumersMap(UUID operationId, OperationStatus opStatus, String manoId) {
-		
-		Map<String, OperationStatus> manoIdToOpAck = operationIdToConsumersAck.get(operationId.toString());
-		
-		manoIdToOpAck.put(manoId, opStatus);
+	void updateOperationIdToConsumersMap(UUID operationId, OperationStatus opStatus, String manoId, String nsdInfoId) {
+		Map<String, NotificationResource> manoIdToOpAck = new HashMap<>();
+		if (operationIdToConsumersAck.containsKey(operationId.toString())) {
+			manoIdToOpAck = operationIdToConsumersAck.get(operationId.toString());
+		}
+		NotificationResource notificationResource = new NotificationResource();
+		manoIdToOpAck.put(manoId, notificationResource);
 		operationIdToConsumersAck.put(operationId.toString(), manoIdToOpAck);
 	}
 	 
@@ -224,6 +226,7 @@ public class NsdManagementService {
 		return nsdInfos;
 	}
 	
+	@SuppressWarnings("unlikely-arg-type")
 	public synchronized void uploadNsd(String nsdInfoId, MultipartFile nsd, NsdContentType nsdContentType) throws Exception, FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
 		log.debug("Processing request to upload NSD content for NSD info " + nsdInfoId);
 		NsdInfoResource nsdInfo = getNsdInfoResource(nsdInfoId);
@@ -334,9 +337,9 @@ public class NsdManagementService {
 		UUID operationId = UUID.randomUUID();
 		
 		List<MANO> manos = MANORepository.findAll();
-		Map<String, OperationStatus> manoToOnboardingState = new HashMap<>();
+		Map<String, NotificationResource> manoToOnboardingState = new HashMap<>();
 		for (MANO mano : manos) {
-			manoToOnboardingState.put(mano.getManoId(), OperationStatus.SENT);
+			manoToOnboardingState.put(mano.getManoId(), new NotificationResource(nsdInfoId, OperationStatus.SENT));
 			
 		}
 		nsdInfo.setAcknowledgedOnboardOpConsumers(manoToOnboardingState);
@@ -351,7 +354,7 @@ public class NsdManagementService {
 		log.debug("NSD content uploaded and nsdOnBoardingNotification delivered");
 	}
 	
-	public synchronized void updateNsdInfoOnboardingStatus(String nsdInfoId, String manoId, OperationStatus opStatus) {
+	public synchronized void updateNsdInfoOnboardingStatus(String nsdInfoId, String manoId, OperationStatus opStatus) throws NotExistingEntityException {
 		
 		log.debug("Retrieving nsdInfoResource {} from DB for updating with onboarding status info for plugin {}.", nsdInfoId, manoId);
 		Optional<NsdInfoResource> optionalNsdInfoResource = nsdInfoRepo.findById(UUID.fromString(nsdInfoId));
@@ -360,8 +363,8 @@ public class NsdManagementService {
 			NsdInfoResource nsdInfoResource = optionalNsdInfoResource.get();
 			
 			NsdInfoResource targetNsdInfoResource = new NsdInfoResource();
-			Map<String, OperationStatus> ackMap = nsdInfoResource.getAcknowledgedOnboardOpConsumers();
-			ackMap.put(manoId, opStatus);
+			Map<String, NotificationResource> ackMap = nsdInfoResource.getAcknowledgedOnboardOpConsumers();
+			ackMap.put(manoId, new NotificationResource(nsdInfoId, opStatus));
 			targetNsdInfoResource.setAcknowledgedOnboardOpConsumers(ackMap);
 			targetNsdInfoResource.setNestedNsdInfoIds(nsdInfoResource.getNestedNsdInfoIds());
 			targetNsdInfoResource.setNsdContentType(nsdInfoResource.getNsdContentType());
@@ -381,17 +384,19 @@ public class NsdManagementService {
 			
 			log.debug("Updating NsdInfoResource {}.", nsdInfoId);
 			nsdInfoRepo.saveAndFlush(targetNsdInfoResource);
+		} else {
+			throw new NotExistingEntityException("NsdInfoResource " + nsdInfoId + " not present in DB.");
 		}
 	}
 	
-	private NsdOnboardingStateType checkNsdOnboardingState(String nsdInfoId, Map<String, OperationStatus> ackMap) {
+	private NsdOnboardingStateType checkNsdOnboardingState(String nsdInfoId, Map<String, NotificationResource> ackMap) {
 		
-		for (Entry<String, OperationStatus> entry : ackMap.entrySet()) {
-			if (entry.getValue() == OperationStatus.FAILED) {
+		for (Entry<String, NotificationResource> entry : ackMap.entrySet()) {
+			if (entry.getValue().getOpStatus() == OperationStatus.FAILED) {
 				log.error("NSD with nsdInfoId {} onboarding failed for mano with manoId {}.", nsdInfoId, entry.getKey());
 				
 				//TODO: Decide how to handle MANO onboarding failures.
-			} else if (entry.getValue() == OperationStatus.SENT || entry.getValue() == OperationStatus.RECEIVED || entry.getValue() == OperationStatus.PROCESSING) {
+			} else if (entry.getValue().getOpStatus() == OperationStatus.SENT || entry.getValue().getOpStatus() == OperationStatus.RECEIVED || entry.getValue().getOpStatus() == OperationStatus.PROCESSING) {
 				log.debug("NSD with nsdInfoId {} onboarding still in progress for mano with manoId {}.");
 				return NsdOnboardingStateType.PROCESSING;
 			}

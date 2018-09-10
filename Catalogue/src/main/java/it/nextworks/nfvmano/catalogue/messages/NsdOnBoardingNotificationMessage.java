@@ -15,7 +15,7 @@ public class NsdOnBoardingNotificationMessage extends CatalogueMessage {
 	private final String nsdId;
 	
 	@JsonInclude(Include.NON_NULL)
-	private String manoId;
+	private String pluginId;
 	
 	
 	@JsonCreator
@@ -41,12 +41,12 @@ public class NsdOnBoardingNotificationMessage extends CatalogueMessage {
 		return nsdId;
 	}
 
-	@JsonProperty("manoId")
-	public String getManoId() {
-		return manoId;
+	@JsonProperty("pluginId")
+	public String getPluginId() {
+		return pluginId;
 	}
 
-	public void setManoId(String manoId) {
-		this.manoId = manoId;
+	public void setPluginId(String manoId) {
+		this.pluginId = manoId;
 	}
 }

@@ -96,7 +96,7 @@ public class ToscaTranslatorTests {
 		System.out.println(mapper.writeValueAsString(dt));
 	}
 
-	//@Ignore
+	@Ignore
 	@SuppressWarnings("static-access")
 	@Test
 	public void parseFileDescriptor() {

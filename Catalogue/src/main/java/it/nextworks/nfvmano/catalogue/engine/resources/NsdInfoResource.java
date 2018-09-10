@@ -18,7 +18,6 @@ import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboa
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOperationalStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdUsageStateType;
 import it.nextworks.nfvmano.catalogue.repos.NsdContentType;
-import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.NotPermittedOperationException;
 
 /**
@@ -72,7 +71,7 @@ public class NsdInfoResource {
 	
 	@ElementCollection
 	@Fetch(FetchMode.SELECT)
-	private Map<String, OperationStatus> acknowledgedOnboardOpConsumers = new HashMap<>();
+	private Map<String, NotificationResource> acknowledgedOnboardOpConsumers = new HashMap<>();
 	
 	public NsdInfoResource() { }
 	
@@ -287,11 +286,11 @@ public class NsdInfoResource {
 	/**
 	 * @return the acknowledgedOnboardOpConsumers
 	 */
-	public Map<String, OperationStatus> getAcknowledgedOnboardOpConsumers() {
+	public Map<String, NotificationResource> getAcknowledgedOnboardOpConsumers() {
 		return acknowledgedOnboardOpConsumers;
 	}
 
-	public void setAcknowledgedOnboardOpConsumers(Map<String, OperationStatus> acknowledgedOnboardOpConsumers) {
+	public void setAcknowledgedOnboardOpConsumers(Map<String, NotificationResource> acknowledgedOnboardOpConsumers) {
 		this.acknowledgedOnboardOpConsumers = acknowledgedOnboardOpConsumers;
 	}
 

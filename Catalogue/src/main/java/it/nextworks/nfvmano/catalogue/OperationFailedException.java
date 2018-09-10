@@ -5,6 +5,7 @@ package it.nextworks.nfvmano.catalogue;
  *
  * @author Marco Capitani <m.capitani AT nextworks.it>
  */
+@SuppressWarnings("serial")
 public class OperationFailedException extends Exception {
 
     public OperationFailedException(String message) {

@@ -10,7 +10,6 @@ import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
 
 import java.nio.file.Path;
-import java.util.UUID;
 import java.util.stream.Stream;
 
 public interface StorageServiceInterface {
