@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -33,6 +34,7 @@ public class NsdBuilderTest {
     }
 
     @Test
+    @Ignore
     public void parseDescriptorTemplate() throws Exception {
         ClassLoader classLoader = getClass().getClassLoader();
         NsdBuilder nsdBuilder = new NsdBuilder();
@@ -55,6 +57,7 @@ public class NsdBuilderTest {
     }
 
     @Test
+    @Ignore
     public void archiveTest() throws Exception {
         ClassLoader classLoader = getClass().getClassLoader();
 
@@ -74,6 +77,7 @@ public class NsdBuilderTest {
     }
 
     @Test
+    @Ignore
     public void archiveTestCirros() throws Exception {
         ClassLoader classLoader = getClass().getClassLoader();
 

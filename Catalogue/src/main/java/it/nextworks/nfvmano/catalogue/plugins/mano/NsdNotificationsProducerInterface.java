@@ -38,8 +38,9 @@ public interface NsdNotificationsProducerInterface {
      *
      * @param notification notification about the deletion of an NSD
 	 * @throws MethodNotImplementedException 
+	 * @throws FailedOperationException 
      */
-	void sendNsdDeletionNotification(NsdDeletionNotificationMessage notification) throws MethodNotImplementedException;
+	void sendNsdDeletionNotification(NsdDeletionNotificationMessage notification) throws MethodNotImplementedException, FailedOperationException;
 
 	/**
      * This method is called when a new PNF is on-boarded, after all the steps are done.

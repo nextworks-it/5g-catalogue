@@ -16,6 +16,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
@@ -67,29 +68,20 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 	@PostConstruct
 	public void init() {
 		log.debug("Initializing notification manager.");
-		initializeKafkaConnector(
-				"ENGINE_NOTIFICATION_MANAGER",
-				kafkaBootstrapServers,
-				remoteNsdNotificationTopic
-		);
+		initializeKafkaConnector("ENGINE_NOTIFICATION_MANAGER", kafkaBootstrapServers, remoteNsdNotificationTopic);
 	}
 
 	private void initializeKafkaConnector(String connectorId, String server, String topicQueueExchange) {
-		log.debug("Initializing Kafka connector with: \nconnectorId: " + connectorId + "\nkafkaServer: " + server + "\ntopic: " + topicQueueExchange);
+		log.debug("Initializing Kafka connector with: \nconnectorId: " + connectorId + "\nkafkaServer: " + server
+				+ "\ntopic: " + topicQueueExchange);
 		Map<CatalogueMessageType, Consumer<CatalogueMessage>> functor = new HashMap<>();
 		functor.put(CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION, msg -> {
 			NsdOnBoardingNotificationMessage castMsg = (NsdOnBoardingNotificationMessage) msg;
 			acceptNsdOnBoardingNotification(castMsg);
 		});
 
-		setConnector(
-				KafkaConnector.Builder()
-						.setBeanId(connectorId)
-						.setKafkaBootstrapServers(server)
-						.setKafkaGroupId(connectorId)
-						.addTopic(topicQueueExchange)
-						.setFunctor(functor)
-						.build());
+		setConnector(KafkaConnector.Builder().setBeanId(connectorId).setKafkaBootstrapServers(server)
+				.setKafkaGroupId(connectorId).addTopic(topicQueueExchange).setFunctor(functor).build());
 		connector.init();
 		log.debug("Kafka connector initialized.");
 	}
@@ -100,13 +92,8 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 		try {
 			log.info("Sending nsdOnBoardingNotification for NSD " + nsdId);
 
-			NsdOnBoardingNotificationMessage msg = new NsdOnBoardingNotificationMessage(
-			        nsdInfoId,
-                    nsdId,
-					operationId,
-                    ScopeType.LOCAL,
-                    OperationStatus.SENT
-            );
+			NsdOnBoardingNotificationMessage msg = new NsdOnBoardingNotificationMessage(nsdInfoId, nsdId, operationId,
+					ScopeType.LOCAL, OperationStatus.SENT);
 
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
@@ -114,8 +101,7 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 
 			String json = mapper.writeValueAsString(msg);
 
-			log.debug("Sending json message over kafka bus on topic "
-					+ localNsdNotificationTopic + "\n" + json);
+			log.debug("Sending json message over kafka bus on topic " + localNsdNotificationTopic + "\n" + json);
 
 			if (skipKafka) {
 				log.debug(" ---- TEST MODE: skipping post to kafka bus -----");
@@ -138,8 +124,29 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 
 	@Override
 	public void sendNsdDeletionNotification(NsdDeletionNotificationMessage notification)
-			throws MethodNotImplementedException {
-		throw new MethodNotImplementedException("sendNsdDeletionNotification method not implemented");
+			throws MethodNotImplementedException, FailedOperationException {
+		try {
+			log.info("Sending nsdOnBoardingNotification for NSD with nsdId: " + notification.getNsdId());
+
+			ObjectMapper mapper = new ObjectMapper();
+			mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+			mapper.setSerializationInclusion(Include.NON_EMPTY);
+
+			String json = mapper.writeValueAsString(notification);
+
+			log.debug("Sending json message over kafka bus on topic " + localNsdNotificationTopic + "\n" + json);
+
+			if (skipKafka) {
+				log.debug(" ---- TEST MODE: skipping post to kafka bus -----");
+			} else {
+				kafkaTemplate.send(localNsdNotificationTopic, json);
+
+				log.debug("Message sent.");
+			}
+		} catch (Exception e) {
+			log.error("Error while posting NsdDeletionNotificationMessage to Kafka bus");
+			throw new FailedOperationException(e.getMessage());
+		}
 	}
 
 	@Override
@@ -158,25 +165,38 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 	public void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) {
 		log.info("Received NSD onboarding notification for NSD {} with info id {}, from plugin {}.",
 				notification.getNsdId(), notification.getNsdInfoId(), notification.getPluginId());
+		
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+		mapper.setSerializationInclusion(Include.NON_EMPTY);
 
+		try {
+			String json = mapper.writeValueAsString(notification);
+			log.debug("RECEIVED MESSAGE: " + json);
+		} catch (JsonProcessingException e) {
+			log.error("Unable to parse received nsdOnboardingNotificationMessage: " + e.getMessage());
+		}
+		
 		switch (notification.getScope()) {
 		case REMOTE:
-
-			log.debug("Updating NsdInfoResource with plugin {} operation status {} for operation {}.",
-					notification.getPluginId(), notification.getOpStatus(), notification.getOperationId().toString());
 			try {
-				nsdMgmtService.updateNsdInfoOnboardingStatus(notification.getNsdInfoId(), notification.getPluginId(),
-						notification.getOpStatus());
-				log.debug("Updating consumers internal mapping for plugin {}.", notification.getPluginId());
-
-				nsdMgmtService.updateOperationIdToConsumersMap(notification.getOperationId(),
-						notification.getOpStatus(), notification.getPluginId(), notification.getNsdInfoId());
+				log.debug("Updating NsdInfoResource with plugin {} operation status {} for operation {}.",
+						notification.getPluginId(), notification.getOpStatus(),
+						notification.getOperationId().toString());
+				nsdMgmtService.updateNsdInfoOperationStatus(notification.getNsdInfoId(), notification.getPluginId(),
+						notification.getOpStatus(), notification.getType());
 				log.debug("NsdInfoResource successfully updated with plugin {} operation status {} for operation {}.",
 						notification.getPluginId(), notification.getOpStatus(),
 						notification.getOperationId().toString());
 			} catch (NotExistingEntityException e) {
 				log.error(e.getMessage());
 			}
+			log.debug("Updating consumers internal mapping for operationId {} and plugin {}.",
+					notification.getOperationId(), notification.getPluginId());
+			nsdMgmtService.updateOperationInfoInConsumersMap(notification.getOperationId(), notification.getOpStatus(),
+					notification.getPluginId(), notification.getNsdInfoId(), notification.getType());
+			log.debug("Consumers internal mapping successfully updated for operationId {} and plugin {}.",
+					notification.getOperationId(), notification.getPluginId());
 			break;
 		case LOCAL:
 			log.error("Nsd LOCAL onboarding notification not handled here, REMOTE onboarding message expected.");

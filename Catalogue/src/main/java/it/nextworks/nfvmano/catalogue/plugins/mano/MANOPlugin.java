@@ -70,7 +70,7 @@ public abstract class MANOPlugin
 		if (this.mano.getManoType() != this.manoType) {
 		    throw new IllegalArgumentException("Mano type and Mano do not agree.");
         }
-		String connectorID = "MANO" + mano.getManoId(); // assuming it's unique among MANOs
+		String connectorID = "MANO_" + mano.getManoId(); // assuming it's unique among MANOs
 		Map<CatalogueMessageType, Consumer<CatalogueMessage>> functor = new HashMap<>();
 		functor.put(
 				CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION,

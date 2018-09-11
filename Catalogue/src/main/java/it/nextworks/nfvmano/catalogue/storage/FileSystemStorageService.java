@@ -137,6 +137,14 @@ public class FileSystemStorageService implements StorageServiceInterface {
             throw new NotExistingEntityException("Could not read file: " + filename, e);
         }
     }
+    
+    public void deleteNsd(NsdInfoResource nsdInfo) {
+    	log.debug("Removing NSD with nsdInfoId {}, nsdId {} and version {}.", nsdInfo.getId(), nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion());
+    	Path locationVersion = Paths.get(nsdsLocation + "/" + nsdInfo.getNsdId().toString() + "/" + nsdInfo.getNsdVersion());
+    	
+    	FileSystemUtils.deleteRecursively(locationVersion.toFile());
+    	log.debug("NSD with nsdInfoId {}, nsdId {} and version {} successfully removed.", nsdInfo.getId(), nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion());
+    }
 
     @Override
     public void deleteAll() {

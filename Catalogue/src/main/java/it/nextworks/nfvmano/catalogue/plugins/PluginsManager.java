@@ -8,7 +8,6 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
-import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +28,7 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OpenSourceMANOPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.DummyMANOPlugin;
+import it.nextworks.nfvmano.catalogue.plugins.mano.DummyMano;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
@@ -61,6 +61,9 @@ public class PluginsManager {
 	@Value("${kafkatopic.remote.nsd}")
 	private String remoteNsdNotificationTopic;
 
+	@Value("${catalogue.defaultMANOType}")
+	private String defaultManoType;
+
 	@Autowired
 	private KafkaTemplate<String, String> kafkaTemplate;
 
@@ -77,49 +80,59 @@ public class PluginsManager {
 	@PostConstruct
 	public void initPlugins() {
 
-		log.debug("Loading MANO info from DB.");
-		List<MANO> manos = MANORepository.findAll();
-
-		if (manos.isEmpty())
-			log.debug("No MANO info stored in DB.");
-
-		for (MANO mano : manos) {
+		if (defaultManoType.equalsIgnoreCase("DUMMY")) {
+			MANO dummy = new DummyMano("DUMMY", MANOType.DUMMY);
 			try {
-				log.debug("Instantiating MANO with manoId: " + mano.getManoId());
-				addMANO(mano);
-				log.debug("MANO with manoId " + mano.getManoId() + " successfully instantiated.");
+				addMANO(dummy);
 			} catch (MalformattedElementException e) {
-				log.error("Malformatted MANO: " + e.getMessage() + ". Skipping.");
+				log.error("Unable to instantiate DUMMY MANO Plugin. Malformatted MANO: " + e.getMessage());
 			}
-		}
+		} else {
+			log.debug("Loading MANO info from DB.");
+			List<MANO> manos = MANORepository.findAll();
 
-		if (!skipMANOConfig) {
-			resources = loadConfigurations();
+			if (manos.isEmpty())
+				log.debug("No MANO info stored in DB.");
 
-			ObjectMapper mapper = new ObjectMapper();
+			for (MANO mano : manos) {
+				try {
+					log.debug("Instantiating MANO with manoId: " + mano.getManoId());
+					addMANO(mano);
+					log.debug("MANO with manoId " + mano.getManoId() + " successfully instantiated.");
+				} catch (MalformattedElementException e) {
+					log.error("Malformatted MANO: " + e.getMessage() + ". Skipping.");
+				}
+			}
 
-			if (resources != null) {
-				for (int i = 0; i < resources.length; i++) {
-					if (resources[i].isFile()) {
-						try {
-							File tmp = resources[i].getFile();
-							log.debug("Loading MANO configuration from config file #" + i + ".");
-							MANO newMano = mapper.readValue(tmp, MANO.class);
-							log.debug("Successfully loaded configuration for MANO with manoId: " + newMano.getManoId());
+			if (!skipMANOConfig) {
+				resources = loadConfigurations();
+
+				ObjectMapper mapper = new ObjectMapper();
+
+				if (resources != null) {
+					for (int i = 0; i < resources.length; i++) {
+						if (resources[i].isFile()) {
 							try {
-								log.debug("Creating MANO Plugin with manoId " + newMano.getManoId()
-										+ " from configuration file.");
-								createMANOPlugin(newMano);
-							} catch (AlreadyExistingEntityException e) {
-								log.error("MANO with manoId " + newMano.getManoId() + " already present in DB.");
-							} catch (MethodNotImplementedException e) {
-								log.error("Unsupported MANO type for MANO with manoId: " + newMano.getManoId());
-							} catch (MalformattedElementException e) {
-								log.error(
-										"Malformatted MANO with manoId " + newMano.getManoId() + ": " + e.getMessage());
+								File tmp = resources[i].getFile();
+								log.debug("Loading MANO configuration from config file #" + i + ".");
+								MANO newMano = mapper.readValue(tmp, MANO.class);
+								log.debug("Successfully loaded configuration for MANO with manoId: "
+										+ newMano.getManoId());
+								try {
+									log.debug("Creating MANO Plugin with manoId " + newMano.getManoId()
+											+ " from configuration file.");
+									createMANOPlugin(newMano);
+								} catch (AlreadyExistingEntityException e) {
+									log.error("MANO with manoId " + newMano.getManoId() + " already present in DB.");
+								} catch (MethodNotImplementedException e) {
+									log.error("Unsupported MANO type for MANO with manoId: " + newMano.getManoId());
+								} catch (MalformattedElementException e) {
+									log.error("Malformatted MANO with manoId " + newMano.getManoId() + ": "
+											+ e.getMessage());
+								}
+							} catch (IOException e) {
+								log.error("Unable to retrieve MANO configuration file: " + e.getMessage());
 							}
-						} catch (IOException e) {
-							log.error("Unable to retrieve MANO configuration file: " + e.getMessage());
 						}
 					}
 				}
@@ -146,25 +159,11 @@ public class PluginsManager {
 
 	private MANOPlugin buildMANOPlugin(MANO mano) throws MalformattedElementException {
 		if (mano.getManoType().equals(MANOType.DUMMY)) {
-			return new DummyMANOPlugin(
-					mano.getManoType(),
-					mano,
-					bootstrapServers,
-					service,
-					localNsdNotificationTopic,
-					remoteNsdNotificationTopic,
-					kafkaTemplate
-			);
+			return new DummyMANOPlugin(mano.getManoType(), mano, bootstrapServers, service, localNsdNotificationTopic,
+					remoteNsdNotificationTopic, kafkaTemplate);
 		} else if (mano.getManoType().equals(MANOType.OSM)) {
-			return new OpenSourceMANOPlugin(
-					mano.getManoType(),
-					mano,
-					bootstrapServers,
-					service,
-					localNsdNotificationTopic,
-					remoteNsdNotificationTopic,
-					kafkaTemplate
-			);
+			return new OpenSourceMANOPlugin(mano.getManoType(), mano, bootstrapServers, service,
+					localNsdNotificationTopic, remoteNsdNotificationTopic, kafkaTemplate);
 		} else {
 			throw new MalformattedElementException("Unsupported MANO type. Skipping.");
 		}
