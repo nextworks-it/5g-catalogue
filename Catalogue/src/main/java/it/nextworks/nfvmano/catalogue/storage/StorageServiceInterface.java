@@ -25,5 +25,7 @@ public interface StorageServiceInterface {
     public Resource loadNsdAsResource(NsdInfoResource nsdInfo, String filename) throws NotExistingEntityException;
 
     public void deleteAll();
+
+	public void deleteNsd(NsdInfoResource nsdInfo);
 	
 }

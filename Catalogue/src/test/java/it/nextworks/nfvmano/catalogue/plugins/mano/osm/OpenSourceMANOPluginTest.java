@@ -24,26 +24,12 @@ public class OpenSourceMANOPluginTest {
 
 	private static OpenSourceMANOPlugin plugin;
 
-    @BeforeClass
-    public static void connectOsm() {
-        OSMMano osmMano = new OSMMano(
-                "testOSM",
-                "10.0.8.26",
-                "admin",
-                "admin",
-                "default"
-        );
-        plugin = new OpenSourceMANOPlugin(
-                MANOType.OSM,
-                osmMano,
-                "blabla",
-                null,
-                null,
-                null,
-                null
-        );
-        // TODO: mock the service
-    }
+	@BeforeClass
+	public static void connectOsm() {
+		OSMMano osmMano = new OSMMano("testOSM", "10.0.8.26", "admin", "admin", "default");
+		plugin = new OpenSourceMANOPlugin(MANOType.OSM, osmMano, "blabla", null, null, null, null);
+		// TODO: mock the service
+	}
 
 	// It's an integration test and depends on OSM.
 	// it's here for practicality, but should not be run by default (hence @Ignore)
@@ -72,13 +58,8 @@ public class OpenSourceMANOPluginTest {
 	@Ignore // As above
 	public void testacceptOnboardNotf() throws InterruptedException {
 		init();
-		plugin.acceptNsdOnBoardingNotification(new NsdOnBoardingNotificationMessage(
-		        "test_info_id",
-                "test_nsd_id",
-				UUID.fromString("7a4cea43-e29d-423b-9ac8-9f0110ede94e"),
-                ScopeType.LOCAL,
-                OperationStatus.SENT
-        ));
+		plugin.acceptNsdOnBoardingNotification(new NsdOnBoardingNotificationMessage("test_info_id", "test_nsd_id",
+				UUID.fromString("7a4cea43-e29d-423b-9ac8-9f0110ede94e"), ScopeType.LOCAL, OperationStatus.SENT));
 		Thread.sleep(2000);
 		assertTrue(plugin.getVnfdIdList().contains("VNFD cirros_vnf"));
 		assertTrue(plugin.getNsdIdList().contains("NSD cirros_2vnf_ns"));
@@ -100,7 +81,8 @@ public class OpenSourceMANOPluginTest {
 	@Ignore // As above
 	public void testacceptDeleteNotf() throws InterruptedException {
 		init();
-		plugin.acceptNsdDeletionNotification(new NsdDeletionNotificationMessage("test_info_id", "test_nsd_id", ScopeType.LOCAL));
+		plugin.acceptNsdDeletionNotification(new NsdDeletionNotificationMessage("test_info_id", "test_nsd_id",
+				UUID.randomUUID(), ScopeType.LOCAL, OperationStatus.SUCCESSFULLY_DONE, "DUMMY"));
 		Thread.sleep(2000);
 		assertFalse(plugin.getVnfdIdList().contains("VNFD cirros_vnf"));
 		assertFalse(plugin.getNsdIdList().contains("NSD cirros_2vnf_ns"));

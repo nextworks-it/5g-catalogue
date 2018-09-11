@@ -16,6 +16,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
@@ -123,8 +124,29 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 
 	@Override
 	public void sendNsdDeletionNotification(NsdDeletionNotificationMessage notification)
-			throws MethodNotImplementedException {
-		throw new MethodNotImplementedException("sendNsdDeletionNotification method not implemented");
+			throws MethodNotImplementedException, FailedOperationException {
+		try {
+			log.info("Sending nsdOnBoardingNotification for NSD with nsdId: " + notification.getNsdId());
+
+			ObjectMapper mapper = new ObjectMapper();
+			mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+			mapper.setSerializationInclusion(Include.NON_EMPTY);
+
+			String json = mapper.writeValueAsString(notification);
+
+			log.debug("Sending json message over kafka bus on topic " + localNsdNotificationTopic + "\n" + json);
+
+			if (skipKafka) {
+				log.debug(" ---- TEST MODE: skipping post to kafka bus -----");
+			} else {
+				kafkaTemplate.send(localNsdNotificationTopic, json);
+
+				log.debug("Message sent.");
+			}
+		} catch (Exception e) {
+			log.error("Error while posting NsdDeletionNotificationMessage to Kafka bus");
+			throw new FailedOperationException(e.getMessage());
+		}
 	}
 
 	@Override
@@ -143,25 +165,36 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 	public void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) {
 		log.info("Received NSD onboarding notification for NSD {} with info id {}, from plugin {}.",
 				notification.getNsdId(), notification.getNsdInfoId(), notification.getPluginId());
+		
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+		mapper.setSerializationInclusion(Include.NON_EMPTY);
 
+		try {
+			String json = mapper.writeValueAsString(notification);
+			log.debug("RECEIVED MESSAGE: " + json);
+		} catch (JsonProcessingException e) {
+			log.error("Unable to parse received nsdOnboardingNotificationMessage: " + e.getMessage());
+		}
+		
 		switch (notification.getScope()) {
 		case REMOTE:
-			/*try {
+			try {
 				log.debug("Updating NsdInfoResource with plugin {} operation status {} for operation {}.",
 						notification.getPluginId(), notification.getOpStatus(),
 						notification.getOperationId().toString());
-				nsdMgmtService.updateNsdInfoOnboardingStatus(notification.getNsdInfoId(), notification.getPluginId(),
-						notification.getOpStatus());
+				nsdMgmtService.updateNsdInfoOperationStatus(notification.getNsdInfoId(), notification.getPluginId(),
+						notification.getOpStatus(), notification.getType());
 				log.debug("NsdInfoResource successfully updated with plugin {} operation status {} for operation {}.",
 						notification.getPluginId(), notification.getOpStatus(),
 						notification.getOperationId().toString());
 			} catch (NotExistingEntityException e) {
 				log.error(e.getMessage());
-			}*/
+			}
 			log.debug("Updating consumers internal mapping for operationId {} and plugin {}.",
 					notification.getOperationId(), notification.getPluginId());
-			nsdMgmtService.updateOperationIdToConsumersMap(notification.getOperationId(), notification.getOpStatus(),
-					notification.getPluginId(), notification.getNsdInfoId());
+			nsdMgmtService.updateOperationInfoInConsumersMap(notification.getOperationId(), notification.getOpStatus(),
+					notification.getPluginId(), notification.getNsdInfoId(), notification.getType());
 			log.debug("Consumers internal mapping successfully updated for operationId {} and plugin {}.",
 					notification.getOperationId(), notification.getPluginId());
 			break;

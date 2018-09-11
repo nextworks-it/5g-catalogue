@@ -24,12 +24,12 @@ public class NsdOnBoardingNotificationMessage extends CatalogueMessage {
 			@JsonProperty("operationId") UUID operationId,
 			@JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus,
-			@JsonProperty("notifierId") String manoId
+			@JsonProperty("notifierId") String pluginId
 	) {
 		super(CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION, operationId, scope, opStatus);
 		this.nsdInfoId = nsdInfoId;
 		this.nsdId = nsdId;
-		this.pluginId = manoId;
+		this.pluginId = pluginId;
 	}
 
     public NsdOnBoardingNotificationMessage(
@@ -55,7 +55,7 @@ public class NsdOnBoardingNotificationMessage extends CatalogueMessage {
 		return nsdId;
 	}
 
-	@JsonProperty("pluginId")
+	@JsonProperty("notifierId")
 	public String getPluginId() {
 		return pluginId;
 	}

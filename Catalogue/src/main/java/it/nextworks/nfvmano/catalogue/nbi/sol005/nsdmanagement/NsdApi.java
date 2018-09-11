@@ -192,7 +192,7 @@ public interface NsdApi {
 			@ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class) })
 	@RequestMapping(value = "/nsd/v1/ns_descriptors/{nsdInfoId}", produces = { "application/json",
 			"application/yaml" }, consumes = { "application/json" }, method = RequestMethod.PATCH)
-	ResponseEntity<NsdInfoModifications> updateNSDInfo(
+	ResponseEntity<?> updateNSDInfo(
 			@ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
 			@ApiParam(value = "", required = true) @Valid @RequestBody NsdInfoModifications body);
 
