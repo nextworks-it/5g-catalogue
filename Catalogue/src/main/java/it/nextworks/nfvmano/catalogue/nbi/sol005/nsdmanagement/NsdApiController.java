@@ -173,7 +173,7 @@ public class NsdApiController implements NsdApi {
 		log.debug("Processing REST request to retrieve NSD for NSD info ID " + nsdInfoId);
 
 		try {
-			Object nsd = nsdManagementService.getNsd(nsdInfoId);
+			Object nsd = nsdManagementService.getNsd(nsdInfoId, false);
 			// TODO: here it needs to check the type of entity that is returned
 			return new ResponseEntity<Resource>((Resource) nsd, HttpStatus.OK);
 		} catch (NotExistingEntityException e) {

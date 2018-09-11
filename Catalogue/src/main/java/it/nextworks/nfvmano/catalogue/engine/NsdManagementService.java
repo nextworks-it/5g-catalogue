@@ -184,11 +184,11 @@ public class NsdManagementService implements NsdManagementInterface {
 	}
 
 	@Override
-	public Object getNsd(String nsdInfoId) throws FailedOperationException, NotExistingEntityException,
+	public Object getNsd(String nsdInfoId, boolean isInternalRequest) throws FailedOperationException, NotExistingEntityException,
 			MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
 		log.debug("Processing request to retrieve an NSD content for NSD info " + nsdInfoId);
 		NsdInfoResource nsdInfo = getNsdInfoResource(nsdInfoId);
-		if (nsdInfo.getNsdOnboardingState() != NsdOnboardingStateType.ONBOARDED) {
+		if ( (!isInternalRequest) && (nsdInfo.getNsdOnboardingState() != NsdOnboardingStateType.ONBOARDED)) {
 			log.error("NSD info " + nsdInfoId + " does not have an onboarded NSD yet");
 			throw new NotPermittedOperationException("NSD info " + nsdInfoId + " does not have an onboarded NSD yet");
 		}

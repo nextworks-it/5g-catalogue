@@ -37,15 +37,15 @@ public class NsdInfoResource {
 	
 	private UUID nsdId; 
 	
-	@ElementCollection
+	@ElementCollection(fetch=FetchType.EAGER)
 	@Fetch(FetchMode.SELECT)
 	private List<UUID> vnfPkgIds = new ArrayList<>();
 	
-	@ElementCollection
+	@ElementCollection(fetch=FetchType.EAGER)
 	@Fetch(FetchMode.SELECT)
 	private List<UUID> pnfdInfoIds = new ArrayList<>();
 	
-	@ElementCollection
+	@ElementCollection(fetch=FetchType.EAGER)
 	@Fetch(FetchMode.SELECT)
 	private List<UUID> nestedNsdInfoIds = new ArrayList<>();
 	
@@ -65,11 +65,11 @@ public class NsdInfoResource {
 	
 	private NsdContentType nsdContentType;
 	
-	@ElementCollection
+	@ElementCollection(fetch=FetchType.EAGER)
 	@Fetch(FetchMode.SELECT)
 	private List<String> nsdFilename = new ArrayList<>();
 
-	@ElementCollection
+	@ElementCollection(fetch=FetchType.EAGER)
 	@Fetch(FetchMode.SELECT)
 	private Map<String, String> userDefinedData = new HashMap<>();
 	
