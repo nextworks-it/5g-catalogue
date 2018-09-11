@@ -1,13 +1,26 @@
 package it.nextworks.nfvmano.catalogue.plugins.mano.osm.elements;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Created by Marco Capitani on 10/09/18.
@@ -33,13 +46,14 @@ public class ArchiveBuilder {
         String nsdId = ymlFile.getNsdCatalog().getNsd().get(0).getId();
         File folder = makeFolder(nsdId);
         makeReadme(readmeContent, folder);
+        makeYml(ymlFile, nsdId, folder);
         makeSubFolder(folder,"ns_config");
         makeSubFolder(folder,"scripts");
         makeSubFolder(folder,"vnf_config");
         File iconsFolder = makeSubFolder(folder, "icons");
         copyIcon(iconsFolder, logoFile);
         // TODO checksum
-        return folder;
+        return compress(folder);
     }
 
     public File makeNewArchive(OsmNsdPackage ymlFile, File logoFile) {
@@ -54,8 +68,16 @@ public class ArchiveBuilder {
         return makeNewArchive(ymlFile, "", defaultLogo);
     }
 
-    public File makeFolder(String nsdId) {
+    private File makeFolder(String nsdId) {
         File folder = new File(tmpDir, nsdId);
+        if (folder.isDirectory()) {
+            log.debug("Temporary folder {} already existing. Overwriting.", folder.getAbsolutePath());
+            if (!rmRecursively(folder)) {
+                throw new IllegalStateException(
+                        String.format("Could not delete folder %s", folder.getAbsolutePath())
+                );
+            }
+        }
         if (!folder.mkdir()) {
             throw new IllegalArgumentException(
                     String.format("Cannot create folder %s", folder.getAbsolutePath())
@@ -64,7 +86,58 @@ public class ArchiveBuilder {
         return folder;
     }
 
-    public void makeReadme(String readmeContent, File folder) {
+    private boolean rmRecursively(File folder) {
+        SimpleFileVisitor<Path> deleter = new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                    throws IOException {
+                Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException e)
+                    throws IOException {
+                if (e == null) {
+                    Files.delete(dir);
+                    return FileVisitResult.CONTINUE;
+                } else {
+                    // directory iteration failed
+                    throw e;
+                }
+            }
+        };
+        try {
+            Files.walkFileTree(folder.toPath(), deleter);
+            return true;
+        } catch (IOException e) {
+            log.error(
+                    "Could not recursively delete folder {}. Error: {}.",
+                    folder.getAbsolutePath(),
+                    e.getMessage()
+            );
+            log.debug("Error details: ", e);
+            return false;
+        }
+    }
+
+    private void makeYml(OsmNsdPackage ymlContent, String nsdId, File folder) {
+        File nsdFile = new File(folder, nsdId + "_nsd.yaml");
+        ObjectMapper ymlMapper = new ObjectMapper(new YAMLFactory());
+        ymlMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        try {
+            List<String> strings = Arrays.asList(ymlMapper.writeValueAsString(ymlContent).split("\n"));
+            Files.write(nsdFile.toPath(), strings);
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("Invalid package provided");
+        } catch (IOException e) {
+            throw new IllegalStateException(
+                    String.format("Could not write nsd file %s. Error: %s", nsdFile.getAbsolutePath(), e.getMessage())
+            );
+        }
+    }
+
+    private void makeReadme(String readmeContent, File folder) {
         File readme = new File(folder, "README");
         List<String> strings = Arrays.asList(readmeContent.split("\n"));
         try {
@@ -79,7 +152,7 @@ public class ArchiveBuilder {
         }
     }
 
-    public File makeSubFolder(File folder, String subFolder) {
+    private File makeSubFolder(File folder, String subFolder) {
         File newFolder = new File(folder, subFolder);
         if (!newFolder.mkdir()) {
             throw new IllegalArgumentException(
@@ -89,9 +162,9 @@ public class ArchiveBuilder {
         return newFolder;
     }
 
-    public void copyIcon(File iconFolder, File icon) {
+    private void copyIcon(File iconFolder, File icon) {
         try {
-            Files.copy(icon.toPath(), iconFolder.toPath());
+            Files.copy(icon.toPath(), new File(iconFolder, icon.getName()).toPath());
         } catch (IOException e) {
             String msg = String.format(
                     "Cannot copy icon file %s to folder %s",
@@ -99,6 +172,48 @@ public class ArchiveBuilder {
                     iconFolder.getAbsolutePath()
             );
             throw new IllegalArgumentException(msg);
+        }
+    }
+
+    private File compress(File folder) {
+        File rootDir = folder.getParentFile();
+        File archive = new File(rootDir, folder.getName() + ".tar.gz");
+        try (
+                FileOutputStream fos = new FileOutputStream(archive);
+                GZIPOutputStream gos = new GZIPOutputStream(new BufferedOutputStream(fos));
+                TarArchiveOutputStream tos = new TarArchiveOutputStream(gos)
+        ) {
+            SimpleFileVisitor<Path> archiver = new SimpleFileVisitor<Path>() {
+
+                private File ROOT = folder.getParentFile();
+
+                private String relPath(Path target) {
+                    return ROOT.toPath().relativize(target).toString();
+                }
+
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                        throws IOException {
+                    tos.putArchiveEntry(new TarArchiveEntry(file.toFile(), relPath(file)));
+                    Files.copy(file, tos);
+                    tos.closeArchiveEntry();
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult preVisitDirectory(Path path, BasicFileAttributes basicFileAttributes)
+                        throws IOException {
+                    tos.putArchiveEntry(new TarArchiveEntry(path.toFile(), relPath(path)));
+                    tos.closeArchiveEntry();
+                    return FileVisitResult.CONTINUE;
+                }
+            };
+            Files.walkFileTree(folder.toPath(), archiver);
+            return archive;
+        } catch (IOException e) {
+            throw new IllegalStateException(
+                    String.format("Could not compress package. Error: %s", e.getMessage())
+            );
         }
     }
 }

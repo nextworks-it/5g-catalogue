@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -37,7 +36,7 @@ public class NsdBuilder {
     private Vld makeVld(
             String vlId,
             NsVirtualLinkNode link,
-            Map<String, List<ConstituentVnfd>> vlToVnfMapping
+            Map<String, Map<ConstituentVnfd, String>> vlToVnfMapping
     ) {
         return new Vld()
                 .setId(vlId)
@@ -46,18 +45,18 @@ public class NsdBuilder {
                 .setMgmtNetwork(vlId.endsWith("_mgmt") ? "true" : "false") // TODO
                 .setType("ELAN")
                 .setVnfdConnectionPointRef(
-                        vlToVnfMapping.getOrDefault(vlId, Collections.emptyList())
+                        vlToVnfMapping.getOrDefault(vlId, Collections.emptyMap()).entrySet()
                                 .stream()
-                                .map(vnf -> makeCPRef(
-                                        vnf.getVnfdIdRef(),
-                                        vnf.getMemberVnfIndex(),
-                                        "eth0"
+                                .map(e -> makeCPRef(
+                                        e.getKey().getVnfdIdRef(),
+                                        e.getKey().getMemberVnfIndex(),
+                                        e.getValue()
                                 ))
                                 .collect(Collectors.toList())
                 );
     }
 
-    void parseDescriptorTemplate(DescriptorTemplate template) throws MalformattedElementException {
+    public void parseDescriptorTemplate(DescriptorTemplate template) throws MalformattedElementException {
         dt = template;
 
         if (!(dt.getTopologyTemplate().getNSNodes().size() == 1)) {
@@ -66,7 +65,7 @@ public class NsdBuilder {
 
         NSNode nsd = dt.getTopologyTemplate().getNSNodes().values().iterator().next();
 
-        Map<String, List<ConstituentVnfd>> vlToVnfMapping = new HashMap<>();
+        Map<String, Map<ConstituentVnfd, String>> vlToVnfMapping = new HashMap<>();
 
         List<ConstituentVnfd> constituentVnfds = dt.getTopologyTemplate().getVNFNodes().values()
                 .stream()
@@ -74,9 +73,18 @@ public class NsdBuilder {
                             ConstituentVnfd output = new ConstituentVnfd()
                                     .setVnfdIdRef(vnf.getProperties().getDescriptorId());
                             vnf.getRequirements().getVirtualLink().forEach(
-                                    vlId -> {
-                                        vlToVnfMapping.putIfAbsent(vlId, new ArrayList<>());
-                                        vlToVnfMapping.get(vlId).add(output);
+                                    input -> {
+                                        String[] split = input.split("/");
+                                        if (!(split.length == 2)) {
+                                            throw new IllegalArgumentException(String.format(
+                                                    "Illegal vl requirement %s: wrong split",
+                                                    input
+                                            ));
+                                        }
+                                        String vlId = split[0];
+                                        String cpId = split[1];
+                                        vlToVnfMapping.putIfAbsent(vlId, new HashMap<>());
+                                        vlToVnfMapping.get(vlId).put(output, cpId);
                                     }
                             );
                             return output;
@@ -84,7 +92,7 @@ public class NsdBuilder {
                 )
                 .collect(Collectors.toList());
         for (int i = 0; i < constituentVnfds.size(); i++) {
-            constituentVnfds.get(i).setVnfdIdRef(String.valueOf(i));
+            constituentVnfds.get(i).setMemberVnfIndex(i + 1);
         }
 
         List<Vld> vlds = dt.getTopologyTemplate().getNsVirtualLinkNodes().entrySet()
@@ -95,7 +103,7 @@ public class NsdBuilder {
         List<Nsd> nsds = new ArrayList<>();
         nsds.add(
                 new Nsd()
-                        .setId(dt.getMetadata().getDescriptorId())
+                        .setId(nsd.getProperties().getDescriptorId())
                         .setName(nsd.getProperties().getName())
                         .setShortName(nsd.getProperties().getName())
                         .setDescription(nsd.getProperties().getName())
