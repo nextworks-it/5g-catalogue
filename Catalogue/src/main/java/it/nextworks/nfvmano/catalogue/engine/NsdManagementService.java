@@ -35,7 +35,6 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANORepository;
 import it.nextworks.nfvmano.catalogue.repos.NsdContentType;
 import it.nextworks.nfvmano.catalogue.repos.NsdInfoRepository;
-import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
@@ -44,6 +43,7 @@ import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
 import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
 import it.nextworks.nfvmano.libs.common.exceptions.NotPermittedOperationException;
+import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 
 @Service
@@ -263,7 +263,7 @@ public class NsdManagementService implements NsdManagementInterface {
 
 				dt = DescriptorsParser.fileToDescriptorTemplate(nsdFile);
 
-				log.debug("NSD succssfully parsed - its content is: \n" + DescriptorsParser.descriptorTemplateToString(dt));				
+				log.debug("NSD successfully parsed - its content is: \n" + DescriptorsParser.descriptorTemplateToString(dt));				
 				//pre-set nsdinfo attributes to properly store NSDs
 				nsdInfo.setNsdVersion(dt.getMetadata().getVersion());
 
@@ -325,7 +325,14 @@ public class NsdManagementService implements NsdManagementInterface {
 		nsdInfo.setNsdOperationalState(NsdOperationalStateType.ENABLED);
 		nsdInfo.setNsdDesigner(dt.getMetadata().getVendor());
 		nsdInfo.setNsdInvariantId(UUID.fromString(dt.getMetadata().getDescriptorId()));
-		String nsdName = dt.getTopologyTemplate().getNSNodes().get(0).getProperties().getName();
+		Map<String, NSNode> nsNodes = dt.getTopologyTemplate().getNSNodes();
+		String nsdName = "";
+		if (nsNodes.size() == 1) {
+			for (Entry<String, NSNode>  nsNode : nsNodes.entrySet()) {
+				nsdName = nsNode.getValue().getProperties().getName();
+			}
+		}
+		
 		log.debug("NSD name: " + nsdName);
 		nsdInfo.setNsdName(nsdName);
 		//nsdInfo.setNsdVersion(dt.getMetadata().getVersion());

@@ -103,6 +103,7 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
 		);
 	}
 
+	@SuppressWarnings("unused")
 	@Override
 	public void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) {
 		log.info(

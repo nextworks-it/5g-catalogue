@@ -32,7 +32,6 @@ public class NsdOnBoardingNotificationMessage extends CatalogueMessage {
 		this.pluginId = manoId;
 	}
 
-    @JsonCreator
     public NsdOnBoardingNotificationMessage(
             @JsonProperty("nsdInfoId") String nsdInfoId,
             @JsonProperty("nsdId") String nsdId,
