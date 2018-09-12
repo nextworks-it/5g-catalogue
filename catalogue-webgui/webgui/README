@@ -1,0 +1,26 @@
+Apache 2 configuration for running the WEB GUI (Ubuntu)
+
+sudo apt-get update
+sudo apt-get install apache2
+
+cd /etc/apache2/
+
+edit apache2.conf adding the following lines:
+
+<Directory path_to_web_gui_repo/dummySO>
+        Options Indexes FollowSymLinks
+        AllowOverride None
+        Require all granted
+</Directory>
+
+NOTE: the path must point at the directory that includes also the WEB GUI template "gentelella", i.e. "dummySO"
+
+cd /etc/apache2/sites-enabled/
+
+edit 000-default.conf:
+
+DocumentRoot path_to_web_gui_repo/dummySO
+
+sudo service apache2 restart
+
+WEB GUI at http://localhost
