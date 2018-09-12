@@ -36,7 +36,7 @@ function createNsdInfosTable(data, params) {
     var btnFlag = true;
     var header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Operational State', 'Onboarding State'], btnFlag, false);
     var cbacks = ['openNSD', 'updateNsdInfo_', 'deleteNsdInfo'];
-    var names = ['View NSD', 'Update NsdInfo', 'Delete NSD'];
+    var names = ['View NSD', 'Enable/Disable NSD', 'Delete NSD'];
     var columns = [['nsdName'], ['nsdVersion'], ['nsdDesigner'], ['nsdOperationalState'], ['nsdOnboardingState']];
 
     table.innerHTML = header + '<tbody>';
