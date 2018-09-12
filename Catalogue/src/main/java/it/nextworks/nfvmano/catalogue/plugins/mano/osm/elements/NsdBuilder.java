@@ -1,3 +1,18 @@
+/*
+* Copyright 2018 Nextworks s.r.l.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 package it.nextworks.nfvmano.catalogue.plugins.mano.osm.elements;
 
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
@@ -5,6 +20,7 @@ import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NsVirtualLink.NsVirtualLinkNode;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,9 +37,10 @@ public class NsdBuilder {
 
     private OsmNsdPackage osmPackage;
     private DescriptorTemplate dt;
+    private final File defaultLogo;
 
-    public NsdBuilder() {
-
+    public NsdBuilder(File defaultLogo) {
+        this.defaultLogo = defaultLogo;
     }
 
     private VnfdConnectionPointRef makeCPRef(String vnfdId, int memberIndex, String cpId) {
@@ -104,12 +121,12 @@ public class NsdBuilder {
         nsds.add(
                 new Nsd()
                         .setId(nsd.getProperties().getDescriptorId())
-                        .setName(nsd.getProperties().getName())
+                        .setName(nsd.getProperties().getDescriptorId())
                         .setShortName(nsd.getProperties().getName())
-                        .setDescription(nsd.getProperties().getName())
+                        .setDescription(dt.getDescription()) // TODO: this is not ideal.
                         .setVendor(nsd.getProperties().getDesigner())
                         .setVersion(nsd.getProperties().getVersion())
-                        .setLogo("osm_2x.png") // TODO get logo?
+                        .setLogo(defaultLogo.getName()) // TODO get logo?
                         .setConstituentVnfd(constituentVnfds)
                         .setVld(vlds)
         );

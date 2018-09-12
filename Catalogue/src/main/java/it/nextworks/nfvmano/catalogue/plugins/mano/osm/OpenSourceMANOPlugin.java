@@ -50,22 +50,26 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class OpenSourceMANOPlugin extends MANOPlugin {
 
+	/* TEST DATA
 	private static final String NSD_FILE_NAME = "cirros_2vnf_ns.tar.gz"; // Should be a filename in src/main/resources
 	private static final String NSD_ID = "cirros_2vnf_ns";
 
 	private static final String[] VNF_FILE_NAMES = { "cirros_vnf.tar.gz" }; // Should be a filename in
 																			// src/main/resources
 	private static final String[] VNFD_IDS = { "cirros_vnf" };
+	*/
 
 	private static final Logger log = LoggerFactory.getLogger(OpenSourceMANOPlugin.class);
 
 	private static final File TMP_DIR = new File("/tmp");
-	private static File DEF_IMG;
+
+	private static final File DEF_IMG = new File(
+			OpenSourceMANOPlugin.class.getClassLoader().getResource("nxw_logo.png").getFile()
+	);
 
 	private OSMClient osmClient;
 	private final OSMMano osm;
@@ -78,7 +82,6 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
 			throw new IllegalArgumentException("OSM plugin requires an OSM type MANO");
 		}
 		osm = (OSMMano) mano;
-		DEF_IMG = new File(getClass().getClassLoader().getResource("osm_2x.png").getFile());
 	}
 
 	@Override
@@ -101,7 +104,7 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
 		log.debug("Body: {}", notification);
 		try {
 			DescriptorTemplate descriptorTemplate = retrieveTemplate(notification.getNsdInfoId());
-			NsdBuilder nsdBuilder = new NsdBuilder();
+			NsdBuilder nsdBuilder = new NsdBuilder(DEF_IMG);
 			nsdBuilder.parseDescriptorTemplate(descriptorTemplate);
 			OsmNsdPackage packageData = nsdBuilder.getPackage();
 

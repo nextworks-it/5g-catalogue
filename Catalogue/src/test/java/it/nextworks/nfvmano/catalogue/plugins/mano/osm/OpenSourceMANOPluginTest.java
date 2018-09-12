@@ -1,3 +1,18 @@
+/*
+* Copyright 2018 Nextworks s.r.l.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 package it.nextworks.nfvmano.catalogue.plugins.mano.osm;
 
 import it.nextworks.nfvmano.catalogue.messages.NsdDeletionNotificationMessage;
@@ -64,10 +79,10 @@ public class OpenSourceMANOPluginTest {
 		plugin.onBoardPackage(vnfd, "test_onb_vnfd");
 		plugin.onBoardPackage(nsd, "test_onb_nsd");
 		// Sleep for OSM to finish
-		Thread.sleep(2000);
-		System.out.println(plugin.getNsdIdList());
+		Thread.sleep(1000);
 		assertTrue(plugin.getVnfdIdList().contains("VNFD cirros_vnf"));
-		assertTrue(plugin.getNsdIdList().contains("NSD cirros_2_test_nsd"));
+		assertTrue(plugin.getNsdIdList().contains("NSD 339b0999-80c3-456c-9ee7-4cf42e4f7be7"));
+		System.out.println(plugin.getNsdIdList());
 	}
 
 
@@ -87,10 +102,10 @@ public class OpenSourceMANOPluginTest {
 	public void testDelete() throws InterruptedException, FailedOperationException {
 		// Prerequisite: have the cirros 2vnf NSD and related VNFD loaded into OSM
 		init();
-		plugin.deleteNsd("7a4cea43-e29d-423b-9ac8-9f0110ede94e", "test_delete_nsd");
+		plugin.deleteNsd("339b0999-80c3-456c-9ee7-4cf42e4f7be7", "test_delete_nsd_gen");
 		plugin.deleteNsd("cirros_2vnf_ns", "test_delete_nsd");
 		plugin.deleteVnfd("cirros_vnf", "test_delete_vnf");
-		Thread.sleep(2000);
+		Thread.sleep(1000);
 		assertFalse(plugin.getVnfdIdList().contains("VNFD cirros_vnf"));
 		assertFalse(plugin.getNsdIdList().contains("NSD cirros_2vnf_ns"));
 	}
