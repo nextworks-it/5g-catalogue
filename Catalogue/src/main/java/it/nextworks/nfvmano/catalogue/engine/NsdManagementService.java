@@ -335,10 +335,11 @@ public class NsdManagementService implements NsdManagementInterface {
 
 		String nsdFilename = null;
 		DescriptorTemplate dt = null;
+		UUID nsdId = null;
 
 		// pre-set nsdinfo attributes to properly store NSDs
-		UUID nsdId = UUID.randomUUID();
-		nsdInfo.setNsdId(nsdId);
+		// UUID nsdId = UUID.randomUUID();
+		
 
 		switch (nsdContentType) {
 		case ZIP: {
@@ -351,6 +352,9 @@ public class NsdManagementService implements NsdManagementInterface {
 				File nsdFile = convertToFile(nsdMpFile);
 
 				dt = DescriptorsParser.fileToDescriptorTemplate(nsdFile);
+				
+				nsdId = UUID.fromString(dt.getMetadata().getDescriptorId());
+				nsdInfo.setNsdId(nsdId);
 
 				log.debug("NSD successfully parsed - its content is: \n"
 						+ DescriptorsParser.descriptorTemplateToString(dt));
@@ -382,7 +386,11 @@ public class NsdManagementService implements NsdManagementInterface {
 				log.info("NSD file is in format: yaml");
 
 				dt = DescriptorsParser.fileToDescriptorTemplate(inputFile);
-				log.debug("NSD succssfully parsed - its content is: \n"
+				
+				nsdId = UUID.fromString(dt.getMetadata().getDescriptorId());
+				nsdInfo.setNsdId(nsdId);
+				
+				log.debug("NSD successfully parsed - its content is: \n"
 						+ DescriptorsParser.descriptorTemplateToString(dt));
 				// pre-set nsdinfo attributes to properly store NSDs
 				nsdInfo.setNsdVersion(dt.getMetadata().getVersion());

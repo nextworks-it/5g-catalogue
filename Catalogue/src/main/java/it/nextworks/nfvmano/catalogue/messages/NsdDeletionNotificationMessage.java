@@ -29,6 +29,19 @@ public class NsdDeletionNotificationMessage extends CatalogueMessage {
 		super(CatalogueMessageType.NSD_DELETION_NOTIFICATION, operationId, scope, opStatus);
 		this.nsdInfoId = nsdInfoId;
 		this.nsdId = nsdId;
+		this.pluginId = pluginId;
+	}
+	
+	public NsdDeletionNotificationMessage(
+			@JsonProperty("nsdInfoId") String nsdInfoId,
+			@JsonProperty("nsdId") String nsdId,
+			@JsonProperty("operationId") UUID operationId,
+			@JsonProperty("scope") ScopeType scope,
+			@JsonProperty("operationStatus") OperationStatus opStatus
+	) {
+		super(CatalogueMessageType.NSD_DELETION_NOTIFICATION, operationId, scope, opStatus);
+		this.nsdInfoId = nsdInfoId;
+		this.nsdId = nsdId;
 	}
 
 	@JsonProperty("nsdInfoId")

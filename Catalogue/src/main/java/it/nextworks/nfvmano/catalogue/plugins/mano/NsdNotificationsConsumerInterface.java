@@ -34,7 +34,7 @@ public interface NsdNotificationsConsumerInterface {
      * @param notification notification about the deletion of an existing NSD
      * @throws MethodNotImplementedException 
      */
-    void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification) throws MethodNotImplementedException;
+    void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification);
 
     /**
      * This method is called when a new PNFD is on-boarded, after all the on-boarding steps are done.

@@ -125,13 +125,13 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
 			log.debug("tId: {}", tId);
 			sendNotification(new NsdOnBoardingNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(),
 					notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
-					mano.getManoId()));
+					osm.getManoId()));
 		} catch (Exception e) {
 			log.error("Could not onboard NSD: {}", e.getMessage());
 			log.debug("Error details: ", e);
 			sendNotification(new NsdOnBoardingNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(),
 					notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
-					mano.getManoId()));
+					osm.getManoId()));
 		}
 	}
 
@@ -156,13 +156,13 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
 					notification.getNsdInfoId());
 			sendNotification(new NsdDeletionNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(),
 					notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
-					mano.getManoId()));
+					osm.getManoId()));
 		} catch (Exception e) {
 			log.error("Could not delete NSD: {}", e.getMessage());
 			log.debug("Error details: ", e);
 			sendNotification(new NsdDeletionNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(),
 					notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
-					mano.getManoId()));
+					osm.getManoId()));
 		}
 	}
 

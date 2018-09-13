@@ -79,6 +79,10 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 			NsdOnBoardingNotificationMessage castMsg = (NsdOnBoardingNotificationMessage) msg;
 			acceptNsdOnBoardingNotification(castMsg);
 		});
+		functor.put(CatalogueMessageType.NSD_DELETION_NOTIFICATION, msg -> {
+			NsdDeletionNotificationMessage castMsg = (NsdDeletionNotificationMessage) msg;
+			acceptNsdDeletionNotification(castMsg);
+		});
 
 		setConnector(KafkaConnector.Builder().setBeanId(connectorId).setKafkaBootstrapServers(server)
 				.setKafkaGroupId(connectorId).addTopic(topicQueueExchange).setFunctor(functor).build());
@@ -214,9 +218,39 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 	}
 
 	@Override
-	public void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification)
-			throws MethodNotImplementedException {
-		throw new MethodNotImplementedException("acceptNsdDeletionNotification method not implemented");
+	public void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification) {
+		log.info("Received NSD deletion notification for NSD {} with info id {}, from plugin {}.",
+				notification.getNsdId(), notification.getNsdInfoId(), notification.getPluginId());
+		
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+		mapper.setSerializationInclusion(Include.NON_EMPTY);
+
+		try {
+			String json = mapper.writeValueAsString(notification);
+			log.debug("RECEIVED MESSAGE: " + json);
+		} catch (JsonProcessingException e) {
+			log.error("Unable to parse received nsdDeletionNotificationMessage: " + e.getMessage());
+		}
+		
+		switch (notification.getScope()) {
+		case REMOTE:
+			log.info("NSD {} with info id {} successfully removed by plugin {}.",
+					notification.getNsdId(), notification.getNsdInfoId(), notification.getPluginId());
+			log.debug("Updating consumers internal mapping for operationId {} and plugin {}.",
+					notification.getOperationId(), notification.getPluginId());
+			nsdMgmtService.updateOperationInfoInConsumersMap(notification.getOperationId(), notification.getOpStatus(),
+					notification.getPluginId(), notification.getNsdInfoId(), notification.getType());
+			log.debug("Consumers internal mapping successfully updated for operationId {} and plugin {}.",
+					notification.getOperationId(), notification.getPluginId());
+			break;
+		case LOCAL:
+			log.error("Nsd LOCAL deletion notification not handled here, REMOTE onboarding message expected.");
+			break;
+		case GLOBAL:
+			log.error("Nsd GLOBAL deletion notification not handled here, REMOTE onboarding message expected.");
+			break;
+		}
 	}
 
 	@Override

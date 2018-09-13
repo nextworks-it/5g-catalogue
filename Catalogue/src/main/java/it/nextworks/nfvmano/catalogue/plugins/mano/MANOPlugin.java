@@ -94,11 +94,7 @@ public abstract class MANOPlugin
 				CatalogueMessageType.NSD_DELETION_NOTIFICATION,
 				msg -> {
                     NsdDeletionNotificationMessage castMsg = (NsdDeletionNotificationMessage) msg;
-					try {
-						acceptNsdDeletionNotification(castMsg);
-					} catch (MethodNotImplementedException e) {
-						log.error("Method not yet implemented: " + e.getMessage());
-					}
+					acceptNsdDeletionNotification(castMsg);
 				}
 		);
 		functor.put(
