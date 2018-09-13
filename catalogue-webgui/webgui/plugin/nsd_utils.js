@@ -18,6 +18,43 @@ function updateNsdInfo(nsdInfoId, elemId) {
     patchJsonRequestToURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId, json, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully updated."]);
 }
 
+function loadNSDFile(elemId, resId) {
+    var files = document.getElementById(elemId).files;
+    
+    if (files && files.length > 0) {
+        createNsdInfoId(files[0], resId);
+    } else {
+        showResultMessage(false, "NSD file/archive not selected.");
+    }
+}
+
+function createNsdInfoId(file, resId) {
+    // TODO: handle also userDefinedData
+    var jsonObj = {"userDefinedData" : {} };
+    var json = JSON.stringify(jsonObj, null, 4);
+    
+    postJsonToURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors", json, uploadNsdContent, [file, resId]);
+}
+
+function uploadNsdContent(data, params) {
+    console.log(JSON.stringify(data, null, 4));
+    
+    var formData = new FormData();
+    formData.append("file", params[0]);
+    formData.append("pippo","pluto");
+    var nsdInfoId = data['id'];
+    
+    putFileToURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content", formData, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully updated."]);
+}
+
+function getNSD(nsdInfoId, resId) {
+    getFileFromURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content", testFUN, [resId]);
+}
+
+function testFUN(data, params) {
+    console.log(data);
+}
+
 function createNsdInfosTable(data, params) {
     //console.log(JSON.stringify(data, null, 4));
     //console.log(params);
@@ -35,7 +72,7 @@ function createNsdInfosTable(data, params) {
     }
     var btnFlag = true;
     var header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Operational State', 'Onboarding State'], btnFlag, false);
-    var cbacks = ['openNSD', 'updateNsdInfo_', 'deleteNsdInfo'];
+    var cbacks = ['getNSD', 'updateNsdInfo_', 'deleteNsdInfo'];
     var names = ['View NSD', 'Enable/Disable NSD', 'Delete NSD'];
     var columns = [['nsdName'], ['nsdVersion'], ['nsdDesigner'], ['nsdOperationalState'], ['nsdOnboardingState']];
 

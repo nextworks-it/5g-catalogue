@@ -33,6 +33,25 @@ function getJsonFromURL(resourceUrl, callback, params) {
     });
 }
 
+function getFileFromURL(resourceUrl, callback, params) {
+    var settings = {
+        "async": true,
+        //"crossDomain": true,
+        "url": resourceUrl,
+        "method": "GET",
+        headers: {          
+            Accept: "application/x-yaml; charset=utf-8"  
+        } 
+    };
+
+    $.ajax(settings).done(function (response) {
+        console.log(response);
+        callback(response, params);
+    }).fail(function (response) {
+        console.log(response);
+    });
+}
+
 function getFromURLWithAuth(resourceUrl, callback, params) {
     
     if (!checkUser('username')) {
@@ -63,40 +82,34 @@ function getFromURLWithAuth(resourceUrl, callback, params) {
     }
 }
 
-function postJsonToURLWithAuth(resourceUrl, jsonData, callback, params) {
+function postJsonToURL(resourceUrl, jsonData, callback, params) {
     
-    if (!checkUser('username')) {
-        redirectToError('401');
-    } else {
-    
-        var settings = {
-            "async": true,
-            "crossDomain": true,
-            "url": resourceUrl,
-            "method": "POST",
-            "headers": {
-                "Content-Type": "application/json"
-            },
-            xhrFields: {
-                withCredentials: true
-            },
-            "data": jsonData
-        };
-          
-        $.ajax(settings).done(function (response) {
-            console.log(response);
+    var settings = {
+        "async": true,
+        //"crossDomain": true,
+        "url": resourceUrl,
+        "method": "POST",
+        "headers": {
+            Accept: "application/json, application/yaml",
+            "Content-Type": "application/json"
+        },
+        "data": jsonData
+    };
+      
+    $.ajax(settings).done(function (response) {
+        console.log(response);
+        
+        if (callback == showResultMessage) {
             callback(true, params[0]);
-        }).fail(function (response) {
-            console.log(response);
-            if (response.status == 401) {
-                location.href = '../401.html';
-            } else if (response.status == 403) {
-                location.href = '../403.html';
-            } else 
-                callback(false, params[1]);
-        });
-    
-    }
+        } else {
+            callback(response, params);
+        }
+    }).fail(function (response) {
+        console.log(response);
+        if (callback == showResultMessage) {
+            callback(false, params[0]);
+        }
+    });
 }
 
 function postToURLWithAuth(resourceUrl, callback, params) {
@@ -164,6 +177,36 @@ function putJsonToURLWithAuth(resourceUrl, jsonData, callback, params) {
         });
         
     }
+}
+
+function putFileToURL(resourceUrl, file, callback, params) {
+
+    var settings = {
+        "async": true,
+        //"crossDomain": true,
+        "url": resourceUrl,
+        "method": "PUT",
+        data: file,
+        cache: false,
+        "contentType": false,
+        processData: false
+    };
+      
+    $.ajax(settings).done(function (response) {
+        console.log(response);
+        
+        if (callback == showResultMessage) {
+            callback(true, params[0]);
+        } else {
+            callback(response, params);
+        }
+    }).fail(function (response) {
+        console.log(response);
+        
+        if (callback == showResultMessage) {
+            callback(true, params[0]);
+        } 
+    });
 }
 
 function putToURLWithAuth(resourceUrl, callback, params) {

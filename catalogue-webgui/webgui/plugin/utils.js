@@ -272,7 +272,8 @@ function createActionButton(id, resId, btnNames, btnCallbacks) {
 function createButton(id, resId, btnName, btnCallback) {
 	
 	var text = 	'<button type="button" class="btn btn-info btn-sm btn-block';
-	if (btnCallback.toLowerCase().indexOf("delete") >= 0) {
+	if (btnCallback.toLowerCase().indexOf("delete") >= 0 ||
+		btnCallback.toLowerCase().indexOf("get") >= 0) {
         text += '" onclick=' + btnCallback + '("' + id + '","' + resId + '")>';
     } else if (btnCallback.toLowerCase().indexOf("view") >= 0) {
         text += '" onclick="location.href=\'' + btnCallback + id + '\'">';
