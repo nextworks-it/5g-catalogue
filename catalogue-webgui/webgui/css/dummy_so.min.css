@@ -158,3 +158,15 @@ body {
     background: #233F67;
     color: #fff
 }
+
+.site_title {
+    font-weight: 400;
+    font-size: 17px;
+    line-height: 59px;
+}
+
+.site_title i {
+    border: 1px solid #EAEAEA;
+    padding: 5px 6px;
+    border-radius: 30%;
+}

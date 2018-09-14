@@ -1,6 +1,17 @@
 
-function getAllNsdInfos(tableId, resId) {
-    getJsonFromURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors", createNsdInfosTable, [tableId, resId]);
+function getAllNsdInfos(elemId, callback, resId) {
+    getJsonFromURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors", callback, [elemId, resId]);
+}
+
+function getNsdInfo(nsdInfoId, callback, elemId) {
+    getJsonFromURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId, callback, [elemId]);
+}
+
+function fillNSDsCounter(data, params) {
+    var countDiv = document.getElementById(params[0]);
+	
+	//console.log(JSON.stringify(data, null, 4));
+	countDiv.innerHTML = data.length;
 }
 
 function deleteNsdInfo(nsdInfoId, resId) {
@@ -47,12 +58,8 @@ function uploadNsdContent(data, params) {
     putFileToURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content", formData, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully updated."]);
 }
 
-function getNSD(nsdInfoId, resId) {
-    getFileFromURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content", testFUN, [resId]);
-}
-
-function testFUN(data, params) {
-    console.log(data);
+function getNSD(nsdInfoId, elemId, callback) {
+    getFileFromURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content", callback, [nsdInfoId, elemId]);
 }
 
 function createNsdInfosTable(data, params) {
@@ -72,7 +79,7 @@ function createNsdInfosTable(data, params) {
     }
     var btnFlag = true;
     var header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Operational State', 'Onboarding State'], btnFlag, false);
-    var cbacks = ['getNSD', 'updateNsdInfo_', 'deleteNsdInfo'];
+    var cbacks = ['openNSD_', 'updateNsdInfo_', 'deleteNsdInfo'];
     var names = ['View NSD', 'Enable/Disable NSD', 'Delete NSD'];
     var columns = [['nsdName'], ['nsdVersion'], ['nsdDesigner'], ['nsdOperationalState'], ['nsdOnboardingState']];
 
@@ -93,7 +100,8 @@ function createNsdInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
     var btnText = '';
     if (btnFlag) {
         btnText += createActionButton(data['id'], resId, names, cbacks);
-        createUpdateNsdInfoModal(data['id'], "updateNsdInfosModals");
+        createUpdateNsdInfoModal(data['id'], data['nsdOperationalState'], "updateNsdInfosModals");
+        creteNSDViewModal(data['id'], "nsdViewModals");
     }
 
 	text += '<tr>';
@@ -123,7 +131,56 @@ function createNsdInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
     return text;
 }
 
-function createUpdateNsdInfoModal(nsdInfoId, modalsContainerId) {
+function creteNSDViewModal(nsdInfoId, modalsContainerId) {
+              
+    console.log('Creating view modal for nsdInfoId: ' + nsdInfoId);
+    var container = document.getElementById(modalsContainerId);
+    
+    if (container) {
+        var text = '<div id="openNSD_' + nsdInfoId + '" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">\
+                    <div class="modal-dialog modal-lg">\
+                      <div class="modal-content">\
+                        <div class="modal-header">\
+                          <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span>\
+                          </button>\
+                          <h4 class="modal-title" id="myModalLabel">NSD with nsdInfoId: ' + nsdInfoId + '</h4>\
+                        </div>\
+                        <div class="modal-body">\
+                            <textarea id="viewNSDContent_' + nsdInfoId + '" class="form-control" rows="30" readonly></textarea>\
+                        </div>\
+                        <div class="modal-footer">\
+                          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>\
+                          <!--button type="button" class="btn btn-primary" data-dismiss="modal" onclick=updateNsdInfo("' + nsdInfoId + '","ed_' + nsdInfoId + '");>Submit</button-->\
+                        </div>\
+                      </div>\
+                    </div>\
+                </div>';
+        
+            container.innerHTML += text;          
+            getNSD(nsdInfoId, 'viewNSDContent_' + nsdInfoId, fillNSDViewModal);
+    }  
+}
+
+function fillNSDViewModal(data, params) {
+    
+    //var yamlObj = jsyaml.load(data);
+    
+    var yaml = jsyaml.dump(data, {
+        indent: 4,
+        styles: {
+        '!!int'  : 'decimal',
+        '!!null' : 'camelcase'
+        }
+    });
+    
+    //console.log(yaml);
+    var nsdInfoId = params[0];
+    var textArea = document.getElementById(params[1]);
+    textArea.value = yaml;
+}
+
+function createUpdateNsdInfoModal(nsdInfoId, opState, modalsContainerId) {
+    
     var container = document.getElementById(modalsContainerId);
     
     if (container) {
@@ -140,10 +197,15 @@ function createUpdateNsdInfoModal(nsdInfoId, modalsContainerId) {
 								<div class="form-group">\
 									<label class="control-label col-md-3 col-sm-3 col-xs-12">Operational State</label>\
 									<div class="col-md-9 col-sm-9 col-xs-12">\
-										<select id="ed_' + nsdInfoId + '" class="form-control">\
-											<option value="ENABLED">ENABLED</option>\
-											<option value="DISABLED">DISABLED</option>\
-										</select>\
+										<select id="ed_' + nsdInfoId + '" class="form-control">';
+        if (opState == 'ENABLED') {
+            text += '<option value="ENABLED">ENABLED</option>\
+					<option value="DISABLED">DISABLED</option>';
+        } else {
+            text += '<option value="DISABLED">DISABLED</option>\
+                    <option value="ENABLED">ENABLED</option>';
+        }
+		text += '</select>\
 									</div>\
 								</div>\
 							</form>\

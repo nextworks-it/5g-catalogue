@@ -1,5 +1,7 @@
 package it.nextworks.nfvmano.catalogue.plugins.mano;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +32,7 @@ public class MANOManagementController {
 
 	}
 	
-	@RequestMapping(value = "/mano", method = RequestMethod.POST)
+	@RequestMapping(value = "/manos", method = RequestMethod.POST)
 	public ResponseEntity<?> createMANO(@RequestBody MANO mano) throws MethodNotImplementedException {
 		
 		log.debug("Received request for new MANO loading");
@@ -57,5 +59,15 @@ public class MANOManagementController {
 		}
 		
 		return new ResponseEntity<String>(createdManoId, HttpStatus.CREATED);
+	}
+	
+	@RequestMapping(value = "/manos", method = RequestMethod.GET)
+	public ResponseEntity<List<MANO>> getMANOs() throws MethodNotImplementedException {
+		
+		log.debug("Received request for getting MANO plugins");
+		
+		List<MANO> manos = pluginsManager.getAllMANOPlugins();
+		
+		return new ResponseEntity<List<MANO>>(manos, HttpStatus.OK);
 	}
 }

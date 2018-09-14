@@ -55,7 +55,7 @@ public class OpenSourceMANOPluginTest {
 	}
 
 	@Test
-	@Ignore // As above
+	//@Ignore // As above
 	public void testOnBoard() throws InterruptedException, FailedOperationException {
 		init();
 		ClassLoader classLoader = getClass().getClassLoader();
@@ -98,7 +98,7 @@ public class OpenSourceMANOPluginTest {
 	}
 
 	@Test
-	//@Ignore // As above
+	@Ignore // As above
 	public void testDelete() throws InterruptedException, FailedOperationException {
 		// Prerequisite: have the cirros 2vnf NSD and related VNFD loaded into OSM
 		init();

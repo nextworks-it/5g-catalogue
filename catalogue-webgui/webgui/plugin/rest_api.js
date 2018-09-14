@@ -45,7 +45,7 @@ function getFileFromURL(resourceUrl, callback, params) {
     };
 
     $.ajax(settings).done(function (response) {
-        console.log(response);
+        //console.log(response);
         callback(response, params);
     }).fail(function (response) {
         console.log(response);

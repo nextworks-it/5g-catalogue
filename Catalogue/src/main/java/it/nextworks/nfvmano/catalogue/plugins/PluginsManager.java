@@ -2,6 +2,7 @@ package it.nextworks.nfvmano.catalogue.plugins;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -203,6 +204,15 @@ public class PluginsManager {
 			log.error("Unsupported MANO type.");
 			throw new MethodNotImplementedException("Unsupported MANO type.");
 		}
+	}
+	
+	public List<MANO> getAllMANOPlugins() {
+		
+		log.debug("Processing request for retrieving all MANO Plugins.");
+		
+		List<MANO> manos = new ArrayList<>();
+		manos = MANORepository.findAll();
+		return manos;
 	}
 
 	private Resource[] loadConfigurations() {

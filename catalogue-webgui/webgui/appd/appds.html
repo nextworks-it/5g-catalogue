@@ -29,7 +29,7 @@
     <script src="../plugin/rest_api.js"></script>
     <script src="../plugin/utils.js"></script>
     <script src="../plugin/nsd_utils.js"></script>
-    <script src="../plugin/js-yaml/dist/js-yaml.min.js"></script>
+    <script src="../plugin/admin_utils.js"></script>
     
   </head>
 
@@ -120,7 +120,7 @@
               <div class="col-md-12">
                 <div class="x_panel">
                   <div class="x_title">
-                    <h2>NETWORK SERVICE DESCRIPTORS <small></small></h2>
+                    <h2>MEC APP PACKAGES <small></small></h2>
                     <ul class="nav navbar-right panel_toolbox">
                       <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                       </li>
@@ -128,8 +128,31 @@
                     <div class="clearfix"></div>
                   </div>
                   <div class="x_content">
-                      <table class="table table-hover" id="nsdInfosTable">
-                        <script>getAllNsdInfos("nsdInfosTable",createNsdInfosTable,"response");</script>                        
+                      <table class="table table-hover" id="pluginsTable">
+                        <thead><tr><th>Name</th><th>Version</th><th>Designer</th><th>Operational State</th><th>Onboarding State</th><th></th></tr></thead>
+                        <tbody></tbody>
+                        <tbody>
+                          <tr><td>fake1</td><td>fake1</td><td>fake1</td><td>ENABLED</td><td>ONBOARDED</td><td>
+                          <div class="btn-group">
+                            <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Action				<span class="fa fa-caret-down"></span>				</button>
+                              <ul class="dropdown-menu" role="menu">
+                                <li><button type="button" class="btn btn-info btn-sm btn-block" data-toggle="modal" data-target="" data-id="">View</button></li>
+                                <li><button type="button" class="btn btn-info btn-sm btn-block" data-toggle="modal" data-target="" data-id="">Enable/Disable</button></li>
+                                <li><button type="button" class="btn btn-info btn-sm btn-block" onclick="">Delete</button></li>
+                              </ul>
+                          </div>
+                          </td></tr>
+                          <tr><td>fake2</td><td>fake2</td><td>fake2</td><td>ENABLED</td><td>ONBOARDED</td><td>
+                          <div class="btn-group">
+                            <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Action				<span class="fa fa-caret-down"></span>				</button>
+                              <ul class="dropdown-menu" role="menu">
+                                <li><button type="button" class="btn btn-info btn-sm btn-block" data-toggle="modal" data-target="" data-id="">View</button></li>
+                                <li><button type="button" class="btn btn-info btn-sm btn-block" data-toggle="modal" data-target="" data-id="">Enable/Disable</button></li>
+                                <li><button type="button" class="btn btn-info btn-sm btn-block" onclick="">Delete</button></li>
+                              </ul>
+                          </div>
+                          </td></tr>
+                        </tbody>                      
                       </table>
                   </div>
                 </div>
@@ -139,7 +162,7 @@
             </div>
             
             <div class="row">
-              <div class="col-md-12" id="nsdViewModals">
+              <div class="col-md-12">
               </div>
             </div>
             
@@ -152,13 +175,13 @@
             </div>
 
             <div class="row">
-              <div class="col-md-12" id="updateNsdInfosModals">
+              <div class="col-md-12">
               </div>
             </div>
 
             <div class="row">
               <div class="col-md-4">
-                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#nsdUploadModal">Onboard NSD</button>
+                
               </div>
 
               <div class="col-md-4">
@@ -170,33 +193,6 @@
             
             <div class="row">
               <div class="col-md-6" id="response">
-              </div>
-            </div>
-            
-            <div id="nsdUploadModal" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
-              <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span>
-                    </button>
-                    <h4 class="modal-title" id="myModalLabel">Upload NSD</h4>
-                  </div>
-                  <div class="modal-body">
-                    <form class="form-horizontal form-label-left" enctype="multipart/form-data">
-                        <div class="form-group">
-                            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="nsdFile">NSD FILE/ARCHIVE </label>
-                            <div id="nsdArchive" style="display: none;"></div>
-                            <div class="col-md-6 col-sm-6 col-xs-12">
-                              <input type="file" autocomplete=off accept="media_type" id="nsdFile" required="required" class="col-md-12 col-xs-12">
-                            </div>
-                        </div>
-                    </form>
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" data-dismiss="modal" onclick=loadNSDFile("nsdFile","response");>Submit</button>
-                  </div>
-                </div>
               </div>
             </div>
           </div>

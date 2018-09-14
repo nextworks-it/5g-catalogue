@@ -38,7 +38,9 @@
         <div class="col-md-3 left_col">
           <div class="left_col scroll-view">
             <div class="navbar nav_title" style="border: 0;">
-              <a href="index.html" class="site_title"><!--i class="glyphicon glyphicon-repeat"></i--> <span>5G CATALOGUE</span></a>
+              <a href="index.html" class="site_title"><i class="glyphicon glyphicon-level-up"></i> <span>5G APPS & SERVICES</span></a>
+              <!--a href="index.html" class="site_title"><i class="glyphicon glyphicon-tags"></i> <span>5G CATALOGUE</span></a-->
+              <!--a href="index.html" class="site_title"><i class="glyphicon glyphicon-book"></i> <span>5G CATALOGUE</span></a-->
             </div>
 
             <div class="clearfix"></div>
@@ -52,22 +54,21 @@
                 <ul class="nav side-menu">
                   <li><a href="index.html"><i class="fa fa-home"></i> Home </a>
                   </li>
-                  <li><a href="./nsd/nsds.html"><i class="fa fa-file-archive-o"></i> Network Service Descriptors </a>
+                  <li><a href="./nsd/nsds.html"><i class="fa fa-file-o"></i> NS Descriptors </a>
                   </li>
-                  <!-- li><a><i class="fa fa-file-text"></i> VS Catalogue <span class="fa fa-chevron-down"></a>
-                    <ul class="nav child_menu">
-                      <li><a href="./pages/blueprint/blueprint_wizard.html">VS Blueprint onboarding</a></li>
-                      <li><a href="./pages/blueprint/blueprint.html">VS Blueprint</a></li>
-                      <li><a href="./pages/blueprint/vs_descriptor.html">VS Descriptor</a></li>
-                      <li><a href="./pages/blueprint/vs_instance.html">VS Instance</a></li>
-                    </ul>
+                  <li><a href="./vnf/vnfs.html"><i class="fa fa-file-archive-o"></i> VNF Packages </a>
+                  </li>
+                  <li><a href="./appd/appds.html"><i class="fa fa-file"></i> MEC APP Packages </a>
+                  </li>
+                  <li><a href="./pnf/pnfs.html"><i class="fa fa-cube"></i> PNF Descriptors </a>
+                  </li>
+                  <li><a href="./sdnapp/sdnapps.html"><i class="fa fa-file-text"></i> SDN APP Packages </a>
                   </li>
                   <li><a><i class="fa fa-gears"></i> ADMIN <span class="fa fa-chevron-down"></a>
                     <ul class="nav child_menu">
-                      <li><a href="./pages/group.html">Group</a></li>
-                      <li><a href="./pages/tenant.html">Tenant</a></li>
+                      <li><a href="./admin/plugins.html">Plugins</a></li>
                     </ul>
-                  </li -->
+                  </li>
                 </ul>
               </div>
             </div>
@@ -115,196 +116,54 @@
         <div class="right_col" role="main">
           <div class="">
             
-            <div class="row">
-              <div class="col-md-12">
-                <div class="x_panel">
-                  <div class="x_title">
-                    <h2>NETWORK SERVICES <small></small></h2>
-                    <ul class="nav navbar-right panel_toolbox">
-                      <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                      </li>
-                    </ul>
-                    <div class="clearfix"></div>
-                  </div>
-                  <div class="x_content">
-                      <table class="table table-hover" id="instantiatedNSTable">
-                        <script>getAllInstantiatedNSes("instantiatedNSTable", "response");</script>                        
-                      </table>
-                  </div>
+            <div class="row top_titles">
+              <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                <div class="tile-stats">
+                  <div class="icon"><i class="fa fa-file-o"></i></div>
+                  <div class="count" id="count-NSD">0</div>
+                  <h3><a href="./nsd/nsds.html">NS Descriptors</a></h3>
+                  <p></p>
                 </div>
-              </div>
-              <div class="clearfix">
               </div>
             </div>
             
-            <div class="row">
-              <div class="col-md-12">
-                <div class="x_panel">
-                  <div class="x_title">
-                    <h2>vCDN NS Scaling</h2>
-                    <ul class="nav navbar-right panel_toolbox">
-                      <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                      </li>
-                    </ul>
-                    <div class="clearfix"></div>
-                  </div>
-                  <div class="x_content" style="display: block;">
-
-                    <form class="form-horizontal form-label-left">
-                      <div class="form-group">
-                        <div class="col-md-9 col-sm-9 col-xs-12 col-md-offset-5">
-                          <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#nsrModal">Edit NS Record</button>
-                          <button type="submit" class="btn btn-success" onclick=instantiateNewNS("NSRecordText","response");>Submit</button>
-                        </div>
-                      </div>
-                      <!--div class="form-group">
-                        <label class="control-label col-sm-3">Scaling Status</label>
-                        <div class="col-md-9 col-sm-9 col-xs-12">
-                          <textarea id="ScalingInfos" class="form-control" rows="3" style="margin: 0px 1.375px 0px 0px; height: 281px;"></textarea>
-                        </div>
-                      </div-->
-                    </form>
-                  </div>
+            <div class="row top_titles">
+              <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                <div class="tile-stats">
+                  <div class="icon"><i class="fa fa-file-archive-o"></i></div>
+                  <div class="count" id="count-VNF">0</div>
+                  <h3><a href="./vnf/vnfs.html">VNF Packages</a></h3>
+                  <p></p>
                 </div>
               </div>
-              <div class="clearfix">
-              </div>
-            </div>
-            
-            <div class="row" style="display: none">
-              <div class="col-md-6 col-xs-12">
-                              
-                <div class="x_panel">
-                  <div class="x_title">
-                    <h2>vCDN NS Components</h2>
-                    <ul class="nav navbar-right panel_toolbox">
-                      <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                      </li>
-                    </ul>
-                    <div class="clearfix"></div>
-                  </div>
-                  <div id="vnf_infos" class="x_content" style="display: block;">
-
-                    <form class="form-horizontal form-label-left">
-
-                      <div class="form-group">
-                        <label class="col-sm-3 control-label">VNF Infos</label>
-
-                        <div class="col-sm-9">
-                          <div class="input-group">
-                            <span class="input-group-btn">
-                              <button type="button" class="btn btn-primary" onclick=getVNFRecordInfo("VNFInfos","recordId","response",fillVNFInfos);>GET</button>
-                            </span>
-                            <input id="recordId" type="text" class="form-control" placeholder="VNF Record Id">
-                          </div>
-                        </div>
-                      </div>
-                      <div class="divider-dashed"></div>
-                      
-                      <div class="form-group">
-                        <label class="control-label col-sm-3">Result</label>
-                        <div class="col-md-9 col-sm-9 col-xs-12">
-                          <textarea id="VNFInfos" class="form-control" rows="3" style="margin: 0px 1.375px 0px 0px; height: 281px;"></textarea>
-                        </div>
-                      </div>
-                      <div class="ln_solid"></div>
-                      <div class="form-group">
-                        <div class="col-md-9 col-sm-9 col-xs-12 col-md-offset-3">
-                          <button class="btn btn-primary" type="reset" onclick=clearForms("vnf_infos");>Reset</button>
-                        </div>
-                      </div>
-                    </form>
-                  </div>
-                </div>                
-              </div>
-              
-              <div class="col-md-6 col-xs-12">
-                <div class="x_panel">
-                  <div class="x_title">
-                    <h2>vCache Edge Configuration</h2>
-                    <ul class="nav navbar-right panel_toolbox">
-                      <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                      </li>
-                    </ul>
-                    <div class="clearfix"></div>
-                  </div>
-                  <div class="x_content" style="display: block;">
-                    <br>
-                    <form class="form-horizontal form-label-left input_mask">
-                      <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12">vCache IP</label>
-                        <div class="col-md-9 col-sm-9 col-xs-12">
-                          <input id="vcache-ip" type="text" class="form-control" placeholder="vCache IP address">
-                        </div>
-                      </div>
-                      <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12">Origin IP</label>
-                        <div class="col-md-9 col-sm-9 col-xs-12">
-                          <input id="origin-ip" type="text" class="form-control" placeholder="vCache remapping - IP address">
-                        </div>
-                      </div>
-                      <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12">Origin Port</label>
-                        <div class="col-md-9 col-sm-9 col-xs-12">
-                          <input id="origin-port" type="text" class="form-control" value="8080" readonly=true>
-                        </div>
-                      </div>
-                      <div class="ln_solid"></div>
-                      <div class="form-group">
-                        <div class="col-md-9 col-sm-9 col-xs-12 col-md-offset-3">
-                          <button class="btn btn-primary" type="reset" onclick=clearForms("lb_config");>Reset</button>
-                          <button type="submit" class="btn btn-success" onclick=submitvCacheConf(["vcache-ip","origin-ip","origin-port"],"response");>Submit</button>
-                        </div>
-                      </div>
-
-                    </form>
-                  </div>
+              <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                <div class="tile-stats">
+                  <div class="icon"><i class="fa fa-file"></i></div>
+                  <div class="count" id="count-APPD">0</div>
+                  <h3><a href="./appd/appds.html">MEC APP Packages</a></h3>
+                  <p></p>
                 </div>
-                
-                <!--div class="x_panel">
-                  <div class="x_title">
-                    <h2>Load Balancer <small>configuration</small></h2>
-                    <ul class="nav navbar-right panel_toolbox">
-                      <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                      </li>
-                    </ul>
-                    <div class="clearfix"></div>
-                  </div>
-                  <div id="lb_conf" class="x_content" style="display: block;">
-                    <br>
-                    <form class="form-horizontal form-label-left input_mask">
-                      <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12">Edge vCache IP</label>
-                        <div class="col-md-9 col-sm-9 col-xs-12">
-                          <input id="edge-ip" type="text" class="form-control" placeholder="Edge vCache IP address">
-                        </div>
-                      </div>
-                      <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12">User IP </label>
-                        <div class="col-md-9 col-sm-9 col-xs-12">
-                          <input id="user-ip" type="text" class="form-control" placeholder="User IP address">
-                        </div>
-                      </div>
-                      <div class="ln_solid"></div>
-                      <div class="form-group">
-                        <div class="col-md-9 col-sm-9 col-xs-12 col-md-offset-3">
-                          <button class="btn btn-primary" type="reset" onclick=clearForms("lb_config");>Reset</button>
-                          <button type="submit" class="btn btn-success">Submit</button>
-                        </div>
-                      </div>
-
-                    </form>
-                  </div>
-                </div-->
+              </div>
+              <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                <div class="tile-stats">
+                  <div class="icon"><i class="fa fa-cube"></i></div>
+                  <div class="count" id="count-PNF">0</div>
+                  <h3><a href="./pnf/pnfs.html">PNF Descriptors</a></h3>
+                  <p></p>
+                </div>
               </div>
             </div>
 
-            <div class="row">
-              <div class="col-md-12">
+            <div class="row top_titles">
+              <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                <div class="tile-stats">
+                  <div class="icon"><i class="fa fa-file-text"></i></div>
+                  <div class="count" id="count-SDNAPP">0</div>
+                  <h3><a href="./sdnapp/sdnapps.html">SDN APP Packages</a></h3>
+                  <p></p>
+                </div>
               </div>
             </div>
-
-
 
             <div class="row">
               <div class="col-md-4">
@@ -321,139 +180,6 @@
               <div class="col-md-6" id="response">
               </div>
             </div>
-            
-            <div id="nsrModal" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
-              <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span>
-                    </button>
-                    <h4 class="modal-title" id="myModalLabel">Edit NS Record</h4>
-                  </div>
-                  <div class="modal-body">
-                    <div class="form-group">
-                      <form id="editNSRecord" data-parsley-validate="" class="form-horizontal form-label-left" novalidate="">
-                        <div class="form-group">
-                        <div id="NSRTextBackup" style="display: none">
-                          {
-                            "nsr": [{
-                              "short-name": "PROVA-NS-V4",
-                              "datacenter": "uc3-5gmedia",
-                              "description": "default description",
-                              "resource-orchestrator": "osmopenmano",
-                              "nsd": {
-                                "scaling-group-descriptor": [{
-                                  "min-instance-count": 0,
-                                  "max-instance-count": 1,
-                                  "name": "UC3-scaling-group",
-                                  "vnfd-member": [{
-                                    "count": 1,
-                                    "member-vnf-index-ref": 1
-                                  }]
-                                }],
-                                "description": "UC3 vCache Network Descriptor",
-                                "vld": [{
-                                  "short-name": "management",
-                                  "name": "management",
-                                  "mgmt-network": "true",
-                                  "vnfd-connection-point-ref": [{
-                                    "vnfd-connection-point-ref": "cp-ens3",
-                                    "member-vnf-index-ref": 1,
-                                    "vnfd-id-ref": "vCache-ubuntu-v4"
-                                  }, {
-                                    "vnfd-connection-point-ref": "cp-ens3",
-                                    "member-vnf-index-ref": 2,
-                                    "vnfd-id-ref": "vCache-edge-ubuntu-v4"
-                                  }, {
-                                    "vnfd-connection-point-ref": "cp-ens3",
-                                    "member-vnf-index-ref": 3,
-                                    "vnfd-id-ref": "vCache-edge-ubuntu-v4"
-                                  }],
-                                  "vim-network-name": "VM-MGMT-NET-KD",
-                                  "id": "management"
-                                }, {
-                                  "mgmt-network": "false",
-                                  "vnfd-connection-point-ref": [{
-                                    "vnfd-connection-point-ref": "cp-ens7",
-                                    "member-vnf-index-ref": 1,
-                                    "vnfd-id-ref": "vCache-ubuntu-v4"
-                                  }],
-                                  "id": "origin",
-                                  "vim-network-name": "origin-net",
-                                  "name": "origin"
-                                }, {
-                                  "mgmt-network": "false",
-                                  "vnfd-connection-point-ref": [{
-                                    "vnfd-connection-point-ref": "cp-ens6",
-                                    "member-vnf-index-ref": 1,
-                                    "vnfd-id-ref": "vCache-ubuntu-v4"
-                                  }, {
-                                    "vnfd-connection-point-ref": "cp-ens7",
-                                    "member-vnf-index-ref": 2,
-                                    "vnfd-id-ref": "vCache-edge-ubuntu-v4"
-                                  }, {
-                                    "vnfd-connection-point-ref": "cp-ens7",
-                                    "member-vnf-index-ref": 3,
-                                    "vnfd-id-ref": "vCache-edge-ubuntu-v4"
-                                  }],
-                                  "id": "cache",
-                                  "vim-network-name": "cache-net",
-                                  "name": "cache"
-                                }, {
-                                  "mgmt-network": "false",
-                                  "vnfd-connection-point-ref": [{
-                                    "vnfd-connection-point-ref": "cp-ens6",
-                                    "member-vnf-index-ref": 2,
-                                    "vnfd-id-ref": "vCache-edge-ubuntu-v4"
-                                  }, {
-                                    "vnfd-connection-point-ref": "cp-ens6",
-                                    "member-vnf-index-ref": 3,
-                                    "vnfd-id-ref": "vCache-edge-ubuntu-v4"
-                                  }],
-                                  "id": "user",
-                                  "vim-network-name": "VM-DATA-NET-KD",
-                                  "name": "user"
-                                }],
-                                "constituent-vnfd": [{
-                                  "member-vnf-index": 1,
-                                  "start-by-default": "true",
-                                  "vnfd-id-ref": "vCache-ubuntu-v4"
-                                }, {
-                                  "member-vnf-index": 2,
-                                  "start-by-default": "true",
-                                  "vnfd-id-ref": "vCache-edge-ubuntu-v4"
-                                }, {
-                                  "member-vnf-index": 3,
-                                  "start-by-default": "true",
-                                  "vnfd-id-ref": "vCache-edge-ubuntu-v4"
-                                }],
-                                "version": "1.11",
-                                "logo": "5G-MEDIA-vCDN.jpg",
-                                "id": "165a0953-ee7f-462a-9a53-5e51955dfc1f",
-                                "name": "vcache-complete-v4"
-                              },
-                              "admin-status": "ENABLED",
-                              "id": "6562df06-6e5e-11e8-9c6b-fa163e3b7bae",
-                              "name": "PROVA-NS-V4"
-                            }]
-                          }
-                        </div>
-                        <div class="col-md-12 col-sm-12 col-xs-16">
-                          <textarea id="NSRecordText" class="form-control" rows="3" style="margin: 0px 1.375px 0px 0px; height: 281px;"></textarea>
-                        </div>
-                      </div>
-                      </form>
-                    </div>
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal" onclick=loadNSRecord("NSRecordText");>Reset</button>
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" data-dismiss="modal" onclick=instantiateNewNS("NSRecordText","response");>Submit</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <script>loadNSRecord("NSRecordText");</script>
           </div>
         </div>
         <!-- /page content -->
@@ -499,6 +225,9 @@
     
     <!-- Custom Theme Scripts -->
     <script src="../gentelella/build/js/custom.min.js"></script>
+    
+    <!-- CATALOGUE COUNTER -->
+    <script>getAllNsdInfos("count-NSD",fillNSDsCounter,"response");</script>
     
     <script>
       var time = new Date().getTime();

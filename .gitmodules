@@ -1,0 +1,3 @@
+[submodule "Catalogue/catalogue-webgui/webgui/plugin/js-yaml"]
+	path = Catalogue/catalogue-webgui/webgui/plugin/js-yaml
+	url = https://github.com/nodeca/js-yaml.git
