@@ -15,7 +15,10 @@ import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -33,6 +36,8 @@ import it.nextworks.nfvmano.libs.descriptors.templates.SubstitutionMapping;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
 
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringBootTest
 public class ToscaTranslatorTests {
 
 	@Autowired

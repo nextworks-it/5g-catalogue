@@ -14,8 +14,8 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.google.gwt.editor.client.Editor.Ignore;
 
-import it.nextworks.nfvmano.catalogue.common.ConfigurationParameters;
 import it.nextworks.nfvmano.catalogue.engine.NotificationManager;
 import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
 import it.nextworks.nfvmano.catalogue.messages.ScopeType;
@@ -35,6 +35,7 @@ public class NotificationManagerTests {
 	private String remoteNsdNotificationTopic;
 
 	@Test
+	@Ignore
 	public void acceptNsdRemoteOnboardingNotification() {
 		NsdOnBoardingNotificationMessage msg = new NsdOnBoardingNotificationMessage(
 				UUID.randomUUID().toString(),

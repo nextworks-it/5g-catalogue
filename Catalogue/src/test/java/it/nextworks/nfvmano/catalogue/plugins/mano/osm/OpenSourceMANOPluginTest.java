@@ -24,6 +24,9 @@ import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.File;
 import java.util.UUID;
@@ -35,6 +38,8 @@ import static org.junit.Assert.*;
  *
  * @author Marco Capitani <m.capitani AT nextworks.it>
  */
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringBootTest
 public class OpenSourceMANOPluginTest {
 
 	private static OpenSourceMANOPlugin plugin;
@@ -55,7 +60,7 @@ public class OpenSourceMANOPluginTest {
 	}
 
 	@Test
-	//@Ignore // As above
+	@Ignore // As above
 	public void testOnBoard() throws InterruptedException, FailedOperationException {
 		init();
 		ClassLoader classLoader = getClass().getClassLoader();

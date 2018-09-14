@@ -24,6 +24,7 @@ import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.File;
@@ -33,14 +34,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import static org.junit.Assert.*;
-
 /**
  * Created by Marco Capitani on 10/09/18.
  *
  * @author Marco Capitani <m.capitani AT nextworks.it>
  */
 @RunWith(SpringJUnit4ClassRunner.class)
+@SpringBootTest
 public class NsdBuilderTest {
 
     private static final File DEF_IMG = new File(
