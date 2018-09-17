@@ -12,7 +12,7 @@ cd Catalogue
 mvn spring-boot:run
 
 For running properly the webgui, submodules are required: 
-git pull --recurse-submodules
+git submodule update --init
 http://localhost
 
 
