@@ -254,7 +254,9 @@ function deleteRequestToURL(resourceUrl, callback, params) {
         callback(true, params[0]);
     }).fail(function (response) {
         console.log(response);
-	callback(false, response.details);
+	var errorMsg = "Status code: " + response.responseJSON.status;
+	errorMsg +=  " Reason: " + response.responseJSON.detail;
+	callback(false, errorMsg);
     });
 }
 
