@@ -55,17 +55,24 @@ function showResultMessage(success, msg) {
     var flag = "true";
     var elem = document.getElementById("response");
     var text;
-    if (success) {
-        text = '<div class="alert alert-info alert-dismissible fade in" role="alert">\
+	if (success == null) {
+		text = '<div class="alert alert-warning alert-dismissible fade in" role="alert">\
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span>\
                 </button>\
-				<strong>SUCCESS!</strong> ' + msg + '</div>';
-    } else {
-        text =  '<div class="alert alert-danger alert-dismissible fade in" role="alert">\
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span>\
-                </button>\
-				<strong>ERROR!</strong> ' + msg + '</div>';
-    }
+				<strong>WARNING!</strong> ' + msg + '</div>';
+	} else {
+		if (success) {
+			text = '<div class="alert alert-info alert-dismissible fade in" role="alert">\
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span>\
+					</button>\
+					<strong>SUCCESS!</strong> ' + msg + '</div>';
+		} else {
+			text =  '<div class="alert alert-danger alert-dismissible fade in" role="alert">\
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span>\
+					</button>\
+					<strong>ERROR!</strong> ' + msg + '</div>';
+		}
+	}
 	text += '<button class="btn btn-info" onclick="refresh(' + flag + ');"><i class="fa fa-refresh"></i> Refresh</button></div>';
     elem.innerHTML = text;	
 	scrollPageTo(elem.offsetTop);

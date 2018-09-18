@@ -19,6 +19,25 @@ body {
 
 }
 
+.sidebar-footer a {
+    padding: 7px 0 3px;
+    text-align: center;
+    width: 100%;
+    font-size: 17px;
+    display: block;
+    float: none;
+    background: #172D44;
+    cursor: pointer;
+}
+
+.sidebar-footer p {
+    padding: 7px 0 0px 0;
+    text-align: center;
+    width: 100%;
+    font-size: 18px;
+    display: block;
+}
+
 .nav.side-menu>li.active>a {
 	text-shadow:rgba(0,0,0,.25) 0 -1px 0;
 	background:linear-gradient(#2B5797,#1A2431),#233F67;
