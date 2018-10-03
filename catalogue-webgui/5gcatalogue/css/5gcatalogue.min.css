@@ -189,3 +189,16 @@ body {
     padding: 5px 6px;
     border-radius: 30%;
 }
+
+#nprogress .bar {
+    background: #ff6a5c
+}
+
+#nprogress .peg {
+	box-shadow: 0 0 10px #ff6a5c, 0 0 5px #ff6a5c
+}
+
+#nprogress .spinner-icon {
+	border-top-color: #ff6a5c;
+	border-left-color: #ff6a5c
+}
