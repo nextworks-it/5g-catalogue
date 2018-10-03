@@ -1,26 +1,46 @@
 Apache 2 configuration for running the WEB GUI (Ubuntu)
 
-sudo apt-get update
-sudo apt-get install apache2
+# apt-get update
+# apt-get install apache2
 
-cd /etc/apache2/
+# cd /etc/apache2/
 
-edit apache2.conf adding the following lines:
+# edit apache2.conf adding the following lines:
 
-<Directory path_to_web_gui_repo/webgui>
-        Options Indexes FollowSymLinks
+<Directory path_to_web_gui_repo/catalogue-webgui>
+        Options Indexes FollowSymLinks Includes
         AllowOverride None
         Require all granted
 </Directory>
 
-NOTE: the path must point at the directory that includes also the WEB GUI template "gentelella", i.e. "catalogue-webgui"
+NOTE: the path must point at the directory that includes also the WEB GUI template "gentelella", i.e. "catalogue-webui"
 
-cd /etc/apache2/sites-enabled/
+# cd /etc/apache2/sites-enabled/
 
-edit 000-default.conf:
+# edit 000-default.conf:
 
-DocumentRoot path_to_web_gui_repo/webgui
+DocumentRoot path_to_web_gui_repo/catalogue-webgui
 
-sudo service apache2 restart
+# cd /etc/apache2/conf-available/
+
+# create ssi.conf with the following lines:
+
+AddType text/html .html
+AddOutputFilter INCLUDES .html
+
+# cd /etc/apache2/conf-enabled/
+
+create link to ../conf-available/ssi.conf
+
+# ln -sv ../conf-availabe/ssi.conf ssi.conf
+
+# cd /etc/apache2/mods-enabled/
+
+create link to ../mods-available/include.load
+
+# ln -sv ../mods-available/include.load include.load
+
+# service apache2 restart
+# service apache2 status
 
 WEB GUI at http://localhost
