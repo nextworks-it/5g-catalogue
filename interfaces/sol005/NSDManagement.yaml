@@ -24,7 +24,7 @@ paths:
 
   '/nsd/v1/ns_descriptors':
     get:
-      summary: Query NSD Info
+      summary: Query NSDs Info
       operationId: getNSDsInfo
       description: >-
         The GET method queries information about multiple NS descriptor
@@ -319,16 +319,6 @@ paths:
           in: header
           required: false
           type: string
-          description: >-
-            The request may contain a "Range" HTTP header to obtain single range
-            of bytes from the NSD file. This can be used to continue an aborted
-            transmission.
-
-
-            If the NFVO does not support range requests, the NFVO shall ignore
-            the 'Range" header, process the GET request, and return the whole
-            NSD file with a 200 OK response (rather than returning a 4xx error
-            status code).
       responses:
         '200':
           description: >-
