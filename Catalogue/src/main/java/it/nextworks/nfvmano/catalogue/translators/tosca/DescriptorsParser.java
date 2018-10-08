@@ -3,6 +3,8 @@ package it.nextworks.nfvmano.catalogue.translators.tosca;
 import java.io.File;
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -15,6 +17,8 @@ import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 
 @Service
 public class DescriptorsParser {
+	
+	private static final Logger log = LoggerFactory.getLogger(DescriptorsParser.class);
 
 	public static DescriptorTemplate fileToDescriptorTemplate(String fileName)
 			throws JsonParseException, JsonMappingException, IOException {
