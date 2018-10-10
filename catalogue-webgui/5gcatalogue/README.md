@@ -61,7 +61,7 @@ $ cd /etc/apache2/conf-enabled/
 Create link to ../conf-available/ssi.conf
 
 ```
-$ sudo ln -sv ../conf-availabe/ssi.conf ssi.conf
+$ sudo ln -sv ../conf-available/ssi.conf ssi.conf
 
 $ cd /etc/apache2/mods-enabled/
 ```
