@@ -1,5 +1,5 @@
 
-var catalogueAddr = window.location.hostname;
+var catalogueAddr = '10.0.8.44';
 var cataloguePort = '8083';
 
 var stopRefreshing = false;
@@ -287,7 +287,9 @@ function createButton(id, resId, btnName, btnCallback) {
     } else if (btnCallback.toLowerCase().indexOf("open") >= 0 ||
 			   btnCallback.toLowerCase().indexOf("update") >= 0) {
 			text += ' buttonModal_'+ btnCallback + '" data-toggle="modal" data-target="#' + btnCallback + id + '" data-id="' + id + '">';
-    }
+    }  else if (btnName.toLowerCase().indexOf("graph") >= 0) { // condizione aggiunta
+		text += '" onclick="location.href=\'' + btnCallback + id + '\'">';
+	}
 	text += btnName + '</button>';
 //	console.log("button: \n" + text);
     
@@ -301,6 +303,7 @@ function createDropdownButton(id, resId, btnNames, btnCallbacks) {
 				</button><ul class="dropdown-menu" role="menu">'; //style="position: static;"
 	for(var i=0; i<btnNames.length; i++) {
 		text += '<li>' + createButton(id, resId, btnNames[i], btnCallbacks[i]) + '</li>';
+		console.log(btnNames[i]);
 	}
 	text += '</ul></div>';		//<input type="text" class="form-control">
 	
