@@ -161,25 +161,25 @@ function createNSDGraph(data) {
 				})
 			.selector('.vnf')
 				.css({
-					'background-image': '../../images/vnf_icon_80.png',
+					'background-image': '../../5gcatalogue/images/vnf_icon_80.png',
 					'width': 80,//'mapData(weight, 40, 80, 20, 60)',
 					'height': 80
 				})
 			.selector('.pnf')
 				.css({
-					'background-image': '../../images/pnf_icon_80.png',
+					'background-image': '../../5gcatalogue/images/pnf_icon_80.png',
 					'width': 80,//'mapData(weight, 40, 80, 20, 60)',
 					'height': 80
 				})
 			.selector('.net')
 				.css({
-					'background-image': '../../images/net_icon_50.png',
+					'background-image': '../../5gcatalogue/images/net_icon_50.png',
 					'width': 50,//'mapData(weight, 40, 80, 20, 60)',
 					'height': 50
 				})
 			.selector('.sap')
 				.css({
-					'background-image': '../../images/sap_icon_grey_50.png',
+					'background-image': '../../5gcatalogue/images/sap_icon_grey_50.png',
 					'width': 50,//'mapData(weight, 40, 80, 20, 60)',
 					'height': 50
 				})
