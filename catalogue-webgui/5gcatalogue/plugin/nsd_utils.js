@@ -58,8 +58,169 @@ function uploadNsdContent(data, params) {
     putFileToURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content", formData, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully updated."]);
 }
 
+function getDescription(descrId) {
+    var nsdId = getURLParameter('nsdId');
+    getNSD(nsdId, descrId, printDescription);
+}
+
+function printDescription(data,param){
+    var yamlObj = jsyaml.load(data);
+    console.log(yamlObj);
+    document.getElementById("descr").innerHTML = yamlObj['description'];
+}
+
+function readNSD(graphId) {
+    var nsdId = getURLParameter('nsdId');
+    //var nsdId = getFileFromURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content", callback, [nsdInfoId, elemId]);
+    console.log(nsdId);
+    getNSD(nsdId, graphId, createNSDGraph);
+}
+
+function createNSDGraph(data) {
+    var yamlObj = jsyaml.load(data);
+    console.log(yamlObj);
+    var nodeTempl=yamlObj['topologyTemplate']['nodeTemplates'];
+    console.log(nodeTempl);
+    //var virtLink = nodeTempl['UHDvCDN_NS']['requirements']['virtualLink'];
+    
+    var nodes = [];
+    var edges = [];
+
+    //$.each( virtLink, function(key, value){
+        //console.log(key + " " + value);
+        //nodes.push({ group: 'nodes', data: { id: value, name: 'Link - ' + value, label: 'Link - ' + value, weight: 50, faveColor: '#fff', faveShape: 'ellipse' }, classes: 'bottom-center net'});
+        //console.log(nodes);
+    //});
+
+    $.each( nodeTempl, function(key, value){
+        //console.log(key + " " + value['type']);
+        if (value['type'] === 'tosca.nodes.nfv.NsVirtualLink'){
+            nodes.push({ group: 'nodes', data: { id: key, name: 'Link - ' + key, label: 'Link - ' + key, weight: 50, faveColor: '#fff', faveShape: 'ellipse' }, classes: 'bottom-center net'});
+        }
+        //console.log(nodes);
+    });
+
+    $.each( nodeTempl, function(key, value){
+        //console.log(key + " " + value['type']);
+        if (value['type'] === 'tosca.nodes.nfv.VNF'){
+            nodes.push({ group: 'nodes', data: { id: key, name: 'NODE - ' + key, label: 'NODE - ' + key, weight: 70, faveColor: '#fff', faveShape: 'ellipse' }, classes: 'bottom-center pnf'});
+            $.each( value['requirements']['virtualLink'], function(key1, value1){
+                console.log(key1 + " " + value1.split('/')[0]);
+                console.log(key);
+                edges.push({ group: 'edges', data: { source: key, target: value1.split('/')[0], faveColor: '#706f6f', strength: 70 }});
+                //nodes.push({ group: 'nodes', data: { id: value, name: 'Link - ' + value, label: 'Link - ' + value, weight: 50, faveColor: '#fff', faveShape: 'ellipse' }, classes: 'bottom-center net'});
+                //console.log(nodes);
+            });    
+        }
+        //console.log(nodes);
+    });
+
+
+    var cy = cytoscape({
+		container: document.getElementById('cy'),
+
+		layout: {
+			name: 'cose',
+			padding: 10,
+		},
+
+		style: cytoscape.stylesheet()
+			.selector('node')
+				.css({
+					'shape': 'data(faveShape)',
+					'content': 'data(name)',
+					'text-valign': 'center',
+					'text-outline-width': 0,
+					'text-width': 2,
+					//'text-outline-color': '#000',
+					'background-color': 'data(faveColor)',
+					'color': '#000',
+					'label': 'data(name)'
+				})
+			.selector(':selected')
+				.css({
+					'border-width': 3,
+					'border-color': '#333'
+				})
+			.selector('edge')
+				.css({
+					'curve-style': 'bezier',
+					'opacity': 0.666,
+					'width': 'mapData(strength, 70, 100, 2, 6)',
+					'target-arrow-shape': 'circle',
+					'source-arrow-shape': 'circle',
+					'line-color': 'data(faveColor)',
+					'source-arrow-color': 'data(faveColor)',
+					'target-arrow-color': 'data(faveColor)'
+				})
+			.selector('edge.questionable')
+				.css({
+					'line-style': 'dotted',
+					'target-arrow-shape': 'diamond',
+					'source-arrow-shape': 'diamond'
+				})
+			.selector('.vnf')
+				.css({
+					'background-image': '../../5gcatalogue/images/vnf_icon_80.png',
+					'width': 80,//'mapData(weight, 40, 80, 20, 60)',
+					'height': 80
+				})
+			.selector('.pnf')
+				.css({
+					'background-image': '../../5gcatalogue/images/pnf_icon_80.png',
+					'width': 80,//'mapData(weight, 40, 80, 20, 60)',
+					'height': 80
+				})
+			.selector('.net')
+				.css({
+					'background-image': '../../5gcatalogue/images/net_icon_50.png',
+					'width': 50,//'mapData(weight, 40, 80, 20, 60)',
+					'height': 50
+				})
+			.selector('.sap')
+				.css({
+					'background-image': '../../5gcatalogue/images/sap_icon_grey_50.png',
+					'width': 50,//'mapData(weight, 40, 80, 20, 60)',
+					'height': 50
+				})
+			.selector('.faded')
+				.css({
+					'opacity': 0.25,
+					'text-opacity': 0
+				})
+			.selector('.top-left')
+				.css({
+					'text-valign': 'top',
+					'text-halign': 'left'
+				})
+			.selector('.top-right')
+				.css({
+					'text-valign': 'top',
+					'text-halign': 'right'
+				})
+			.selector('.bottom-center')
+				.css({
+					'text-valign': 'bottom',
+					'text-halign': 'center'
+				}),
+
+		elements: {
+		  nodes: nodes,
+		  edges: edges
+		},
+
+		ready: function(){
+		  window.cy = this;
+		}
+	});
+	
+	//cy.minZoom(0.8);
+	cy.maxZoom(1.6);
+}
+
 function getNSD(nsdInfoId, elemId, callback) {
     getFileFromURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content", callback, [nsdInfoId, elemId]);
+    //console.log(getFileFromURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content", callback, [nsdInfoId, elemId]));
 }
 
 function createNsdInfosTable(data, params) {
@@ -79,8 +240,10 @@ function createNsdInfosTable(data, params) {
     }
     var btnFlag = true;
     var header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Operational State', 'Onboarding State'], btnFlag, false);
-    var cbacks = ['openNSD_', 'updateNsdInfo_', 'deleteNsdInfo'];
-    var names = ['View NSD', 'Change NSD OpState', 'Delete NSD'];
+    var cbacks = ['openNSD_', 'updateNsdInfo_', 'deleteNsdInfo', 'nsd_graph.html?nsdId='];
+    var names = ['View NSD', 'Change NSD OpState', 'Delete NSD', 'View NSD Graph'];
+    //var cbacks = ['openNSD_', 'updateNsdInfo_', 'deleteNsdInfo'];
+    //var names = ['View NSD', 'Change NSD OpState', 'Delete NSD'];
     var columns = [['nsdName'], ['nsdVersion'], ['nsdDesigner'], ['nsdOperationalState'], ['nsdOnboardingState']];
 
     table.innerHTML = header + '<tbody>';
