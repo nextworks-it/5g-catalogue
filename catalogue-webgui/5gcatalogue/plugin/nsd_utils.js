@@ -66,7 +66,7 @@ function getDescription(descrId) {
 function printDescription(data,param){
     var yamlObj = jsyaml.load(data);
     console.log(yamlObj);
-    document.getElementById("descr").innerHTML = yamlObj['topologyTemplate']['nodeTemplates']['UHDvCDN_NS']['properties']['name'];
+    document.getElementById(data).innerHTML = yamlObj['description'];
 }
 
 function readNSD(graphId) {
