@@ -1,142 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <!-- Meta, title, CSS, favicons, etc. -->
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>5G APP & SERVICE CATALOGUE</title>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <!-- Meta, title, CSS, favicons, etc. -->
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!--#include virtual="/5gcatalogue/templates/scripts_head.html" -->
-    
-    <!-- 5G APP & SERVICE CATALOGUE Scripts -->
-    <script src="../plugin/rest_api.js"></script>
-    <script src="../plugin/utils.js"></script>
-    <script src="../plugin/nsd_utils.js"></script>
-    <script src="../plugin/js-yaml/dist/js-yaml.min.js"></script>
-    
-  </head>
+  <title>5G APP & SERVICE CATALOGUE</title>
 
-  <body class="nav-md">
-    <div class="container body">
-      <div class="main_container">
-        
-        <!--#include virtual="/5gcatalogue/templates/side_top_bar.html" -->
+  <!--#include virtual="/5gcatalogue/templates/scripts_head.html" -->
+  <!-- Cytoscape-3.1.0 -->
+  <meta name="viewport" content="user-scalable=no, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, minimal-ui">
+  <!-- script src="../../plugin/cytoscape.js-3.1.0/cytoscape.js"></script-->
+  <script src="../../5gcatalogue/plugin/cytoscape.js-3.1.0/cytoscape.min.js"></script>
 
-        <!-- page content -->
-        <div class="right_col" role="main">
-          <div class="">
-            
-            <div class="row">
-              <div class="col-md-12">
-                <div class="x_panel">
-                  <div class="x_title">
-                    <h2>NETWORK SERVICE DESCRIPTORS <small></small></h2>
-                    <ul class="nav navbar-right panel_toolbox">
-                      <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                      </li>
-                    </ul>
-                    <div class="clearfix"></div>
-                  </div>
-                  <div class="x_content">
-                      <table class="table table-hover" id="nsdInfosTable">
-                        <script>getAllNsdInfos("nsdInfosTable",createNsdInfosTable,"response");</script>                        
-                      </table>
-                  </div>
+  <!-- 5G APP & SERVICE CATALOGUE Scripts -->
+  <script src="../plugin/rest_api.js"></script>
+  <script src="../plugin/utils.js"></script>
+  <script src="../plugin/nsd_utils.js"></script>
+  <script src="../plugin/js-yaml/dist/js-yaml.min.js"></script>
+
+</head>
+
+<body class="nav-md">
+  <div class="container body">
+    <div class="main_container">
+
+      <!--#include virtual="/5gcatalogue/templates/side_top_bar.html" -->
+
+      <!-- page content -->
+      <div class="right_col" role="main">
+        <div class="">
+
+          <div class="row">
+            <div class="col-md-12">
+              <div class="x_panel">
+                <div class="x_title">
+                  <h2>NETWORK SERVICE DESCRIPTORS <small></small></h2>
+                  <ul class="nav navbar-right panel_toolbox">
+                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                    </li>
+                  </ul>
+                  <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                  <table class="table table-hover" id="nsdInfosTable">
+                    <script>getAllNsdInfos("nsdInfosTable", createNsdInfosTable, "response");</script>
+                  </table>
                 </div>
               </div>
-              <div class="clearfix">
-              </div>
             </div>
-            
-            <div class="row">
-              <div class="col-md-12" id="nsdViewModals">
-              </div>
+            <div class="clearfix">
             </div>
-            
-            <div class="row">
-              <div class="col-md-6 col-xs-12">
-              </div>
-              
-              <div class="col-md-6 col-xs-12">
-              </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12" id="nsdViewModals">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12" id="nsdGraphModals">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 col-xs-12">
             </div>
 
-            <div class="row">
-              <div class="col-md-12" id="updateNsdInfosModals">
-              </div>
+            <div class="col-md-6 col-xs-12">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12" id="updateNsdInfosModals">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4">
+              <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#nsdUploadModal">Onboard
+                NSD</button>
             </div>
 
-            <div class="row">
-              <div class="col-md-4">
-                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#nsdUploadModal">Onboard NSD</button>
-              </div>
-
-              <div class="col-md-4">
-              </div>
-
-              <div class="col-md-4">
-              </div>
+            <div class="col-md-4">
             </div>
-            
-            <div class="row">
-              <div class="col-md-6" id="response">
-              </div>
+
+            <div class="col-md-4">
             </div>
-            
-            <div id="nsdUploadModal" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
-              <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span>
-                    </button>
-                    <h4 class="modal-title" id="myModalLabel">Upload NSD</h4>
-                  </div>
-                  <div class="modal-body">
-                    <form class="form-horizontal form-label-left" enctype="multipart/form-data">
-                        <div class="form-group">
-                            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="nsdFile">NSD FILE/ARCHIVE </label>
-                            <div id="nsdArchive" style="display: none;"></div>
-                            <div class="col-md-6 col-sm-6 col-xs-12">
-                              <input type="file" autocomplete=off accept="media_type" id="nsdFile" required="required" class="col-md-12 col-xs-12">
-                            </div>
-                        </div>
-                    </form>
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" data-dismiss="modal" onclick=loadNSDFile("nsdFile", "response");>Submit</button>
-                  </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6" id="response">
+            </div>
+          </div>
+
+          <div id="nsdUploadModal" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-hidden="true"
+            style="display: none;">
+            <div class="modal-dialog modal-lg">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span>
+                  </button>
+                  <h4 class="modal-title" id="myModalLabel">Upload NSD</h4>
+                </div>
+                <div class="modal-body">
+                  <form class="form-horizontal form-label-left" enctype="multipart/form-data">
+                    <div class="form-group">
+                      <label class="control-label col-md-3 col-sm-3 col-xs-12" for="nsdFile">NSD FILE/ARCHIVE </label>
+                      <div id="nsdArchive" style="display: none;"></div>
+                      <div class="col-md-6 col-sm-6 col-xs-12">
+                        <input type="file" autocomplete=off accept="media_type" id="nsdFile" required="required" class="col-md-12 col-xs-12">
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                  <button type="button" class="btn btn-primary" data-dismiss="modal" onclick=loadNSDFile("nsdFile","response")>Submit</button>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <!-- /page content -->
-
-        <!-- footer content -->
-        <!--#include virtual="/5gcatalogue/templates/footer.html" -->
-        <!-- /footer content -->
       </div>
-    </div>
-    
-    <!--#include virtual="/5gcatalogue/templates/scripts_foot.html" -->
-    
-    <script>
-      var time = new Date().getTime();
-      $(document.body).bind("mousemove keypress", function() {
-          time = new Date().getTime();
-      });
+      <!-- /page content -->
 
-      function refresh() {
-          if(new Date().getTime() - time >= 60000) 
-              window.location.reload(true);
-          else 
-              setTimeout(refresh, 5000);
-      }
-      setTimeout(refresh, 5000);
-	</script> 
-  </body>
+      <!-- footer content -->
+      <!--#include virtual="/5gcatalogue/templates/footer.html" -->
+      <!-- /footer content -->
+    </div>
+  </div>
+
+  <!--#include virtual="/5gcatalogue/templates/scripts_foot.html" -->
+
+  <script>
+    var time = new Date().getTime();
+    $(document.body).bind("mousemove keypress", function () {
+      time = new Date().getTime();
+    });
+
+    function autoRefresh() {
+      if (new Date().getTime() - time >= 60000)
+        window.location.reload(true);
+      else
+        setTimeout(autoRefresh, 5000);
+    }
+    setTimeout(autoRefresh, 5000);
+  </script>
+</body>
+
 </html>

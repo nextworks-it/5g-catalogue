@@ -66,7 +66,7 @@ function getDescription(descrId) {
 function printDescription(data,param){
     var yamlObj = jsyaml.load(data);
     console.log(yamlObj);
-    document.getElementById("descr").innerHTML = yamlObj['description'];
+    document.getElementById("descr").innerHTML = yamlObj['topologyTemplate']['nodeTemplates']['UHDvCDN_NS']['properties']['name'];
 }
 
 function readNSD(graphId) {
@@ -105,14 +105,15 @@ function createNSDGraph(data) {
         if (value['type'] === 'tosca.nodes.nfv.VNF'){
             nodes.push({ group: 'nodes', data: { id: key, name: 'NODE - ' + key, label: 'NODE - ' + key, weight: 70, faveColor: '#fff', faveShape: 'ellipse' }, classes: 'bottom-center pnf'});
             $.each( value['requirements']['virtualLink'], function(key1, value1){
-                console.log(key1 + " " + value1.split('/')[0]);
-                console.log(key);
+                //console.log(key1 + " " + value1.split('/')[0]);
+                //console.log(key);
                 edges.push({ group: 'edges', data: { source: key, target: value1.split('/')[0], faveColor: '#706f6f', strength: 70 }});
                 //nodes.push({ group: 'nodes', data: { id: value, name: 'Link - ' + value, label: 'Link - ' + value, weight: 50, faveColor: '#fff', faveShape: 'ellipse' }, classes: 'bottom-center net'});
                 //console.log(nodes);
             });    
         }
-        //console.log(nodes);
+        console.log(nodes);
+        //document.getElementById("row1")='<td>eccolo</td>';
     });
 
 
@@ -251,6 +252,7 @@ function createNsdInfosTable(data, params) {
     var rows = '';
     for (var i in data) {
         rows +=  createNsdInfosTableRow(data[i], btnFlag, cbacks, names, columns, resId);
+        //rows += '<th colspan="6" id = "graphhere' + i + '">dovrebbe andare qui</th>';
     }
     
     table.innerHTML += rows + '</tbody>';
@@ -289,8 +291,8 @@ function createNsdInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
 	    subText += '</td>';
 	    text += subText;
 	}
-	text += btnText + '</tr>';
-    
+    text += btnText + '</tr>';   
+
     return text;
 }
 

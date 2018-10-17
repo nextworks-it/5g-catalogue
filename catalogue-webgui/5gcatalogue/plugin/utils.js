@@ -289,7 +289,7 @@ function createButton(id, resId, btnName, btnCallback) {
 			text += ' buttonModal_'+ btnCallback + '" data-toggle="modal" data-target="#' + btnCallback + id + '" data-id="' + id + '">';
     }  else if (btnName.toLowerCase().indexOf("graph") >= 0) { // condizione aggiunta
 		text += '" onclick="location.href=\'' + btnCallback + id + '\'">';
-	}
+	} 
 	text += btnName + '</button>';
 //	console.log("button: \n" + text);
     
