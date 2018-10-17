@@ -28,11 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Created by Marco Capitani on 10/09/18.
- *
- * @author Marco Capitani <m.capitani AT nextworks.it>
- */
 public class NsdBuilder {
 
     private OsmNsdPackage osmPackage;

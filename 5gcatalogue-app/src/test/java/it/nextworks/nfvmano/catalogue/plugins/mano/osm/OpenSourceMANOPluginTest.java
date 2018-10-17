@@ -33,11 +33,6 @@ import java.util.UUID;
 
 import static org.junit.Assert.*;
 
-/**
- * Created by Marco Capitani on 20/08/18.
- *
- * @author Marco Capitani <m.capitani AT nextworks.it>
- */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest
 public class OpenSourceMANOPluginTest {

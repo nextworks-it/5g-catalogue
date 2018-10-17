@@ -37,11 +37,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
-/**
- * Created by Marco Capitani on 10/09/18.
- *
- * @author Marco Capitani <m.capitani AT nextworks.it>
- */
 public class ArchiveBuilder {
 
     private static final Logger log = LoggerFactory.getLogger(ArchiveBuilder.class);

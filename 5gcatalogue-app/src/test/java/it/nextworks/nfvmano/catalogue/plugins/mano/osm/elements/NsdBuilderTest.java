@@ -34,11 +34,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-/**
- * Created by Marco Capitani on 10/09/18.
- *
- * @author Marco Capitani <m.capitani AT nextworks.it>
- */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest
 public class NsdBuilderTest {
