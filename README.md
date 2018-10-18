@@ -19,7 +19,7 @@ NFV-SDN Catalogue capable of storing and  versioning:
 * [PostgresSQL] - as internal DB 
 * [Apache Kafka] - as internal message bus, configured with the following topics: catalogue-onboarding-local, catalogue-onboarding-remote
 
-### Included Libraries
+### Used Libraries
 
 | Lib | README |
 | ------ | ------ |
@@ -65,13 +65,13 @@ $ ./bootstrap.sh all
 
 ## Versioning
 
-For the versions available, see the [tags on this repository](). 
+For the versions available, see the [tags on this repository]. 
 
 ## Authors
 
-* **Francesca Moscatelli** - [Nextworks S.r.l.](http://www.nextworks.it)
+* **Francesca Moscatelli**, **Giacomo Bernini**, **Giada Landi**, **Marco Capitani** - [Nextworks S.r.l.](http://www.nextworks.it)
 
 ## License
 
-This project is licensed under the XXXXXX License - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the XXXXXX License - see the [LICENSE](LICENSE) file for details
 
