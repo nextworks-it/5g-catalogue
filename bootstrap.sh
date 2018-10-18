@@ -36,22 +36,22 @@ function prepareEnv()
     sudo -u postgres createdb cataloguedb
 
     log "BUILDING NFV-LIB DEPENDENCIES..."
-    if [ ! -d  ../nfv-libs/ ]; then
+    if [ ! -d  ../nfv-sol-libs/ ]; then
         cd ..
-        git clone ssh://${GITUSER}@terrance.nextworks.it/git/KD/nfv-libs
+        git clone https://github.com/nextworks-it/nfv-sol-libs.git
         cd 5g-catalogue
     fi
 
-    cd ../nfv-libs/NFV_MANO_LIBS_COMMON
+    cd ../nfv-sol-libs/NFV_MANO_SOL001_LIBS_COMMON
     mvn clean install
-    cd ../NFV_MANO_LIBS_DESCRIPTORS
+    cd ../NFV_MANO_SOL001_LIBS_DESCRIPTORS
     mvn clean install
 }
 
 function compileApp()
 {
     log "COMPILING 5G APPs & SERVICEs CATALOGUE"
-    cd Catalogue
+    cd 5gcatalogue-app
     mvn clean package
     cd ../
 }
@@ -59,7 +59,7 @@ function compileApp()
 function runApp()
 {
     log "RUNNING 5G APPs & SERVICEs CATALOGUE"
-    cd Catalogue
+    cd 5gcatalogue-app
     mvn spring-boot:run
     cd ../
 }

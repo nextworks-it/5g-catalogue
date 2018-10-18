@@ -21,12 +21,12 @@ NFV-SDN Catalogue capable of storing and  versioning:
 
 ### Used Libraries
 
-| Lib | README |
+| Lib | REPOSITORY |
 | ------ | ------ |
-| NfvManoLibsSol001Common |  |
-| NfvManoLibsSol001Descriptors |  |
-| J-OSMClient |  |
-| OpenStack4j |  |
+| NfvManoLibsSol001Common | [README](https://github.com/nextworks-it/nfv-sol-libs) |
+| NfvManoLibsSol001Descriptors | [README](https://github.com/nextworks-it/nfv-sol-libs) |
+| J-OSMClient | [README](https://github.com/girtel/J-OSMClient) |
+| OpenStack4j | [README](https://github.com/ContainX/openstack4j) |
 
 ### Installing
 
@@ -65,7 +65,7 @@ $ ./bootstrap.sh all
 
 ## Versioning
 
-For the versions available, see the [tags on this repository]. 
+For the versions available, see tags on this repository. 
 
 ## Authors
 
@@ -73,5 +73,5 @@ For the versions available, see the [tags on this repository].
 
 ## License
 
-This project is licensed under the XXXXXX License - see the [LICENSE](LICENSE) file for details
+This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details
 

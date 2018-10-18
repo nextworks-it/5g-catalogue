@@ -2,14 +2,6 @@
 
 ## Getting Started
 
-### Prerequisites
-
-For running properly the webgui, submodules are required:
-
-```
-$ git submodule update --init
-``` 
-
 ### Installing
 
 Apache 2 configuration for running the WEB GUI (Ubuntu)
