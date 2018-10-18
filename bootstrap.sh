@@ -1,0 +1,89 @@
+#!/bin/bash
+
+BANNER_H="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+BANNER_S="\n\n\n\n\n\n"
+GITUSER=$USER
+
+function log()
+{
+    echo $BANNER_H
+    echo $1
+    echo -e $BANNER_S
+}
+
+function myhelp ()
+{
+    echo "Usage: $0 <CMD>"
+    echo "-----"
+    echo " CMD := compile-app | run-app | all |"
+    echo "        env-dep"
+}
+
+function prepareEnv()
+{
+    log "PREPARING ENVIRONMENT"
+
+    if [ ! -d  /var/log/5gcatalogue/ ]; then
+        sudo mkdir  /var/log/5gcatalogue/
+        sudo chmod a+rw /var/log/5gcatalogue/
+    fi
+
+    which psql
+    if [ "$?" -gt "0" ]; then
+        log "POSTGRES not installed... Installing"
+        sudo apt-get install postgresql -y
+    fi
+    sudo -u postgres createdb cataloguedb
+
+    log "BUILDING NFV-LIB DEPENDENCIES..."
+    if [ ! -d  ../nfv-libs/ ]; then
+        cd ..
+        git clone ssh://${GITUSER}@terrance.nextworks.it/git/KD/nfv-libs
+        cd 5g-catalogue
+    fi
+
+    cd ../nfv-libs/NFV_MANO_LIBS_COMMON
+    mvn clean install
+    cd ../NFV_MANO_LIBS_DESCRIPTORS
+    mvn clean install
+}
+
+function compileApp()
+{
+    log "COMPILING 5G APPs & SERVICEs CATALOGUE"
+    cd Catalogue
+    mvn clean package
+    cd ../
+}
+
+function runApp()
+{
+    log "RUNNING 5G APPs & SERVICEs CATALOGUE"
+    cd Catalogue
+    mvn spring-boot:run
+    cd ../
+}
+
+
+case $1 in
+    (env-dep)
+        prepareEnv
+        ;;
+    (compile-app)
+        compileApp
+        ;;
+    (run-app)
+        runApp
+        ;;
+    (all)
+        prepareEnv;
+        compileApp;
+        runApp;
+        ;;
+
+    (*)
+        echo "Invalid option '$1'!!!!"
+        myhelp;
+        exit -1
+        ;;
+esac
