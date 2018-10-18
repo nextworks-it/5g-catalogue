@@ -33,6 +33,7 @@ function prepareEnv()
         log "POSTGRES not installed... Installing"
         sudo apt-get install postgresql -y
     fi
+    sudo -u postgres psql -U postgres -d postgres -c "alter user postgres with password 'postgres';"
     sudo -u postgres createdb cataloguedb
 
     log "BUILDING NFV-LIB DEPENDENCIES..."
