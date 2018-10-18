@@ -73,5 +73,5 @@ For the versions available, see the [tags on this repository].
 
 ## License
 
-This project is licensed under the XXXXXX License - see the [LICENSE](LICENSE) file for details
+This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details
 
