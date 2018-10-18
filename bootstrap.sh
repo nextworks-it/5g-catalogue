@@ -51,7 +51,7 @@ function prepareEnv()
 function compileApp()
 {
     log "COMPILING 5G APPs & SERVICEs CATALOGUE"
-    cd Catalogue
+    cd 5gcatalogue-app
     mvn clean package
     cd ../
 }
@@ -59,7 +59,7 @@ function compileApp()
 function runApp()
 {
     log "RUNNING 5G APPs & SERVICEs CATALOGUE"
-    cd Catalogue
+    cd 5gcatalogue-app
     mvn spring-boot:run
     cd ../
 }
