@@ -16,14 +16,14 @@ $ cd /etc/apache2/
 Edit apache2.conf adding the following lines:
 
 ```
-<Directory <path_to_web_gui_repo>/catalogue-webgui>
+<Directory <path_to_web_gui_repo>/5gcatalogue-webgui>
         Options Indexes FollowSymLinks Includes
         AllowOverride None
         Require all granted
 </Directory>
 ```
 
-- NOTE: the path must point at the directory that includes also the WEB GUI template "gentelella", i.e. "catalogue-webui"
+- NOTE: the path must point at the directory that includes also the WEB GUI template "gentelella", i.e. "5gcatalogue-webui"
 
 ```
 $ cd /etc/apache2/sites-enabled/
@@ -32,7 +32,7 @@ $ cd /etc/apache2/sites-enabled/
 Edit 000-default.conf:
 
 ```
-DocumentRoot <path_to_web_gui_repo>/catalogue-webgui
+DocumentRoot <path_to_web_gui_repo>/5gcatalogue-webgui
 ```
 
 ```
