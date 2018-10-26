@@ -15,6 +15,7 @@
 */
 
 function getAllNsdInfos(elemId, callback, resId) {
+    console.log("**************************Sto facendo la getallnsdinfo*********************");
     getJsonFromURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors", callback, [elemId, resId]);
 }
 
@@ -80,6 +81,8 @@ function getDescription(descrId) {
 }
 
 function printDescription(data, params){
+    console.log(data);
+    console.log('Sto facendo la print***************************************');
     var yamlObj = jsyaml.load(data);
     console.log(yamlObj);
     document.getElementById(params[1]).innerHTML = ' - ' + params[0] + ' - ' + yamlObj['description'];
@@ -92,7 +95,36 @@ function readNSD(graphId) {
 }
 
 function getNSD(nsdInfoId, elemId, callback) {
+    console.log('Sto facendo la get***************************************');
     getFileFromURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content", callback, [nsdInfoId, elemId]);
+    console.log('Fatta la get***************************************');
+}
+
+function showCanvas(data,params) {
+    console.log('Guardo la canvas***************************************');
+    console.log(params[0]);
+    console.log(params[1]);
+    console.log(data)
+    console.log(data.lenght);
+    for (var i in data) {
+        console.log(data[i]['id']);
+        if (data[i]['id'] === params[0]){
+            var nsdName= data[i]['nsdName'];
+            console.log(nsdName);
+        }
+        document.getElementById("graphOf_"+ data[i]['id']).style.display = "none";
+    }
+    //$( ".graph_canvas" ).hide();
+    //$( ".graph_canvas" ).ready(function(){
+        //$("#graphOf_"+ params[0]).show();
+    //});
+    //document.getElementByClassName("graph_canvas").style.display = "none";
+    document.getElementById("graphOf_"+ params[0]).style.display = "block";
+    //var cy_res='cy_'+params[0];
+    var dataId ='cy_'+params[0];
+    console.log("dataid="+dataId);
+    document.getElementById(dataId).innerHTML = '<script>'+getNSD(params[0],dataId, createNSDGraph);+'</script>';
+    //document.getElementById("graphOf_"+params[0]).innerHTML ='';
 }
 
 function createNsdInfosTable(data, params) {
@@ -112,7 +144,7 @@ function createNsdInfosTable(data, params) {
     }
     var btnFlag = true;
     var header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Operational State', 'Onboarding State'], btnFlag, false);
-    var cbacks = ['openNSD_', 'nsd_graph.html?nsdId=', 'updateNsdInfo_', 'deleteNsdInfo'];
+    var cbacks = ['openNSD_', 'showCanvas', 'updateNsdInfo_', 'deleteNsdInfo'];
     var names = ['View NSD', 'View NSD Graph', 'Change NSD OpState', 'Delete NSD'];
     var columns = [['nsdName'], ['nsdVersion'], ['nsdDesigner'], ['nsdOperationalState'], ['nsdOnboardingState']];
 
@@ -135,6 +167,7 @@ function createNsdInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
         btnText += createActionButton(data['id'], resId, names, cbacks);
         createUpdateNsdInfoModal(data['id'], data['nsdOperationalState'], "updateNsdInfosModals");
         creteNSDViewModal(data['id'], "nsdViewModals");
+        createCanvas(data);
     }
 
 	text += '<tr>';
@@ -163,6 +196,37 @@ function createNsdInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
 
     return text;
 }
+
+function createCanvas(data){
+    console.log(data);
+    console.log('Canvas per grafico' +  data['id']);
+    var dataId ='cy_'+data['id'];
+    var nsdName=data['nsdName'];
+    var graphName="graphOf_" + data['id'];
+    document.getElementById("graphCanvas").innerHTML += '<div id="' + graphName + '" class="graph_canvas" style="display: none";>\
+                                                            <div class="col-md-12">\
+                                                            <div class="x_panel">\
+                                                                <div class="x_title">\
+                                                                <h2>NETWORK SERVICE DESCRIPTOR GRAPH - ' + nsdName + ' <small></small></h2>\
+                                                                <div class="clearfix"></div>\
+                                                                </div>\
+                                                                <div class="x_content">\
+                                                                <style>\
+                                                                    #' + dataId + '{\
+                                                                    min-height: 600px;\
+                                                                    width: auto;\
+                                                                    left: 0;\
+                                                                    top: 0;\
+                                                                    }\
+                                                                </style>\
+                                                                <div id="'+dataId+'"></div>\
+                                                                </div>\
+                                                            </div>\
+                                                            </div>\
+                                                        </div>';
+
+}
+
 
 function creteNSDViewModal(nsdInfoId, modalsContainerId) {
               
@@ -257,8 +321,10 @@ function createUpdateNsdInfoModal(nsdInfoId, opState, modalsContainerId) {
 }
 
 function createNSDGraph(data, params) {
+    console.log('Sto facendo la graph***************************************');
+    console.log(params[1]);
     var yamlObj = jsyaml.load(data);
-    //console.log(yamlObj);
+    console.log(yamlObj);
     var nodeTempl=yamlObj['topologyTemplate']['nodeTemplates'];
     //console.log(nodeTempl);
     
@@ -289,7 +355,7 @@ function createNSDGraph(data, params) {
 
 
     var cy = cytoscape({
-		container: document.getElementById('cy'),
+        container: document.getElementById(params[1]),
 
 		layout: {
 			name: 'cose',
@@ -386,6 +452,6 @@ function createNSDGraph(data, params) {
 		}
 	});
 	
-	//cy.minZoom(0.8);
+	cy.minZoom(0.5);
 	cy.maxZoom(1.6);
 }

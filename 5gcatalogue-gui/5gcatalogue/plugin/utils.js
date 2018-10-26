@@ -14,7 +14,7 @@
 * limitations under the License.
 */
 
-var catalogueAddr = window.location.hostname;
+var catalogueAddr = '10.0.8.44';
 var cataloguePort = '8083';
 
 var stopRefreshing = false;
@@ -303,7 +303,7 @@ function createButton(id, resId, btnName, btnCallback) {
 			   btnCallback.toLowerCase().indexOf("update") >= 0) {
 			text += ' buttonModal_'+ btnCallback + '" data-toggle="modal" data-target="#' + btnCallback + id + '" data-id="' + id + '">';
     }  else if (btnName.toLowerCase().indexOf("graph") >= 0) {
-		text += '" onclick="location.href=\'' + btnCallback + id + '\'">';
+		text += '" onclick=getAllNsdInfos("' + id + '",' + btnCallback + ',"response")>';
 	} 
 	text += btnName + '</button>';
 //	console.log("button: \n" + text);
