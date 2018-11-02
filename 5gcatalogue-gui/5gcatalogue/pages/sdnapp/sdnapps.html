@@ -15,119 +15,162 @@
 */-->
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <!-- Meta, title, CSS, favicons, etc. -->
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>5G APP & SERVICE CATALOGUE</title>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <!-- Meta, title, CSS, favicons, etc. -->
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!--#include virtual="/5gcatalogue/templates/scripts_head.html" -->
-        
-  </head>
+  <title>5G APP & SERVICE CATALOGUE</title>
 
-  <body class="nav-md">
-    <div class="container body">
-      <div class="main_container">
-        
-        <!--#include virtual="/5gcatalogue/templates/side_top_bar.html" -->
+  <!--#include virtual="/5gcatalogue/templates/scripts_head.html" -->
 
-        <!-- page content -->
-        <div class="right_col" role="main">
-          <div class="">
-            
-            <div class="row">
-              <div class="col-md-12">
-                <div class="x_panel">
-                  <div class="x_title">
-                    <h2>SDN APP PACKAGES <small></small></h2>
-                    <ul class="nav navbar-right panel_toolbox">
-                      <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                      </li>
-                    </ul>
-                    <div class="clearfix"></div>
-                  </div>
-                  <div class="x_content">
-                      <table class="table table-hover" id="pluginsTable">
-                        <thead><tr><th>Name</th><th>Version</th><th>Designer</th><th>Operational State</th><th>Onboarding State</th><th></th></tr></thead>
-                        <tbody></tbody>
-                        <tbody>
-                          <tr><td>test1</td><td>v0.1</td><td>Nextworks</td><td>ENABLED</td><td>ONBOARDED</td><td>
-                          <div class="btn-group">
+</head>
+
+<body class="nav-md">
+  <div class="container body">
+    <div class="main_container">
+
+      <!--#include virtual="/5gcatalogue/templates/side_top_bar.html" -->
+
+      <!-- page content -->
+      <div class="right_col" role="main">
+        <div class="">
+
+          <div class="row">
+            <div class="col-md-12">
+              <div class="x_panel">
+                <div class="x_title">
+                  <h2>SDN APP PACKAGES <small></small></h2>
+                  <ul class="nav navbar-right panel_toolbox">
+                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                    </li>
+                  </ul>
+                  <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                  <table class="table table-hover" id="pluginsTable">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Version</th>
+                        <th>Designer</th>
+                        <th>Operational State</th>
+                        <th>Onboarding State</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                    <tbody>
+                      <tr>
+                        <td>test1</td>
+                        <td>v0.1</td>
+                        <td>Nextworks</td>
+                        <td>ENABLED</td>
+                        <td>ONBOARDED</td>
+                        <td>
+                          <!--<div class="btn-group">
                             <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Action				<span class="fa fa-caret-down"></span>				</button>
                               <ul class="dropdown-menu" role="menu">
                                 <li><button type="button" class="btn btn-info btn-sm btn-block" onclick="showResultMessage(null,'Method under development');">View</button></li>
                                 <li><button type="button" class="btn btn-info btn-sm btn-block" onclick="showResultMessage(null,'Method under development');">Change OpState</button></li>
                                 <li><button type="button" class="btn btn-info btn-sm btn-block" onclick="showResultMessage(null,'Method under development');">Delete</button></li>
                               </ul>
-                          </div>
-                          </td></tr>
-                          <tr><td>test2</td><td>v0.1</td><td>Nextworks</td><td>ENABLED</td><td>ONBOARDED</td><td>
-                          <div class="btn-group">
+                          </div>-->
+                          <a title="View" class="btn btn-link">
+                            <i class="fa fa-eye" onclick="showResultMessage(null,'Method under development');"></i>
+                          </a>
+                          <a title="Status" class="btn btn-link">
+                            <i class="fa fa-gear" onclick="showResultMessage(null,'Method under development');"></i>
+                          </a>
+                          <a title="Delete" class="btn btn-link">
+                            <i class="fa fa-close" onclick="showResultMessage(null,'Method under development');"></i>
+                          </a>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>test2</td>
+                        <td>v0.1</td>
+                        <td>Nextworks</td>
+                        <td>ENABLED</td>
+                        <td>ONBOARDED</td>
+                        <td>
+                          <!--<div class="btn-group">
                             <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Action				<span class="fa fa-caret-down"></span>				</button>
                               <ul class="dropdown-menu" role="menu">
                                 <li><button type="button" class="btn btn-info btn-sm btn-block" onclick="showResultMessage(null,'Method under development');">View</button></li>
                                 <li><button type="button" class="btn btn-info btn-sm btn-block" onclick="showResultMessage(null,'Method under development');">Change OpState</button></li>
                                 <li><button type="button" class="btn btn-info btn-sm btn-block" onclick="showResultMessage(null,'Method under development');">Delete</button></li>
                               </ul>
-                          </div>
-                          </td></tr>
-                        </tbody>                  
-                      </table>
-                  </div>
+                          </div>-->
+                          <a title="View" class="btn btn-link">
+                            <i class="fa fa-eye" onclick="showResultMessage(null,'Method under development');"></i>
+                          </a>
+                          <a title="Status" class="btn btn-link">
+                            <i class="fa fa-gear" onclick="showResultMessage(null,'Method under development');"></i>
+                          </a>
+                          <a title="Delete" class="btn btn-link">
+                            <i class="fa fa-close" onclick="showResultMessage(null,'Method under development');"></i>
+                          </a>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
-              <div class="clearfix">
-              </div>
             </div>
-            
-            <div class="row">
-              <div class="col-md-12">
-              </div>
+            <div class="clearfix">
             </div>
-            
-            <div class="row">
-              <div class="col-md-6 col-xs-12">
-              </div>
-              
-              <div class="col-md-6 col-xs-12">
-              </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 col-xs-12">
             </div>
 
-            <div class="row">
-              <div class="col-md-12">
-              </div>
+            <div class="col-md-6 col-xs-12">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4">
+
             </div>
 
-            <div class="row">
-              <div class="col-md-4">
-                
-              </div>
-
-              <div class="col-md-4">
-              </div>
-
-              <div class="col-md-4">
-              </div>
+            <div class="col-md-4">
             </div>
-            
-            <div class="row">
-              <div class="col-md-6" id="response">
-              </div>
+
+            <div class="col-md-4">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6" id="response">
             </div>
           </div>
         </div>
-        <!-- /page content -->
-
-        <!-- footer content -->
-        <!--#include virtual="/5gcatalogue/templates/footer.html" -->
-        <!-- /footer content -->
       </div>
+      <!-- /page content -->
+
+      <!-- footer content -->
+      <!--#include virtual="/5gcatalogue/templates/footer.html" -->
+      <!-- /footer content -->
     </div>
-    
-    <!--#include virtual="/5gcatalogue/templates/scripts_foot.html" -->
-    
-  </body>
+  </div>
+
+  <!--#include virtual="/5gcatalogue/templates/scripts_foot.html" -->
+
+</body>
+
 </html>

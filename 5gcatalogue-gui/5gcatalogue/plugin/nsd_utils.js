@@ -143,7 +143,7 @@ function createNsdInfosTable(data, params) {
         return;
     }
     var btnFlag = true;
-    var header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Operational State', 'Onboarding State'], btnFlag, false);
+    var header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Operational State', 'Onboarding State','Actions'], btnFlag, false);
     var cbacks = ['openNSD_', 'showCanvas', 'updateNsdInfo_', 'deleteNsdInfo'];
     var names = ['View NSD', 'View NSD Graph', 'Change NSD OpState', 'Delete NSD'];
     var columns = [['nsdName'], ['nsdVersion'], ['nsdDesigner'], ['nsdOperationalState'], ['nsdOnboardingState']];
@@ -164,7 +164,8 @@ function createNsdInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
     var text = '';
     var btnText = '';
     if (btnFlag) {
-        btnText += createActionButton(data['id'], resId, names, cbacks);
+        //btnText += createActionButton(data['id'], resId, names, cbacks);
+        btnText += createLinkSet(data['id'], resId, names, cbacks);
         createUpdateNsdInfoModal(data['id'], data['nsdOperationalState'], "updateNsdInfosModals");
         creteNSDViewModal(data['id'], "nsdViewModals");
         createCanvas(data);

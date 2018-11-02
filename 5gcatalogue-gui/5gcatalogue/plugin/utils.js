@@ -14,7 +14,8 @@
 * limitations under the License.
 */
 
-var catalogueAddr = '10.0.8.44';
+//var catalogueAddr = '10.0.8.44';
+var catalogueAddr = window.location.hostname;
 var cataloguePort = '8083';
 
 var stopRefreshing = false;
@@ -287,6 +288,56 @@ function createActionButton(id, resId, btnNames, btnCallbacks) {
 	} else {
 		text +=  createButton(id, resId, btnNames, btnCallbacks);
 	}
+	text += '</td>';	
+	return text;
+}
+
+function createLinkSet(id, resId, btnNames, btnCallbacks) {
+	var text = '<td>';
+	if(btnNames instanceof Array) {
+		if(btnNames.length == btnCallbacks.length) {
+			for(var i=0; i<btnNames.length; i++) {
+				if (btnCallbacks[i].toLowerCase().indexOf("delete") >= 0 ||
+					btnCallbacks[i].toLowerCase().indexOf("get") >= 0) {
+					text += '<a title="Delete"class="btn btn-link">\
+							<i class="fa fa-close"  onclick=' + btnCallbacks[i] + '("' + id + '","' + resId + '")></i>\
+							</a>';
+				} else if (btnCallbacks[i].toLowerCase().indexOf("update") >= 0) {
+							text += '<a title="Status"class="btn btn-link">\
+										<i class="fa fa-gear" "buttonModal_'+ btnCallbacks[i] + '"  data-toggle="modal" data-target="#' + btnCallbacks[i] + id + '" data-id="' + id + '"></i>\
+									</a>';
+				} else if (btnCallbacks[i].toLowerCase().indexOf("open") >= 0) {
+						text += '<a title="View" class="btn btn-link">\
+								<i class="fa fa-eye" "buttonModal_'+ btnCallbacks[i] + '"  data-toggle="modal" data-target="#' + btnCallbacks[i] + id + '" data-id="' + id + '"></i>\
+								</a>';
+				}  else if (btnNames[i].toLowerCase().indexOf("graph") >= 0) {
+					text += '<a title="Graph"class="btn btn-link">\
+								<i class="fa fa-area-chart"  onclick=getAllNsdInfos("' + id + '",' + btnCallbacks[i] + ',"response")></i>\
+							</a>';
+				} 
+			}
+		}
+	}	else {
+		if (btnCallbacks.toLowerCase().indexOf("delete") >= 0 ||
+					btnCallbacks.toLowerCase().indexOf("get") >= 0) {
+					text += '<a class="btn btn-link">\
+							<i class="fa fa-close" onclick=' + btnCallbacks + '("' + id + '","' + resId + '")></i>\
+							</a>';
+				} else if (btnCallbacks.toLowerCase().indexOf("view") >= 0) {
+						text += '<a class="btn btn-link">\
+								<i class="fa fa-eye" onclick="location.href=\'' + btnCallbacks + id + '\'"></i>\
+								</a>';
+				} else if (btnCallbacks.toLowerCase().indexOf("open") >= 0 ||
+						btnCallbacks.toLowerCase().indexOf("update") >= 0) {
+							text += '<a class="btn btn-link">\
+										<i class="fa fa-gear buttonModal_'+ btnCallbacks + '" data-toggle="modal" data-target="#' + btnCallbacks + id + '" data-id="' + id + '"></i>\
+									</a>';
+				}  else if (btnNames.toLowerCase().indexOf("graph") >= 0) {
+					text += '<a class="btn btn-link">\
+								<i class="fa fa-area-chart" onclick=getAllNsdInfos("' + id + '",' + btnCallbacks + ',"response")></i>\
+							</a>';
+				}
+			}
 	text += '</td>';	
 	return text;
 }
