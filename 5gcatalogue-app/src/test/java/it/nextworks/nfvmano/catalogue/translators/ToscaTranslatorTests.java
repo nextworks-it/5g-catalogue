@@ -201,6 +201,7 @@ public class ToscaTranslatorTests {
 	}
 	
 	@Test
+	@Ignore
 	public void parseArchive() {
 
 		try {
