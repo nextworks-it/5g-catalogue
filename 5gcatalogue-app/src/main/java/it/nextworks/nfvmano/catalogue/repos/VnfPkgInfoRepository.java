@@ -13,15 +13,17 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package it.nextworks.nfvmano.catalogue.messages;
+package it.nextworks.nfvmano.catalogue.repos;
 
-public enum CatalogueMessageType {
-	NSD_ONBOARDING_NOTIFICATION,
-	NSD_CHANGE_NOTIFICATION,
-	NSD_DELETION_NOTIFICATION,
-	PNFD_ONBOARDING_NOTIFICATION,
-	PNFD_DELETION_NOTIFICATION,
-	VNFPKG_ONBOARDING_NOTIFICATION,
-	VNFPKG_CHANGE_NOTIFICATION,
-	VNFPKG_DELETION_NOTIFICATION
+import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+import java.util.UUID;
+
+public interface VnfPkgInfoRepository extends JpaRepository<VnfPkgInfoResource, UUID> {
+
+	Optional<VnfPkgInfoResource> findById(UUID id);
+	Optional<VnfPkgInfoResource> findByVnfdId(UUID vnfdId);
+	
 }

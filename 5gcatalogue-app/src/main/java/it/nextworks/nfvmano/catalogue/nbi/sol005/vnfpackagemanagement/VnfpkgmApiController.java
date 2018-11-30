@@ -15,6 +15,8 @@
 */
 package it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement;
 
+import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdInfo;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.CreateVnfPkgInfoRequest;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.PkgmSubscription;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.PkgmSubscriptionRequest;
@@ -24,8 +26,10 @@ import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.V
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.VnfPkgInfoModifications;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.*;
+import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -54,6 +58,9 @@ public class VnfpkgmApiController implements VnfpkgmApi {
 
     private final HttpServletRequest request;
 
+    @Autowired
+    VnfPackageManagementInterface vnfPackageManagementInterface;
+
     @org.springframework.beans.factory.annotation.Autowired
     public VnfpkgmApiController(ObjectMapper objectMapper, HttpServletRequest request) {
         this.objectMapper = objectMapper;
@@ -75,7 +82,23 @@ public class VnfpkgmApiController implements VnfpkgmApi {
     }
 
     public ResponseEntity<VnfPkgInfo> createVNFPkgInfo(@ApiParam(value = "" ,required=true )  @Valid @RequestBody CreateVnfPkgInfoRequest body) {
+
         String accept = request.getHeader("Accept");
+        if (accept != null && accept.contains("application/json")) {
+            log.debug("Processing REST request to create a VNF Pkg info");
+            try {
+                VnfPkgInfo vnfPkgInfo = vnfPackageManagementInterface.createVnfPkgInfo(body);
+                return new ResponseEntity<VnfPkgInfo>(vnfPkgInfo, HttpStatus.CREATED);
+            } catch (MalformattedElementException e) {
+                return new ResponseEntity<VnfPkgInfo>(HttpStatus.BAD_REQUEST);
+            } catch (Exception e) {
+                log.error("Exception while creating VNF Pkg info: " + e.getMessage());
+                return new ResponseEntity<VnfPkgInfo>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } else
+            return new ResponseEntity<VnfPkgInfo>(HttpStatus.BAD_REQUEST);
+
+        /*String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
                 return new ResponseEntity<VnfPkgInfo>(objectMapper.readValue("{  \"vnfProductName\" : \"vnfProductName\",  \"vnfd\" : \"http://example.com/aeiou\",  \"vnfdVersion\" : \"vnfdVersion\",  \"vnfProvider\" : \"vnfProvider\",  \"_links\" : \"http://example.com/aeiou\",  \"vnfdId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"packageContent\" : \"http://example.com/aeiou\",  \"additionalArtifacts\" : [ {    \"checksum\" : \"checksum\",    \"artifactPath\" : \"artifactPath\"  }, {    \"checksum\" : \"checksum\",    \"artifactPath\" : \"artifactPath\"  } ],  \"usageState\" : { },  \"checksum\" : \"checksum\",  \"softwareImages\" : [ {    \"imagePath\" : \"imagePath\",    \"version\" : \"version\",    \"minDisk\" : 0,    \"createdAt\" : \"createdAt\",    \"size\" : 1,    \"provider\" : \"provider\",    \"minRam\" : 6,    \"name\" : \"name\",    \"checksum\" : \"checksum\",    \"containerFormat\" : { },    \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",    \"diskFormat\" : { },    \"userMetadata\" : { }  }, {    \"imagePath\" : \"imagePath\",    \"version\" : \"version\",    \"minDisk\" : 0,    \"createdAt\" : \"createdAt\",    \"size\" : 1,    \"provider\" : \"provider\",    \"minRam\" : 6,    \"name\" : \"name\",    \"checksum\" : \"checksum\",    \"containerFormat\" : { },    \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",    \"diskFormat\" : { },    \"userMetadata\" : { }  } ],  \"self\" : \"http://example.com/aeiou\",  \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"operationalState\" : { },  \"onboardingState\" : { },  \"vnfSoftwareVersion\" : \"vnfSoftwareVersion\"}", VnfPkgInfo.class), HttpStatus.NOT_IMPLEMENTED);
@@ -85,7 +108,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
             }
         }
 
-        return new ResponseEntity<VnfPkgInfo>(HttpStatus.NOT_IMPLEMENTED);
+        return new ResponseEntity<VnfPkgInfo>(HttpStatus.NOT_IMPLEMENTED);*/
     }
 
     public ResponseEntity<Void> deleteSubscription(@ApiParam(value = "",required=true) @PathVariable("subscriptionId") String subscriptionId) {

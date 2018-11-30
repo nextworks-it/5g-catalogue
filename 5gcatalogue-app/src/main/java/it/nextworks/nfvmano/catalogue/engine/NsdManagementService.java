@@ -30,6 +30,7 @@ import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import it.nextworks.nfvmano.catalogue.repos.ContentType;
 import it.nextworks.nfvmano.catalogue.storage.StorageServiceInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +59,6 @@ import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboa
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOperationalStateType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANORepository;
-import it.nextworks.nfvmano.catalogue.repos.NsdContentType;
 import it.nextworks.nfvmano.catalogue.repos.NsdInfoRepository;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
@@ -215,7 +215,7 @@ public class NsdManagementService implements NsdManagementInterface {
 		 * log.debug("Got NSD content.");
 		 */
 
-		NsdContentType ct = nsdInfo.getNsdContentType();
+		ContentType ct = nsdInfo.getContentType();
 		switch (ct) {
 		case YAML: {
 			// try {
@@ -335,7 +335,7 @@ public class NsdManagementService implements NsdManagementInterface {
 	}
 
 	@Override
-	public synchronized void uploadNsd(String nsdInfoId, MultipartFile nsd, NsdContentType nsdContentType)
+	public synchronized void uploadNsd(String nsdInfoId, MultipartFile nsd, ContentType contentType)
 			throws Exception, FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException,
 			MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
 		log.debug("Processing request to upload NSD content for NSD info " + nsdInfoId);
@@ -356,7 +356,7 @@ public class NsdManagementService implements NsdManagementInterface {
 		// UUID nsdId = UUID.randomUUID();
 		
 
-		switch (nsdContentType) {
+		switch (contentType) {
 		case ZIP: {
 			try {
 				log.info("NSD file is in format: zip");
@@ -378,8 +378,8 @@ public class NsdManagementService implements NsdManagementInterface {
 
 				nsdFilename = storageService.storeNsd(nsdInfo, nsdMpFile);
 
-				// change nsdContentType to YAML as nsd file is no more zip from now on
-				nsdContentType = NsdContentType.YAML;
+				// change contentType to YAML as nsd file is no more zip from now on
+				contentType = ContentType.YAML;
 
 				log.debug("NSD file successfully stored");
 				// clean tmp files
@@ -422,8 +422,8 @@ public class NsdManagementService implements NsdManagementInterface {
 		}
 
 		default: {
-			log.error("Unsupported content type: " + nsdContentType.toString());
-			throw new MethodNotImplementedException("Unsupported content type: " + nsdContentType.toString());
+			log.error("Unsupported content type: " + contentType.toString());
+			throw new MethodNotImplementedException("Unsupported content type: " + contentType.toString());
 		}
 		}
 
@@ -450,7 +450,7 @@ public class NsdManagementService implements NsdManagementInterface {
 		log.debug("NSD name: " + nsdName);
 		nsdInfo.setNsdName(nsdName);
 		// nsdInfo.setNsdVersion(dt.getMetadata().getVersion());
-		nsdInfo.setNsdContentType(nsdContentType);
+		nsdInfo.setContentType(contentType);
 		nsdInfo.addNsdFilename(nsdFilename);
 
 		// clean tmp files

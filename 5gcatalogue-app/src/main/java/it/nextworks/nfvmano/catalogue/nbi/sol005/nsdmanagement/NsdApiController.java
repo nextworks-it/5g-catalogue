@@ -25,7 +25,7 @@ import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdmSubs
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdInfo;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdInfoModifications;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.ProblemDetails;
-import it.nextworks.nfvmano.catalogue.repos.NsdContentType;
+import it.nextworks.nfvmano.catalogue.repos.ContentType;
 import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
@@ -444,18 +444,18 @@ public class NsdApiController implements NsdApi {
 			return new ResponseEntity<String>("Unable to parse content " + contentType, HttpStatus.NOT_IMPLEMENTED);
 		} else {
 			try {
-				NsdContentType type = null;
+				ContentType type = null;
 				log.debug("NSD content file name is: " + body.getOriginalFilename());
 				if (body.getOriginalFilename().endsWith("zip")) {
-					type = NsdContentType.ZIP;
+					type = ContentType.ZIP;
 				} else if (body.getOriginalFilename().endsWith("yaml")) {
-					type = NsdContentType.YAML;
+					type = ContentType.YAML;
 				} else {
 					// TODO: to be implemented later on
 					return new ResponseEntity<String>("Unable to parse file type that is not .zip or .yaml",
 							HttpStatus.NOT_IMPLEMENTED);
 				}
-				// nsdManagementService.uploadNsd(nsdInfoId, (String)body, NsdContentType.YAML);
+				// nsdManagementService.uploadNsd(nsdInfoId, (String)body, ContentType.YAML);
 				nsdManagementService.uploadNsd(nsdInfoId, body, type);
 				log.debug("Upload processing done");
 				return new ResponseEntity<>(HttpStatus.NO_CONTENT);

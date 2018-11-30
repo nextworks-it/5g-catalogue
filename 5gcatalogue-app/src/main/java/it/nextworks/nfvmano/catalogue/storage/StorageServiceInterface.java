@@ -16,6 +16,7 @@
 package it.nextworks.nfvmano.catalogue.storage;
 
 
+import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,6 +33,8 @@ public interface StorageServiceInterface {
 	public void init() throws FailedOperationException;
 
     public String storeNsd(NsdInfoResource nsdInfo, MultipartFile file) throws MalformattedElementException, FailedOperationException;
+
+    public String storeVnfPkg(VnfPkgInfoResource vnfPkgInfoResource, MultipartFile file) throws MalformattedElementException, FailedOperationException;
 
     public Stream<Path> loadAllNsds() throws FailedOperationException;
 

@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 
+import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -52,7 +53,7 @@ public class FileSystemStorageService implements StorageServiceInterface {
 	private String rootDir;
 	
 	private Path nsdsLocation;
-	private Path vnfpckgsLocation;
+	private Path vnfPkgsLocation;
 	
 	public FileSystemStorageService() {	}
 	
@@ -60,7 +61,7 @@ public class FileSystemStorageService implements StorageServiceInterface {
 	public void initStorageService() {
 		log.debug("Initializing file system storage service.");
 		this.nsdsLocation = Paths.get(rootDir + ConfigurationParameters.storageNsdsSubfolder);
-		this.vnfpckgsLocation = Paths.get(rootDir + ConfigurationParameters.storageVnfpckgsSubfolder);
+		this.vnfPkgsLocation = Paths.get(rootDir + ConfigurationParameters.storageVnfpckgsSubfolder);
 		//this.deleteAll();
 		try {
 			this.init();
@@ -74,7 +75,7 @@ public class FileSystemStorageService implements StorageServiceInterface {
 		try {
 			//create rootLocation + nsds and vnfpckgs folders
             Files.createDirectories(nsdsLocation);
-            Files.createDirectories(vnfpckgsLocation);
+            Files.createDirectories(vnfPkgsLocation);
         }
         catch (IOException e) {
             throw new FailedOperationException("Could not initialize storage", e);
@@ -117,7 +118,42 @@ public class FileSystemStorageService implements StorageServiceInterface {
 		}
 	}
 
-    public Stream<Path> loadAllNsds() throws FailedOperationException {
+	@Override
+	public String storeVnfPkg(VnfPkgInfoResource vnfPkgInfoResource, MultipartFile file) throws MalformattedElementException, FailedOperationException {
+		String filename = StringUtils.cleanPath(file.getOriginalFilename());
+		try {
+			if (file.isEmpty()) {
+				throw new MalformattedElementException("Failed to store empty file " + filename);
+			}
+			if (filename.contains("..")) {
+				// This is a security check
+				throw new MalformattedElementException(
+						"Cannot store file with relative path outside current directory "
+								+ filename);
+			}
+
+			Path locationRoot = Paths.get(vnfPkgsLocation + "/" + vnfPkgInfoResource.getVnfdId().toString());
+			Path locationVersion = Paths.get(vnfPkgsLocation + "/" + vnfPkgInfoResource.getVnfdId().toString() + "/" + vnfPkgInfoResource.getVnfdVersion().toString());
+			if (!Files.isDirectory(locationRoot, LinkOption.NOFOLLOW_LINKS)) {
+				if (!Files.isDirectory(locationVersion, LinkOption.NOFOLLOW_LINKS)) {
+					Files.createDirectories(locationVersion);
+				}
+			} else {
+				if (!Files.isDirectory(locationVersion, LinkOption.NOFOLLOW_LINKS)) {
+					Files.createDirectories(locationVersion);
+				}
+			}
+			try (InputStream inputStream = file.getInputStream()) {
+				Files.copy(inputStream, locationVersion.resolve(filename),
+						StandardCopyOption.REPLACE_EXISTING);
+				return filename;
+			}
+		} catch (IOException e) {
+			throw new FailedOperationException("Failed to store file " + filename, e);
+		}
+	}
+
+	public Stream<Path> loadAllNsds() throws FailedOperationException {
     	log.debug("Loading all files from file system");
     	try {
     		return Files.walk(this.nsdsLocation, 1)
@@ -165,7 +201,7 @@ public class FileSystemStorageService implements StorageServiceInterface {
     public void deleteAll() {
     	log.debug("Removing all stored files.");
     	FileSystemUtils.deleteRecursively(nsdsLocation.toFile());
-    	FileSystemUtils.deleteRecursively(vnfpckgsLocation.toFile());
+    	FileSystemUtils.deleteRecursively(vnfPkgsLocation.toFile());
     	log.debug("Removed all stored files.");
     }
 

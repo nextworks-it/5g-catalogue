@@ -15,7 +15,7 @@
 */
 package it.nextworks.nfvmano.catalogue.repos;
 
-public enum NsdContentType {
+public enum ContentType {
 
 	UNSPECIFIED,
 	ZIP,

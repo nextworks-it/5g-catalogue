@@ -1,43 +1,37 @@
 /*
-* Copyright 2018 Nextworks s.r.l.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2018 Nextworks s.r.l.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements;
 
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.PackageOnboardingStateType;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.PackageOperationalStateType;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.PackageUsageStateType;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.VnfPackageArtifactInfo;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.VnfPackageSoftwareImageInfo;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
 import org.springframework.validation.annotation.Validated;
 import javax.validation.Valid;
-import javax.validation.constraints.*;
 
 /**
  * VnfPkgInfo
  */
 @Validated
-@javax.annotation.Generated(value = "io.swagger.codegen.languages.SpringCodegen", date = "2018-10-05T11:50:31.473+02:00")
+@javax.annotation.Generated(value = "io.swagger.codegen.languages.SpringCodegen", date = "2018-11-29T11:50:43.237+01:00")
 
 public class VnfPkgInfo   {
   @JsonProperty("id")
@@ -82,16 +76,7 @@ public class VnfPkgInfo   {
   private KeyValuePairs userDefinedData = null;
 
   @JsonProperty("_links")
-  private String links = null;
-
-  @JsonProperty("self")
-  private String self = null;
-
-  @JsonProperty("vnfd")
-  private String vnfd = null;
-
-  @JsonProperty("packageContent")
-  private String packageContent = null;
+  private VnfPkgLinksType links = null;
 
   public VnfPkgInfo id(UUID id) {
     this.id = id;
@@ -377,7 +362,7 @@ public class VnfPkgInfo   {
     this.userDefinedData = userDefinedData;
   }
 
-  public VnfPkgInfo links(String links) {
+  public VnfPkgInfo links(VnfPkgLinksType links) {
     this.links = links;
     return this;
   }
@@ -388,73 +373,14 @@ public class VnfPkgInfo   {
   **/
   @ApiModelProperty(value = "")
 
+  @Valid
 
-  public String getLinks() {
+  public VnfPkgLinksType getLinks() {
     return links;
   }
 
-  public void setLinks(String links) {
+  public void setLinks(VnfPkgLinksType links) {
     this.links = links;
-  }
-
-  public VnfPkgInfo self(String self) {
-    this.self = self;
-    return this;
-  }
-
-  /**
-   * Get self
-   * @return self
-  **/
-  @ApiModelProperty(value = "")
-
-
-  public String getSelf() {
-    return self;
-  }
-
-  public void setSelf(String self) {
-    this.self = self;
-  }
-
-  public VnfPkgInfo vnfd(String vnfd) {
-    this.vnfd = vnfd;
-    return this;
-  }
-
-  /**
-   * Get vnfd
-   * @return vnfd
-  **/
-  @ApiModelProperty(value = "")
-
-
-  public String getVnfd() {
-    return vnfd;
-  }
-
-  public void setVnfd(String vnfd) {
-    this.vnfd = vnfd;
-  }
-
-  public VnfPkgInfo packageContent(String packageContent) {
-    this.packageContent = packageContent;
-    return this;
-  }
-
-  /**
-   * Get packageContent
-   * @return packageContent
-  **/
-  @ApiModelProperty(value = "")
-
-
-  public String getPackageContent() {
-    return packageContent;
-  }
-
-  public void setPackageContent(String packageContent) {
-    this.packageContent = packageContent;
   }
 
 
@@ -480,15 +406,12 @@ public class VnfPkgInfo   {
         Objects.equals(this.operationalState, vnfPkgInfo.operationalState) &&
         Objects.equals(this.usageState, vnfPkgInfo.usageState) &&
         Objects.equals(this.userDefinedData, vnfPkgInfo.userDefinedData) &&
-        Objects.equals(this.links, vnfPkgInfo.links) &&
-        Objects.equals(this.self, vnfPkgInfo.self) &&
-        Objects.equals(this.vnfd, vnfPkgInfo.vnfd) &&
-        Objects.equals(this.packageContent, vnfPkgInfo.packageContent);
+        Objects.equals(this.links, vnfPkgInfo.links);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, vnfdId, vnfProvider, vnfProductName, vnfSoftwareVersion, vnfdVersion, checksum, softwareImages, additionalArtifacts, onboardingState, operationalState, usageState, userDefinedData, links, self, vnfd, packageContent);
+    return Objects.hash(id, vnfdId, vnfProvider, vnfProductName, vnfSoftwareVersion, vnfdVersion, checksum, softwareImages, additionalArtifacts, onboardingState, operationalState, usageState, userDefinedData, links);
   }
 
   @Override
@@ -510,9 +433,6 @@ public class VnfPkgInfo   {
     sb.append("    usageState: ").append(toIndentedString(usageState)).append("\n");
     sb.append("    userDefinedData: ").append(toIndentedString(userDefinedData)).append("\n");
     sb.append("    links: ").append(toIndentedString(links)).append("\n");
-    sb.append("    self: ").append(toIndentedString(self)).append("\n");
-    sb.append("    vnfd: ").append(toIndentedString(vnfd)).append("\n");
-    sb.append("    packageContent: ").append(toIndentedString(packageContent)).append("\n");
     sb.append("}");
     return sb.toString();
   }

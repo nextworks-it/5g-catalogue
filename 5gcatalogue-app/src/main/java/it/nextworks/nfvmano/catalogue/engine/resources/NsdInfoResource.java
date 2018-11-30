@@ -36,7 +36,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboardingStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOperationalStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdUsageStateType;
-import it.nextworks.nfvmano.catalogue.repos.NsdContentType;
+import it.nextworks.nfvmano.catalogue.repos.ContentType;
 import it.nextworks.nfvmano.libs.common.exceptions.NotPermittedOperationException;
 
 /**
@@ -78,7 +78,7 @@ public class NsdInfoResource {
 
 	private UUID nsdInvariantId;
 	
-	private NsdContentType nsdContentType;
+	private ContentType contentType;
 	
 	@ElementCollection(fetch=FetchType.EAGER)
 	@Fetch(FetchMode.SELECT)
@@ -101,7 +101,7 @@ public class NsdInfoResource {
 		nsdOnboardingState = NsdOnboardingStateType.CREATED;
 		nsdOperationalState = NsdOperationalStateType.DISABLED;
 		nsdUsageState = NsdUsageStateType.NOT_IN_USE;
-		nsdContentType = NsdContentType.UNSPECIFIED;
+		contentType = ContentType.UNSPECIFIED;
 	}
 
 	/**
@@ -280,17 +280,17 @@ public class NsdInfoResource {
 	}
 	
 	/**
-	 * @return the nsdContentType
+	 * @return the contentType
 	 */
-	public NsdContentType getNsdContentType() {
-		return nsdContentType;
+	public ContentType getContentType() {
+		return contentType;
 	}
 
 	/**
-	 * @param nsdContentType the nsdContentType to set
+	 * @param contentType the contentType to set
 	 */
-	public void setNsdContentType(NsdContentType nsdContentType) {
-		this.nsdContentType = nsdContentType;
+	public void setContentType(ContentType contentType) {
+		this.contentType = contentType;
 	}
 	
 	/**
