@@ -430,7 +430,6 @@ public class NsdApiController implements NsdApi {
 	public ResponseEntity<?> uploadNSD(
 			@ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
 			@ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
-			// @ApiParam(value = "", required = true) @Valid @RequestBody String body,
 			// @ApiParam(value = "", required = true) @Valid @RequestBody Object body,
 			@ApiParam(value = "The payload body contains a copy of the file representing the NSD or a ZIP file that contains the file or multiple files representing the NSD, as specified above. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType) {
 

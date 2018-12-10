@@ -208,9 +208,9 @@ public interface VnfpkgmApi {
         @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class) })
     @RequestMapping(value = "/vnfpkgm/v1/vnf_packages/{vnfPkgId}/package_content",
         produces = { "application/json", "application/yaml" }, 
-        consumes = { "application/zip" },
+        consumes = { "application/zip", "multipart/form-data" },
         method = RequestMethod.PUT)
-    ResponseEntity<Void> uploadVNFPkg(@ApiParam(value = "",required=true) @PathVariable("vnfPkgId") String vnfPkgId,@ApiParam(value = "" ,required=true )  @Valid @RequestBody Object body,@ApiParam(value = "The payload body contains a VNF Package ZIP file. The request shall set the \"Content-Type\" HTTP header as defined above." ) @RequestHeader(value="Content-Type", required=false) String contentType);
+    ResponseEntity<?> uploadVNFPkg(@ApiParam(value = "",required=true) @PathVariable("vnfPkgId") String vnfPkgId, @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body, @ApiParam(value = "The payload body contains a VNF Package ZIP file. The request shall set the \"Content-Type\" HTTP header as defined above." ) @RequestHeader(value="Content-Type", required=false) String contentType);
 
 
     @ApiOperation(value = "Upload VNF Package content from URI.", nickname = "uploadVNFPkgFromURI", notes = "", tags={  })

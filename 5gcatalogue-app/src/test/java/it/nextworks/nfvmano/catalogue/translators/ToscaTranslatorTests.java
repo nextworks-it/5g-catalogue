@@ -27,6 +27,9 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.UUID;
 
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VDU.VDUComputeNode;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VDU.VDUVirtualBlockStorageNode;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VduCp.VduCpNode;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.junit.Ignore;
@@ -131,7 +134,7 @@ public class ToscaTranslatorTests {
 		try {
 
 			ClassLoader classLoader = getClass().getClassLoader();
-			File nsd = new File(classLoader.getResource("vCDN_UC3_5GMEDIA.yaml").getFile());
+			File nsd = new File(classLoader.getResource("cirros_vnfd_sol001.yaml").getFile());
 			ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
 			DescriptorTemplate descriptorTemplate = descriptorParser.fileToDescriptorTemplate(nsd.getAbsolutePath());		
@@ -201,13 +204,13 @@ public class ToscaTranslatorTests {
 	}
 	
 	@Test
-	@Ignore
+	//@Ignore
 	public void parseArchive() {
 
 		try {
 
 			ClassLoader classLoader = getClass().getClassLoader();
-			File archive = new File(classLoader.getResource("vCDN_UC3_5GMEDIA.zip").getFile());
+			File archive = new File(classLoader.getResource("cirros_vnf_sol001.zip").getFile());
 			FileInputStream input = new FileInputStream(archive);
 			MultipartFile mp_file = new MockMultipartFile(archive.getName(), input);
 			ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
@@ -240,36 +243,35 @@ public class ToscaTranslatorTests {
 			System.out.println("===============================================================================================");
 
 			try {
-				Map<String, NSNode> nsNodes = descriptorTemplate.getTopologyTemplate().getNSNodes();
-
-				System.out.println("NS Nodes");
-				for (Entry<String, NSNode> nsNode : nsNodes.entrySet()) {
-					System.out.println(mapper.writeValueAsString(nsNode.getValue()));
-				}
-				System.out.println("===============================================================================================");
-
-				Map<String, NsVirtualLinkNode> nsVirtualLinks = descriptorTemplate.getTopologyTemplate()
-						.getNsVirtualLinkNodes();
-
-				System.out.println("NS Virtual Link Nodes");
-				for (Entry<String, NsVirtualLinkNode> nsVLinkNode : nsVirtualLinks.entrySet()) {
-					System.out.println(mapper.writeValueAsString(nsVLinkNode.getValue()));
-				}
-				System.out.println("===============================================================================================");
-
-				Map<String, SapNode> sapNodes = descriptorTemplate.getTopologyTemplate().getSapNodes();
-
-				System.out.println("SAP Nodes");
-				for (Entry<String, SapNode> sapNode : sapNodes.entrySet()) {
-					System.out.println(mapper.writeValueAsString(sapNode.getValue()));
-				}
-				System.out.println("===============================================================================================");
-				
 				Map<String, VNFNode> vnfNodes = descriptorTemplate.getTopologyTemplate().getVNFNodes();
 
 				System.out.println("VNF Nodes");
 				for (Entry<String, VNFNode> vnfNode : vnfNodes.entrySet()) {
 					System.out.println(mapper.writeValueAsString(vnfNode.getValue()));
+				}
+				System.out.println("===============================================================================================");
+
+				Map<String, VDUComputeNode> vduComputeNodes = descriptorTemplate.getTopologyTemplate().getVDUComputeNodes();
+
+				System.out.println("VDU Computes Nodes");
+				for (Entry<String, VDUComputeNode> vduComputeNode : vduComputeNodes.entrySet()) {
+					System.out.println(mapper.writeValueAsString(vduComputeNode.getValue()));
+				}
+				System.out.println("===============================================================================================");
+
+				Map<String, VDUVirtualBlockStorageNode>  vduVirtualBlockStorageNodes = descriptorTemplate.getTopologyTemplate().getVDUBlockStorageNodes();
+
+				System.out.println("Virtual Block Storage Nodes");
+				for (Entry<String, VDUVirtualBlockStorageNode> vduVirtualBlockStorageNode : vduVirtualBlockStorageNodes.entrySet()) {
+					System.out.println(mapper.writeValueAsString(vduVirtualBlockStorageNode.getValue()));
+				}
+				System.out.println("===============================================================================================");
+
+				Map<String, VduCpNode> vduCpNodes = descriptorTemplate.getTopologyTemplate().getVduCpNodes();
+
+				System.out.println("Vdu CP Nodes");
+				for (Entry<String, VduCpNode> vduCpNode : vduCpNodes.entrySet()) {
+					System.out.println(mapper.writeValueAsString(vduCpNode.getValue()));
 				}
 				System.out.println("===============================================================================================");
 

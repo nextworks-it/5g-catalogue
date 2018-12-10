@@ -2,6 +2,9 @@ package it.nextworks.nfvmano.catalogue.engine.resources;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboardingStateType;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOperationalStateType;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdUsageStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.*;
 import it.nextworks.nfvmano.catalogue.repos.ContentType;
 import org.hibernate.annotations.Cascade;
@@ -48,7 +51,11 @@ public class VnfPkgInfoResource {
     }
 
     public VnfPkgInfoResource(Map<String, String> userDefinedData) {
-        this.userDefinedData = userDefinedData;
+        if (userDefinedData != null) this.userDefinedData = userDefinedData;
+        onboardingState = PackageOnboardingStateType.CREATED;
+        operationalState = PackageOperationalStateType.DISABLED;
+        usageState = PackageUsageStateType.NOT_IN_USE;
+        contentType = ContentType.UNSPECIFIED;
     }
 
     public VnfPkgInfoResource(UUID vnfdId, String vnfProvider, String vnfProductName, String vnfSoftwareVersion, String vnfdVersion, PackageOnboardingStateType onboardingState, PackageOperationalStateType operationalState, PackageUsageStateType usageState, KeyValuePairs userDefinedData) {

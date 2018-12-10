@@ -140,9 +140,9 @@ public class ArchiveParser {
 							if (this.templates.containsKey(mst_name)) {
 								this.mainServiceTemplate = this.templates.get(mst_name);
 							} else {
-								log.error("Main Service Template specified in TOSCA.meta not present in CSAR Definitions directory");
+								log.error("Main Service Template specified in TOSCA.meta not present in CSAR Definitions directory: " +  mst_name);
 								throw new MalformattedElementException(
-										"Main Service Template specified in TOSCA.meta not present in CSAR Definitions directory");
+										"Main Service Template specified in TOSCA.meta not present in CSAR Definitions directory: " +  mst_name);
 							}
 						}
 					}

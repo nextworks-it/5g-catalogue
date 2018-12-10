@@ -15,6 +15,7 @@
 */
 package it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement;
 
+import it.nextworks.nfvmano.catalogue.common.Utilities;
 import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdInfo;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.CreateVnfPkgInfoRequest;
@@ -26,7 +27,11 @@ import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.V
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.VnfPkgInfoModifications;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.*;
+import it.nextworks.nfvmano.catalogue.repos.ContentType;
+import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
+import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
+import it.nextworks.nfvmano.libs.common.exceptions.NotPermittedOperationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -233,9 +238,56 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         return new ResponseEntity<VnfPkgInfoModifications>(HttpStatus.NOT_IMPLEMENTED);
     }
 
-    public ResponseEntity<Void> uploadVNFPkg(@ApiParam(value = "",required=true) @PathVariable("vnfPkgId") String vnfPkgId,@ApiParam(value = "" ,required=true )  @Valid @RequestBody Object body,@ApiParam(value = "The payload body contains a VNF Package ZIP file. The request shall set the \"Content-Type\" HTTP header as defined above." ) @RequestHeader(value="Content-Type", required=false) String contentType) {
+    public ResponseEntity<?> uploadVNFPkg(@ApiParam(value = "", required=true) @PathVariable("vnfPkgId") String vnfPkgId,
+                                          @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
+                                          //@ApiParam(value = "", required=true) @Valid @RequestBody Object body,
+                                          @ApiParam(value = "The payload body contains a VNF Package ZIP file. The request shall set the \"Content-Type\" HTTP header as defined above." ) @RequestHeader(value="Content-Type", required=false) String contentType) {
         String accept = request.getHeader("Accept");
-        return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
+
+        log.debug("Processing REST request for Uploading VNF Pkg content in VNF Pkg info " + vnfPkgId);
+        if (body.isEmpty()) {
+            return new ResponseEntity<String>("Error message: File is empty!", HttpStatus.BAD_REQUEST);
+        }
+
+        if (!contentType.startsWith("multipart/form-data")) {
+            // TODO: to be implemented later on
+            return new ResponseEntity<String>("Unable to parse content " + contentType, HttpStatus.NOT_IMPLEMENTED);
+        } else {
+            try {
+                ContentType type = null;
+                log.debug("VNF Pkg content file name is: " + body.getOriginalFilename());
+                if (body.getOriginalFilename().endsWith("zip")) {
+                    type = ContentType.ZIP;
+                } else {
+                    // TODO: to be implemented later on
+                    return new ResponseEntity<String>("Unable to parse file type that is not .zip",
+                            HttpStatus.NOT_IMPLEMENTED);
+                }
+                vnfPackageManagementInterface.uploadVnfPkg(vnfPkgId, body, type);
+                log.debug("Upload processing done");
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+                // TODO: check if we need to introduce the asynchronous mode
+            } catch (NotPermittedOperationException | AlreadyExistingEntityException e) {
+                log.error("Impossible to upload VNF Pkg: " + e.getMessage());
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
+                        "Impossible to upload VNF Pkg: " + e.getMessage()), HttpStatus.CONFLICT);
+            } catch (MalformattedElementException e) {
+                log.error("Impossible to upload VNF Pkg: " + e.getMessage());
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
+                        "Impossible to upload VNF Pkg: " + e.getMessage()), HttpStatus.BAD_REQUEST);
+            } catch (NotExistingEntityException e) {
+                log.error("Impossible to upload VNF PkgD: " + e.getMessage());
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
+                        "Impossible to upload VNF Pkg: " + e.getMessage()), HttpStatus.NOT_FOUND);
+            } catch (Exception e) {
+                log.error("General exception while uploading VNF Pkg content: " + e.getMessage());
+                log.error("Details: ", e);
+                return new ResponseEntity<ProblemDetails>(
+                        Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                                "General exception while uploading VNF Pkg content: " + e.getMessage()),
+                        HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
     }
 
     public ResponseEntity<Void> uploadVNFPkgFromURI(@ApiParam(value = "",required=true) @PathVariable("vnfPkgId") String vnfPkgId,@ApiParam(value = "" ,required=true )  @Valid @RequestBody UploadVnfPackageFromUriRequest body) {
