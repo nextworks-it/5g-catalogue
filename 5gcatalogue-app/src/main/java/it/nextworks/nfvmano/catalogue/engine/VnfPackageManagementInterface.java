@@ -17,6 +17,8 @@ public interface VnfPackageManagementInterface {
 
     VnfPkgInfoModifications updateVnfPkgInfo(VnfPkgInfoModifications vnfPkgInfoModifications, String vnfPkgInfoId) throws NotExistingEntityException, MalformattedElementException, NotPermittedOperationException;
 
+    Object getVnfd(String vnfPkgInfoId, boolean isInternalRequest) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException;
+
     Object getVnfPkg(String vnfPkgInfoId, boolean isInternalRequest) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException;
 
     VnfPkgInfo getVnfPkgInfo(String vnfPkgInfoId) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, MethodNotImplementedException;

@@ -1,11 +1,17 @@
 package it.nextworks.nfvmano.catalogue.engine;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import it.nextworks.nfvmano.catalogue.engine.resources.NotificationResource;
+import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
 import it.nextworks.nfvmano.catalogue.messages.CatalogueMessageType;
+import it.nextworks.nfvmano.catalogue.messages.NsdDeletionNotificationMessage;
+import it.nextworks.nfvmano.catalogue.messages.ScopeType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboardingStateType;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOperationalStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.*;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANORepository;
@@ -16,7 +22,6 @@ import it.nextworks.nfvmano.catalogue.translators.tosca.ArchiveParser;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
-import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import org.slf4j.Logger;
@@ -31,7 +36,7 @@ import java.io.IOException;
 import java.util.*;
 
 @Service
-public class VnfPackageManagementService implements  VnfPackageManagementInterface {
+public class VnfPackageManagementService implements VnfPackageManagementInterface {
 
     private static final Logger log = LoggerFactory.getLogger(VnfPackageManagementService.class);
 
@@ -99,27 +104,172 @@ public class VnfPackageManagementService implements  VnfPackageManagementInterfa
 
     @Override
     public void deleteVnfPkgInfo(String vnfPkgInfoId) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
+        log.debug("Processing request to delete an VNF Pkg info.");
+
+        if (vnfPkgInfoId == null)
+            throw new MalformattedElementException("Invalid VNF Pkg info ID.");
+
+        try {
+            UUID id = UUID.fromString(vnfPkgInfoId);
+
+            Optional<VnfPkgInfoResource> optional = vnfPkgInfoRepository.findById(id);
+
+            if (optional.isPresent()) {
+                log.debug("Found VNF Pkg info resource with id: " + vnfPkgInfoId);
+
+                VnfPkgInfoResource vnfPkgInfoResource = optional.get();
+                vnfPkgInfoResource.isDeletable();
+
+                log.debug("The VNF Pkg info can be removed.");
+                if (vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.ONBOARDED
+                        || vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.PROCESSING) {
+                    log.debug("The VNF Pkg info is associated to an onboarded VNF Pkg. Removing it.");
+                    UUID vnfdId = vnfPkgInfoResource.getVnfdId();
+
+                    try {
+                        storageService.deleteVnfPkg(vnfPkgInfoResource);
+                    } catch (Exception e) {
+                        log.error("Unable to delete VNF Pkg with vnfdId {} from fylesystem.", vnfPkgInfoResource.getVnfdId().toString());
+                        log.error("Details: ", e);
+                    }
+
+                    UUID operationId = insertOperationInfoInConsumersMap(vnfPkgInfoId,
+                            CatalogueMessageType.NSD_DELETION_NOTIFICATION, OperationStatus.SENT);
+
+                    log.debug("VNF Pkg {} locally removed. Sending vnfPkgDeletionNotificationMessage to bus.", vnfdId);
+                    // TODO: send notification
+                }
+
+                vnfPkgInfoRepository.deleteById(id);
+                log.debug("Deleted VNF Pkg info resource with id: " + vnfPkgInfoId);
+            } else {
+                log.debug("VNF Pkg info resource with id " + vnfPkgInfoId + "not found.");
+                throw new NotExistingEntityException("VNF Pkg info resource with id " + vnfPkgInfoId + "not found.");
+            }
+        } catch (IllegalArgumentException e) {
+            log.error("Wrong ID format: " + vnfPkgInfoId);
+            throw new MalformattedElementException("Wrong ID format: " + vnfPkgInfoId);
+        }
 
     }
 
     @Override
     public VnfPkgInfoModifications updateVnfPkgInfo(VnfPkgInfoModifications vnfPkgInfoModifications, String vnfPkgInfoId) throws NotExistingEntityException, MalformattedElementException, NotPermittedOperationException {
-        return null;
+        log.debug("Processing request to update VNF Pkg info: " + vnfPkgInfoId);
+        VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
+
+        if (vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.ONBOARDED
+            || vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.PROCESSING) {
+            if (vnfPkgInfoModifications.getOperationalState() != null) {
+                if (vnfPkgInfoResource.getOperationalState() == vnfPkgInfoModifications.getOperationalState()) {
+                    log.error("VNF Pkg operational state already "
+                            + vnfPkgInfoResource.getOperationalState() + ". Cannot update VNF Pkg info.");
+                    throw new NotPermittedOperationException("VNF Pkg operational state already "
+                            + vnfPkgInfoResource.getOperationalState() + ". Cannot update VNF Pkg info.");
+                } else {
+                    vnfPkgInfoResource.setOperationalState(vnfPkgInfoModifications.getOperationalState());
+                }
+            }
+            if (vnfPkgInfoModifications.getUserDefinedData() != null) {
+                vnfPkgInfoResource.setUserDefinedData(vnfPkgInfoModifications.getUserDefinedData());
+            }
+
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+            mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+
+            try {
+                String json = mapper.writeValueAsString(vnfPkgInfoModifications);
+                log.debug("Updating vnfPkgInfoResource with vnfPkgInfoModifications: " + json);
+            } catch (JsonProcessingException e) {
+                log.error("Unable to parse received vnfPkgInfoModifications: " + e.getMessage());
+            }
+            vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
+            log.debug("VnfPkgInfoResource successfully updated.");
+        } else {
+            log.error("VNF Pkg onboarding state not ONBOARDED. Cannot update VNF Pkg info.");
+            throw new NotPermittedOperationException("VNF Pkg onboarding state not ONBOARDED. Cannot update VNF Pkg info.");
+        }
+        return vnfPkgInfoModifications;
+    }
+
+    @Override
+    public Object getVnfd(String vnfPkgInfoId, boolean isInternalRequest) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
+        log.debug("Processing request to retrieve a VNFD content for VNF Pkg info " + vnfPkgInfoId);
+
+        VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
+        if ((!isInternalRequest) && (vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.ONBOARDED)) {
+            log.error("VNF Pkg info " + vnfPkgInfoId + " does not have an onboarded VNFD yet");
+            throw new NotPermittedOperationException("VNF Pkg info " + vnfPkgInfoId + " does not have an onboarded VNFD yet");
+        }
+        UUID vnfdId = vnfPkgInfoResource.getVnfdId();
+        log.debug("Internal VNFD ID: " + vnfdId);
+
+
+        String vnfPkgFilename = vnfPkgInfoResource.getVnfPkgFilename();
+        if (vnfPkgFilename == null) {
+            log.error("Found zero file for VNFD in YAML format. Error.");
+            throw new FailedOperationException("Found zero file for VNFD in YAML format. Error.");
+        }
+
+        return storageService.loadVnfdAsResource(vnfPkgInfoResource, vnfPkgFilename);
     }
 
     @Override
     public Object getVnfPkg(String vnfPkgInfoId, boolean isInternalRequest) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
-        return null;
+        log.debug("Processing request to retrieve a VNF Pkg content for VNF Pkg info " + vnfPkgInfoId);
+
+        VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
+        if ((!isInternalRequest) && (vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.ONBOARDED)) {
+            log.error("VNF Pkg info " + vnfPkgInfoId + " does not have an onboarded VNF Pkg yet");
+            throw new NotPermittedOperationException("VNF Pkg info " + vnfPkgInfoId + " does not have an onboarded VNF Pkg yet");
+        }
+        UUID vnfdId = vnfPkgInfoResource.getVnfdId();
+        log.debug("Internal VNFD ID: " + vnfdId);
+
+        ContentType ct = vnfPkgInfoResource.getContentType();
+        switch (ct) {
+            case ZIP: {
+                // try {
+                String vnfPkgFilename = vnfPkgInfoResource.getVnfPkgFilename();
+                if (vnfPkgFilename == null) {
+                    log.error("Found zero file for VNF Pkg in ZIP format. Error.");
+                    throw new FailedOperationException("Found zero file for VNF Pkg in ZIP format. Error.");
+                }
+
+                return storageService.loadVnfPkgAsResource(vnfPkgInfoResource, vnfPkgFilename);
+            }
+
+            default: {
+                log.error("Content type not yet supported.");
+                throw new MethodNotImplementedException("Content type not yet supported.");
+            }
+        }
     }
 
     @Override
     public VnfPkgInfo getVnfPkgInfo(String vnfPkgInfoId) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, MethodNotImplementedException {
-        return null;
+        log.debug("Processing request to get a VNF Pkg info.");
+        VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
+        log.debug("Found VNF Pkg info resource with id: " + vnfPkgInfoId);
+        VnfPkgInfo vnfPkgInfo = buildVnfPkgInfo(vnfPkgInfoResource);
+        log.debug("Built VNF Pkg info with id: " + vnfPkgInfoId);
+        return vnfPkgInfo;
     }
 
     @Override
     public List<VnfPkgInfo> getAllVnfPkgInfos() throws FailedOperationException, MethodNotImplementedException {
-        return null;
+        log.debug("Processing request to get all VNF Pkg infos.");
+
+        List<VnfPkgInfoResource> vnfPkgInfoResources = vnfPkgInfoRepository.findAll();
+        List<VnfPkgInfo> vnfPkgInfos = new ArrayList<>();
+
+        for (VnfPkgInfoResource vnfPkgInfoResource : vnfPkgInfoResources) {
+            VnfPkgInfo vnfPkgInfo = buildVnfPkgInfo(vnfPkgInfoResource);
+            vnfPkgInfos.add(vnfPkgInfo);
+            log.debug("Added VNF Pkg info " + vnfPkgInfoResource.getId());
+        }
+        return vnfPkgInfos;
     }
 
     @Override

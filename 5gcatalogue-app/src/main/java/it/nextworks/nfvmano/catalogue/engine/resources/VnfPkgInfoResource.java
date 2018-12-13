@@ -2,11 +2,11 @@ package it.nextworks.nfvmano.catalogue.engine.resources;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboardingStateType;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOperationalStateType;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdUsageStateType;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.*;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.PackageOnboardingStateType;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.PackageOperationalStateType;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.PackageUsageStateType;
 import it.nextworks.nfvmano.catalogue.repos.ContentType;
+import it.nextworks.nfvmano.libs.common.exceptions.NotPermittedOperationException;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
@@ -33,12 +33,12 @@ public class VnfPkgInfoResource {
     private PackageOperationalStateType operationalState;
     private PackageUsageStateType usageState;
 
-    @ElementCollection(fetch=FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.EAGER)
     @Fetch(FetchMode.SELECT)
     private Map<String, String> userDefinedData = new HashMap<>();
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    @ElementCollection(fetch= FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.EAGER)
     @Fetch(FetchMode.SELECT)
     @Cascade(org.hibernate.annotations.CascadeType.ALL)
     private Map<String, NotificationResource> acknowledgedOnboardOpConsumers = new HashMap<>();
@@ -92,103 +92,110 @@ public class VnfPkgInfoResource {
         return vnfdId;
     }
 
-    public String getVnfProvider() {
-        return vnfProvider;
-    }
-
-    public String getVnfProductName() {
-        return vnfProductName;
-    }
-
-    public String getVnfSoftwareVersion() {
-        return vnfSoftwareVersion;
-    }
-
-    public String getVnfdVersion() {
-        return vnfdVersion;
-    }
-
-    public String getChecksum() {
-        return checksum;
-    }
-
-    public PackageOnboardingStateType getOnboardingState() {
-        return onboardingState;
-    }
-
-    public PackageOperationalStateType getOperationalState() {
-        return operationalState;
-    }
-
-    public PackageUsageStateType getUsageState() {
-        return usageState;
-    }
-
-    public Map<String, String> getUserDefinedData() {
-        return userDefinedData;
-    }
-
-    public Map<String, NotificationResource> getAcknowledgedOnboardOpConsumers() {
-        return acknowledgedOnboardOpConsumers;
-    }
-
-    public ContentType getContentType() {
-        return contentType;
-    }
-
-    public String getVnfPkgFilename() {
-        return vnfPkgFilename;
-    }
-
     public void setVnfdId(UUID vnfdId) {
         this.vnfdId = vnfdId;
+    }
+
+    public String getVnfProvider() {
+        return vnfProvider;
     }
 
     public void setVnfProvider(String vnfProvider) {
         this.vnfProvider = vnfProvider;
     }
 
+    public String getVnfProductName() {
+        return vnfProductName;
+    }
+
     public void setVnfProductName(String vnfProductName) {
         this.vnfProductName = vnfProductName;
+    }
+
+    public String getVnfSoftwareVersion() {
+        return vnfSoftwareVersion;
     }
 
     public void setVnfSoftwareVersion(String vnfSoftwareVersion) {
         this.vnfSoftwareVersion = vnfSoftwareVersion;
     }
 
+    public String getVnfdVersion() {
+        return vnfdVersion;
+    }
+
     public void setVnfdVersion(String vnfdVersion) {
         this.vnfdVersion = vnfdVersion;
+    }
+
+    public String getChecksum() {
+        return checksum;
     }
 
     public void setChecksum(String checksum) {
         this.checksum = checksum;
     }
 
+    public PackageOnboardingStateType getOnboardingState() {
+        return onboardingState;
+    }
+
     public void setOnboardingState(PackageOnboardingStateType onboardingState) {
         this.onboardingState = onboardingState;
+    }
+
+    public PackageOperationalStateType getOperationalState() {
+        return operationalState;
     }
 
     public void setOperationalState(PackageOperationalStateType operationalState) {
         this.operationalState = operationalState;
     }
 
+    public PackageUsageStateType getUsageState() {
+        return usageState;
+    }
+
     public void setUsageState(PackageUsageStateType usageState) {
         this.usageState = usageState;
+    }
+
+    public Map<String, String> getUserDefinedData() {
+        return userDefinedData;
     }
 
     public void setUserDefinedData(Map<String, String> userDefinedData) {
         this.userDefinedData = userDefinedData;
     }
 
+    public Map<String, NotificationResource> getAcknowledgedOnboardOpConsumers() {
+        return acknowledgedOnboardOpConsumers;
+    }
+
     public void setAcknowledgedOnboardOpConsumers(Map<String, NotificationResource> acknowledgedOnboardOpConsumers) {
         this.acknowledgedOnboardOpConsumers = acknowledgedOnboardOpConsumers;
+    }
+
+    public ContentType getContentType() {
+        return contentType;
     }
 
     public void setContentType(ContentType contentType) {
         this.contentType = contentType;
     }
 
+    public String getVnfPkgFilename() {
+        return vnfPkgFilename;
+    }
+
     public void setVnfPkgFilename(String vnfPkgFilename) {
         this.vnfPkgFilename = vnfPkgFilename;
+    }
+
+    public void isDeletable() throws NotPermittedOperationException {
+        if (operationalState != PackageOperationalStateType.DISABLED)
+            throw new NotPermittedOperationException("VNF Pkg info " + this.id + " cannot be deleted because not DISABLED");
+        if (usageState != PackageUsageStateType.NOT_IN_USE)
+            throw new NotPermittedOperationException("VNF Pkg info " + this.id + " cannot be deleted because IN USE");
     }
 }

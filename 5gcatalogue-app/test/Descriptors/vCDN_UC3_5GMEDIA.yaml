@@ -104,9 +104,9 @@ topologyTemplate:
     productInfoName: mid vCache for UHD vCDN
     productInfoDescription: mid vCache for UHD vCDN
     vnfmInfo:
-     - juju
+    - juju
     localizationLanguages:
-     - ENG
+    - ENG
     defaultLocalizationLanguage: ENG
     configurableProperties:
      isAutoscaleEnabled: "false"
@@ -115,9 +115,9 @@ topologyTemplate:
     flavourDescription: vCache MID DF
    requirements:
     virtualLink:
-     - management_mgmt/cp-ens3
-     - origin/cp-ens7
-     - cache/cp-ens6
+    - management_mgmt/cp-ens3
+    - origin/cp-ens7
+    - cache/cp-ens6
 
   edgevCacheVNF01:
    type: tosca.nodes.nfv.VNF
@@ -130,9 +130,9 @@ topologyTemplate:
     productInfoName: edge vCache for UHD vCDN
     productInfoDescription: edge vCache for UHD vCDN
     vnfmInfo:
-     - juju
+    - juju
     localizationLanguages:
-     - ENG
+    - ENG
     defaultLocalizationLanguage: ENG
     configurableProperties:
      isAutoscaleEnabled: "false"
@@ -141,9 +141,9 @@ topologyTemplate:
     flavourDescription: vCache EDGE DF
    requirements:
     virtualLink:
-     - management_mgmt/cp-ens3
-     - user/cp-ens6
-     - cache/cp-ens7
+    - management_mgmt/cp-ens3
+    - user/cp-ens6
+    - cache/cp-ens7
 
   edgevCacheVNF02:
    type: tosca.nodes.nfv.VNF
@@ -156,9 +156,9 @@ topologyTemplate:
     productInfoName: edge vCache for UHD vCDN
     productInfoDescription: edge vCache for UHD vCDN
     vnfmInfo:
-     - juju
+    - juju
     localizationLanguages:
-     - ENG
+    - ENG
     defaultLocalizationLanguage: ENG
     configurableProperties:
      isAutoscaleEnabled: "false"
@@ -167,6 +167,6 @@ topologyTemplate:
     flavourDescription: vCache EDGE DF
    requirements:
     virtualLink:
-     - management_mgmt/cp-ens3
-     - user/cp-ens6
-     - cache/cp-ens7
+    - management_mgmt/cp-ens3
+    - user/cp-ens6
+    - cache/cp-ens7

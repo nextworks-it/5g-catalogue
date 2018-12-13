@@ -71,36 +71,6 @@ public class ToscaTranslatorTests {
 	@Autowired
 	DescriptorTemplateRepository descriptorTemplateRepository;
 
-	@SuppressWarnings("unused")
-	private String StoreNSDescriptorTemplate(DescriptorTemplate input) throws AlreadyExistingEntityException {
-
-		String descriptorId = input.getMetadata().getDescriptorId();
-		String vendor = input.getMetadata().getVendor();
-		String version = input.getMetadata().getVersion();
-
-		DescriptorTemplate output = new DescriptorTemplate(input.getToscaDefinitionsVersion(),
-				input.getToscaDefaultNamespace(), input.getDescription(), input.getMetadata(),
-				input.getTopologyTemplate());
-
-		System.out.println(ReflectionToStringBuilder.toString(output, ToStringStyle.MULTI_LINE_STYLE));
-
-		try {
-			descriptorTemplateRepository.saveAndFlush(output);
-		} catch (NullPointerException e) {
-			e.printStackTrace();
-		}
-
-		Optional<DescriptorTemplate> optionalDT = descriptorTemplateRepository
-				.findByMetadataDescriptorIdAndMetadataVendorAndMetadataVersion(descriptorId, vendor, version);
-		UUID id = null;
-
-		if (optionalDT.isPresent()) {
-			id = ((DescriptorTemplate) optionalDT.get()).getId();
-		}
-
-		return String.valueOf(id);
-	}
-
 	static String readFile(String path, Charset encoding) throws IOException {
 		byte[] encoded = Files.readAllBytes(Paths.get(path));
 		return new String(encoded, encoding);
@@ -134,7 +104,7 @@ public class ToscaTranslatorTests {
 		try {
 
 			ClassLoader classLoader = getClass().getClassLoader();
-			File nsd = new File(classLoader.getResource("cirros_vnfd_sol001.yaml").getFile());
+			File nsd = new File(classLoader.getResource("two_cirros_example_tosca.yaml").getFile());
 			ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
 			DescriptorTemplate descriptorTemplate = descriptorParser.fileToDescriptorTemplate(nsd.getAbsolutePath());		
@@ -204,7 +174,7 @@ public class ToscaTranslatorTests {
 	}
 	
 	@Test
-	//@Ignore
+	@Ignore
 	public void parseArchive() {
 
 		try {
