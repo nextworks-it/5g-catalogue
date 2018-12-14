@@ -18,11 +18,14 @@ package it.nextworks.nfvmano.catalogue.storage;
 import it.nextworks.nfvmano.catalogue.common.ConfigurationParameters;
 import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
+import it.nextworks.nfvmano.catalogue.translators.tosca.ArchiveParser;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -44,6 +47,9 @@ import java.util.stream.Stream;
 public class FileSystemStorageService implements StorageServiceInterface {
 
     private static final Logger log = LoggerFactory.getLogger(FileSystemStorageService.class);
+
+    @Autowired
+    ArchiveParser archiveParser;
 
     @Value("${catalogue.storageRootDir}")
     private String rootDir;
@@ -211,12 +217,27 @@ public class FileSystemStorageService implements StorageServiceInterface {
             Path path = loadVnfPkg(vnfPkgInfo, filename);
             byte[] bytes = Files.readAllBytes(path);
             InputStream input = new ByteArrayInputStream(bytes);
-
-
-
-            Resource resource = new UrlResource(path.toUri());
+            log.debug("Going to parse archive {} for retrieving main service template...", filename);
+            byte[] mst = archiveParser.getMainDescriptorFromArchive(input);
+            log.debug("Extracting main service template in file {}...", vnfPkgsLocation + "/"
+                    + vnfPkgInfo.getVnfdId().toString()
+                    + "/" + vnfPkgInfo.getVnfdVersion() + "/"
+                    + filename.substring(0, filename.lastIndexOf('.'))
+                    + "_vnfd.yaml");
+            FileUtils.writeByteArrayToFile(new File(vnfPkgsLocation + "/"
+                    + vnfPkgInfo.getVnfdId().toString()
+                    + "/" + vnfPkgInfo.getVnfdVersion() + "/"
+                    + filename.substring(0, filename.lastIndexOf('.'))
+                    + "_vnfd.yaml"), mst);
+            Path mst_path = Paths.get(vnfPkgsLocation + "/"
+                    + vnfPkgInfo.getVnfdId().toString()
+                    + "/" + vnfPkgInfo.getVnfdVersion() + "/"
+                    + filename.substring(0, filename.lastIndexOf('.'))
+                    + "_vnfd.yaml");
+            Resource resource = new UrlResource(mst_path.toUri());
             if (resource.exists() || resource.isReadable()) {
-                log.debug("Found file " + filename);
+                log.debug("Found file " + filename.substring(0, filename.lastIndexOf('.'))
+                        + "_vnfd.yaml");
                 return resource;
             } else {
                 throw new NotExistingEntityException("Could not read file: " + filename);

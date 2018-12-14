@@ -198,7 +198,8 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         log.debug("Processing request to retrieve a VNFD content for VNF Pkg info " + vnfPkgInfoId);
 
         VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
-        if ((!isInternalRequest) && (vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.ONBOARDED)) {
+        if ((!isInternalRequest) && (vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.ONBOARDED
+                && vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.PROCESSING)) {
             log.error("VNF Pkg info " + vnfPkgInfoId + " does not have an onboarded VNFD yet");
             throw new NotPermittedOperationException("VNF Pkg info " + vnfPkgInfoId + " does not have an onboarded VNFD yet");
         }
@@ -212,7 +213,12 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             throw new FailedOperationException("Found zero file for VNFD in YAML format. Error.");
         }
 
-        return storageService.loadVnfdAsResource(vnfPkgInfoResource, vnfPkgFilename);
+        try {
+            return storageService.loadVnfdAsResource(vnfPkgInfoResource, vnfPkgFilename);
+        } catch (IOException e) {
+            log.error("Error while processing VNF Pkg for retrieving VNFD: " +  e.getMessage());
+            throw new FailedOperationException("Error while processing VNF Pkg for retrieving VNFD: " +  e.getMessage());
+        }
     }
 
     @Override
@@ -220,7 +226,8 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         log.debug("Processing request to retrieve a VNF Pkg content for VNF Pkg info " + vnfPkgInfoId);
 
         VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
-        if ((!isInternalRequest) && (vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.ONBOARDED)) {
+        if ((!isInternalRequest) && (vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.ONBOARDED
+                && vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.PROCESSING)) {
             log.error("VNF Pkg info " + vnfPkgInfoId + " does not have an onboarded VNF Pkg yet");
             throw new NotPermittedOperationException("VNF Pkg info " + vnfPkgInfoId + " does not have an onboarded VNF Pkg yet");
         }

@@ -144,7 +144,7 @@ public class ArchiveParser {
         }
     }
 
-    public Resource getMainDescriptorFromArchive(InputStream archive) throws IOException {
+    public byte[] getMainDescriptorFromArchive(InputStream archive) throws IOException {
 
         this.folderNames.clear();
         this.templates.clear();
@@ -170,16 +170,19 @@ public class ArchiveParser {
 
                 if (fileName.toLowerCase().equalsIgnoreCase("tosca.meta")) {
                     this.metadata = outStream;
-                    try {
-                        setMainServiceTemplateFromMetadata(this.metadata.toByteArray());
-                        // TODO: convert mst in a Resource
-                    } catch (MalformattedElementException e) {
-                        log.error(e.getMessage());
-                    }
+                } else if (fileName.toLowerCase().endsWith(".yaml")) {
+                    this.templates.put(fileName, outStream);
                 }
             }
         }
 
+        try {
+            setMainServiceTemplateFromMetadata(this.metadata.toByteArray());
+            byte[] mst = this.mainServiceTemplate.toByteArray();
+            return mst;
+        } catch (MalformattedElementException e) {
+            log.error(e.getMessage());
+        }
         return null;
     }
 

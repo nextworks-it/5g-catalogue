@@ -208,7 +208,29 @@ public class VnfpkgmApiController implements VnfpkgmApi {
     }
 
     public ResponseEntity<?> getVNFPkg(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId, @ApiParam(value = "") @RequestHeader(value = "Range", required = false) String range) {
-        String accept = request.getHeader("Accept");
+        log.debug("Processing REST request to retrieve VNF Pkg for VNF Pkg info ID " + vnfPkgId);
+
+        try {
+            Object vnfPkg = vnfPackageManagementInterface.getVnfPkg(vnfPkgId, false);
+            // TODO: here it needs to check the type of entity that is returned
+            return new ResponseEntity<Resource>((Resource) vnfPkg, HttpStatus.OK);
+        } catch (NotExistingEntityException e) {
+            log.error("VNF Pkg for VNF Pkg info ID " + vnfPkgId + " not found");
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
+                            "VNF Pkg for VNF Pkg info ID " + vnfPkgId + " not found: " + e.getMessage()),
+                    HttpStatus.NOT_FOUND);
+        } catch (NotPermittedOperationException e) {
+            return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
+                    "VNF Pkg for VNF Pkg info ID " + vnfPkgId + " not found: " + e.getMessage()), HttpStatus.CONFLICT);
+        } catch (Exception e) {
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                            "VNF Pkg for VNF Pkg info ID " + vnfPkgId + " not found: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        /*String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
                 return new ResponseEntity<Object>(objectMapper.readValue("\"{}\"", Object.class), HttpStatus.NOT_IMPLEMENTED);
@@ -218,7 +240,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
             }
         }
 
-        return new ResponseEntity<Object>(HttpStatus.NOT_IMPLEMENTED);
+        return new ResponseEntity<Object>(HttpStatus.NOT_IMPLEMENTED);*/
     }
 
     public ResponseEntity<?> getVNFPkgsInfo() {
