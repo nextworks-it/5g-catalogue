@@ -23,8 +23,6 @@ import it.nextworks.nfvmano.catalogue.messages.*;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdDeletionNotification;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnboardingNotification;
 import it.nextworks.nfvmano.catalogue.plugins.KafkaConnector;
-import it.nextworks.nfvmano.catalogue.plugins.mano.NsdNotificationsConsumerInterface;
-import it.nextworks.nfvmano.catalogue.plugins.mano.NsdNotificationsProducerInterface;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
@@ -44,7 +42,8 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 @Service
-public class NotificationManager implements NsdNotificationsConsumerInterface, NsdNotificationsProducerInterface {
+public class NotificationManager implements NsdNotificationsConsumerInterface, NsdNotificationsProducerInterface,
+        VnfPkgNotificationsConsumerInterface, VnfPkgNotificationsProducerInterface {
 
     private static final Logger log = LoggerFactory.getLogger(NotificationManager.class);
 
@@ -68,6 +67,9 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
     @Autowired
     private NsdManagementService nsdMgmtService;
 
+    @Autowired
+    private VnfPackageManagementService vnfPackageManagementService;
+
     public NotificationManager() {
         log.debug("Building notification manager.");
     }
@@ -90,6 +92,22 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
             NsdDeletionNotificationMessage castMsg = (NsdDeletionNotificationMessage) msg;
             acceptNsdDeletionNotification(castMsg);
         });
+        functor.put(CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION, msg -> {
+            VnfPkgOnBoardingNotificationMessage castMsg = (VnfPkgOnBoardingNotificationMessage) msg;
+            try {
+                acceptVnfPkgOnBoardingNotification(castMsg);
+            } catch (MethodNotImplementedException e) {
+                e.printStackTrace();
+            }
+        });
+        functor.put(CatalogueMessageType.VNFPKG_DELETION_NOTIFICATION, msg -> {
+            VnfPkgDeletionNotificationMessage castMsg = (VnfPkgDeletionNotificationMessage) msg;
+            try {
+                acceptVnfPkgDeletionNotification(castMsg);
+            } catch (MethodNotImplementedException e) {
+                e.printStackTrace();
+            }
+        });
 
         setConnector(KafkaConnector.Builder().setBeanId(connectorId).setKafkaBootstrapServers(server)
                 .setKafkaGroupId(connectorId).addTopic(topicQueueExchange).setFunctor(functor).build());
@@ -98,24 +116,21 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
     }
 
     @Override
-    public void sendNsdOnBoardingNotification(String nsdInfoId, String nsdId, UUID operationId)
+    public void sendNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification)
             throws FailedOperationException, MalformattedElementException, MethodNotImplementedException {
         try {
-            log.info("Sending nsdOnBoardingNotification for NSD " + nsdId);
-
-            NsdOnBoardingNotificationMessage msg = new NsdOnBoardingNotificationMessage(nsdInfoId, nsdId, operationId,
-                    ScopeType.LOCAL, OperationStatus.SENT);
+            log.info("Sending nsdOnBoardingNotification for NSD " + notification.getNsdId());
 
             ObjectMapper mapper = new ObjectMapper();
             mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
             mapper.setSerializationInclusion(Include.NON_EMPTY);
 
-            String json = mapper.writeValueAsString(msg);
+            String json = mapper.writeValueAsString(notification);
 
             log.debug("Sending json message over kafka bus on topic " + localNsdNotificationTopic + "\n" + json);
 
             if (skipKafka) {
-                log.debug(" ---- TEST MODE: skipping post to kafka bus -----");
+                log.debug(" ---- TEST MODE: skipping post to kafka bus ----");
             } else {
                 kafkaTemplate.send(localNsdNotificationTopic, json);
 
@@ -137,7 +152,7 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
     public void sendNsdDeletionNotification(NsdDeletionNotificationMessage notification)
             throws MethodNotImplementedException, FailedOperationException {
         try {
-            log.info("Sending nsdOnBoardingNotification for NSD with nsdId: " + notification.getNsdId());
+            log.info("Sending nsdDeletionNotification for NSD with nsdId: " + notification.getNsdId());
 
             ObjectMapper mapper = new ObjectMapper();
             mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
@@ -148,7 +163,7 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
             log.debug("Sending json message over kafka bus on topic " + localNsdNotificationTopic + "\n" + json);
 
             if (skipKafka) {
-                log.debug(" ---- TEST MODE: skipping post to kafka bus -----");
+                log.debug(" ---- TEST MODE: skipping post to kafka bus ----");
             } else {
                 kafkaTemplate.send(localNsdNotificationTopic, json);
 
@@ -278,5 +293,118 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 
     public void setConnector(KafkaConnector connector) {
         this.connector = connector;
+    }
+
+    @Override
+    public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
+        log.info("Received VNF Pkg onboarding notification for VNF Pkg {} with info id {}, from plugin {}.",
+                notification.getVnfdId(), notification.getVnfPkgInfoId(), notification.getPluginId());
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(Include.NON_EMPTY);
+
+        try {
+            String json = mapper.writeValueAsString(notification);
+            log.debug("RECEIVED MESSAGE: " + json);
+        } catch (JsonProcessingException e) {
+            log.error("Unable to parse received nsdOnboardingNotificationMessage: " + e.getMessage());
+        }
+
+        switch (notification.getScope()) {
+            case REMOTE:
+                try {
+                    log.debug("Updating VnfPkgInfoResource with plugin {} operation status {} for operation {}.",
+                            notification.getPluginId(), notification.getOpStatus(),
+                            notification.getOperationId().toString());
+                    vnfPackageManagementService.updateVnfPkgInfoOperationStatus(notification.getVnfPkgInfoId(), notification.getPluginId(),
+                            notification.getOpStatus(), notification.getType());
+                    log.debug("VnfPkgInfoResource successfully updated with plugin {} operation status {} for operation {}.",
+                            notification.getPluginId(), notification.getOpStatus(),
+                            notification.getOperationId().toString());
+                } catch (NotExistingEntityException e) {
+                    log.error(e.getMessage());
+                }
+                log.debug("Updating consumers internal mapping for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                vnfPackageManagementService.updateOperationInfoInConsumersMap(notification.getOperationId(), notification.getOpStatus(),
+                        notification.getPluginId(), notification.getVnfPkgInfoId(), notification.getType());
+                log.debug("Consumers internal mapping successfully updated for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                break;
+            case LOCAL:
+                log.error("Nsd LOCAL onboarding notification not handled here, REMOTE onboarding message expected.");
+                break;
+            case GLOBAL:
+                log.error("Nsd GLOBAL onboarding notification not handled here, REMOTE onboarding message expected.");
+                break;
+        }
+    }
+
+    @Override
+    public void acceptVnfPkgChangeNotification(VnfPkgChangeNotificationMessage notification) throws MethodNotImplementedException {
+
+    }
+
+    @Override
+    public void acceptVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) throws MethodNotImplementedException {
+
+    }
+
+    @Override
+    public void sendVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) throws MethodNotImplementedException, FailedOperationException {
+        try {
+            log.info("Sending vnfPkgOnBoardingNotification for VNF Pkg with info Id: " + notification.getVnfPkgInfoId());
+
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+            mapper.setSerializationInclusion(Include.NON_EMPTY);
+
+            String json = mapper.writeValueAsString(notification);
+
+            log.debug("Sending json message over kafka bus on topic " + localNsdNotificationTopic + "\n" + json);
+
+            if (skipKafka) {
+                log.debug(" ---- TEST MODE: skipping post to kafka bus ----");
+            } else {
+                kafkaTemplate.send(localNsdNotificationTopic, json);
+
+                log.debug("Message sent.");
+            }
+        } catch (Exception e) {
+            log.error("Error while posting VnfPkgBoardingNotificationMessage to Kafka bus");
+            throw new FailedOperationException(e.getMessage());
+        }
+    }
+
+    @Override
+    public void sendVnfPkgChangeNotification(VnfPkgChangeNotificationMessage notification) throws MethodNotImplementedException {
+
+    }
+
+    @Override
+    public void sendVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) throws MethodNotImplementedException, FailedOperationException {
+        try {
+            log.info("Sending vnfPkgDeletionNotification for VNF Pkg with info Id: " + notification.getVnfPkgInfoId());
+
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+            mapper.setSerializationInclusion(Include.NON_EMPTY);
+
+            String json = mapper.writeValueAsString(notification);
+
+            log.debug("Sending json message over kafka bus on topic " + localNsdNotificationTopic + "\n" + json);
+
+            if (skipKafka) {
+                log.debug(" ---- TEST MODE: skipping post to kafka bus ----");
+            } else {
+                kafkaTemplate.send(localNsdNotificationTopic, json);
+
+                log.debug("Message sent.");
+            }
+        } catch (Exception e) {
+            log.error("Error while posting VnfPkgDeletionNotificationMessage to Kafka bus");
+            throw new FailedOperationException(e.getMessage());
+        }
     }
 }

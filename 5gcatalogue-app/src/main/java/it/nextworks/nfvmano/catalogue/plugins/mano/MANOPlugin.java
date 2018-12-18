@@ -36,7 +36,7 @@ import java.util.function.Consumer;
 
 public abstract class MANOPlugin
         extends Plugin
-        implements NsdNotificationsConsumerInterface, VnfdNotificationsConsumerInterface {
+        implements NsdNotificationsConsumerInterface, VnfPkgNotificationsConsumerInterface {
 
     private static final Logger log = LoggerFactory.getLogger(MANOPlugin.class);
 
@@ -70,7 +70,11 @@ public abstract class MANOPlugin
                 CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION,
                 msg -> {
                     NsdOnBoardingNotificationMessage castMsg = (NsdOnBoardingNotificationMessage) msg;
-                    acceptNsdOnBoardingNotification(castMsg);
+                    try {
+                        acceptNsdOnBoardingNotification(castMsg);
+                    } catch (MethodNotImplementedException e) {
+                        log.error("Method not yet implemented: " + e.getMessage());
+                    }
                 }
         );
         functor.put(
@@ -88,7 +92,11 @@ public abstract class MANOPlugin
                 CatalogueMessageType.NSD_DELETION_NOTIFICATION,
                 msg -> {
                     NsdDeletionNotificationMessage castMsg = (NsdDeletionNotificationMessage) msg;
-                    acceptNsdDeletionNotification(castMsg);
+                    try {
+                        acceptNsdDeletionNotification(castMsg);
+                    } catch (MethodNotImplementedException e) {
+                        log.error("Method not yet implemented: " + e.getMessage());
+                    }
                 }
         );
         functor.put(
@@ -106,6 +114,36 @@ public abstract class MANOPlugin
                 msg -> {
                     try {
                         acceptPnfdDeletionNotification(null);
+                    } catch (MethodNotImplementedException e) {
+                        log.error("Method not yet implemented: " + e.getMessage());
+                    }
+                }
+        );
+        functor.put(
+                CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION,
+                msg -> {
+                    try {
+                        acceptVnfPkgOnBoardingNotification(null);
+                    } catch (MethodNotImplementedException e) {
+                        log.error("Method not yet implemented: " + e.getMessage());
+                    }
+                }
+        );
+        functor.put(
+                CatalogueMessageType.VNFPKG_CHANGE_NOTIFICATION,
+                msg -> {
+                    try {
+                        acceptVnfPkgChangeNotification(null);
+                    } catch (MethodNotImplementedException e) {
+                        log.error("Method not yet implemented: " + e.getMessage());
+                    }
+                }
+        );
+        functor.put(
+                CatalogueMessageType.VNFPKG_DELETION_NOTIFICATION,
+                msg -> {
+                    try {
+                        acceptVnfPkgDeletionNotification(null);
                     } catch (MethodNotImplementedException e) {
                         log.error("Method not yet implemented: " + e.getMessage());
                     }

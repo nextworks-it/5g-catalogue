@@ -23,6 +23,7 @@ import it.nextworks.nfvmano.catalogue.engine.resources.NotificationResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
 import it.nextworks.nfvmano.catalogue.messages.CatalogueMessageType;
 import it.nextworks.nfvmano.catalogue.messages.NsdDeletionNotificationMessage;
+import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
 import it.nextworks.nfvmano.catalogue.messages.ScopeType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.*;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
@@ -448,8 +449,11 @@ public class NsdManagementService implements NsdManagementInterface {
         nsdInfoRepo.saveAndFlush(nsdInfo);
         log.debug("NSD info updated");
 
+        NsdOnBoardingNotificationMessage msg = new NsdOnBoardingNotificationMessage(nsdInfo.getId().toString(), nsdId.toString(),
+                operationId, ScopeType.LOCAL, OperationStatus.SENT);
+
         // send notification over kafka bus
-        notificationManager.sendNsdOnBoardingNotification(nsdInfo.getId().toString(), nsdId.toString(), operationId);
+        notificationManager.sendNsdOnBoardingNotification(msg);
 
         log.debug("NSD content uploaded and nsdOnBoardingNotification delivered");
     }

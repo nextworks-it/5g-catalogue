@@ -13,10 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.nextworks.nfvmano.catalogue.plugins.mano;
+package it.nextworks.nfvmano.catalogue.messages;
 
-import it.nextworks.nfvmano.catalogue.messages.NsdChangeNotificationMessage;
-import it.nextworks.nfvmano.catalogue.messages.NsdDeletionNotificationMessage;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdDeletionNotification;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnboardingNotification;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
@@ -36,7 +34,7 @@ public interface NsdNotificationsProducerInterface {
      * @throws MalformattedElementException
      * @throws FailedOperationException
      */
-    void sendNsdOnBoardingNotification(String nsdInfoId, String nsdId, UUID operationId) throws FailedOperationException, MalformattedElementException, MethodNotImplementedException;
+    void sendNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) throws FailedOperationException, MalformattedElementException, MethodNotImplementedException;
 
     /**
      * This method is called when a new NSD is changed, after all the steps are done.

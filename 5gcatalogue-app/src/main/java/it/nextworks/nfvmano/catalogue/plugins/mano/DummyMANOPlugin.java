@@ -16,13 +16,11 @@
 package it.nextworks.nfvmano.catalogue.plugins.mano;
 
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
-import it.nextworks.nfvmano.catalogue.messages.NsdChangeNotificationMessage;
-import it.nextworks.nfvmano.catalogue.messages.NsdDeletionNotificationMessage;
-import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
-import it.nextworks.nfvmano.catalogue.messages.ScopeType;
+import it.nextworks.nfvmano.catalogue.messages.*;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdDeletionNotification;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnboardingNotification;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
+import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -87,6 +85,24 @@ public class DummyMANOPlugin extends MANOPlugin {
     @Override
     public void acceptPnfdDeletionNotification(PnfdDeletionNotification notification) {
         log.info("Received PNFD deletion notification.");
+        log.debug("Body: {}", notification);
+    }
+
+    @Override
+    public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) {
+        log.info("Received VNF Pkg onboarding notification.");
+        log.debug("Body: {}", notification);
+    }
+
+    @Override
+    public void acceptVnfPkgChangeNotification(VnfPkgChangeNotificationMessage notification) {
+        log.info("Received VNF Pkg change notification.");
+        log.debug("Body: {}", notification);
+    }
+
+    @Override
+    public void acceptVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) {
+        log.info("Received VNF Pkg deletion notification.");
         log.debug("Body: {}", notification);
     }
 }

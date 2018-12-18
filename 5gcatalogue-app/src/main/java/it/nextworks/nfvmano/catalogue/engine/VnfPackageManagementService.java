@@ -8,8 +8,6 @@ import it.nextworks.nfvmano.catalogue.engine.resources.NotificationResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
 import it.nextworks.nfvmano.catalogue.messages.CatalogueMessageType;
-import it.nextworks.nfvmano.catalogue.messages.NsdDeletionNotificationMessage;
-import it.nextworks.nfvmano.catalogue.messages.ScopeType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboardingStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.*;
@@ -159,7 +157,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
 
         if (vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.ONBOARDED
-            || vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.PROCESSING) {
+                || vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.PROCESSING) {
             if (vnfPkgInfoModifications.getOperationalState() != null) {
                 if (vnfPkgInfoResource.getOperationalState() == vnfPkgInfoModifications.getOperationalState()) {
                     log.error("VNF Pkg operational state already "
@@ -216,8 +214,8 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         try {
             return storageService.loadVnfdAsResource(vnfPkgInfoResource, vnfPkgFilename);
         } catch (IOException e) {
-            log.error("Error while processing VNF Pkg for retrieving VNFD: " +  e.getMessage());
-            throw new FailedOperationException("Error while processing VNF Pkg for retrieving VNFD: " +  e.getMessage());
+            log.error("Error while processing VNF Pkg for retrieving VNFD: " + e.getMessage());
+            throw new FailedOperationException("Error while processing VNF Pkg for retrieving VNFD: " + e.getMessage());
         }
     }
 
@@ -411,5 +409,61 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         fos.write(multipart.getBytes());
         fos.close();
         return convFile;
+    }
+
+    public void updateVnfPkgInfoOperationStatus(String vnfPkgInfoId, String pluginId, OperationStatus opStatus, CatalogueMessageType type) throws NotExistingEntityException {
+        // TODO: implement
+        log.debug("Retrieving vnfPkgInfoResource {} from DB for updating with onboarding status info for plugin {}.",
+                vnfPkgInfoId, pluginId);
+        Optional<VnfPkgInfoResource> optionalVnfPkgInfoResource = vnfPkgInfoRepository.findById(UUID.fromString(vnfPkgInfoId));
+
+        if (optionalVnfPkgInfoResource.isPresent()) {
+            try {
+                VnfPkgInfoResource vnfPkgInfoResource = optionalVnfPkgInfoResource.get();
+
+                Map<String, NotificationResource> ackMap = new HashMap<>();
+                if (vnfPkgInfoResource.getAcknowledgedOnboardOpConsumers() != null) {
+                    ackMap = vnfPkgInfoResource.getAcknowledgedOnboardOpConsumers();
+                }
+                ackMap.put(pluginId, new NotificationResource(vnfPkgInfoId, type, opStatus));
+                vnfPkgInfoResource.setAcknowledgedOnboardOpConsumers(ackMap);
+
+                if (type == CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION) {
+                    log.debug("Checking VNF Pkg with vnfPkgInfoId {} onboarding state.", vnfPkgInfoId);
+                    vnfPkgInfoResource.setOnboardingState(checkVnfPkgOnboardingState(vnfPkgInfoId, ackMap));
+                }
+
+                log.debug("Updating VnfPkgInfoResource {} with onboardingState {}.", vnfPkgInfoId,
+                        vnfPkgInfoResource.getOnboardingState());
+                vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
+            } catch (Exception e) {
+                log.error("Error while updating VnfPkgInfoResource with vnfPkgInfoId: " + vnfPkgInfoId);
+                log.error("Details: ", e);
+            }
+        } else {
+            throw new NotExistingEntityException("VnfPkgInfoResource " + vnfPkgInfoId + " not present in DB.");
+        }
+    }
+
+    private PackageOnboardingStateType checkVnfPkgOnboardingState(String vnfPkgInfoId, Map<String, NotificationResource> ackMap) {
+
+        for (Map.Entry<String, NotificationResource> entry : ackMap.entrySet()) {
+            if (entry.getValue().getOperation() == CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION) {
+                if (entry.getValue().getOpStatus() == OperationStatus.FAILED) {
+                    log.error("VNF Pkg with vnfPkgInfoId {} onboarding failed for mano with manoId {}.", vnfPkgInfoId,
+                            entry.getKey());
+
+                    // TODO: Decide how to handle MANO onboarding failures.
+                    return PackageOnboardingStateType.PROCESSING;
+                } else if (entry.getValue().getOpStatus() == OperationStatus.SENT
+                        || entry.getValue().getOpStatus() == OperationStatus.RECEIVED
+                        || entry.getValue().getOpStatus() == OperationStatus.PROCESSING) {
+                    log.debug("VNF Pkg with vnfPkgInfoId {} onboarding still in progress for mano with manoId {}.");
+                    return PackageOnboardingStateType.PROCESSING;
+                }
+            }
+        }
+        log.debug("VNF Pkg with vnfPkgInfoId " + vnfPkgInfoId + " successfully onboarded by all expected consumers.");
+        return PackageOnboardingStateType.ONBOARDED;
     }
 }

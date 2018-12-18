@@ -13,11 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.nextworks.nfvmano.catalogue.plugins.mano;
+package it.nextworks.nfvmano.catalogue.messages;
 
-import it.nextworks.nfvmano.catalogue.messages.NsdChangeNotificationMessage;
-import it.nextworks.nfvmano.catalogue.messages.NsdDeletionNotificationMessage;
-import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdDeletionNotification;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnboardingNotification;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
@@ -28,9 +25,9 @@ public interface NsdNotificationsConsumerInterface {
      * This method is called when a new NSD is on-boarded, after all the steps are done.
      * REF IFA 013 v2.4.1 - 8.2.6
      *
-     * @param castMsg notification about the on-boarding of a new NSD
+     * @param notification notification about the on-boarding of a new NSD
      */
-    void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage castMsg);
+    void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) throws MethodNotImplementedException;
 
     /**
      * This method is called when there is a change of state in an on-boarded NSD.
@@ -49,7 +46,7 @@ public interface NsdNotificationsConsumerInterface {
      * @param notification notification about the deletion of an existing NSD
      * @throws MethodNotImplementedException
      */
-    void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification);
+    void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification) throws MethodNotImplementedException;
 
     /**
      * This method is called when a new PNFD is on-boarded, after all the on-boarding steps are done.

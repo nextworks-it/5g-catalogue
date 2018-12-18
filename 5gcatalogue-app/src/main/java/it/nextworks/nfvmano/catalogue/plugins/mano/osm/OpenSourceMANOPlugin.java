@@ -21,10 +21,7 @@ import com.girtel.osmclient.OSMClient;
 import com.girtel.osmclient.OSMComponent;
 import com.girtel.osmclient.utils.HTTPResponse;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
-import it.nextworks.nfvmano.catalogue.messages.NsdChangeNotificationMessage;
-import it.nextworks.nfvmano.catalogue.messages.NsdDeletionNotificationMessage;
-import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
-import it.nextworks.nfvmano.catalogue.messages.ScopeType;
+import it.nextworks.nfvmano.catalogue.messages.*;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdDeletionNotification;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnboardingNotification;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
@@ -249,6 +246,21 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
         }
         // else, return the content, which will probably go unused.
         return httpResponse.getContent();
+    }
+
+    @Override
+    public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
+
+    }
+
+    @Override
+    public void acceptVnfPkgChangeNotification(VnfPkgChangeNotificationMessage notification) throws MethodNotImplementedException {
+
+    }
+
+    @Override
+    public void acceptVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) throws MethodNotImplementedException {
+
     }
 
     private static class TransactionResponse {

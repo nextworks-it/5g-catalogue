@@ -34,6 +34,18 @@ import java.util.UUID;
         @Type(
                 value = NsdDeletionNotificationMessage.class,
                 name = "NSD_DELETE_NOTIFICATION"
+        ),
+        @Type(
+                value = NsdDeletionNotificationMessage.class,
+                name = "VNFPKG_ONBOARDING_NOTIFICATION"
+        ),
+        @Type(
+                value = NsdDeletionNotificationMessage.class,
+                name = "VNFPKG_CHANGE_NOTIFICATION"
+        ),
+        @Type(
+                value = NsdDeletionNotificationMessage.class,
+                name = "VNFPKG_DELETE_NOTIFICATION"
         )
 })
 

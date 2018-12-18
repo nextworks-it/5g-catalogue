@@ -58,6 +58,7 @@ public class KafkaConnector {
     private final Map<String, Object> props;
     private final String[] topics;
     private final Map<CatalogueMessageType, Consumer<CatalogueMessage>> functor;
+
     public KafkaConnector(
             String beanId,
             String kafkaBootstrapServers,

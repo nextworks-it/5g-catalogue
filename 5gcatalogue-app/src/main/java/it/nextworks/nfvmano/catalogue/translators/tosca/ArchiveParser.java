@@ -20,7 +20,6 @@ import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
