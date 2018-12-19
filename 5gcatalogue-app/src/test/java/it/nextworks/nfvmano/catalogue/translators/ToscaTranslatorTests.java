@@ -27,6 +27,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.UUID;
 
+import it.nextworks.nfvmano.libs.descriptors.templates.SubstitutionMappings;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VDU.VDUComputeNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VDU.VDUVirtualBlockStorageNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VduCp.VduCpNode;
@@ -54,7 +55,6 @@ import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.Sap.SapNode;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import it.nextworks.nfvmano.libs.descriptors.templates.Metadata;
 import it.nextworks.nfvmano.libs.descriptors.templates.Node;
-import it.nextworks.nfvmano.libs.descriptors.templates.SubstitutionMapping;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
 
@@ -116,7 +116,7 @@ public class ToscaTranslatorTests {
 			System.out.println("===============================================================================================");
 			
 			System.out.println("Substitution Mapping");
-			SubstitutionMapping subMapping = descriptorTemplate.getTopologyTemplate().getSubstituitionMapping();
+			SubstitutionMappings subMapping = descriptorTemplate.getTopologyTemplate().getSubstituitionMappings();
 			System.out.println(mapper.writeValueAsString(subMapping));
 			System.out.println("===============================================================================================");
 
@@ -201,7 +201,7 @@ public class ToscaTranslatorTests {
 			System.out.println("===============================================================================================");
 			
 			System.out.println("Substitution Mapping");
-			SubstitutionMapping subMapping = descriptorTemplate.getTopologyTemplate().getSubstituitionMapping();
+			SubstitutionMappings subMapping = descriptorTemplate.getTopologyTemplate().getSubstituitionMappings();
 			System.out.println(mapper.writeValueAsString(subMapping));
 			System.out.println("===============================================================================================");
 
