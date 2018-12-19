@@ -36,15 +36,15 @@ import java.util.UUID;
                 name = "NSD_DELETE_NOTIFICATION"
         ),
         @Type(
-                value = NsdDeletionNotificationMessage.class,
+                value = VnfPkgOnBoardingNotificationMessage.class,
                 name = "VNFPKG_ONBOARDING_NOTIFICATION"
         ),
         @Type(
-                value = NsdDeletionNotificationMessage.class,
+                value = VnfPkgChangeNotificationMessage.class,
                 name = "VNFPKG_CHANGE_NOTIFICATION"
         ),
         @Type(
-                value = NsdDeletionNotificationMessage.class,
+                value = VnfPkgDeletionNotificationMessage.class,
                 name = "VNFPKG_DELETE_NOTIFICATION"
         )
 })

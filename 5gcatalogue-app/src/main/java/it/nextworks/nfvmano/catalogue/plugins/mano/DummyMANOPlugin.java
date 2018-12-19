@@ -74,6 +74,15 @@ public class DummyMANOPlugin extends MANOPlugin {
     public void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification) {
         log.info("Received NSD deletion notification.");
         log.debug("Body: {}", notification);
+        NsdDeletionNotificationMessage response = new NsdDeletionNotificationMessage(
+                notification.getNsdInfoId(),
+                notification.getNsdId(),
+                notification.getOperationId(),
+                ScopeType.REMOTE,
+                OperationStatus.SUCCESSFULLY_DONE,
+                mano.getManoId()
+        );
+        sendNotification(response);
     }
 
     @Override
@@ -92,6 +101,16 @@ public class DummyMANOPlugin extends MANOPlugin {
     public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) {
         log.info("Received VNF Pkg onboarding notification.");
         log.debug("Body: {}", notification);
+        VnfPkgOnBoardingNotificationMessage response = new VnfPkgOnBoardingNotificationMessage(
+                notification.getVnfPkgInfoId(),
+                notification.getVnfdId(),
+                notification.getOperationId(),
+                ScopeType.REMOTE,
+                OperationStatus.SUCCESSFULLY_DONE,
+                mano.getManoId()
+        );
+        sendNotification(response);
+        log.debug("VnfPkgOnBoardingNotification sent to NotificationManager");
     }
 
     @Override
@@ -104,5 +123,15 @@ public class DummyMANOPlugin extends MANOPlugin {
     public void acceptVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) {
         log.info("Received VNF Pkg deletion notification.");
         log.debug("Body: {}", notification);
+        VnfPkgDeletionNotificationMessage response = new VnfPkgDeletionNotificationMessage(
+                notification.getVnfPkgInfoId(),
+                notification.getVnfdId(),
+                notification.getOperationId(),
+                ScopeType.REMOTE,
+                OperationStatus.SUCCESSFULLY_DONE,
+                mano.getManoId()
+        );
+        sendNotification(response);
+        log.debug("VnfPkgDeletionNotification sent to NotificationManager");
     }
 }

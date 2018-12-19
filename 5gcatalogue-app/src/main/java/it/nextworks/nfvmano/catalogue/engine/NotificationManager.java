@@ -80,6 +80,14 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
         initializeKafkaConnector("ENGINE_NOTIFICATION_MANAGER", kafkaBootstrapServers, remoteNsdNotificationTopic);
     }
 
+    public KafkaConnector getConnector() {
+        return connector;
+    }
+
+    public void setConnector(KafkaConnector connector) {
+        this.connector = connector;
+    }
+
     private void initializeKafkaConnector(String connectorId, String server, String topicQueueExchange) {
         log.debug("Initializing Kafka connector with: \nconnectorId: " + connectorId + "\nkafkaServer: " + server
                 + "\ntopic: " + topicQueueExchange);
@@ -287,14 +295,6 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
         throw new MethodNotImplementedException("acceptPnfdDeletionNotification method not implemented");
     }
 
-    public KafkaConnector getConnector() {
-        return connector;
-    }
-
-    public void setConnector(KafkaConnector connector) {
-        this.connector = connector;
-    }
-
     @Override
     public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
         log.info("Received VNF Pkg onboarding notification for VNF Pkg {} with info id {}, from plugin {}.",
@@ -343,12 +343,43 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 
     @Override
     public void acceptVnfPkgChangeNotification(VnfPkgChangeNotificationMessage notification) throws MethodNotImplementedException {
-
+        throw new MethodNotImplementedException("acceptVnfPkgChangeNotification method not implemented");
     }
 
     @Override
     public void acceptVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) throws MethodNotImplementedException {
+        log.info("Received VNF Pkg deletion notification for VNF Pkg {} with info id {}, from plugin {}.",
+                notification.getVnfdId(), notification.getVnfPkgInfoId(), notification.getPluginId());
 
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(Include.NON_EMPTY);
+
+        try {
+            String json = mapper.writeValueAsString(notification);
+            log.debug("RECEIVED MESSAGE: " + json);
+        } catch (JsonProcessingException e) {
+            log.error("Unable to parse received vnfPkgDeletionNotificationMessage: " + e.getMessage());
+        }
+
+        switch (notification.getScope()) {
+            case REMOTE:
+                log.info("VNF Pkg {} with info id {} successfully removed by plugin {}.",
+                        notification.getVnfdId(), notification.getVnfPkgInfoId(), notification.getPluginId());
+                log.debug("Updating consumers internal mapping for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                vnfPackageManagementService.updateOperationInfoInConsumersMap(notification.getOperationId(), notification.getOpStatus(),
+                        notification.getPluginId(), notification.getVnfPkgInfoId(), notification.getType());
+                log.debug("Consumers internal mapping successfully updated for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                break;
+            case LOCAL:
+                log.error("VNF Pkg LOCAL deletion notification not handled here, REMOTE onboarding message expected.");
+                break;
+            case GLOBAL:
+                log.error("VNF Pkg GLOBAL deletion notification not handled here, REMOTE onboarding message expected.");
+                break;
+        }
     }
 
     @Override
@@ -379,7 +410,7 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 
     @Override
     public void sendVnfPkgChangeNotification(VnfPkgChangeNotificationMessage notification) throws MethodNotImplementedException {
-
+        throw new MethodNotImplementedException("sendVnfPkgChangeNotification method not implemented");
     }
 
     @Override

@@ -122,8 +122,9 @@ public abstract class MANOPlugin
         functor.put(
                 CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION,
                 msg -> {
+                    VnfPkgOnBoardingNotificationMessage castMsg = (VnfPkgOnBoardingNotificationMessage) msg;
                     try {
-                        acceptVnfPkgOnBoardingNotification(null);
+                        acceptVnfPkgOnBoardingNotification(castMsg);
                     } catch (MethodNotImplementedException e) {
                         log.error("Method not yet implemented: " + e.getMessage());
                     }
@@ -132,8 +133,9 @@ public abstract class MANOPlugin
         functor.put(
                 CatalogueMessageType.VNFPKG_CHANGE_NOTIFICATION,
                 msg -> {
+                    VnfPkgChangeNotificationMessage castMsg = (VnfPkgChangeNotificationMessage) msg;
                     try {
-                        acceptVnfPkgChangeNotification(null);
+                        acceptVnfPkgChangeNotification(castMsg);
                     } catch (MethodNotImplementedException e) {
                         log.error("Method not yet implemented: " + e.getMessage());
                     }
@@ -142,8 +144,9 @@ public abstract class MANOPlugin
         functor.put(
                 CatalogueMessageType.VNFPKG_DELETION_NOTIFICATION,
                 msg -> {
+                    VnfPkgDeletionNotificationMessage castMsg = (VnfPkgDeletionNotificationMessage) msg;
                     try {
-                        acceptVnfPkgDeletionNotification(null);
+                        acceptVnfPkgDeletionNotification(castMsg);
                     } catch (MethodNotImplementedException e) {
                         log.error("Method not yet implemented: " + e.getMessage());
                     }

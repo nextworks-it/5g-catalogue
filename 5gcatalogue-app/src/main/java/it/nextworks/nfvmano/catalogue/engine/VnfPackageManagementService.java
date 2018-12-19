@@ -8,6 +8,9 @@ import it.nextworks.nfvmano.catalogue.engine.resources.NotificationResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
 import it.nextworks.nfvmano.catalogue.messages.CatalogueMessageType;
+import it.nextworks.nfvmano.catalogue.messages.ScopeType;
+import it.nextworks.nfvmano.catalogue.messages.VnfPkgDeletionNotificationMessage;
+import it.nextworks.nfvmano.catalogue.messages.VnfPkgOnBoardingNotificationMessage;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboardingStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.*;
@@ -135,7 +138,9 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                             CatalogueMessageType.NSD_DELETION_NOTIFICATION, OperationStatus.SENT);
 
                     log.debug("VNF Pkg {} locally removed. Sending vnfPkgDeletionNotificationMessage to bus.", vnfdId);
-                    // TODO: send notification
+
+                    VnfPkgDeletionNotificationMessage msg = new VnfPkgDeletionNotificationMessage(vnfPkgInfoId, vnfdId.toString(), operationId, ScopeType.LOCAL, OperationStatus.SENT);
+                    notificationManager.sendVnfPkgDeletionNotification(msg);
                 }
 
                 vnfPkgInfoRepository.deleteById(id);
@@ -352,7 +357,9 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         log.debug("VNF PKG info updated");
 
         // send notification over kafka bus
-        //notificationManager.sendVnfPkgOnBoardingNotification(vnfPkgInfoResource.getId().toString(), vnfdId.toString(), operationId);
+        VnfPkgOnBoardingNotificationMessage msg =
+                new VnfPkgOnBoardingNotificationMessage(vnfPkgInfoId, vnfdId.toString(), operationId, ScopeType.LOCAL, OperationStatus.SENT);
+        notificationManager.sendVnfPkgOnBoardingNotification(msg);
 
         log.debug("VNF Pkg content uploaded and vnfPkgOnBoardingNotification delivered");
     }
@@ -412,7 +419,6 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
     }
 
     public void updateVnfPkgInfoOperationStatus(String vnfPkgInfoId, String pluginId, OperationStatus opStatus, CatalogueMessageType type) throws NotExistingEntityException {
-        // TODO: implement
         log.debug("Retrieving vnfPkgInfoResource {} from DB for updating with onboarding status info for plugin {}.",
                 vnfPkgInfoId, pluginId);
         Optional<VnfPkgInfoResource> optionalVnfPkgInfoResource = vnfPkgInfoRepository.findById(UUID.fromString(vnfPkgInfoId));
@@ -428,7 +434,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                 ackMap.put(pluginId, new NotificationResource(vnfPkgInfoId, type, opStatus));
                 vnfPkgInfoResource.setAcknowledgedOnboardOpConsumers(ackMap);
 
-                if (type == CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION) {
+                if (type == CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION) {
                     log.debug("Checking VNF Pkg with vnfPkgInfoId {} onboarding state.", vnfPkgInfoId);
                     vnfPkgInfoResource.setOnboardingState(checkVnfPkgOnboardingState(vnfPkgInfoId, ackMap));
                 }
