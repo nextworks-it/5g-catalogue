@@ -54,7 +54,7 @@ function clearForms(parentId, flag) {
 		//console.log(elems[i])
 		elems[i].reset();
 	}
-	
+
 	if (flag) {
 		var modal = document.getElementById(parentId);
 		modal.style = 'display:none';
@@ -90,7 +90,7 @@ function showResultMessage(success, msg) {
 		}
 	}
 	text += '<button class="btn btn-info" onclick="refresh(' + flag + ');"><i class="fa fa-refresh"></i> Refresh</button></div>';
-    elem.innerHTML = text;	
+    elem.innerHTML = text;
 	scrollPageTo(elem.offsetTop);
 }
 
@@ -109,7 +109,7 @@ function loadFromFile(type, evt, elementId, resId) {
 		if(!elem)
 			return;
 		openTextFile(evt, elem);
-	}	
+	}
 }
 
 function readZipFile(file, containerId, resId) {
@@ -120,7 +120,7 @@ function readZipFile(file, containerId, resId) {
 	};
 	var model = (function() {
 		var URL = this.webkitURL || this.mozURL || this.URL;
-	
+
 		return {
 			getEntries : function(file, onend) {
 				zip.createReader(new zip.BlobReader(file), function(zipReader) {
@@ -129,7 +129,7 @@ function readZipFile(file, containerId, resId) {
 				}, onerror);
 			},
 			getEntryFile : function(entry, onend, onprogress) {
-				var writer, zipFileEntry;	
+				var writer, zipFileEntry;
 				function getData() {
 					entry.getData(writer, function(blob) {
 						var blobURL = URL.createObjectURL(blob);
@@ -137,10 +137,10 @@ function readZipFile(file, containerId, resId) {
 					}, onprogress);
 				}
 				writer = new zip.BlobWriter();
-				getData();				
+				getData();
 			}
 		};
-	})();	
+	})();
 	model.getEntries(file, function(entries) {
 		var cnt = 0;
 		entries.forEach(function(entry) {
@@ -166,7 +166,7 @@ function readZipFile(file, containerId, resId) {
 			});
 		});
 	});
-	
+
 	function onerror(message) {
 		if(!message || message == undefined)
 			message = 'Error';
@@ -184,13 +184,13 @@ function openTextFile(event, container) {
 	}
 //  console.log("type = " + f.type);
 	var reader = new FileReader();
-	
+
 	reader.onload = function(event) {
 		console.log("File read: " + event.target.result);
 		container.innerHTML = event.target.result;
 		console.log(container.innerHTML);
 	};
-	
+
 	reader.readAsText(file);
 }
 
@@ -204,7 +204,7 @@ function createTableHeaderFromObject(data, btnFlag, cols) {
 				return true;
             if (key.indexOf('password') >= 0)
 				return true;
-			
+
 			text += '<th>' + key + '</th>';
 		});
 		if (btnFlag) {
@@ -212,13 +212,13 @@ function createTableHeaderFromObject(data, btnFlag, cols) {
 		}
 	}
 	text += '</tr></thead>';
-    
+
 	return text;
 }
 
 function createTableHeaderByValues(cols, btnFlag, checkbFlag) {
     var text = '<thead><tr>';
-	
+
 	if (cols) {
 		if(checkbFlag) {
 			text +='<th><input type="checkbox" class="checkbox-toggle purge-check" style="display: none"></th>'
@@ -238,7 +238,7 @@ function createTableHeaderByValues(cols, btnFlag, checkbFlag) {
 
 function hideElement(elem, flag) {
 	if (flag) {
-		elem.style.display = 'none';	
+		elem.style.display = 'none';
 	} else {
 		if(elem.tagName.toLowerCase() == 'table')
 			elem.style.display = 'table';
@@ -284,11 +284,11 @@ function createActionButton(id, resId, btnNames, btnCallbacks) {
 	if(btnNames instanceof Array) {
 		if(btnNames.length == btnCallbacks.length) {
 			text += createDropdownButton(id, resId, btnNames, btnCallbacks);
-		}		
+		}
 	} else {
 		text +=  createButton(id, resId, btnNames, btnCallbacks);
 	}
-	text += '</td>';	
+	text += '</td>';
 	return text;
 }
 
@@ -303,7 +303,7 @@ function createLinkSet(id, resId, btnNames, btnCallbacks) {
 							<i class="fa fa-close"  onclick=' + btnCallbacks[i] + '("' + id + '","' + resId + '")></i>\
 							</a>';
 				} else if (btnCallbacks[i].toLowerCase().indexOf("update") >= 0) {
-							text += '<a title="Status"class="btn btn-link">\
+							text += '<a title="Operational State"class="btn btn-link">\
 										<i class="fa fa-gear" "buttonModal_'+ btnCallbacks[i] + '"  data-toggle="modal" data-target="#' + btnCallbacks[i] + id + '" data-id="' + id + '"></i>\
 									</a>';
 				} else if (btnCallbacks[i].toLowerCase().indexOf("open") >= 0) {
@@ -314,7 +314,7 @@ function createLinkSet(id, resId, btnNames, btnCallbacks) {
 					text += '<a title="Graph"class="btn btn-link">\
 								<i class="fa fa-area-chart"  onclick=getAllNsdInfos("' + id + '",' + btnCallbacks[i] + ',"response")></i>\
 							</a>';
-				} 
+				}
 			}
 		}
 	}	else {
@@ -338,12 +338,12 @@ function createLinkSet(id, resId, btnNames, btnCallbacks) {
 							</a>';
 				}
 			}
-	text += '</td>';	
+	text += '</td>';
 	return text;
 }
 
 function createButton(id, resId, btnName, btnCallback) {
-	
+
 	var text = 	'<button type="button" class="btn btn-info btn-sm btn-block';
 	if (btnCallback.toLowerCase().indexOf("delete") >= 0 ||
 		btnCallback.toLowerCase().indexOf("get") >= 0) {
@@ -355,10 +355,10 @@ function createButton(id, resId, btnName, btnCallback) {
 			text += ' buttonModal_'+ btnCallback + '" data-toggle="modal" data-target="#' + btnCallback + id + '" data-id="' + id + '">';
     }  else if (btnName.toLowerCase().indexOf("graph") >= 0) {
 		text += '" onclick=getAllNsdInfos("' + id + '",' + btnCallback + ',"response")>';
-	} 
+	}
 	text += btnName + '</button>';
 //	console.log("button: \n" + text);
-    
+
 	return text;
 }
 
@@ -372,6 +372,6 @@ function createDropdownButton(id, resId, btnNames, btnCallbacks) {
 		console.log(btnNames[i]);
 	}
 	text += '</ul></div>';		//<input type="text" class="form-control">
-	
+
 	return text;
 }

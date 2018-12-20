@@ -36,6 +36,8 @@ topologyTemplate:
 
  substitutionMappings:
   nodeType: cirros_NS
+  properties:
+   name: cirros_2_test_nsd
   requirements:
    virtualLink: ["eth0", "vld_mgmt"]
 
