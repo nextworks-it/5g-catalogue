@@ -59,8 +59,8 @@ public class OpenSourceMANOPluginTest {
 	public void testOnBoard() throws InterruptedException, FailedOperationException {
 		init();
 		ClassLoader classLoader = getClass().getClassLoader();
-		File vnfd = new File(classLoader.getResource("cirros_vnf.tar.gz").getFile());
-		File nsd = new File(classLoader.getResource("cirros_2vnf_ns.tar.gz").getFile());
+		File vnfd = new File(classLoader.getResource("Descriptors/OSM/cirros_vnf.tar.gz").getFile());
+		File nsd = new File(classLoader.getResource("Descriptors/OSM/cirros_2vnf_ns.tar.gz").getFile());
 		plugin.onBoardPackage(vnfd, "test_onb_vnfd");
 		plugin.onBoardPackage(nsd, "test_onb_nsd");
 		// Sleep for OSM to finish
@@ -74,7 +74,7 @@ public class OpenSourceMANOPluginTest {
 	public void testOnBoardGenerated() throws InterruptedException, FailedOperationException {
 		init();
 		ClassLoader classLoader = getClass().getClassLoader();
-		File vnfd = new File(classLoader.getResource("cirros_vnf.tar.gz").getFile());
+		File vnfd = new File(classLoader.getResource("Descriptors/OSM/cirros_vnf.tar.gz").getFile());
 		File nsd = new File(classLoader.getResource("339b0999-80c3-456c-9ee7-4cf42e4f7be7.tar.gz").getFile());
 		plugin.onBoardPackage(vnfd, "test_onb_vnfd");
 		plugin.onBoardPackage(nsd, "test_onb_nsd");

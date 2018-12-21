@@ -97,7 +97,7 @@ public class NsdBuilderTest {
         ClassLoader classLoader = getClass().getClassLoader();
 
         DescriptorTemplate dt = readFile(
-                new File(classLoader.getResource("two_cirros_example_tosca.yaml").getFile()).getPath(),
+                new File(classLoader.getResource("Descriptors/two_cirros_example_tosca.yaml").getFile()).getPath(),
                 StandardCharsets.UTF_8
         );
 

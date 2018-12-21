@@ -38,15 +38,8 @@ topologyTemplate:
   nodeType: cirros_NS
   properties:
    name: cirros_2_test_nsd
-  requirements:
-   virtualLink: ["eth0", "vld_mgmt"]
 
  nodeTemplates:
-
-  eth0:
-   type: tosca.nodes.nfv.Sap
-   requirements:
-    externalVirtualLink: [vld_mgmt]
 
   vld_mgmt:
    type: tosca.nodes.nfv.NsVirtualLink

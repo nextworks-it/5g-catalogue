@@ -1,0 +1,4 @@
+TOSCA-Meta-File-Version: 1.0
+CSAR-Version: 1.1
+CreatedBy: Nextworks S.r.l.
+Entry-Definitions: Definitions/vCache_mid_UC3_5GMEDIA_sm.yaml
