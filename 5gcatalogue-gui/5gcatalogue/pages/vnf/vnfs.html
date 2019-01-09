@@ -51,7 +51,10 @@
                   <div class="clearfix"></div>
                 </div>
                 <div class="x_content">
-                  <table class="table table-hover" id="pluginsTable">
+                    <table class="table table-hover" id="vnfInfosTable">
+                        <script>getAllVnfInfos("vnfInfosTable", createVnfInfosTable, "response");</script>
+                      </table>
+                  <!--<table class="table table-hover" id="pluginsTable">
                     <thead>
                       <tr>
                         <th>Name</th>
@@ -71,14 +74,6 @@
                         <td>ENABLED</td>
                         <td>ONBOARDED</td>
                         <td>
-                          <!--<div class="btn-group">
-                            <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Action				<span class="fa fa-caret-down"></span>				</button>
-                              <ul class="dropdown-menu" role="menu">
-                                <li><button type="button" class="btn btn-info btn-sm btn-block" onclick="showResultMessage(null,'Method under development');">View</button></li>
-                                <li><button type="button" class="btn btn-info btn-sm btn-block" onclick="showResultMessage(null,'Method under development');">Change OpState</button></li>
-                                <li><button type="button" class="btn btn-info btn-sm btn-block" onclick="showResultMessage(null,'Method under development');">Delete</button></li>
-                              </ul>                            
-                          </div>-->
                           <a title="View" class="btn btn-link">
                             <i class="fa fa-eye" onclick="showResultMessage(null,'Method under development');"></i>
                           </a>
@@ -98,16 +93,6 @@
                         <td>ENABLED</td>
                         <td>ONBOARDED</td>
                         <td>
-                          <!--<div class="btn-group">
-                            <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Action
-                              <span class="fa fa-caret-down"></span> </button>
-                            <ul class="dropdown-menu" role="menu">
-                              <li><button type="button" class="btn btn-info btn-sm btn-block" onclick="showResultMessage(null,'Method under development');">View</button></li>
-                              <li><button type="button" class="btn btn-info btn-sm btn-block" onclick="showResultMessage(null,'Method under development');">Change
-                                  OpState</button></li>
-                              <li><button type="button" class="btn btn-info btn-sm btn-block" onclick="showResultMessage(null,'Method under development');">Delete</button></li>
-                            </ul>
-                          </div>-->
                           <a title="View" class="btn btn-link">
                             <i class="fa fa-eye" onclick="showResultMessage(null,'Method under development');"></i>
                           </a>
@@ -120,7 +105,7 @@
                         </td>
                       </tr>
                     </tbody>
-                  </table>
+                  </table>-->
                 </div>
               </div>
             </div>
@@ -129,7 +114,7 @@
           </div>
 
           <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-12"id="vnfViewModals">
             </div>
           </div>
 
@@ -148,7 +133,8 @@
 
           <div class="row">
             <div class="col-md-4">
-
+              <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#vnfUploadModal">Onboard
+                VNF</button>
             </div>
 
             <div class="col-md-4">
@@ -162,6 +148,37 @@
             <div class="col-md-6" id="response">
             </div>
           </div>
+
+          <div id="graphCanvas"></div>
+
+          <div id="vnfUploadModal" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-hidden="true"
+            style="display: none;">
+            <div class="modal-dialog modal-lg">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span>
+                  </button>
+                  <h4 class="modal-title" id="myModalLabel">Upload VNF</h4>
+                </div>
+                <div class="modal-body">
+                  <form class="form-horizontal form-label-left" enctype="multipart/form-data">
+                    <div class="form-group">
+                      <label class="control-label col-md-3 col-sm-3 col-xs-12" for="vnfFile">VNF FILE/ARCHIVE </label>
+                      <div id="vnfArchive" style="display: none;"></div>
+                      <div class="col-md-6 col-sm-6 col-xs-12">
+                        <input type="file" autocomplete=off accept="media_type" id="vnfFile" required="required" class="col-md-12 col-xs-12">
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                  <button type="button" class="btn btn-primary" data-dismiss="modal" onclick=loadVNFFile("vnfFile","response")>Submit</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
       <!-- /page content -->
