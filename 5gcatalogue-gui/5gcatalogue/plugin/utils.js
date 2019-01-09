@@ -14,8 +14,8 @@
 * limitations under the License.
 */
 
-//var catalogueAddr = '10.0.8.44';
-var catalogueAddr = window.location.hostname;
+var catalogueAddr = '10.0.8.44';
+//var catalogueAddr = window.location.hostname;
 var cataloguePort = '8083';
 
 var stopRefreshing = false;
