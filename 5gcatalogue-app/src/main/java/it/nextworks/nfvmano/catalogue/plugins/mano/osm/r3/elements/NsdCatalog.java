@@ -13,26 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.nextworks.nfvmano.catalogue.plugins.mano.osm.elements;
+package it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.elements;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class OsmNsdPackage {
+import java.util.List;
 
-    private NsdCatalog nsdCatalog;
+public class NsdCatalog {
 
-    public OsmNsdPackage() {
+    private List<Nsd> nsd;
+
+    public NsdCatalog() {
 
     }
 
-    @JsonProperty("nsd:nsd-catalog")
-    public NsdCatalog getNsdCatalog() {
-        return nsdCatalog;
+    @JsonProperty("nsd")
+    public List<Nsd> getNsd() {
+        return nsd;
     }
 
-    @JsonProperty("nsd:nsd-catalog")
-    public OsmNsdPackage setNsdCatalog(NsdCatalog nsdCatalog) {
-        this.nsdCatalog = nsdCatalog;
+    @JsonProperty("nsd")
+    public NsdCatalog setNsd(List<Nsd> nsd) {
+        this.nsd = nsd;
         return this;
     }
 

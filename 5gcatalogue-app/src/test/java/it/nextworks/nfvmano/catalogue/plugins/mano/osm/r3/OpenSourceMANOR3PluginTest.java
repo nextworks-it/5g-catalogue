@@ -13,12 +13,13 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package it.nextworks.nfvmano.catalogue.plugins.mano.osm;
+package it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3;
 
 import it.nextworks.nfvmano.catalogue.messages.NsdDeletionNotificationMessage;
 import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
 import it.nextworks.nfvmano.catalogue.messages.ScopeType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import org.junit.BeforeClass;
@@ -35,14 +36,14 @@ import static org.junit.Assert.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest
-public class OpenSourceMANOPluginTest {
+public class OpenSourceMANOR3PluginTest {
 
-	private static OpenSourceMANOPlugin plugin;
+	private static OpenSourceMANOR3Plugin plugin;
 
 	@BeforeClass
 	public static void connectOsm() {
-		OSMMano osmMano = new OSMMano("testOSM", "10.0.8.26", "admin", "admin", "default");
-		plugin = new OpenSourceMANOPlugin(MANOType.OSM, osmMano, "blabla", null, null, null, null);
+		OSMMano osmMano = new OSMMano("testOSM", "10.0.8.26", "admin", "admin", "default", MANOType.OSMR3);
+		plugin = new OpenSourceMANOR3Plugin(MANOType.OSMR3, osmMano, "blabla", null, null, null, null);
 		// TODO: mock the service
 	}
 

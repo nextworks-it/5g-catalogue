@@ -13,12 +13,12 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package it.nextworks.nfvmano.catalogue.plugins.mano.osm.elements;
+package it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.elements;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OpenSourceMANOPlugin;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.OpenSourceMANOR3Plugin;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import org.junit.Ignore;
@@ -39,7 +39,7 @@ import java.nio.file.Paths;
 public class NsdBuilderTest {
 
     private static final File DEF_IMG = new File(
-            OpenSourceMANOPlugin.class.getClassLoader().getResource("nxw_logo.png").getFile()
+            OpenSourceMANOR3Plugin.class.getClassLoader().getResource("nxw_logo.png").getFile()
     );
 
     static DescriptorTemplate readFile(String path, Charset encoding) throws IOException {
