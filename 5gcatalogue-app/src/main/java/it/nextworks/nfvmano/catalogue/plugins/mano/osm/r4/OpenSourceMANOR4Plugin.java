@@ -35,6 +35,7 @@ import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
+import it.nextworks.nfvmano.libs.osmr4Client.OSMr4Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -57,6 +58,7 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
     );
     private final OSMMano osm;
     // TODO: OSMR4 client var
+    private OSMr4Client osMr4Client;
     // private OSMClient osmClient;
 
     public OpenSourceMANOR4Plugin(MANOType manoType, MANO mano, String kafkaBootstrapServers,

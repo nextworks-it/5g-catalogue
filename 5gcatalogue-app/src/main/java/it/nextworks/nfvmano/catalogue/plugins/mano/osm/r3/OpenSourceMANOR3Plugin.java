@@ -40,8 +40,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.kafka.core.KafkaTemplate;
 
-import it.nextworks.nfvmano.libs.osmr4Client.OSMr4Client;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
