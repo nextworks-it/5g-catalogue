@@ -24,6 +24,8 @@ import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
+import it.nextworks.nfvmano.libs.descriptors.templates.Node;
+import it.nextworks.nfvmano.libs.descriptors.templates.NodeType;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -338,6 +340,13 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         if (vnfNodes.size() == 1) {
             for (Map.Entry<String, VNFNode> vnfNode : vnfNodes.entrySet()) {
                 vnfName = vnfNode.getValue().getProperties().getProductName();
+            }
+        } else {
+            Map<String, String> subMapsProperties = dt.getTopologyTemplate().getSubstituitionMappings().getProperties();
+            for (Map.Entry<String, String> entry : subMapsProperties.entrySet()) {
+                if (entry.getKey().equalsIgnoreCase("productName")) {
+                    vnfName = entry.getValue();
+                }
             }
         }
 

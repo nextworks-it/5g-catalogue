@@ -426,6 +426,13 @@ public class NsdManagementService implements NsdManagementInterface {
             for (Entry<String, NSNode> nsNode : nsNodes.entrySet()) {
                 nsdName = nsNode.getValue().getProperties().getName();
             }
+        } else {
+            Map<String, String> subMapsProperties = dt.getTopologyTemplate().getSubstituitionMappings().getProperties();
+            for (Map.Entry<String, String> entry : subMapsProperties.entrySet()) {
+                if (entry.getKey().equalsIgnoreCase("name")) {
+                    nsdName = entry.getValue();
+                }
+            }
         }
 
         log.debug("NSD name: " + nsdName);

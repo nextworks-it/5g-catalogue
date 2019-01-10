@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.nextworks.nfvmano.catalogue.plugins.mano.osm;
+package it.nextworks.nfvmano.catalogue.plugins.mano.osm.r4;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,9 +27,10 @@ import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnbo
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.elements.ArchiveBuilder;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.elements.NsdBuilder;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.elements.OsmNsdPackage;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.elements.ArchiveBuilder;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.elements.NsdBuilder;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.elements.OsmNsdPackage;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
@@ -39,41 +40,31 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.kafka.core.KafkaTemplate;
 
-import it.nextworks.nfvmano.libs.osmr4Client.OSMr4Client;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class OpenSourceMANOPlugin extends MANOPlugin {
+public class OpenSourceMANOR4Plugin extends MANOPlugin {
 
-	/* TEST DATA
-	private static final String NSD_FILE_NAME = "cirros_2vnf_ns.tar.gz"; // Should be a filename in src/main/resources
-	private static final String NSD_ID = "cirros_2vnf_ns";
-
-	private static final String[] VNF_FILE_NAMES = { "cirros_vnf.tar.gz" }; // Should be a filename in
-																			// src/main/resources
-	private static final String[] VNFD_IDS = { "cirros_vnf" };
-	*/
-
-    private static final Logger log = LoggerFactory.getLogger(OpenSourceMANOPlugin.class);
+    private static final Logger log = LoggerFactory.getLogger(OpenSourceMANOR4Plugin.class);
 
     private static final File TMP_DIR = new File("/tmp");
 
     private static final File DEF_IMG = new File(
-            OpenSourceMANOPlugin.class.getClassLoader().getResource("nxw_logo.png").getFile()
+            OpenSourceMANOR4Plugin.class.getClassLoader().getResource("nxw_logo.png").getFile()
     );
     private final OSMMano osm;
-    private OSMClient osmClient;
+    // TODO: OSMR4 client var
+    // private OSMClient osmClient;
 
-    public OpenSourceMANOPlugin(MANOType manoType, MANO mano, String kafkaBootstrapServers,
-                                NsdManagementInterface service, String localTopic, String remoteTopic,
-                                KafkaTemplate<String, String> kafkaTemplate) {
+    public OpenSourceMANOR4Plugin(MANOType manoType, MANO mano, String kafkaBootstrapServers,
+                                  NsdManagementInterface service, String localTopic, String remoteTopic,
+                                  KafkaTemplate<String, String> kafkaTemplate) {
         super(manoType, mano, kafkaBootstrapServers, service, localTopic, remoteTopic, kafkaTemplate);
-        if (MANOType.OSM != manoType) {
-            throw new IllegalArgumentException("OSM plugin requires an OSM type MANO");
+        if (MANOType.OSMR4 != manoType) {
+            throw new IllegalArgumentException("OSM R4 plugin requires an OSM R4 type MANO");
         }
         osm = (OSMMano) mano;
     }
@@ -85,12 +76,13 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
     }
 
     void initOsmConnection() {
-        osmClient = new OSMClient(osm.getIpAddress(), osm.getUsername(), osm.getPassword(), osm.getProject());
-        log.info("OSM instance addr {}, user {}, project {} connected.", osm.getIpAddress(), osm.getUsername(),
+        // TODO: init OSMR4 client var
+        // osmClient = new OSMClient(osm.getIpAddress(), osm.getUsername(), osm.getPassword(), osm.getProject());
+        log.info("OSM R4 instance addr {}, user {}, project {} connected.", osm.getIpAddress(), osm.getUsername(),
                 osm.getProject());
     }
 
-    @SuppressWarnings("unused")
+    // TODO: to be updated according to new descriptor format in OSMR4
     @Override
     public void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) {
         log.info("Received NSD onboarding notificationfor NSD {} info id {}.", notification.getNsdId(),
@@ -104,14 +96,6 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
 
             ArchiveBuilder archiver = new ArchiveBuilder(TMP_DIR, DEF_IMG);
             File archive = archiver.makeNewArchive(packageData, "Generated by NXW Catalogue");
-
-            /*
-             * Test code loading static package List<String> tIds = new LinkedList<>(); for
-             * (String vnfFileName : VNF_FILE_NAMES) { File vnf = loadFile(vnfFileName);
-             * tIds.add(onBoardPackage(vnf, UUID.randomUUID().toString())); }
-             * log.debug("Required VNFD onboarded, tIds: {} onboarding NSD", tIds); File nsd
-             * = loadFile(NSD_FILE_NAME);
-             */
 
             String tId = onBoardPackage(archive, notification.getOperationId().toString());
             log.info("Successfully uploaded nsd {} with info ID {}.", notification.getNsdId(),
@@ -135,16 +119,13 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
         log.debug("Body: {}", notification);
     }
 
+    // TODO: to be updated according to new descriptor format in OSMR4
     @Override
     public void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification) {
         log.info("Received NSD deletion notification for NSD {} info id {}.", notification.getNsdId(),
                 notification.getNsdInfoId());
         log.debug("Body: {}", notification);
         try {
-            /*
-             * Test code deleting static packages deleteNsd(NSD_ID, "test_delete_nsd"); for
-             * (String vnfdId : VNFD_IDS) { deleteVnfd(vnfdId, "test_delete_vnf"); }
-             */
             deleteNsd(notification.getNsdId(), notification.getOperationId().toString());
             log.info("Successfully deleted nsd {} with info ID {}.", notification.getNsdId(),
                     notification.getNsdInfoId());
@@ -195,28 +176,33 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
 
     String onBoardPackage(File file, String opId) throws FailedOperationException {
         log.info("Onboarding package, opId: {}.", opId);
-        HTTPResponse httpResponse = osmClient.uploadPackage(file);
+        // TODO: call OSMR4 client upload
+        HTTPResponse httpResponse = null; // osmClient.uploadPackage(file);
         return parseResponseReturning(httpResponse, opId, true);
     }
 
     void deleteNsd(String nsdId, String opId) throws FailedOperationException {
         log.info("Deleting nsd {}, opId: {}.", nsdId, opId);
-        HTTPResponse httpResponse = osmClient.deleteNSD(nsdId);
+        // TODO: call OSMR4 client delete
+        HTTPResponse httpResponse = null; // osmClient.deleteNSD(nsdId);
         parseResponse(httpResponse, opId);
     }
 
     void deleteVnfd(String vnfdId, String opId) throws FailedOperationException {
         log.info("Deleting vnfd {}, opId: {}.", vnfdId, opId);
-        HTTPResponse httpResponse = osmClient.deleteVNFD(vnfdId);
+        // TODO: call OSMR4 client delete
+        HTTPResponse httpResponse = null; // osmClient.deleteVNFD(vnfdId);
         parseResponse(httpResponse, opId);
     }
 
     List<String> getNsdIdList() {
-        return osmClient.getNSDList().stream().map(OSMComponent::toString).collect(Collectors.toList());
+        // TODO: call OSMR4 client get
+        return null; // osmClient.getNSDList().stream().map(OSMComponent::toString).collect(Collectors.toList());
     }
 
     List<String> getVnfdIdList() {
-        return osmClient.getVNFDList().stream().map(OSMComponent::toString).collect(Collectors.toList());
+        // TODO: call OSMR4 client get
+        return null; // osmClient.getVNFDList().stream().map(OSMComponent::toString).collect(Collectors.toList());
     }
 
     private void parseResponse(HTTPResponse httpResponse, String opId) throws FailedOperationException {
@@ -250,16 +236,19 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
         return httpResponse.getContent();
     }
 
+    // TODO: to be implemented according to new descriptor format in OSMR4
     @Override
     public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
 
     }
 
+    // TODO: to be implemented according to new descriptor format in OSMR4
     @Override
     public void acceptVnfPkgChangeNotification(VnfPkgChangeNotificationMessage notification) throws MethodNotImplementedException {
 
     }
 
+    // TODO: to be implemented according to new descriptor format in OSMR4
     @Override
     public void acceptVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) throws MethodNotImplementedException {
 

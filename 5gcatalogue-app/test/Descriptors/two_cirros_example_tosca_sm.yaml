@@ -7,20 +7,39 @@ metadata:
  vendor: Nextworks
  version: "0.1"
 
+nodeTypes:
+ cirros_NS:
+  derivedFrom: tosca.nodes.nfv.NS
+  properties:
+   descriptorId:
+    type: string
+    constraints: [validValues: [339b0999-80c3-456c-9ee7-4cf42e4f7be7]]
+    default: 339b0999-80c3-456c-9ee7-4cf42e4f7be7
+   designer:
+    type: string
+    constraints: [validValues: [Nextworks]]
+    default: Nextworks
+   version:
+    type: string
+    default: "0.1"
+   name:
+    type: string
+    default: cirros_2_test_nsd
+   invariantId:
+    type: string
+    default: 339b0999-80c3-456c-9ee7-4cf42e4f7be7
+   flavourId:
+    type: string
+    default: simple
+
 topologyTemplate:
 
- nodeTemplates:
+ substitutionMappings:
+  nodeType: cirros_NS
+  properties:
+   name: cirros_2_test_nsd
 
-  cirros_NS:
-   type: tosca.nodes.nfv.NS
-   properties:
-    descriptorId: 339b0999-80c3-456c-9ee7-4cf42e4f7be7
-    designer: Nextworks
-    version: "0.1"
-    name: cirros_2_test_nsd
-    invariantId: 339b0999-80c3-456c-9ee7-4cf42e4f7be7
-   requirements:
-    virtualLink: [management, user]
+ nodeTemplates:
 
   vld_mgmt:
    type: tosca.nodes.nfv.NsVirtualLink
@@ -60,7 +79,7 @@ topologyTemplate:
     flavourDescription: vCache Edge DF
    requirements:
     virtualLink:
-     - vld_mgmt/eth0
+     - vld_mgmt
    capabilities:
     monitoringParameter:
      - cpuLoad
@@ -87,7 +106,7 @@ topologyTemplate:
     flavourDescription: vCache Edge DF
    requirements:
     virtualLink:
-     - vld_mgmt/eth0
+     - vld_mgmt
    capabilities:
     monitoringParameter:
      - cpuLoad

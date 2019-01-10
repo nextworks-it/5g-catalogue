@@ -23,75 +23,67 @@ topologyTemplate:
 
   management_mgmt:
    type: tosca.nodes.nfv.NsVirtualLink
-   properties:
-    provider: Nextworks
-    version: "1.11"
-    vlProfile:
-     maxBitrateRequirements:
-      root: 1000000
-      leaf: 100000
-     minBitrateRequirements:
-      root: 100000
-      leaf: 10000
-    connectivityType:
-     layerProtocols: [IPV4]
-     flowPattern: LINE
-    serviceAvailability:
-     level: LEVEL_1
+    properties:
+     description: Mgmt VL
+     testAccess: [NONE]
+     vlProfile:
+      maxBitrateRequirements:
+       root: 1000000
+       leaf: 100000
+      minBitrateRequirements:
+       root: 100000
+       leaf: 10000
+     connectivityType:
+      layerProtocols: [IPV4]
+      flowPattern: LINE
 
   origin:
    type: tosca.nodes.nfv.NsVirtualLink
-   properties:
-    provider: Nextworks
-    version: "1.11"
-    vlProfile:
-     maxBitrateRequirements:
-      root: 1000000
-      leaf: 100000
-     minBitrateRequirements:
-      root: 100000
-      leaf: 10000
-    connectivityType:
-     layerProtocols: [IPV4]
-     flowPattern: LINE
-    serviceAvailability:
-     level: LEVEL_1
+    properties:
+     description: Mgmt VL
+     testAccess: [NONE]
+     vlProfile:
+      maxBitrateRequirements:
+       root: 1000000
+       leaf: 100000
+      minBitrateRequirements:
+       root: 100000
+       leaf: 10000
+     connectivityType:
+      layerProtocols: [IPV4]
+      flowPattern: LINE
 
   cache:
    type: tosca.nodes.nfv.NsVirtualLink
-   properties:
-    provider: Nextworks
-    version: "1.11"
-    vlProfile:
-     maxBitrateRequirements:
-      root: 1000000
-      leaf: 100000
-     minBitrateRequirements:
-      root: 100000
-      leaf: 10000
-    connectivityType:
-     layerProtocols: [IPV4]
-     flowPattern: LINE
-    serviceAvailability:
-     level: LEVEL_1
+    properties:
+     description: Mgmt VL
+     testAccess: [NONE]
+     vlProfile:
+      maxBitrateRequirements:
+       root: 1000000
+       leaf: 100000
+      minBitrateRequirements:
+       root: 100000
+       leaf: 10000
+     connectivityType:
+      layerProtocols: [IPV4]
+      flowPattern: LINE
 
   user:
    type: tosca.nodes.nfv.NsVirtualLink
-   properties:
-    provider: Nextworks
-    version: "1.11"
-    vlProfile:
-     maxBitrateRequirements:
-      root: 1000000
-      leaf: 100000
-     minBitrateRequirements:
-      root: 100000
-      leaf: 10000
-    connectivityType:
-     layerProtocols: [IPV4]
-     flowPattern: LINE
-    serviceAvailability:
-     level: LEVEL_1
+    properties:
+     description: Mgmt VL
+     testAccess: [NONE]
+     vlProfile:
+      maxBitrateRequirements:
+       root: 1000000
+       leaf: 100000
+      minBitrateRequirements:
+       root: 100000
+       leaf: 10000
+     connectivityType:
+      layerProtocols: [IPV4]
+      flowPattern: LINE
 
   midvCacheVNF:
    type: tosca.nodes.nfv.VNF

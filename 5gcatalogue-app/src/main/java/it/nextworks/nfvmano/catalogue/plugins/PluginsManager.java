@@ -19,7 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementService;
 import it.nextworks.nfvmano.catalogue.plugins.mano.*;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OpenSourceMANOPlugin;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.OpenSourceMANOR3Plugin;
 import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
@@ -169,8 +169,8 @@ public class PluginsManager {
         if (mano.getManoType().equals(MANOType.DUMMY)) {
             return new DummyMANOPlugin(mano.getManoType(), mano, bootstrapServers, service, localNsdNotificationTopic,
                     remoteNsdNotificationTopic, kafkaTemplate);
-        } else if (mano.getManoType().equals(MANOType.OSM)) {
-            return new OpenSourceMANOPlugin(mano.getManoType(), mano, bootstrapServers, service,
+        } else if (mano.getManoType().equals(MANOType.OSMR3)) {
+            return new OpenSourceMANOR3Plugin(mano.getManoType(), mano, bootstrapServers, service,
                     localNsdNotificationTopic, remoteNsdNotificationTopic, kafkaTemplate);
         } else {
             throw new MalformattedElementException("Unsupported MANO type. Skipping.");
@@ -190,11 +190,11 @@ public class PluginsManager {
         log.debug("RECEIVED MANO:\nMANO ID: " + manoId + "\nMANO TYPE: " + type);
 
         switch (type) {
-            case OSM:
+            case OSMR3:
                 log.debug("Processing request for creating " + type + "Plugin.");
                 OSMMano osmMano = (OSMMano) mano;
                 OSMMano targetOsmMano = new OSMMano(osmMano.getManoId(), osmMano.getIpAddress(), osmMano.getUsername(),
-                        osmMano.getPassword(), osmMano.getProject());
+                        osmMano.getPassword(), osmMano.getProject(), MANOType.OSMR3);
                 targetOsmMano.isValid();
                 log.debug("Persisting OSM MANO with manoId: " + manoId);
                 OSMMano createdMano = MANORepository.saveAndFlush(targetOsmMano);
