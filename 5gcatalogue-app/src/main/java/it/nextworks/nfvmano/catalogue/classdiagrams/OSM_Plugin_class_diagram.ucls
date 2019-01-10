@@ -31,7 +31,7 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <class id="4" language="java" name="it.nextworks.nfvmano.catalogue.plugins.mano.osm.OpenSourceMANOPlugin" 
+  <class id="4" language="java" name="it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.OpenSourceMANOR3Plugin"
     project="Catalogue" 
     file="/Catalogue/src/main/java/it/nextworks/nfvmano/catalogue/plugins/mano/osm/OpenSourceMANOPlugin.java" 
     binary="false" corner="BOTTOM_RIGHT">    
@@ -42,7 +42,7 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <class id="5" language="java" name="it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano" project="Catalogue" 
+  <class id="5" language="java" name="it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano" project="Catalogue"
     file="/Catalogue/src/main/java/it/nextworks/nfvmano/catalogue/plugins/mano/osm/OSMMano.java" binary="false" 
     corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="742" y="627"/>    

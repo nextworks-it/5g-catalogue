@@ -24,15 +24,11 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.UUID;
 
 import it.nextworks.nfvmano.libs.descriptors.templates.SubstitutionMappings;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VDU.VDUComputeNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VDU.VDUVirtualBlockStorageNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VduCp.VduCpNode;
-import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,7 +52,6 @@ import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import it.nextworks.nfvmano.libs.descriptors.templates.Metadata;
 import it.nextworks.nfvmano.libs.descriptors.templates.Node;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
-import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest
@@ -81,7 +76,7 @@ public class ToscaTranslatorTests {
 	@Test
 	public void parseStringDescriptor() throws Exception {
 		ClassLoader classLoader = getClass().getClassLoader();
-		File nsd = new File(classLoader.getResource("vCDN_tosca_v03.yaml").getFile());
+		File nsd = new File(classLoader.getResource("Descriptors/two_cirros_example_tosca.yaml").getFile());
 		ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
 		String nsd_string = readFile(nsd.getAbsolutePath(), StandardCharsets.UTF_8);
@@ -104,7 +99,7 @@ public class ToscaTranslatorTests {
 		try {
 
 			ClassLoader classLoader = getClass().getClassLoader();
-			File nsd = new File(classLoader.getResource("two_cirros_example_tosca.yaml").getFile());
+			File nsd = new File(classLoader.getResource("Descriptors/two_cirros_example_tosca.yaml").getFile());
 			ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
 			DescriptorTemplate descriptorTemplate = descriptorParser.fileToDescriptorTemplate(nsd.getAbsolutePath());		
@@ -180,7 +175,7 @@ public class ToscaTranslatorTests {
 		try {
 
 			ClassLoader classLoader = getClass().getClassLoader();
-			File archive = new File(classLoader.getResource("cirros_vnf_sol001.zip").getFile());
+			File archive = new File(classLoader.getResource("Descriptors/cirros_vnf_sol001.zip").getFile());
 			FileInputStream input = new FileInputStream(archive);
 			MultipartFile mp_file = new MockMultipartFile(archive.getName(), input);
 			ObjectMapper mapper = new ObjectMapper(new YAMLFactory());

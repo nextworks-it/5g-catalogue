@@ -39,8 +39,8 @@ public class OSMMano extends MANO {
         // JPA only
     }
 
-    public OSMMano(String manoId, String ipAddress, String username, String password, String project) {
-        super(manoId, MANOType.OSM);
+    public OSMMano(String manoId, String ipAddress, String username, String password, String project, MANOType manoType) {
+        super(manoId, manoType);
         this.ipAddress = ipAddress;
         this.username = username;
         this.password = password;

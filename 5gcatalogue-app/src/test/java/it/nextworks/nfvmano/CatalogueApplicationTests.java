@@ -18,7 +18,7 @@ package it.nextworks.nfvmano;
 import it.nextworks.nfvmano.catalogue.plugins.mano.DummyMano;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OpenSourceMANOPlugin;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.OpenSourceMANOR3Plugin;
 
 import java.util.UUID;
 
@@ -41,6 +41,8 @@ import it.nextworks.nfvmano.catalogue.messages.ScopeType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.DummyMANOPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
+
+import static it.nextworks.nfvmano.catalogue.plugins.mano.MANOType.OSMR3;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest
@@ -116,20 +118,21 @@ public class CatalogueApplicationTests {
     // NOTE: remove ignore to run (the spring runner will refuse to run it otherwise)
     @Test
     @Ignore
-    public void testIntegrationOSM() throws Exception {
+    public void testIntegrationOSMR3() throws Exception {
 
-        //create osm MANO
+        //create r3 MANO
         MANO mano = new OSMMano(
-                "test-osm",
+                "test-r3",
                 "10.0.8.26",
                 "admin",
                 "admin",
-                "default"
+                "default",
+                MANOType.OSMR3
         );
 
-        //create osm mano plugin
-        MANOPlugin plugin = new OpenSourceMANOPlugin(
-                MANOType.OSM,
+        //create r3 mano plugin
+        MANOPlugin plugin = new OpenSourceMANOR3Plugin(
+                MANOType.OSMR3,
                 mano,
                 kafkaBootstrapServers,
                 null,
@@ -189,18 +192,19 @@ public class CatalogueApplicationTests {
         );
         plugin.init();
 
-        //create osm MANO
+        //create r3 MANO
         MANO osmMano = new OSMMano(
-                "test-osm",
+                "test-r3",
                 "10.0.8.26",
                 "admin",
                 "admin",
-                "default"
+                "default",
+                MANOType.OSMR3
         );
 
-        //create osm mano plugin
-        MANOPlugin osmPlugin = new OpenSourceMANOPlugin(
-                MANOType.OSM,
+        //create r3 mano plugin
+        MANOPlugin osmPlugin = new OpenSourceMANOR3Plugin(
+                MANOType.OSMR3,
                 osmMano,
                 kafkaBootstrapServers,
                 null,

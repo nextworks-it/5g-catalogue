@@ -13,12 +13,13 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package it.nextworks.nfvmano.catalogue.plugins.mano.osm;
+package it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3;
 
 import it.nextworks.nfvmano.catalogue.messages.NsdDeletionNotificationMessage;
 import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
 import it.nextworks.nfvmano.catalogue.messages.ScopeType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import org.junit.BeforeClass;
@@ -35,14 +36,14 @@ import static org.junit.Assert.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest
-public class OpenSourceMANOPluginTest {
+public class OpenSourceMANOR3PluginTest {
 
-	private static OpenSourceMANOPlugin plugin;
+	private static OpenSourceMANOR3Plugin plugin;
 
 	@BeforeClass
 	public static void connectOsm() {
-		OSMMano osmMano = new OSMMano("testOSM", "10.0.8.26", "admin", "admin", "default");
-		plugin = new OpenSourceMANOPlugin(MANOType.OSM, osmMano, "blabla", null, null, null, null);
+		OSMMano osmMano = new OSMMano("testOSM", "10.0.8.26", "admin", "admin", "default", MANOType.OSMR3);
+		plugin = new OpenSourceMANOR3Plugin(MANOType.OSMR3, osmMano, "blabla", null, null, null, null);
 		// TODO: mock the service
 	}
 
@@ -59,8 +60,8 @@ public class OpenSourceMANOPluginTest {
 	public void testOnBoard() throws InterruptedException, FailedOperationException {
 		init();
 		ClassLoader classLoader = getClass().getClassLoader();
-		File vnfd = new File(classLoader.getResource("cirros_vnf.tar.gz").getFile());
-		File nsd = new File(classLoader.getResource("cirros_2vnf_ns.tar.gz").getFile());
+		File vnfd = new File(classLoader.getResource("Descriptors/OSM/cirros_vnf.tar.gz").getFile());
+		File nsd = new File(classLoader.getResource("Descriptors/OSM/cirros_2vnf_ns.tar.gz").getFile());
 		plugin.onBoardPackage(vnfd, "test_onb_vnfd");
 		plugin.onBoardPackage(nsd, "test_onb_nsd");
 		// Sleep for OSM to finish
@@ -74,7 +75,7 @@ public class OpenSourceMANOPluginTest {
 	public void testOnBoardGenerated() throws InterruptedException, FailedOperationException {
 		init();
 		ClassLoader classLoader = getClass().getClassLoader();
-		File vnfd = new File(classLoader.getResource("cirros_vnf.tar.gz").getFile());
+		File vnfd = new File(classLoader.getResource("Descriptors/OSM/cirros_vnf.tar.gz").getFile());
 		File nsd = new File(classLoader.getResource("339b0999-80c3-456c-9ee7-4cf42e4f7be7.tar.gz").getFile());
 		plugin.onBoardPackage(vnfd, "test_onb_vnfd");
 		plugin.onBoardPackage(nsd, "test_onb_nsd");
