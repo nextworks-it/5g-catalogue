@@ -38,7 +38,7 @@ function updateVnfInfo(vnfInfoId, elemId) {
     var opState = document.getElementById(elemId).value;
     
     var jsonObj = JSON.parse("{}");
-    jsonObj['vnfOperationalState'] = opState;
+    jsonObj['operationalState'] = opState;
     var json = JSON.stringify(jsonObj, null, 4);
     
     console.log("VnfInfoModifications: " + json);
@@ -145,8 +145,8 @@ function createVnfInfosTable(data, params) {
     }
     var btnFlag = true;
     var header = createTableHeaderByValues(['Name', 'Version', 'Provider', 'Operational State', 'Onboarding State','Actions'], btnFlag, false);
-    var cbacks = ['openVNF_', 'showCanvas', 'updateVnfInfo_', 'deleteVnfInfo'];
-    var names = ['View VNF', 'View VNF Graph', 'Change VNF OpState', 'Delete VNF'];
+    var cbacks = ['openVNF_', 'updateVnfInfo_', 'deleteVnfInfo'];
+    var names = ['View VNF', 'Change VNF OpState', 'Delete VNF'];
     var columns = [['vnfProductName'], ['vnfdVersion'], ['vnfProvider'], ['operationalState'], ['onboardingState']];
 
     table.innerHTML = header + '<tbody>';
@@ -167,9 +167,9 @@ function createVnfInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
     if (btnFlag) {
         //btnText += createActionButton(data['id'], resId, names, cbacks);
         btnText += createLinkSet(data['id'], resId, names, cbacks);
-        createUpdateVnfInfoModal(data['id'], data['vnfOperationalState'], "updateVnfInfosModals");
+        createUpdateVnfInfoModal(data['id'], data['operationalState'], "updateVnfInfosModals");
         creteVNFViewModal(data['id'], "vnfViewModals");
-        createCanvas(data);
+        //createCanvas(data);
     }
 
 	text += '<tr>';
