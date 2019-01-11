@@ -17,8 +17,6 @@ package it.nextworks.nfvmano.catalogue.plugins.mano.osm.r4;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.girtel.osmclient.OSMClient;
-import com.girtel.osmclient.OSMComponent;
 import com.girtel.osmclient.utils.HTTPResponse;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
 import it.nextworks.nfvmano.catalogue.messages.*;
@@ -28,9 +26,9 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.elements.ArchiveBuilder;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.elements.NsdBuilder;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.elements.OsmNsdPackage;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.ArchiveBuilder;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.NsdBuilder;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.OsmNsdPackage;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
@@ -44,7 +42,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class OpenSourceMANOR4Plugin extends MANOPlugin {
 
