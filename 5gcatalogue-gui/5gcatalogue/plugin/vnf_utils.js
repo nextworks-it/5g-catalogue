@@ -16,11 +16,11 @@
 
 function getAllVnfInfos(elemId, callback, resId) {
     console.log("**************************Sto facendo la getallvnfinfo*********************");
-    getJsonFromURL("http://" + catalogueAddr + ":8083/vnf/v1/vnf_descriptors", callback, [elemId, resId]);
+    getJsonFromURL("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages", callback, [elemId, resId]);
 }
 
 function getVnfInfo(vnfInfoId, callback, elemId) {
-    getJsonFromURL("http://" + catalogueAddr + ":8083/vnf/v1/vnf_descriptors/" + vnfInfoId, callback, [elemId]);
+    getJsonFromURL("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId, callback, [elemId]);
 }
 
 function fillVNFsCounter(data, params) {
@@ -31,7 +31,7 @@ function fillVNFsCounter(data, params) {
 }
 
 function deleteVnfInfo(vnfInfoId, resId) {
-    deleteRequestToURL("http://" + catalogueAddr + ":8083/vnf/v1/vnf_descriptors/" + vnfInfoId, showResultMessage, ["VNF with vnfInfoID " + vnfInfoId + " successfully deleted."]);
+    deleteRequestToURL("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId, showResultMessage, ["VNF with vnfInfoID " + vnfInfoId + " successfully deleted."]);
 }
 
 function updateVnfInfo(vnfInfoId, elemId) {
@@ -42,7 +42,7 @@ function updateVnfInfo(vnfInfoId, elemId) {
     var json = JSON.stringify(jsonObj, null, 4);
     
     console.log("VnfInfoModifications: " + json);
-    patchJsonRequestToURL("http://" + catalogueAddr + ":8083/vnf/v1/vnf_descriptors/" + vnfInfoId, json, showResultMessage, ["VNF with vnfInfoId " + vnfInfoId + " successfully updated."]);
+    patchJsonRequestToURL("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId, json, showResultMessage, ["VNF with vnfInfoId " + vnfInfoId + " successfully updated."]);
 }
 
 function loadVNFFile(elemId, resId) {
@@ -59,8 +59,8 @@ function createVnfInfoId(file, resId) {
     // TODO: handle also userDefinedData
     var jsonObj = {"userDefinedData" : {} };
     var json = JSON.stringify(jsonObj, null, 4);
-    
-    postJsonToURL("http://" + catalogueAddr + ":8083/vnf/v1/vnf_descriptors", json, uploadVnfContent, [file, resId]);
+    console.log(json)
+    postJsonToURL("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages", json, uploadVnfContent, [file, resId]);
 }
 
 function uploadVnfContent(data, params) {
@@ -71,7 +71,8 @@ function uploadVnfContent(data, params) {
     formData.append("pippo","pluto");
     var vnfInfoId = data['id'];
     
-    putFileToURL("http://" + catalogueAddr + ":8083/vnf/v1/vnf_descriptors/" + vnfInfoId + "/vnf_content", formData, showResultMessage, ["VNF with vnfInfoId " + vnfInfoId + " successfully updated."]);
+    putFileToURL("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "/package_content", formData, showResultMessage, ["VNF with vnfInfoId " + vnfInfoId + " successfully updated."]);
+    //putVnfPkgToURL("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "/package_content", formData, showResultMessage, ["VNF with vnfInfoId " + vnfInfoId + " successfully updated."]);
 }
 
 function getDescription(descrId) {
@@ -96,11 +97,11 @@ function readVNF(graphId) {
 
 function getVNF(vnfInfoId, elemId, callback) {
     console.log('Sto facendo la get***************************************');
-    getFileFromURL("http://" + catalogueAddr + ":8083/vnf/v1/vnf_descriptors/" + vnfInfoId + "/vnf_content", callback, [vnfInfoId, elemId]);
+    getFileFromURL("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "/vnfd", callback, [vnfInfoId, elemId]);
     console.log('Fatta la get***************************************');
 }
 
-function showCanvas(data,params) {
+function showVnfCanvas(data,params) {
     console.log('Guardo la canvas***************************************');
     console.log(params[0]);
     console.log(params[1]);
@@ -143,10 +144,10 @@ function createVnfInfosTable(data, params) {
         return;
     }
     var btnFlag = true;
-    var header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Operational State', 'Onboarding State','Actions'], btnFlag, false);
+    var header = createTableHeaderByValues(['Name', 'Version', 'Provider', 'Operational State', 'Onboarding State','Actions'], btnFlag, false);
     var cbacks = ['openVNF_', 'showCanvas', 'updateVnfInfo_', 'deleteVnfInfo'];
     var names = ['View VNF', 'View VNF Graph', 'Change VNF OpState', 'Delete VNF'];
-    var columns = [['vnfName'], ['vnfVersion'], ['vnfDesigner'], ['vnfOperationalState'], ['vnfOnboardingState']];
+    var columns = [['vnfProductName'], ['vnfdVersion'], ['vnfProvider'], ['operationalState'], ['onboardingState']];
 
     table.innerHTML = header + '<tbody>';
 
@@ -198,7 +199,7 @@ function createVnfInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
     return text;
 }
 
-function createCanvas(data){
+function createVnfCanvas(data){
     console.log(data);
     console.log('Canvas per grafico' +  data['id']);
     var dataId ='cy_'+data['id'];
