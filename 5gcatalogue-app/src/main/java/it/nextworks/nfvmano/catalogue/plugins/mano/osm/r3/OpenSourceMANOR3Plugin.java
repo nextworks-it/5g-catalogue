@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.nextworks.nfvmano.catalogue.plugins.mano.osm;
+package it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,9 +27,10 @@ import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnbo
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.elements.ArchiveBuilder;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.elements.NsdBuilder;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.elements.OsmNsdPackage;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.ArchiveBuilder;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.NsdBuilder;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.OsmNsdPackage;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
@@ -45,7 +46,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class OpenSourceMANOPlugin extends MANOPlugin {
+public class OpenSourceMANOR3Plugin extends MANOPlugin {
 
 	/* TEST DATA
 	private static final String NSD_FILE_NAME = "cirros_2vnf_ns.tar.gz"; // Should be a filename in src/main/resources
@@ -56,22 +57,22 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
 	private static final String[] VNFD_IDS = { "cirros_vnf" };
 	*/
 
-    private static final Logger log = LoggerFactory.getLogger(OpenSourceMANOPlugin.class);
+    private static final Logger log = LoggerFactory.getLogger(OpenSourceMANOR3Plugin.class);
 
     private static final File TMP_DIR = new File("/tmp");
 
     private static final File DEF_IMG = new File(
-            OpenSourceMANOPlugin.class.getClassLoader().getResource("nxw_logo.png").getFile()
+            OpenSourceMANOR3Plugin.class.getClassLoader().getResource("nxw_logo.png").getFile()
     );
     private final OSMMano osm;
     private OSMClient osmClient;
 
-    public OpenSourceMANOPlugin(MANOType manoType, MANO mano, String kafkaBootstrapServers,
-                                NsdManagementInterface service, String localTopic, String remoteTopic,
-                                KafkaTemplate<String, String> kafkaTemplate) {
+    public OpenSourceMANOR3Plugin(MANOType manoType, MANO mano, String kafkaBootstrapServers,
+                                  NsdManagementInterface service, String localTopic, String remoteTopic,
+                                  KafkaTemplate<String, String> kafkaTemplate) {
         super(manoType, mano, kafkaBootstrapServers, service, localTopic, remoteTopic, kafkaTemplate);
-        if (MANOType.OSM != manoType) {
-            throw new IllegalArgumentException("OSM plugin requires an OSM type MANO");
+        if (MANOType.OSMR3 != manoType) {
+            throw new IllegalArgumentException("OSM R3 plugin requires an OSM R3 type MANO");
         }
         osm = (OSMMano) mano;
     }
@@ -84,11 +85,10 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
 
     void initOsmConnection() {
         osmClient = new OSMClient(osm.getIpAddress(), osm.getUsername(), osm.getPassword(), osm.getProject());
-        log.info("OSM instance addr {}, user {}, project {} connected.", osm.getIpAddress(), osm.getUsername(),
+        log.info("OSM R3 instance addr {}, user {}, project {} connected.", osm.getIpAddress(), osm.getUsername(),
                 osm.getProject());
     }
 
-    @SuppressWarnings("unused")
     @Override
     public void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) {
         log.info("Received NSD onboarding notificationfor NSD {} info id {}.", notification.getNsdId(),
@@ -248,16 +248,19 @@ public class OpenSourceMANOPlugin extends MANOPlugin {
         return httpResponse.getContent();
     }
 
+    // TODO: to be implemented according to descriptor format in OSMR3
     @Override
     public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
 
     }
 
+    // TODO: to be implemented according to descriptor format in OSMR3
     @Override
     public void acceptVnfPkgChangeNotification(VnfPkgChangeNotificationMessage notification) throws MethodNotImplementedException {
 
     }
 
+    // TODO: to be implemented according to descriptor format in OSMR3
     @Override
     public void acceptVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) throws MethodNotImplementedException {
 

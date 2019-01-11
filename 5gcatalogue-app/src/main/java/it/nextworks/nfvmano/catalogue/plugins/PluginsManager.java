@@ -19,10 +19,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementService;
 import it.nextworks.nfvmano.catalogue.plugins.mano.*;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OpenSourceMANOPlugin;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.OpenSourceMANOR3Plugin;
 import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
+import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,10 +38,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class PluginsManager {
@@ -169,8 +167,8 @@ public class PluginsManager {
         if (mano.getManoType().equals(MANOType.DUMMY)) {
             return new DummyMANOPlugin(mano.getManoType(), mano, bootstrapServers, service, localNsdNotificationTopic,
                     remoteNsdNotificationTopic, kafkaTemplate);
-        } else if (mano.getManoType().equals(MANOType.OSM)) {
-            return new OpenSourceMANOPlugin(mano.getManoType(), mano, bootstrapServers, service,
+        } else if (mano.getManoType().equals(MANOType.OSMR3)) {
+            return new OpenSourceMANOR3Plugin(mano.getManoType(), mano, bootstrapServers, service,
                     localNsdNotificationTopic, remoteNsdNotificationTopic, kafkaTemplate);
         } else {
             throw new MalformattedElementException("Unsupported MANO type. Skipping.");
@@ -190,11 +188,11 @@ public class PluginsManager {
         log.debug("RECEIVED MANO:\nMANO ID: " + manoId + "\nMANO TYPE: " + type);
 
         switch (type) {
-            case OSM:
+            case OSMR3:
                 log.debug("Processing request for creating " + type + "Plugin.");
                 OSMMano osmMano = (OSMMano) mano;
                 OSMMano targetOsmMano = new OSMMano(osmMano.getManoId(), osmMano.getIpAddress(), osmMano.getUsername(),
-                        osmMano.getPassword(), osmMano.getProject());
+                        osmMano.getPassword(), osmMano.getProject(), MANOType.OSMR3);
                 targetOsmMano.isValid();
                 log.debug("Persisting OSM MANO with manoId: " + manoId);
                 OSMMano createdMano = MANORepository.saveAndFlush(targetOsmMano);
@@ -211,6 +209,23 @@ public class PluginsManager {
                 log.error("Unsupported MANO type.");
                 throw new MethodNotImplementedException("Unsupported MANO type.");
         }
+    }
+
+    public MANO getMANOPlugin(String manoId) throws NotExistingEntityException {
+
+        log.debug("Processing request for retrieving MANO Plugin with manoId {}.", manoId);
+
+        Optional<MANO> optionalMANO = MANORepository.findByManoId(manoId);
+
+        MANO mano = null;
+
+        if (optionalMANO.isPresent()) {
+            mano = optionalMANO.get();
+        } else {
+            throw new NotExistingEntityException("MANO Plugin with manoId " + manoId + " not present in DB");
+        }
+
+        return mano;
     }
 
     public List<MANO> getAllMANOPlugins() {
