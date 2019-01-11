@@ -104,7 +104,7 @@ public interface NsdApi {
             @ApiResponse(code = 416, message = "Status 416", response = ProblemDetails.class),
             @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
     @RequestMapping(value = "/nsd/v1/ns_descriptors/{nsdInfoId}/nsd_content", produces = {"application/json",
-            "application/x-yaml", "application/zip"}, method = RequestMethod.GET)
+            "application/yaml", "application/zip"}, method = RequestMethod.GET)
     ResponseEntity<?> getNSD(@ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
                              @ApiParam(value = "The request may contain a \"Range\" HTTP header to obtain single range of bytes from the NSD file. This can be used to continue an aborted transmission.  If the NFVO does not support range requests, the NFVO shall ignore the 'Range\" header, process the GET request, and return the whole NSD file with a 200 OK response (rather than returning a 4xx error status code).") @RequestHeader(value = "Range", required = false) String range);
 

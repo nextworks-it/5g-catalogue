@@ -15,10 +15,12 @@
  */
 package it.nextworks.nfvmano.catalogue.plugins.mano;
 
+import io.swagger.annotations.ApiParam;
 import it.nextworks.nfvmano.catalogue.plugins.PluginsManager;
 import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
+import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +45,7 @@ public class MANOManagementController {
     }
 
     @RequestMapping(value = "/manos", method = RequestMethod.POST)
-    public ResponseEntity<?> createMANO(@RequestBody MANO mano) throws MethodNotImplementedException {
+    public ResponseEntity<?> createMANO(@ApiParam(value = "", required = true) @RequestBody MANO mano) throws MethodNotImplementedException {
 
         log.debug("Received request for new MANO loading");
         if ((mano == null) || (mano.getManoId() == null)) {
@@ -79,5 +81,21 @@ public class MANOManagementController {
         List<MANO> manos = pluginsManager.getAllMANOPlugins();
 
         return new ResponseEntity<List<MANO>>(manos, HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/manos/{manoId}", method = RequestMethod.DELETE)
+    public ResponseEntity<?> deleteMANO(@ApiParam(value = "", required = true) @PathVariable("manoId") String manoId) throws MethodNotImplementedException {
+
+        log.debug("Received request for removing MANO plugin with manoId {}", manoId);
+
+        MANO mano = null;
+
+        try {
+            mano = pluginsManager.getMANOPlugin(manoId);
+        } catch (NotExistingEntityException e) {
+            return new ResponseEntity<String>("MANO Plugin with manoId " + manoId + " not present in DB", HttpStatus.BAD_REQUEST);
+        }
+
+        return new ResponseEntity<MANO>(mano, HttpStatus.OK);
     }
 }

@@ -13,18 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.elements;
+package it.nextworks.nfvmano.catalogue.plugins.mano.osm.common;
 
+import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NsVirtualLink.NsVirtualLinkNode;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class NsdBuilder {
+
+    @Autowired
+    FileSystemStorageService fileSystemStorageService;
 
     private final File defaultLogo;
     private OsmNsdPackage osmPackage;
@@ -80,7 +85,12 @@ public class NsdBuilder {
                 .map(vnf -> {
                             ConstituentVnfd output = new ConstituentVnfd()
                                     .setVnfdIdRef(vnf.getProperties().getDescriptorId());
-                            vnf.getRequirements().getVirtualLink().forEach(
+
+                           String descriptorId = vnf.getProperties().getDescriptorId();
+
+                           DescriptorTemplate vnfd;
+
+                            /*vnf.getRequirements().getVirtualLink().forEach(
                                     input -> {
                                         String[] split = input.split("/");
                                         if (!(split.length == 2)) {
@@ -94,7 +104,7 @@ public class NsdBuilder {
                                         vlToVnfMapping.putIfAbsent(vlId, new HashMap<>());
                                         vlToVnfMapping.get(vlId).put(output, cpId);
                                     }
-                            );
+                            );*/
                             return output;
                         }
                 )
