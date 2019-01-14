@@ -11,9 +11,9 @@ topologyTemplate:
     nodeType: tosca.nodes.nfv.VNF
     requirements:
       virtualLink: [{cp: cp-ens3, vl: management_mgmt}, {cp: cp-ens7, vl: origin}, {cp: cp-ens6, vl: cache}]
-
+  
   nodeTemplates:
-
+    
     vCACHE_VNF:
       type: tosca.nodes.nfv.VNF
       properties:
@@ -28,11 +28,11 @@ topologyTemplate:
           - JuJu
         flavourId: simple
         flavourDescription: Simple deployment flavour
-
+    
     vCache_vdu:
       type: tosca.nodes.nfv.Vdu.Compute
       properties:
-        name: cirros_vdu
+        name: vcache_mid_vdu
         vduProfile:
           minNumberOfInstances: 1
           maxNumberOfInstances: 1
@@ -45,7 +45,7 @@ topologyTemplate:
               numVirtualCpu: 4
       requirements:
         virtualStorage: [vCache_storage]
-
+    
     vCache_storage:
       type: tosca.nodes.nfv.Vdu.VirtualBlockStorage
       properties:
@@ -58,7 +58,7 @@ topologyTemplate:
           containerFormat: BARE
           diskFormat: QCOW2
           size: 1880
-
+    
     cp-ens3:
       type: tosca.nodes.nfv.VnfExtCp
       properties:
@@ -68,7 +68,7 @@ topologyTemplate:
         description: mgmt interface
       requirements:
         externalVirtualLink: [management_mgmt]
-
+    
     cp-ens7:
       type: tosca.nodes.nfv.VnfExtCp
       properties:
@@ -78,7 +78,7 @@ topologyTemplate:
         description: origin interface
       requirements:
         externalVirtualLink: [origin]
-
+    
     cp-ens6:
       type: tosca.nodes.nfv.VnfExtCp
       properties:

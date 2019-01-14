@@ -33,7 +33,7 @@ topologyTemplate:
     vCache_vdu:
       type: tosca.nodes.nfv.Vdu.Compute
       properties:
-        name: cirros_vdu
+        name: vcache_edge_vdu
         vduProfile:
           minNumberOfInstances: 1
           maxNumberOfInstances: 1

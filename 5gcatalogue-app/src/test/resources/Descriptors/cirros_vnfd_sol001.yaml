@@ -17,7 +17,7 @@ topologyTemplate:
     CIRROS_VNF:
       type: tosca.nodes.nfv.VNF
       properties:
-        descriptorId: cb0bcae1-00e7-41fa-b407-ba384e76a3e3
+        descriptorId: cirros_vnfd #cb0bcae1-00e7-41fa-b407-ba384e76a3e3
         descriptorVersion: "1.0"
         provider: OSM
         productName: cirros_vnf
@@ -61,13 +61,13 @@ topologyTemplate:
     
     eth0:
       type: tosca.nodes.nfv.VnfExtCp
-        properties:
-          protocol: [associatedLayerProtocol: IPV4]
-          layerProtocols: [IPV4]
-          role: LEAF
-          description: mgmt interface
-        requirements:
-          externalVirtualLink: [vld_mgmt]
+      properties:
+        protocol: [associatedLayerProtocol: IPV4]
+        layerProtocols: [IPV4]
+        role: LEAF
+        description: mgmt interface
+      requirements:
+        externalVirtualLink: [vld_mgmt]
 
 
 

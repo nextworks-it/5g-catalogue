@@ -88,7 +88,7 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
         try {
             DescriptorTemplate descriptorTemplate = retrieveTemplate(notification.getNsdInfoId());
             NsdBuilder nsdBuilder = new NsdBuilder(DEF_IMG);
-            nsdBuilder.parseDescriptorTemplate(descriptorTemplate);
+            nsdBuilder.parseDescriptorTemplate(descriptorTemplate, null);
             OsmNsdPackage packageData = nsdBuilder.getPackage();
 
             ArchiveBuilder archiver = new ArchiveBuilder(TMP_DIR, DEF_IMG);

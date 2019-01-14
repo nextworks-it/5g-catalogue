@@ -40,48 +40,48 @@ topologyTemplate:
     
     firstVNF:
       type: tosca.nodes.nfv.VNF
-        properties:
-          descriptorId: cb0bcae1-00e7-41fa-b407-ba384e76a3e3
-          descriptorVersion: "0.1"
-          provider: Nextworks
-          productName: cirros_vnf_sol001
-          softwareVersion: v5.3
-          productInfoName: cirros VNF for test NS
-          productInfoDescription: cirros VNF for test NS
-          vnfmInfo:
-            - juju
-          localizationLanguages:
-            - ENG
-          defaultLocalizationLanguage: ENG
-          configurableProperties:
-            isAutoscaleEnabled: "false"
-            isAutohealEnabled: "false"
-          flavourId: cirrosDf_001
-          flavourDescription: cirros DF
-        requirements:
-          virtualLink:
-            - vld_mgmt
+      properties:
+        descriptorId: cirros_vnfd #cb0bcae1-00e7-41fa-b407-ba384e76a3e3
+        descriptorVersion: "0.1"
+        provider: Nextworks
+        productName: cirros_vnf_sol001
+        softwareVersion: v5.3
+        productInfoName: cirros VNF for test NS
+        productInfoDescription: cirros VNF for test NS
+        vnfmInfo:
+          - juju
+        localizationLanguages:
+          - ENG
+        defaultLocalizationLanguage: ENG
+        configurableProperties:
+          isAutoscaleEnabled: "false"
+          isAutohealEnabled: "false"
+        flavourId: cirrosDf_001
+        flavourDescription: cirros DF
+      requirements:
+        virtualLink:
+          - vld_mgmt
     
     secondVNF:
       type: tosca.nodes.nfv.VNF
-        properties:
-          descriptorId: cb0bcae1-00e7-41fa-b407-ba384e76a3e3
-          descriptorVersion: "0.1"
-          provider: Nextworks
-          productName: cirros_vnf_sol001
-          softwareVersion: v5.3
-          productInfoName: cirros VNF for test NS
-          productInfoDescription: cirros VNF for test NS
-          vnfmInfo:
-            - juju
-          localizationLanguages:
-            - ENG
-          defaultLocalizationLanguage: ENG
-          configurableProperties:
-            isAutoscaleEnabled: "false"
-            isAutohealEnabled: "false"
-          flavourId: cirrosDf_001
-          flavourDescription: cirros DF
-        requirements:
-          virtualLink:
-            - vld_mgmt
+      properties:
+        descriptorId: cirros_vnfd #cb0bcae1-00e7-41fa-b407-ba384e76a3e3
+        descriptorVersion: "0.1"
+        provider: Nextworks
+        productName: cirros_vnf_sol001
+        softwareVersion: v5.3
+        productInfoName: cirros VNF for test NS
+        productInfoDescription: cirros VNF for test NS
+        vnfmInfo:
+          - juju
+        localizationLanguages:
+          - ENG
+        defaultLocalizationLanguage: ENG
+        configurableProperties:
+          isAutoscaleEnabled: "false"
+          isAutohealEnabled: "false"
+        flavourId: cirrosDf_001
+        flavourDescription: cirros DF
+      requirements:
+        virtualLink:
+          - vld_mgmt

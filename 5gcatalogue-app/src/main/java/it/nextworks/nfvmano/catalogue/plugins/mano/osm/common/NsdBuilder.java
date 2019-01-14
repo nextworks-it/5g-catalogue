@@ -15,11 +15,8 @@
  */
 package it.nextworks.nfvmano.catalogue.plugins.mano.osm.common;
 
-import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
 import it.nextworks.nfvmano.catalogue.storage.StorageServiceInterface;
-import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
-import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NsVirtualLink.NsVirtualLinkNode;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
@@ -30,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -78,7 +74,7 @@ public class NsdBuilder {
                 );
     }
 
-    public void parseDescriptorTemplate(DescriptorTemplate template) throws MalformattedElementException {
+    public void parseDescriptorTemplate(DescriptorTemplate template, Map<String, DescriptorTemplate> vnfds) throws MalformattedElementException {
         dt = template;
 
         if (!(dt.getTopologyTemplate().getNSNodes().size() == 1)) {
@@ -89,42 +85,35 @@ public class NsdBuilder {
 
         Map<String, Map<ConstituentVnfd, String>> vlToVnfMapping = new HashMap<>();
 
-        Map<String, VNFNode> vnfNodes = dt.getTopologyTemplate().getVNFNodes();
-
         List<ConstituentVnfd> constituentVnfds = new ArrayList<>();
 
-        for (Map.Entry<String, VNFNode> vnfNodeEntry : vnfNodes.entrySet()) {
-            String vnfdId = vnfNodeEntry.getValue().getProperties().getDescriptorId();
-            String version = vnfNodeEntry.getValue().getProperties().getDescriptorVersion();
-            String fileName = vnfNodeEntry.getValue().getProperties().getProductName().concat(".zip");
+        Map<String, VNFNode> vnfNodes = dt.getTopologyTemplate().getVNFNodes();
 
-            ConstituentVnfd constituentVnfd = new ConstituentVnfd().setVnfdIdRef(vnfdId);
+        for (Map.Entry<String, VNFNode> vnfNode : vnfNodes.entrySet()) {
+            String vnfdId = vnfNode.getValue().getProperties().getDescriptorId();
 
-            List<String> vls = vnfNodeEntry.getValue().getRequirements().getVirtualLink();
+            for (Map.Entry<String, DescriptorTemplate> vnfd : vnfds.entrySet()) {
+                if (vnfdId.equalsIgnoreCase(vnfd.getValue().getTopologyTemplate().getVNFNodes().entrySet().iterator().next().getValue().getProperties().getDescriptorId())) {
+                    ConstituentVnfd constituentVnfd = new ConstituentVnfd().setVnfdIdRef(vnfdId);
+                    constituentVnfds.add(constituentVnfd);
 
-            for (String vlId : vls) {
-                vlToVnfMapping.putIfAbsent(vlId, new HashMap<>());
+                    List<String> vls = vnfNode.getValue().getRequirements().getVirtualLink();
 
-                try {
-                    log.debug("Searching VNFD with vnfdId {} and version {} in pkg {}", vnfdId, version, fileName);
-                    File vnfd_file = storageService.loadVnfdAsFile(vnfdId, version, fileName);
-                    DescriptorTemplate vnfd = DescriptorsParser.fileToDescriptorTemplate(vnfd_file);
-
-                    List<VirtualLinkPair> pairs = vnfd.getTopologyTemplate().getSubstituitionMappings().getRequirements().getVirtualLink();
-                    for (VirtualLinkPair pair : pairs) {
-                        if (pair.getVl().equalsIgnoreCase(vlId)) {
-                            String cpId = pair.getCp();
-                            vlToVnfMapping.get(vlId).put(constituentVnfd, cpId);
+                    for (String vlId : vls) {
+                        vlToVnfMapping.putIfAbsent(vlId, new HashMap<>());
+                        List<VirtualLinkPair> pairs = vnfd.getValue().getTopologyTemplate().getSubstituitionMappings().getRequirements().getVirtualLink();
+                        for (VirtualLinkPair pair : pairs) {
+                            if (pair.getVl().equalsIgnoreCase(vlId)) {
+                                String cpId = pair.getCp();
+                                vlToVnfMapping.get(vlId).put(constituentVnfd, cpId);
+                            }
                         }
                     }
-
-                } catch (NotExistingEntityException e) {
-                    log.error("VNFD with vnfdId " + vnfdId + " and version " + version + " does not exist in storage: " + e.getMessage());
-                } catch (IOException e) {
-                    log.error("Unable to read VNFD with vnfdId " + vnfdId + " and version " + version + ": " + e.getMessage());
                 }
             }
         }
+
+
 
         /*List<ConstituentVnfd> constituentVnfds = dt.getTopologyTemplate().getVNFNodes().values()
                 .stream()

@@ -21,7 +21,7 @@ topologyTemplate:
         descriptorId: 70b92c52-d3b6-4077-b851-6ac2d37dc520
         designer: Nextworks
         version: "1.11"
-        name: vcache-complete-v4
+        name: vCDN_UC3_5GMEDIA
         invariantId: 70b92c52-d3b6-4077-b851-6ac2d37dc520
       requirements:
         virtualLink: [management_mgmt, origin, cache, user]

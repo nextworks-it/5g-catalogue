@@ -36,13 +36,89 @@ public class ArchiveParser {
 
     private static final Logger log = LoggerFactory.getLogger(ArchiveParser.class);
 
-    private ByteArrayOutputStream metadata;
-    private Map<String, ByteArrayOutputStream> templates = new HashMap<>();
-    private ByteArrayOutputStream mainServiceTemplate;
-    private List<String> folderNames = new ArrayList<>();
-    private Set<String> admittedFolders = new HashSet<>();
+    private static ByteArrayOutputStream metadata;
+    private static Map<String, ByteArrayOutputStream> templates = new HashMap<>();
+    private static ByteArrayOutputStream mainServiceTemplate;
+    private static List<String> folderNames = new ArrayList<>();
+    private static Set<String> admittedFolders = new HashSet<>();
 
     public ArchiveParser() {
+    }
+
+    private static void setMainServiceTemplateFromMetadata(byte[] metadata) throws IOException, MalformattedElementException {
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(metadata), "UTF-8"));
+
+        log.debug("Going to parse TOSCA.meta...");
+
+        try {
+            while (true) {
+                String line = reader.readLine();
+                if (line == null) {
+                    break;
+                } else {
+                    String regex = "^Entry-Definitions: (Definitions\\/[^\\\\]*\\.yaml)$";
+                    if (line.matches(regex)) {
+                        Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+                        Matcher matcher = pattern.matcher(line);
+                        if (matcher.find()) {
+                            String mst_name = matcher.group(1);
+                            log.debug("Parsing metadata: found Main Service Template " + mst_name);
+                            if (templates.containsKey(mst_name)) {
+                                mainServiceTemplate = templates.get(mst_name);
+                            } else {
+                                log.error("Main Service Template specified in TOSCA.meta not present in CSAR Definitions directory: " + mst_name);
+                                throw new MalformattedElementException(
+                                        "Main Service Template specified in TOSCA.meta not present in CSAR Definitions directory: " + mst_name);
+                            }
+                        }
+                    }
+                }
+            }
+        } finally {
+            reader.close();
+        }
+    }
+
+    public static byte[] getMainDescriptorFromArchive(InputStream archive) throws IOException {
+        folderNames.clear();
+        templates.clear();
+        mainServiceTemplate = null;
+        metadata = null;
+
+        ZipEntry entry;
+
+        ZipInputStream zipStream = new ZipInputStream(archive);
+        while ((entry = zipStream.getNextEntry()) != null) {
+
+            if (!entry.isDirectory()) {
+                ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+
+                int count;
+                byte[] buffer = new byte[1024];
+                while ((count = zipStream.read(buffer)) != -1) {
+                    outStream.write(buffer, 0, count);
+                }
+
+                String fileName = entry.getName();
+                log.debug("Parsing Archive: found file with name " + fileName);
+
+                if (fileName.toLowerCase().equalsIgnoreCase("tosca.meta")) {
+                    metadata = outStream;
+                } else if (fileName.toLowerCase().endsWith(".yaml")) {
+                    templates.put(fileName, outStream);
+                }
+            }
+        }
+
+        try {
+            setMainServiceTemplateFromMetadata(metadata.toByteArray());
+            byte[] mst = mainServiceTemplate.toByteArray();
+            return mst;
+        } catch (MalformattedElementException e) {
+            log.error(e.getMessage());
+        }
+        return null;
     }
 
     @PostConstruct
@@ -106,83 +182,6 @@ public class ArchiveParser {
                 throw new MalformattedElementException("Folder with name " + fName + " not admitted in CSAR option#1 structure");
             }
         }
-    }
-
-    private void setMainServiceTemplateFromMetadata(byte[] metadata) throws IOException, MalformattedElementException {
-
-        BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(metadata), "UTF-8"));
-
-        log.debug("Going to parse TOSCA.meta...");
-
-        try {
-            while (true) {
-                String line = reader.readLine();
-                if (line == null) {
-                    break;
-                } else {
-                    String regex = "^Entry-Definitions: (Definitions\\/[^\\\\]*\\.yaml)$";
-                    if (line.matches(regex)) {
-                        Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
-                        Matcher matcher = pattern.matcher(line);
-                        if (matcher.find()) {
-                            String mst_name = matcher.group(1);
-                            log.debug("Parsing metadata: found Main Service Template " + mst_name);
-                            if (this.templates.containsKey(mst_name)) {
-                                this.mainServiceTemplate = this.templates.get(mst_name);
-                            } else {
-                                log.error("Main Service Template specified in TOSCA.meta not present in CSAR Definitions directory: " + mst_name);
-                                throw new MalformattedElementException(
-                                        "Main Service Template specified in TOSCA.meta not present in CSAR Definitions directory: " + mst_name);
-                            }
-                        }
-                    }
-                }
-            }
-        } finally {
-            reader.close();
-        }
-    }
-
-    public byte[] getMainDescriptorFromArchive(InputStream archive) throws IOException {
-
-        this.folderNames.clear();
-        this.templates.clear();
-        this.mainServiceTemplate = null;
-        this.metadata = null;
-
-        ZipEntry entry;
-
-        ZipInputStream zipStream = new ZipInputStream(archive);
-        while ((entry = zipStream.getNextEntry()) != null) {
-
-            if (!entry.isDirectory()) {
-                ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-
-                int count;
-                byte[] buffer = new byte[1024];
-                while ((count = zipStream.read(buffer)) != -1) {
-                    outStream.write(buffer, 0, count);
-                }
-
-                String fileName = entry.getName();
-                log.debug("Parsing Archive: found file with name " + fileName);
-
-                if (fileName.toLowerCase().equalsIgnoreCase("tosca.meta")) {
-                    this.metadata = outStream;
-                } else if (fileName.toLowerCase().endsWith(".yaml")) {
-                    this.templates.put(fileName, outStream);
-                }
-            }
-        }
-
-        try {
-            setMainServiceTemplateFromMetadata(this.metadata.toByteArray());
-            byte[] mst = this.mainServiceTemplate.toByteArray();
-            return mst;
-        } catch (MalformattedElementException e) {
-            log.error(e.getMessage());
-        }
-        return null;
     }
 
     public DescriptorTemplate archiveToMainDescriptor(MultipartFile file)

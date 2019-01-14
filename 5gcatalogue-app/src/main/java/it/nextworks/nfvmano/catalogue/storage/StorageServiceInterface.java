@@ -24,12 +24,16 @@ import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
 public interface StorageServiceInterface {
+
+    public static File loadVnfdAsFile(String vnfdId, String version, String filename) throws NotExistingEntityException, IOException {
+        return null;
+    }
 
     public void init() throws FailedOperationException;
 
@@ -48,8 +52,6 @@ public interface StorageServiceInterface {
     public Resource loadVnfPkgAsResource(VnfPkgInfoResource vnfPkgInfo, String filename) throws NotExistingEntityException;
 
     public Resource loadVnfdAsResource(VnfPkgInfoResource vnfPkgInfo, String filename) throws NotExistingEntityException, IOException;
-
-    public File loadVnfdAsFile(String vnfdId, String version, String filename) throws NotExistingEntityException, IOException;
 
     public void deleteAll();
 
