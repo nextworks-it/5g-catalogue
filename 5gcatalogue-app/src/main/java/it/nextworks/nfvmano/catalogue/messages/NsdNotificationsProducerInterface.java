@@ -21,8 +21,6 @@ import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
 
-import java.util.UUID;
-
 public interface NsdNotificationsProducerInterface {
 
     /**

@@ -3,100 +3,85 @@ toscaDefaultNamespace: test
 description: Descriptor for 2 cirros test NS
 
 metadata:
- descriptorId: 339b0999-80c3-456c-9ee7-4cf42e4f7be7
- vendor: Nextworks
- version: "0.1"
+  descriptorId: 339b0999-80c3-456c-9ee7-4cf42e4f7be7
+  vendor: Nextworks
+  version: "0.1"
 
 topologyTemplate:
-
- nodeTemplates:
-
-  cirros_NS:
-   type: tosca.nodes.nfv.NS
-   properties:
-    descriptorId: 339b0999-80c3-456c-9ee7-4cf42e4f7be7
-    designer: Nextworks
-    version: "0.1"
-    name: cirros_2_test_nsd
-    invariantId: 339b0999-80c3-456c-9ee7-4cf42e4f7be7
-   capabilities:
-   requirements:
-    virtualLink: [management, user]
-
-  vld_mgmt:
-   type: tosca.nodes.nfv.NsVirtualLink
-   properties:
-    provider: Nextworks
-    version: "0.1"
-    vlProfile:
-     maxBitrateRequirements:
-      root: 1000000
-      leaf: 100000
-     minBitrateRequirements:
-      root: 100000
-      leaf: 10000
-    connectivityType:
-     layerProtocols: [IPV4]
-     flowPattern: LINE
-    serviceAvailability:
-     level: LEVEL_1
-
-  firstVNF:
-   type: tosca.nodes.nfv.VNF
-   properties:
-    descriptorId: cirros_vnfd
-    descriptorVersion: "0.1"
-    provider: Nextworks
-    productName: cirros_test_1
-    softwareVersion: v5.3
-    productInfoName: cirros VNF for test NS
-    productInfoDescription: cirros VNF for test NS
-    vnfmInfo:
-     - juju
-    localizationLanguages:
-     - ENG
-    defaultLocalizationLanguage: ENG
-    configurableProperties:
-     isAutoscaleEnabled: "false"
-     isAutohealEnabled: "false"
-    modifiableAttributes:
-     extension:
-      test: test
-    flavourId: cirrosDf_001
-    flavourDescription: vCache Edge DF
-   requirements:
-    virtualLink:
-     - vld_mgmt/eth0
-   capabilities:
-    monitoringParameter:
-     - cpuLoad
-
-  secondVNF:
-   type: tosca.nodes.nfv.VNF
-   properties:
-    descriptorId: cirros_vnfd
-    descriptorVersion: "0.1"
-    provider: Nextworks
-    productName: cirros_test_2
-    softwareVersion: v5.3
-    productInfoName: cirros VNF for test NS
-    productInfoDescription: cirros VNF for test NS
-    vnfmInfo:
-     - juju
-    localizationLanguages:
-     - ENG
-    defaultLocalizationLanguage: ENG
-    configurableProperties:
-     isAutoscaleEnabled: "false"
-     isAutohealEnabled: "false"
-    modifiableAttributes:
-     extension:
-      test: test
-    flavourId: cirrosDf_001
-    flavourDescription: vCache Edge DF
-   requirements:
-    virtualLink:
-     - vld_mgmt/eth0
-   capabilities:
-    monitoringParameter:
-     - cpuLoad
+  
+  nodeTemplates:
+    
+    cirros_NS:
+      type: tosca.nodes.nfv.NS
+      properties:
+        descriptorId: 339b0999-80c3-456c-9ee7-4cf42e4f7be7
+        designer: Nextworks
+        version: "0.1"
+        name: two_cirros_example_tosca
+        invariantId: 339b0999-80c3-456c-9ee7-4cf42e4f7be7
+      requirements:
+        virtualLink: [vld_mgmt]
+    
+    vld_mgmt:
+      type: tosca.nodes.nfv.NsVirtualLink
+      properties:
+        description: Mgmt VL
+        testAccess: [NONE]
+        vlProfile:
+          maxBitrateRequirements:
+            root: 1000000
+            leaf: 100000
+          minBitrateRequirements:
+            root: 100000
+            leaf: 10000
+        connectivityType:
+          layerProtocols: [IPV4]
+          flowPattern: LINE
+    
+    firstVNF:
+      type: tosca.nodes.nfv.VNF
+        properties:
+          descriptorId: cb0bcae1-00e7-41fa-b407-ba384e76a3e3
+          descriptorVersion: "0.1"
+          provider: Nextworks
+          productName: cirros_vnf_sol001
+          softwareVersion: v5.3
+          productInfoName: cirros VNF for test NS
+          productInfoDescription: cirros VNF for test NS
+          vnfmInfo:
+            - juju
+          localizationLanguages:
+            - ENG
+          defaultLocalizationLanguage: ENG
+          configurableProperties:
+            isAutoscaleEnabled: "false"
+            isAutohealEnabled: "false"
+          flavourId: cirrosDf_001
+          flavourDescription: cirros DF
+        requirements:
+          virtualLink:
+            - vld_mgmt
+    
+    secondVNF:
+      type: tosca.nodes.nfv.VNF
+        properties:
+          descriptorId: cb0bcae1-00e7-41fa-b407-ba384e76a3e3
+          descriptorVersion: "0.1"
+          provider: Nextworks
+          productName: cirros_vnf_sol001
+          softwareVersion: v5.3
+          productInfoName: cirros VNF for test NS
+          productInfoDescription: cirros VNF for test NS
+          vnfmInfo:
+            - juju
+          localizationLanguages:
+            - ENG
+          defaultLocalizationLanguage: ENG
+          configurableProperties:
+            isAutoscaleEnabled: "false"
+            isAutohealEnabled: "false"
+          flavourId: cirrosDf_001
+          flavourDescription: cirros DF
+        requirements:
+          virtualLink:
+            - vld_mgmt

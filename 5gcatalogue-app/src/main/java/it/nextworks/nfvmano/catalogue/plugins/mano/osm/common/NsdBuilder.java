@@ -16,24 +16,33 @@
 package it.nextworks.nfvmano.catalogue.plugins.mano.osm.common;
 
 import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
+import it.nextworks.nfvmano.catalogue.storage.StorageServiceInterface;
+import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
+import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NsVirtualLink.NsVirtualLinkNode;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
+import it.nextworks.nfvmano.libs.descriptors.templates.VirtualLinkPair;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class NsdBuilder {
 
-    @Autowired
-    FileSystemStorageService fileSystemStorageService;
-
+    private static final Logger log = LoggerFactory.getLogger(NsdBuilder.class);
     private final File defaultLogo;
     private OsmNsdPackage osmPackage;
     private DescriptorTemplate dt;
+
+    @Autowired
+    private StorageServiceInterface storageService;
 
     public NsdBuilder(File defaultLogo) {
         this.defaultLogo = defaultLogo;
@@ -80,17 +89,50 @@ public class NsdBuilder {
 
         Map<String, Map<ConstituentVnfd, String>> vlToVnfMapping = new HashMap<>();
 
-        List<ConstituentVnfd> constituentVnfds = dt.getTopologyTemplate().getVNFNodes().values()
+        Map<String, VNFNode> vnfNodes = dt.getTopologyTemplate().getVNFNodes();
+
+        List<ConstituentVnfd> constituentVnfds = new ArrayList<>();
+
+        for (Map.Entry<String, VNFNode> vnfNodeEntry : vnfNodes.entrySet()) {
+            String vnfdId = vnfNodeEntry.getValue().getProperties().getDescriptorId();
+            String version = vnfNodeEntry.getValue().getProperties().getDescriptorVersion();
+            String fileName = vnfNodeEntry.getValue().getProperties().getProductName().concat(".zip");
+
+            ConstituentVnfd constituentVnfd = new ConstituentVnfd().setVnfdIdRef(vnfdId);
+
+            List<String> vls = vnfNodeEntry.getValue().getRequirements().getVirtualLink();
+
+            for (String vlId : vls) {
+                vlToVnfMapping.putIfAbsent(vlId, new HashMap<>());
+
+                try {
+                    log.debug("Searching VNFD with vnfdId {} and version {} in pkg {}", vnfdId, version, fileName);
+                    File vnfd_file = storageService.loadVnfdAsFile(vnfdId, version, fileName);
+                    DescriptorTemplate vnfd = DescriptorsParser.fileToDescriptorTemplate(vnfd_file);
+
+                    List<VirtualLinkPair> pairs = vnfd.getTopologyTemplate().getSubstituitionMappings().getRequirements().getVirtualLink();
+                    for (VirtualLinkPair pair : pairs) {
+                        if (pair.getVl().equalsIgnoreCase(vlId)) {
+                            String cpId = pair.getCp();
+                            vlToVnfMapping.get(vlId).put(constituentVnfd, cpId);
+                        }
+                    }
+
+                } catch (NotExistingEntityException e) {
+                    log.error("VNFD with vnfdId " + vnfdId + " and version " + version + " does not exist in storage: " + e.getMessage());
+                } catch (IOException e) {
+                    log.error("Unable to read VNFD with vnfdId " + vnfdId + " and version " + version + ": " + e.getMessage());
+                }
+            }
+        }
+
+        /*List<ConstituentVnfd> constituentVnfds = dt.getTopologyTemplate().getVNFNodes().values()
                 .stream()
                 .map(vnf -> {
                             ConstituentVnfd output = new ConstituentVnfd()
                                     .setVnfdIdRef(vnf.getProperties().getDescriptorId());
 
-                           String descriptorId = vnf.getProperties().getDescriptorId();
-
-                           DescriptorTemplate vnfd;
-
-                            /*vnf.getRequirements().getVirtualLink().forEach(
+                            vnf.getRequirements().getVirtualLink().forEach(
                                     input -> {
                                         String[] split = input.split("/");
                                         if (!(split.length == 2)) {
@@ -104,11 +146,11 @@ public class NsdBuilder {
                                         vlToVnfMapping.putIfAbsent(vlId, new HashMap<>());
                                         vlToVnfMapping.get(vlId).put(output, cpId);
                                     }
-                            );*/
+                            );
                             return output;
                         }
                 )
-                .collect(Collectors.toList());
+                .collect(Collectors.toList());*/
         for (int i = 0; i < constituentVnfds.size(); i++) {
             constituentVnfds.get(i).setMemberVnfIndex(i + 1);
         }

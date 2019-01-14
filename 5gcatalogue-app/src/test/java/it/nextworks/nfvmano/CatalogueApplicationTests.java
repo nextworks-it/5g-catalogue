@@ -15,13 +15,14 @@
  */
 package it.nextworks.nfvmano;
 
-import it.nextworks.nfvmano.catalogue.plugins.mano.DummyMano;
-import it.nextworks.nfvmano.catalogue.plugins.mano.MANOPlugin;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
+import it.nextworks.nfvmano.catalogue.messages.ScopeType;
+import it.nextworks.nfvmano.catalogue.plugins.mano.*;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.OpenSourceMANOR3Plugin;
-
-import java.util.UUID;
-
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -32,17 +33,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-
-import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
-import it.nextworks.nfvmano.catalogue.messages.ScopeType;
-import it.nextworks.nfvmano.catalogue.plugins.mano.DummyMANOPlugin;
-import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
-import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
-
-import static it.nextworks.nfvmano.catalogue.plugins.mano.MANOType.OSMR3;
+import java.util.UUID;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest
