@@ -17,7 +17,7 @@ topologyTemplate:
     CIRROS_VNF:
       type: tosca.nodes.nfv.VNF
       properties:
-        descriptorId: cirros_vnfd #cb0bcae1-00e7-41fa-b407-ba384e76a3e3
+        descriptorId: cb0bcae1-00e7-41fa-b407-ba384e76a3e3
         descriptorVersion: "1.0"
         provider: OSM
         productName: cirros_vnf

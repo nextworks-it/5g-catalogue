@@ -11,9 +11,9 @@ topologyTemplate:
     nodeType: tosca.nodes.nfv.VNF
     requirements:
       virtualLink: [{cp: eth0, vl: vld_mgmt}]
-
+  
   nodeTemplates:
-
+    
     CIRROS_VNF:
       type: tosca.nodes.nfv.VNF
       properties:
@@ -28,7 +28,7 @@ topologyTemplate:
           - JuJu
         flavourId: simple
         flavourDescription: Simple deployment flavour
-
+    
     cirros_vdu:
       type: tosca.nodes.nfv.Vdu.Compute
       properties:
@@ -45,7 +45,7 @@ topologyTemplate:
               numVirtualCpu: 1
       requirements:
         virtualStorage: [cirros_storage]
-
+    
     cirros_storage:
       type: tosca.nodes.nfv.Vdu.VirtualBlockStorage
       properties:
@@ -58,7 +58,7 @@ topologyTemplate:
           containerFormat: BARE
           diskFormat: QCOW2
           size: 512
-
+    
     eth0:
       type: tosca.nodes.nfv.VnfExtCp
       properties:
@@ -67,8 +67,7 @@ topologyTemplate:
         role: LEAF
         description: mgmt interface
       requirements:
-        virtualBinding: [cirros_vdu]
-        virtualLink: vld_mgmt
+        externalVirtualLink: [vld_mgmt]
 
 
 
