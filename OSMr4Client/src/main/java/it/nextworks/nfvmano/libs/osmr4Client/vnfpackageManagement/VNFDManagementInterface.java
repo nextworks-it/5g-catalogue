@@ -7,11 +7,11 @@ import java.io.File;
 public interface VNFDManagementInterface {
 
     HttpResponse createVnfPackage();
-    HttpResponse uploadVnfPackageContent(String vnfdId, File content);
-    HttpResponse getVnfd(String vnfdId);
-    HttpResponse getVnfPackageInfo(String vnfdId);
-    HttpResponse deleteVnfPackage(String vnfdId);
-    HttpResponse getVnfPackageContent(String vnfdId);
+    HttpResponse uploadVnfPackageContent(String vnfPkgId, File content);
+    HttpResponse getVnfd(String vnfPkgId);
+    HttpResponse getVnfPackageInfo(String vnfPkgId);
+    HttpResponse deleteVnfPackage(String vnfPkgId);
+    HttpResponse getVnfPackageContent(String vnfPkgId);
     HttpResponse getVnfPackageList();
 
 }

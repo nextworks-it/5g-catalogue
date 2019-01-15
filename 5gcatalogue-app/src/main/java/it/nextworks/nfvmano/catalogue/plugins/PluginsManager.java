@@ -20,6 +20,7 @@ import it.nextworks.nfvmano.catalogue.engine.NsdManagementService;
 import it.nextworks.nfvmano.catalogue.plugins.mano.*;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.OpenSourceMANOR3Plugin;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r4.OpenSourceMANOR4Plugin;
 import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
@@ -172,6 +173,9 @@ public class PluginsManager {
         } else if (mano.getManoType().equals(MANOType.OSMR3)) {
             return new OpenSourceMANOR3Plugin(mano.getManoType(), mano, bootstrapServers, service,
                     localNsdNotificationTopic, remoteNsdNotificationTopic, kafkaTemplate);
+        } else if (mano.getManoType().equals(MANOType.OSMR4)) {
+                return new OpenSourceMANOR4Plugin(mano.getManoType(), mano, bootstrapServers, service,
+                        localNsdNotificationTopic, remoteNsdNotificationTopic, kafkaTemplate);
         } else {
             throw new MalformattedElementException("Unsupported MANO type. Skipping.");
         }
@@ -191,10 +195,11 @@ public class PluginsManager {
 
         switch (type) {
             case OSMR3:
+            case OSMR4:
                 log.debug("Processing request for creating " + type + "Plugin.");
                 OSMMano osmMano = (OSMMano) mano;
                 OSMMano targetOsmMano = new OSMMano(osmMano.getManoId(), osmMano.getIpAddress(), osmMano.getUsername(),
-                        osmMano.getPassword(), osmMano.getProject(), MANOType.OSMR3);
+                            osmMano.getPassword(), osmMano.getProject(), type);
                 targetOsmMano.isValid();
                 log.debug("Persisting OSM MANO with manoId: " + manoId);
                 OSMMano createdMano = MANORepository.saveAndFlush(targetOsmMano);

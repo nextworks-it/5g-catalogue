@@ -105,7 +105,7 @@ public class HttpResponse {
                 else {
                     in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                     while ((line = in.readLine()) != null)
-                        content.append(line);
+                        content.append(line + "\n");
                 }
             }
             else {
@@ -120,6 +120,6 @@ public class HttpResponse {
             e.printStackTrace();
         }
 
-        return new HttpResponse(code, message, content.toString().replaceAll("\\{}", "\"empty\""), filePath);
+        return new HttpResponse(code, message, content.toString(), filePath);
     }
 }
