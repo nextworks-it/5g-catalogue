@@ -51,7 +51,7 @@ public class NsdBuilderTest {
     }
 
     @Test
-    //@Ignore
+    @Ignore
     public void parseDescriptorTemplate() throws Exception {
         ClassLoader classLoader = getClass().getClassLoader();
         NsdBuilder nsdBuilder = new NsdBuilder(DEF_IMG);
@@ -81,7 +81,7 @@ public class NsdBuilderTest {
     }
 
     @Test
-    //@Ignore
+    @Ignore
     public void archiveTest() throws Exception {
         ClassLoader classLoader = getClass().getClassLoader();
 
@@ -110,7 +110,7 @@ public class NsdBuilderTest {
     }
 
     @Test
-    //@Ignore
+    @Ignore
     public void archiveTestCirros() throws Exception {
         ClassLoader classLoader = getClass().getClassLoader();
 
