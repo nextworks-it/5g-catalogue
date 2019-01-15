@@ -1,8 +1,17 @@
 {
+<<<<<<< HEAD
 	"manoId": "NXW_OSMR3.3",
 	"manoType": "OSMR3",
 	"ipAddress": "10.0.8.26",
 	"username": "admin",
 	"password": "admin",
 	"project": "default"
+=======
+  "manoId": "NXW_OSMR3.3",
+  "manoType": "OSMR3",
+  "ipAddress": "10.0.8.26",
+  "username": "admin",
+  "password": "admin",
+  "project": "default"
+>>>>>>> master
 }

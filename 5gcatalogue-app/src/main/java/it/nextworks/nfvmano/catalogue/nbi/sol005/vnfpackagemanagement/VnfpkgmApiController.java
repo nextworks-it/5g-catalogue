@@ -43,8 +43,8 @@ import java.util.List;
 
 @javax.annotation.Generated(value = "io.swagger.codegen.languages.SpringCodegen", date = "2018-10-05T11:50:31.473+02:00")
 
-@Controller
 @CrossOrigin
+@Controller
 public class VnfpkgmApiController implements VnfpkgmApi {
 
     private static final Logger log = LoggerFactory.getLogger(VnfpkgmApiController.class);
@@ -56,7 +56,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
     @Autowired
     VnfPackageManagementInterface vnfPackageManagementInterface;
 
-    @org.springframework.beans.factory.annotation.Autowired
+    @Autowired
     public VnfpkgmApiController(ObjectMapper objectMapper, HttpServletRequest request) {
         this.objectMapper = objectMapper;
         this.request = request;

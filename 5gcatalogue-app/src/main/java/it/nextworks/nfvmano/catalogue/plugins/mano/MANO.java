@@ -26,8 +26,10 @@ import javax.persistence.Id;
 
 @Entity
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "manoType", visible = true)
-@JsonSubTypes({@JsonSubTypes.Type(value = OSMMano.class, name = "OSM"),
-        @JsonSubTypes.Type(value = DummyMano.class, name = "DUMMY")})
+@JsonSubTypes({@JsonSubTypes.Type(value = OSMMano.class, name = "OSMR3"),
+        @JsonSubTypes.Type(value = OSMMano.class, name = "OSMR4"),
+        @JsonSubTypes.Type(value = DummyMano.class, name = "DUMMY"),
+        @JsonSubTypes.Type(value = OSMMano.class, name = "TIMEO")})
 public abstract class MANO {
 
     @Id

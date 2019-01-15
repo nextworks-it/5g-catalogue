@@ -28,13 +28,15 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.elements.ArchiveBuilder;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.elements.NsdBuilder;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.elements.OsmNsdPackage;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.ArchiveBuilder;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.NsdBuilder;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.OsmNsdPackage;
+import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -43,7 +45,9 @@ import org.springframework.kafka.core.KafkaTemplate;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class OpenSourceMANOR3Plugin extends MANOPlugin {
@@ -97,7 +101,30 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
         try {
             DescriptorTemplate descriptorTemplate = retrieveTemplate(notification.getNsdInfoId());
             NsdBuilder nsdBuilder = new NsdBuilder(DEF_IMG);
-            nsdBuilder.parseDescriptorTemplate(descriptorTemplate);
+
+            Map<String, VNFNode> vnfNodes = descriptorTemplate.getTopologyTemplate().getVNFNodes();
+
+            Map<String, DescriptorTemplate> vnfds = new HashMap<>();
+
+            for (Map.Entry<String, VNFNode> vnfNodeEntry : vnfNodes.entrySet()) {
+
+                String vnfdId = vnfNodeEntry.getValue().getProperties().getDescriptorId();
+                String version = vnfNodeEntry.getValue().getProperties().getDescriptorVersion();
+                String fileName = vnfNodeEntry.getValue().getProperties().getProductName().concat(".zip");
+
+                try {
+                    log.debug("Searching VNFD with vnfdId {} and version {} in pkg {}", vnfdId, version, fileName);
+                    File vnfd_file = FileSystemStorageService.loadVnfdAsFile(vnfdId, version, fileName);
+                    DescriptorTemplate vnfd = DescriptorsParser.fileToDescriptorTemplate(vnfd_file);
+                    vnfds.putIfAbsent(vnfd.getMetadata().getDescriptorId(), vnfd);
+                } catch (NotExistingEntityException e) {
+                    log.error("VNFD with vnfdId " + vnfdId + " and version " + version + " does not exist in storage: " + e.getMessage());
+                } catch (IOException e) {
+                    log.error("Unable to read VNFD with vnfdId " + vnfdId + " and version " + version + ": " + e.getMessage());
+                }
+            }
+
+            nsdBuilder.parseDescriptorTemplate(descriptorTemplate, vnfds);
             OsmNsdPackage packageData = nsdBuilder.getPackage();
 
             ArchiveBuilder archiver = new ArchiveBuilder(TMP_DIR, DEF_IMG);
