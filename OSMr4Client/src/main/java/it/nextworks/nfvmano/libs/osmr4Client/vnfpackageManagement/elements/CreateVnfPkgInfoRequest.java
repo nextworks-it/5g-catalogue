@@ -16,15 +16,12 @@
 package it.nextworks.nfvmano.libs.osmr4Client.vnfpackageManagement.elements;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.shc.easyjson.JSONObject;
-
-import javax.validation.Valid;
 import java.util.Objects;
 
 /**
  * CreateVnfPkgInfoRequest
  */
-public class CreateVnfPkgInfoRequest extends JSONObject {
+public class CreateVnfPkgInfoRequest {
     @JsonProperty("userDefinedData")
     private KeyValuePairs userDefinedData = null;
 
@@ -38,8 +35,6 @@ public class CreateVnfPkgInfoRequest extends JSONObject {
      *
      * @return userDefinedData
      **/
-    @Valid
-
     public KeyValuePairs getUserDefinedData() {
         return userDefinedData;
     }

@@ -22,14 +22,6 @@
     <dependencies>
 
         <dependency>
-            <groupId>com.goharsha</groupId>
-            <artifactId>easyjson</artifactId>
-            <classifier>gwt</classifier>
-            <version>0.3</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>4.5.4</version>
@@ -41,18 +33,6 @@
             <artifactId>httpmime</artifactId>
             <version>4.5.4</version>
             <scope>compile</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-            <version>2.11.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.11.1</version>
         </dependency>
 
         <dependency>

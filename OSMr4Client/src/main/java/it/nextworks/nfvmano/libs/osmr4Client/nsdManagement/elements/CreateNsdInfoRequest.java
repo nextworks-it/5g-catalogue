@@ -16,15 +16,12 @@
 package it.nextworks.nfvmano.libs.osmr4Client.nsdManagement.elements;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.shc.easyjson.JSONObject;
-
-import javax.validation.Valid;
 import java.util.Objects;
 
 /**
  * This type creates a completely new NS descriptor resource.
  */
-public class CreateNsdInfoRequest extends JSONObject {
+public class CreateNsdInfoRequest {
     @JsonProperty("userDefinedData")
     private KeyValuePairs userDefinedData = null;
 
@@ -38,8 +35,6 @@ public class CreateNsdInfoRequest extends JSONObject {
      *
      * @return userDefinedData
      **/
-    @Valid
-
     public KeyValuePairs getUserDefinedData() {
         return userDefinedData;
     }
