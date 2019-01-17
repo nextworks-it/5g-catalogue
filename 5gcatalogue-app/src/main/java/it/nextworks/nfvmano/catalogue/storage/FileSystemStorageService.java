@@ -63,7 +63,7 @@ public class FileSystemStorageService implements StorageServiceInterface {
         return location.resolve(filename);
     }
 
-    public static File loadVnfdAsFile(String vnfdId, String version, String filename) throws NotExistingEntityException, IOException {
+    public static File loadVnfdAsFile(String vnfdId, String version, String filename) throws NotExistingEntityException {
         log.debug("Searching file " + filename);
         try {
             Path path = loadVnfPkg(vnfdId, version, filename);
@@ -95,6 +95,8 @@ public class FileSystemStorageService implements StorageServiceInterface {
                 throw new NotExistingEntityException("Could not read file: " + filename);
             }
         } catch (MalformedURLException e) {
+            throw new NotExistingEntityException("Could not read file: " + filename, e);
+        } catch (IOException e) {
             throw new NotExistingEntityException("Could not read file: " + filename, e);
         }
     }
