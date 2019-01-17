@@ -14,8 +14,8 @@
 * limitations under the License.
 */
 
-var catalogueAddr = '10.0.8.44';
-//var catalogueAddr = window.location.hostname;
+//var catalogueAddr = '10.0.8.44';
+var catalogueAddr = window.location.hostname;
 var cataloguePort = '8083';
 
 var stopRefreshing = false;
@@ -308,11 +308,16 @@ function createLinkSet(id, resId, btnNames, btnCallbacks) {
 									</a>';
 				} else if (btnCallbacks[i].toLowerCase().indexOf("open") >= 0) {
 						text += '<a title="View" class="btn btn-link">\
-								<i class="fa fa-eye" "buttonModal_'+ btnCallbacks[i] + '"  data-toggle="modal" data-target="#' + btnCallbacks[i] + id + '" data-id="' + id + '"></i>\
+								<i class="fa fa-file-code-o" "buttonModal_'+ btnCallbacks[i] + '"  data-toggle="modal" data-target="#' + btnCallbacks[i] + id + '" data-id="' + id + '"></i>\
 								</a>';
-				}  else if (btnNames[i].toLowerCase().indexOf("graph") >= 0) {
+				}  else if (btnNames[i].toLowerCase().indexOf("nsd graph") >= 0) {
 					text += '<a title="Graph"class="btn btn-link">\
-								<i class="fa fa-area-chart"  onclick=getAllNsdInfos("' + id + '",' + btnCallbacks[i] + ',"response")></i>\
+								<i class="fa fa-eye"  onclick=getAllNsdInfos("' + id + '",' + btnCallbacks[i] + ',"response")></i>\
+							</a>';
+				}
+				else if (btnNames[i].toLowerCase().indexOf("vnf graph") >= 0) {
+					text += '<a title="Graph"class="btn btn-link">\
+								<i class="fa fa-eye"  onclick=getAllVnfInfos("' + id + '",' + btnCallbacks[i] + ',"response")></i>\
 							</a>';
 				}
 			}

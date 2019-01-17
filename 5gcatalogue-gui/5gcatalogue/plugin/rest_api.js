@@ -33,6 +33,7 @@ function getJsonFromURL(resourceUrl, callback, params) {
     });
 }
 
+
 function getFileFromURL(resourceUrl, callback, params) {
     var settings = {
         "async": true,
@@ -40,7 +41,7 @@ function getFileFromURL(resourceUrl, callback, params) {
         "url": resourceUrl,
         "method": "GET",
         headers: {          
-            Accept: "application/x-yaml; charset=utf-8"  
+            Accept: "application/yaml; charset=utf-8"  
         } 
     };
 
@@ -189,6 +190,36 @@ function putFileToURL(resourceUrl, file, callback, params) {
         data: file,
         cache: false,
         "contentType": false,
+        processData: false
+    };
+      
+    $.ajax(settings).done(function (response) {
+        console.log(response);
+        
+        if (callback == showResultMessage) {
+            callback(true, params[0]);
+        } else {
+            callback(response, params);
+        }
+    }).fail(function (response) {
+        console.log(response);
+        
+        if (callback == showResultMessage) {
+            callback(true, params[0]);
+        } 
+    });
+}
+
+function putVnfPkgToURL(resourceUrl, file, callback, params) {
+
+    var settings = {
+        "async": true,
+        //"crossDomain": true,
+        "url": resourceUrl,
+        "method": "PUT",
+        data: file,
+        cache: false,
+        "contentType": "multipart/form-data",
         processData: false
     };
       

@@ -100,7 +100,7 @@ function getNSD(nsdInfoId, elemId, callback) {
     console.log('Fatta la get***************************************');
 }
 
-function showCanvas(data,params) {
+function showNsdGraphCanvas(data,params) {
     console.log('Guardo la canvas***************************************');
     console.log(params[0]);
     console.log(params[1]);
@@ -144,7 +144,7 @@ function createNsdInfosTable(data, params) {
     }
     var btnFlag = true;
     var header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Operational State', 'Onboarding State','Actions'], btnFlag, false);
-    var cbacks = ['openNSD_', 'showCanvas', 'updateNsdInfo_', 'deleteNsdInfo'];
+    var cbacks = ['openNSD_', 'showNsdGraphCanvas', 'updateNsdInfo_', 'deleteNsdInfo'];
     var names = ['View NSD', 'View NSD Graph', 'Change NSD OpState', 'Delete NSD'];
     var columns = [['nsdName'], ['nsdVersion'], ['nsdDesigner'], ['nsdOperationalState'], ['nsdOnboardingState']];
 
@@ -204,7 +204,7 @@ function createCanvas(data){
     var dataId ='cy_'+data['id'];
     var nsdName=data['nsdName'];
     var graphName="graphOf_" + data['id'];
-    document.getElementById("graphCanvas").innerHTML += '<div id="' + graphName + '" class="graph_canvas" style="display: none";>\
+    document.getElementById("nsdGraphCanvas").innerHTML += '<div id="' + graphName + '" class="graph_canvas" style="display: none";>\
                                                             <div class="col-md-12">\
                                                             <div class="x_panel">\
                                                                 <div class="x_title">\
