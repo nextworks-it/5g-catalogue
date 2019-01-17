@@ -47,17 +47,56 @@ import java.util.stream.Stream;
 public class FileSystemStorageService implements StorageServiceInterface {
 
     private static final Logger log = LoggerFactory.getLogger(FileSystemStorageService.class);
-
+    private static Path nsdsLocation;
+    private static Path vnfPkgsLocation;
     @Autowired
     ArchiveParser archiveParser;
-
     @Value("${catalogue.storageRootDir}")
     private String rootDir;
 
-    private Path nsdsLocation;
-    private Path vnfPkgsLocation;
-
     public FileSystemStorageService() {
+    }
+
+    public static Path loadVnfPkg(String vnfdId, String version, String filename) {
+        log.debug("Loading file " + filename + " for VNF Pkg " + vnfdId);
+        Path location = Paths.get(vnfPkgsLocation + "/" + vnfdId + "/" + version);
+        return location.resolve(filename);
+    }
+
+    public static File loadVnfdAsFile(String vnfdId, String version, String filename) throws NotExistingEntityException, IOException {
+        log.debug("Searching file " + filename);
+        try {
+            Path path = loadVnfPkg(vnfdId, version, filename);
+            byte[] bytes = Files.readAllBytes(path);
+            InputStream input = new ByteArrayInputStream(bytes);
+            log.debug("Going to parse archive {} for retrieving main service template...", filename);
+            byte[] mst = ArchiveParser.getMainDescriptorFromArchive(input);
+            log.debug("Extracting main service template in file {}...", vnfPkgsLocation + "/"
+                    + vnfdId
+                    + "/" + version + "/"
+                    + filename.substring(0, filename.lastIndexOf('.'))
+                    + "_vnfd.yaml");
+            FileUtils.writeByteArrayToFile(new File(vnfPkgsLocation + "/"
+                    + vnfdId
+                    + "/" + version + "/"
+                    + filename.substring(0, filename.lastIndexOf('.'))
+                    + "_vnfd.yaml"), mst);
+            Path mst_path = Paths.get(vnfPkgsLocation + "/"
+                    + vnfdId
+                    + "/" + version + "/"
+                    + filename.substring(0, filename.lastIndexOf('.'))
+                    + "_vnfd.yaml");
+            File vnfd_file = mst_path.toFile();
+
+            if (vnfd_file.exists() || vnfd_file.canRead()) {
+                log.debug("Found file " + filename.substring(0, filename.lastIndexOf('.')) + "_vnfd.yaml");
+                return vnfd_file;
+            } else {
+                throw new NotExistingEntityException("Could not read file: " + filename);
+            }
+        } catch (MalformedURLException e) {
+            throw new NotExistingEntityException("Could not read file: " + filename, e);
+        }
     }
 
     @PostConstruct

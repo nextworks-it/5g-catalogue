@@ -15,11 +15,15 @@
  */
 package it.nextworks.nfvmano.catalogue.plugins.mano.osm.common;
 
-import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
+import it.nextworks.nfvmano.catalogue.storage.StorageServiceInterface;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NsVirtualLink.NsVirtualLinkNode;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
+import it.nextworks.nfvmano.libs.descriptors.templates.VirtualLinkPair;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
@@ -28,12 +32,13 @@ import java.util.stream.Collectors;
 
 public class NsdBuilder {
 
-    @Autowired
-    FileSystemStorageService fileSystemStorageService;
-
+    private static final Logger log = LoggerFactory.getLogger(NsdBuilder.class);
     private final File defaultLogo;
     private OsmNsdPackage osmPackage;
     private DescriptorTemplate dt;
+
+    @Autowired
+    private StorageServiceInterface storageService;
 
     public NsdBuilder(File defaultLogo) {
         this.defaultLogo = defaultLogo;
@@ -69,7 +74,7 @@ public class NsdBuilder {
                 );
     }
 
-    public void parseDescriptorTemplate(DescriptorTemplate template) throws MalformattedElementException {
+    public void parseDescriptorTemplate(DescriptorTemplate template, Map<String, DescriptorTemplate> vnfds) throws MalformattedElementException {
         dt = template;
 
         if (!(dt.getTopologyTemplate().getNSNodes().size() == 1)) {
@@ -80,17 +85,43 @@ public class NsdBuilder {
 
         Map<String, Map<ConstituentVnfd, String>> vlToVnfMapping = new HashMap<>();
 
-        List<ConstituentVnfd> constituentVnfds = dt.getTopologyTemplate().getVNFNodes().values()
+        List<ConstituentVnfd> constituentVnfds = new ArrayList<>();
+
+        Map<String, VNFNode> vnfNodes = dt.getTopologyTemplate().getVNFNodes();
+
+        for (Map.Entry<String, VNFNode> vnfNode : vnfNodes.entrySet()) {
+            String vnfdId = vnfNode.getValue().getProperties().getDescriptorId();
+
+            for (Map.Entry<String, DescriptorTemplate> vnfd : vnfds.entrySet()) {
+                if (vnfdId.equalsIgnoreCase(vnfd.getValue().getTopologyTemplate().getVNFNodes().entrySet().iterator().next().getValue().getProperties().getDescriptorId())) {
+                    ConstituentVnfd constituentVnfd = new ConstituentVnfd().setVnfdIdRef(vnfdId);
+                    constituentVnfds.add(constituentVnfd);
+
+                    List<String> vls = vnfNode.getValue().getRequirements().getVirtualLink();
+
+                    for (String vlId : vls) {
+                        vlToVnfMapping.putIfAbsent(vlId, new HashMap<>());
+                        List<VirtualLinkPair> pairs = vnfd.getValue().getTopologyTemplate().getSubstituitionMappings().getRequirements().getVirtualLink();
+                        for (VirtualLinkPair pair : pairs) {
+                            if (pair.getVl().equalsIgnoreCase(vlId)) {
+                                String cpId = pair.getCp();
+                                vlToVnfMapping.get(vlId).put(constituentVnfd, cpId);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+
+        /*List<ConstituentVnfd> constituentVnfds = dt.getTopologyTemplate().getVNFNodes().values()
                 .stream()
                 .map(vnf -> {
                             ConstituentVnfd output = new ConstituentVnfd()
                                     .setVnfdIdRef(vnf.getProperties().getDescriptorId());
 
-                           String descriptorId = vnf.getProperties().getDescriptorId();
-
-                           DescriptorTemplate vnfd;
-
-                            /*vnf.getRequirements().getVirtualLink().forEach(
+                            vnf.getRequirements().getVirtualLink().forEach(
                                     input -> {
                                         String[] split = input.split("/");
                                         if (!(split.length == 2)) {
@@ -104,11 +135,11 @@ public class NsdBuilder {
                                         vlToVnfMapping.putIfAbsent(vlId, new HashMap<>());
                                         vlToVnfMapping.get(vlId).put(output, cpId);
                                     }
-                            );*/
+                            );
                             return output;
                         }
                 )
-                .collect(Collectors.toList());
+                .collect(Collectors.toList());*/
         for (int i = 0; i < constituentVnfds.size(); i++) {
             constituentVnfds.get(i).setMemberVnfIndex(i + 1);
         }

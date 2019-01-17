@@ -7,25 +7,25 @@ metadata:
   version: "1.11"
 
 topologyTemplate:
-
+  
   substitutionMappings:
     nodeType: tosca.nodes.nfv.NS
     requirements:
       virtualLink: [{cp: midvCacheVNF, vl: origin}, {cp: edgevCacheVNF01, vl: user}, {cp: edgevCacheVNF02, vl: user}]
-
+  
   nodeTemplates:
-
+    
     UHDvCDN_NS:
       type: tosca.nodes.nfv.NS
       properties:
         descriptorId: 70b92c52-d3b6-4077-b851-6ac2d37dc520
         designer: Nextworks
         version: "1.11"
-        name: vcache-complete-v4
+        name: vCDN_UC3_5GMEDIA
         invariantId: 70b92c52-d3b6-4077-b851-6ac2d37dc520
       requirements:
         virtualLink: [management_mgmt, origin, cache, user]
-
+    
     management_mgmt:
       type: tosca.nodes.nfv.NsVirtualLink
       properties:
@@ -41,7 +41,7 @@ topologyTemplate:
         connectivityType:
           layerProtocols: [IPV4]
           flowPattern: LINE
-
+    
     origin:
       type: tosca.nodes.nfv.NsVirtualLink
       properties:
@@ -57,7 +57,7 @@ topologyTemplate:
         connectivityType:
           layerProtocols: [IPV4]
           flowPattern: LINE
-
+    
     cache:
       type: tosca.nodes.nfv.NsVirtualLink
       properties:
@@ -73,7 +73,7 @@ topologyTemplate:
         connectivityType:
           layerProtocols: [IPV4]
           flowPattern: LINE
-
+    
     user:
       type: tosca.nodes.nfv.NsVirtualLink
       properties:
@@ -89,14 +89,14 @@ topologyTemplate:
         connectivityType:
           layerProtocols: [IPV4]
           flowPattern: LINE
-
+    
     midvCacheVNF:
       type: tosca.nodes.nfv.VNF
       properties:
         descriptorId: af4178d5-8b5e-4b9f-a56a-61be55b6a201
         descriptorVersion: "1.11"
         provider: Nextworks
-        productName: vCache-ubuntu-v4
+        productName: vCache_mid_UC3_5GMEDIA
         softwareVersion: v1.11
         productInfoName: mid vCache for UHD vCDN
         productInfoDescription: mid vCache for UHD vCDN
@@ -115,14 +115,14 @@ topologyTemplate:
           - management_mgmt
           - origin
           - cache
-
+    
     edgevCacheVNF01:
       type: tosca.nodes.nfv.VNF
       properties:
         descriptorId: e8d2567d-05f8-4a3a-9cee-4c4be7712504
         descriptorVersion: "1.11"
         provider: Nextworks
-        productName: vCache-edge-ubuntu-v4
+        productName: vCache_edge_UC3_5GMEDIA
         softwareVersion: v1.11
         productInfoName: edge vCache for UHD vCDN
         productInfoDescription: edge vCache for UHD vCDN
@@ -141,14 +141,14 @@ topologyTemplate:
           - management_mgmt
           - user
           - cache
-
+    
     edgevCacheVNF02:
       type: tosca.nodes.nfv.VNF
       properties:
         descriptorId: e8d2567d-05f8-4a3a-9cee-4c4be7712504
         descriptorVersion: "1.11"
         provider: Nextworks
-        productName: vCache-edge-ubuntu-v4
+        productName: vCache_edge_UC3_5GMEDIA
         softwareVersion: v1.11
         productInfoName: edge vCache for UHD vCDN
         productInfoDescription: edge vCache for UHD vCDN
