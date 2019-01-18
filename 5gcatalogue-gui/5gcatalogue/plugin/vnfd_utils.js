@@ -15,7 +15,6 @@
 */
 
 function getAllVnfInfos(elemId, callback, resId) {
-    console.log("**************************Sto facendo la getallvnfinfo*********************");
     getJsonFromURL("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages", callback, [elemId, resId]);
 }
 
@@ -25,9 +24,9 @@ function getVnfInfo(vnfInfoId, callback, elemId) {
 
 function fillVNFsCounter(data, params) {
     var countDiv = document.getElementById(params[0]);
-	
-	//console.log(JSON.stringify(data, null, 4));
-	countDiv.innerHTML = data.length;
+
+	  //console.log(JSON.stringify(data, null, 4));
+	  countDiv.innerHTML = data.length;
 }
 
 function deleteVnfInfo(vnfInfoId, resId) {
@@ -36,18 +35,18 @@ function deleteVnfInfo(vnfInfoId, resId) {
 
 function updateVnfInfo(vnfInfoId, elemId) {
     var opState = document.getElementById(elemId).value;
-    
+
     var jsonObj = JSON.parse("{}");
     jsonObj['operationalState'] = opState;
     var json = JSON.stringify(jsonObj, null, 4);
-    
-    console.log("VnfInfoModifications: " + json);
+
+    //console.log("VnfInfoModifications: " + json);
     patchJsonRequestToURL("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId, json, showResultMessage, ["VNF with vnfInfoId " + vnfInfoId + " successfully updated."]);
 }
 
 function loadVNFFile(elemId, resId) {
     var files = document.getElementById(elemId).files;
-    
+
     if (files && files.length > 0) {
         createVnfInfoId(files[0], resId);
     } else {
@@ -59,73 +58,62 @@ function createVnfInfoId(file, resId) {
     // TODO: handle also userDefinedData
     var jsonObj = {"userDefinedData" : {} };
     var json = JSON.stringify(jsonObj, null, 4);
-    console.log(json)
+    //console.log(json)
     postJsonToURL("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages", json, uploadVnfContent, [file, resId]);
 }
 
 function uploadVnfContent(data, params) {
-    console.log(JSON.stringify(data, null, 4));
-    
+    //console.log(JSON.stringify(data, null, 4));
+
     var formData = new FormData();
     formData.append("file", params[0]);
     formData.append("pippo","pluto");
     var vnfInfoId = data['id'];
-    
+
     putFileToURL("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "/package_content", formData, showResultMessage, ["VNF with vnfInfoId " + vnfInfoId + " successfully updated."]);
-    //putVnfPkgToURL("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "/package_content", formData, showResultMessage, ["VNF with vnfInfoId " + vnfInfoId + " successfully updated."]);
 }
 
 function getDescription(descrId) {
     var vnfId = getURLParameter('vnfId');
-    console.log(vnfId);
+    //console.log(vnfId);
     getVNF(vnfId, descrId, printDescription);
 }
 
 function printDescription(data, params){
-    console.log(data);
-    console.log('Sto facendo la print***************************************');
+    //console.log(data);
     var yamlObj = jsyaml.load(data);
-    console.log(yamlObj);
+    //console.log(yamlObj);
     document.getElementById(params[1]).innerHTML = ' - ' + params[0] + ' - ' + yamlObj['description'];
 }
 
 function readVNF(graphId) {
     var vnfId = getURLParameter('vnfId');
-    console.log(vnfId);
+    //console.log(vnfId);
     getVNF(vnfId, graphId, createVNFGraph);
 }
 
 function getVNF(vnfInfoId, elemId, callback) {
-    console.log('Sto facendo la get***************************************');
     getFileFromURL("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "/vnfd", callback, [vnfInfoId, elemId]);
-    console.log('Fatta la get***************************************');
 }
 
 function showVnfGraphCanvas(data,params) {
-    console.log('Guardo la canvas***************************************');
-    console.log(params[0]);
-    console.log(params[1]);
-    console.log(data)
-    console.log(data.lenght);
+    //console.log(params[0]);
+    //console.log(params[1]);
+    //console.log(data)
+    //console.log(data.lenght);
     for (var i in data) {
-        console.log(data[i]['id']);
+        //console.log(data[i]['id']);
         if (data[i]['id'] === params[0]){
             var vnfProductName= data[i]['vnfProductName'];
-            console.log(vnfProductName);
+            //console.log(vnfProductName);
         }
         document.getElementById("graphOf_"+ data[i]['id']).style.display = "none";
     }
-    //$( ".graph_canvas" ).hide();
-    //$( ".graph_canvas" ).ready(function(){
-        //$("#graphOf_"+ params[0]).show();
-    //});
-    //document.getElementByClassName("graph_canvas").style.display = "none";
+
     document.getElementById("graphOf_"+ params[0]).style.display = "block";
-    //var cy_res='cy_'+params[0];
     var dataId ='cy_'+params[0];
-    console.log("dataid="+dataId);
+    //console.log("dataid="+dataId);
     document.getElementById(dataId).innerHTML = '<script>'+getVNF(params[0],dataId, createVNFGraph);+'</script>';
-    //document.getElementById("graphOf_"+params[0]).innerHTML ='';
 }
 
 function createVnfInfosTable(data, params) {
@@ -139,7 +127,7 @@ function createVnfInfosTable(data, params) {
         return;
     }
     if (!data || data.length == 0) {
-	//console.log('No NS Instances');
+	      //console.log('No NS Instances');
         table.innerHTML = '<tr>No VNFs stored in Catalogue</tr>';
         return;
     }
@@ -155,7 +143,7 @@ function createVnfInfosTable(data, params) {
     for (var i in data) {
         rows +=  createVnfInfosTableRow(data[i], btnFlag, cbacks, names, columns, resId);
     }
-    
+
     table.innerHTML += rows + '</tbody>';
 }
 
@@ -194,7 +182,7 @@ function createVnfInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
 	    subText += '</td>';
 	    text += subText;
 	}
-    text += btnText + '</tr>';   
+    text += btnText + '</tr>';
 
     return text;
 }
@@ -231,10 +219,9 @@ function createVnfCanvas(data){
 
 
 function creteVNFViewModal(vnfInfoId, modalsContainerId) {
-              
-    console.log('Creating view modal for vnfInfoId: ' + vnfInfoId);
+    //console.log('Creating view modal for vnfInfoId: ' + vnfInfoId);
     var container = document.getElementById(modalsContainerId);
-    
+
     if (container) {
         var text = '<div id="openVNF_' + vnfInfoId + '" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">\
                     <div class="modal-dialog modal-lg">\
@@ -254,17 +241,17 @@ function creteVNFViewModal(vnfInfoId, modalsContainerId) {
                       </div>\
                     </div>\
                 </div>';
-        
-            container.innerHTML += text;          
+
+            container.innerHTML += text;
             getVNF(vnfInfoId, 'viewVNFContent_' + vnfInfoId, fillVNFViewModal);
-    }  
+    }
 }
 
 function fillVNFViewModal(data, params) {
-    
+
     var yamlObj = jsyaml.load(data);
     //console.log(yamlObj);
-    
+
     var yaml = jsyaml.dump(data, {
         indent: 4,
         styles: {
@@ -272,7 +259,7 @@ function fillVNFViewModal(data, params) {
         '!!null' : 'camelcase'
         }
     });
-    
+
     //console.log(yaml);
     var vnfInfoId = params[0];
     var textArea = document.getElementById(params[1]);
@@ -280,9 +267,9 @@ function fillVNFViewModal(data, params) {
 }
 
 function createUpdateVnfInfoModal(vnfInfoId, opState, modalsContainerId) {
-    
+
     var container = document.getElementById(modalsContainerId);
-    
+
     if (container) {
         var text = '<div id="updateVnfInfo_' + vnfInfoId + '" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">\
                     <div class="modal-dialog modal-lg">\
@@ -317,16 +304,15 @@ function createUpdateVnfInfoModal(vnfInfoId, opState, modalsContainerId) {
                       </div>\
                     </div>\
                 </div>';
-        
+
         container.innerHTML += text;
     }
 }
 
 function createVNFGraph(data, params) {
-    console.log('Sto facendo la graph***************************************');
-    console.log(params[1]);
+    //console.log(params[1]);
     var yamlObj = jsyaml.load(data);
-    console.log(yamlObj);
+    //console.log(yamlObj);
     var nodeTempl=yamlObj['topologyTemplate']['nodeTemplates'];
     //console.log(nodeTempl);
 
@@ -336,84 +322,59 @@ function createVNFGraph(data, params) {
     var ypos=50;
 
     $.each( nodeTempl, function(key, value){
-        //console.log(key + " " + value['type']); 
+        //console.log(key + " " + value['type']);
         if (value['type'] === 'tosca.nodes.nfv.VNF'){
             nodes.push({group: 'nodes', data:{id: key, name: key, label: key, faveShape: 'rectangle', faveColor: '#DDDDDD'}});
             nodes.push({group: 'nodes', data:{id: 'externalCp',parent: key, name: 'externalCp', label: 'externalCp', faveShape: 'rectangle', faveColor: '#CCCCCC'}});
             $.each( nodeTempl, function(key1, value1){
                 if (value1['type'] === 'tosca.nodes.nfv.Vdu.Compute'){
-                    nodes.push({ group: 'nodes', data: { id: key1, col: col, parent: key, name: key1, label: key1, weight: 100, faveColor: '#DDDDDD', faveShape: 'ellipse' }, classes: 'bottom-center vnf'});
+                    nodes.push({ group: 'nodes', data: { id: key1, col: col, parent: key, name: key1, label: key1, weight: 100, faveColor: '#DDDDDD', faveShape: 'ellipse' }, classes: 'bottom-center vdu'});
                     //edges.push({ group: 'edges', data: { source: key1, target: value1['requirements']['virtualStorage'], faveColor: '#706f6f', strength: 70 }});
-                } 
+                }
             });
         }
     });
     col=col+1;
     $.each( nodeTempl, function(key, value){
             if (value['type'] === 'tosca.nodes.nfv.VnfExtCp'){
-                nodes.push({ group: 'nodes', data: { id: key, col: col,parent: 'externalCp', name: key, label: key, weight: 50, faveColor: '#fff', faveShape: 'ellipse'},  classes: 'bottom-center net'});
+                nodes.push({ group: 'nodes', data: { id: key, col: col,parent: 'externalCp', name: key, label: key, weight: 50, faveColor: '#fff', faveShape: 'ellipse'},  classes: 'bottom-center extcp'});
         }
     });
     col=col+1;
     $.each( nodeTempl, function(key, value){
             if (value['type'] === 'tosca.nodes.nfv.VnfExtCp'){
             $.each( value['requirements'], function(key2, value2){
-                console.log(key2 + " " + value2);
+                //console.log(key2 + " " + value2);
                 //console.log(key);
-                nodes.push({ group: 'nodes', data: { id: key2+value2, col: col, name: value2, label: value2, weight: 50, faveColor: '#fff', faveShape: 'ellipse'} , classes: 'bottom-center sap '});
+                nodes.push({ group: 'nodes', data: { id: key2+value2, col: col, name: value2, label: value2, weight: 50, faveColor: '#fff', faveShape: 'ellipse'} , classes: 'bottom-center net '});
                 edges.push({ group: 'edges', data: { source: key, target: key2+value2, faveColor: '#706f6f', strength: 70 }});
             });
         }
     });
-        /*if (value['type'] === 'tosca.nodes.nfv.VnfExtCp'){
-            nodes.push({ group: 'nodes', data: { id: key, name: 'Cp - ' + key, label: 'Cp - ' + key, weight: 50, faveColor: '#fff', faveShape: 'ellipse'}, position: { x: 215, y: 85 } , classes: 'bottom-center net'});
-            //console.log(value['requirements']);
-            $.each( value['requirements'], function(key1, value1){
-                //console.log(key1 + " " + value1);
-                //console.log(key);
-                nodes.push({ group: 'nodes', data: { id: key1 + value1, name: key1 + " " + value1, label: key1 + " " + value1, weight: 50, faveColor: '#fff', faveShape: 'rectangle'}, position: { x: 250, y: 85 } , classes: 'bottom-center net'});
-                edges.push({ group: 'edges', data: { source: key, target: key1 + value1, faveColor: '#706f6f', strength: 70 }});
-                $.each( nodeTempl, function(key2, value2){
-                    if (value2['type'] === 'tosca.nodes.nfv.Vdu.Compute'){
-                        edges.push({ group: 'edges', data: { source: key, target: key2, label: 'prova', faveColor: '#706f6f', strength: 70 }});
-                        console.log(key + " " + key2);
-                    } 
-                });
-            });
-            //edges.push({ group: 'edges', data: { source: key, target: value1.split('/')[0], faveColor: '#706f6f', strength: 70 }});
-            //value['requirements']['externalVirtualLink'];
-            //nodes.push({ group: 'nodes', data: { id: value['requirements']['externalVirtualLink'], name: 'VLink - ' + value['requirements']['externalVirtualLink'], label: 'VLink - ' + value['requirements']['externalVirtualLink'], weight: 50, faveColor: '#fff', faveShape: 'ellipse' }, classes: 'bottom-center faded'});
-        } else if (value['type'] === 'tosca.nodes.nfv.Vdu.Compute'){
-            nodes.push({ group: 'nodes', data: { id: key, name: 'NODE - ' + key, label: 'NODE - ' + key, weight: 70, faveColor: '#fff', faveShape: 'ellipse' }, position: { x: 300, y: 85 }, classes: 'bottom-center vnf'}); 
-        }
-        //console.log(nodes);
-    });
-    */
 
     var cy = cytoscape({
         container: document.getElementById(params[1]),
-
         boxSelectionEnabled: false,
         autounselectify: true,
 
 		layout: {
 			name: 'grid',
-            padding: 1,
-            position: function(node) { 
-                return {
-                 row: node.data('row'),
-                 col: node.data('col')
-                } 
-              }
+      padding: 1,
+      position: function(node) {
+          return {
+           row: node.data('row'),
+           col: node.data('col')
+          }
+        }
 		},
 
 		style: cytoscape.stylesheet()
 			.selector('node')
 				.css({
-                    'shape': 'data(faveShape)',
-                    'height': 80,
-                    'width': 80,
-                    'content': 'data(name)',
+          'shape': 'data(faveShape)',
+          'height': 80,
+          'width': 80,
+          'content': 'data(name)',
 					'text-valign': 'center',
 					'text-outline-width': 0,
 					'text-width': 2,
@@ -421,22 +382,22 @@ function createVNFGraph(data, params) {
 					'background-color': 'data(faveColor)',
 					'color': '#000',
 					'label': 'data(name)'
-                })
-            .selector('$node > node')
-                .css({
-                    'shape': 'data(faveShape)',
-                    'color': '#000',
-                    'text-pt': 10,
-                    'text-outline-width': 0,
-                    //'text-outline-color': '#000',
-                    'padding-top': '10px',
-                    'padding-left': '30px',
-                    'padding-bottom': '10px',
-                    'padding-right': '30px',
-                    'text-valign': 'top',
-                    'text-halign': 'center',
-                    'background-color': 'data(faveColor)'
-                })
+        })
+      .selector('$node > node')
+        .css({
+            'shape': 'data(faveShape)',
+            'color': '#000',
+            'text-pt': 10,
+            'text-outline-width': 0,
+            //'text-outline-color': '#000',
+            'padding-top': '10px',
+            'padding-left': '30px',
+            'padding-bottom': '10px',
+            'padding-right': '30px',
+            'text-valign': 'top',
+            'text-halign': 'center',
+            'background-color': 'data(faveColor)'
+        })
 			.selector(':selected')
 				.css({
 					'border-width': 3,
@@ -448,10 +409,10 @@ function createVNFGraph(data, params) {
 					'opacity': 0.666,
 					'width': 'mapData(strength, 70, 100, 2, 6)',
 					'target-arrow-shape': 'circle',
-                    'source-arrow-shape': 'circle',
+          'source-arrow-shape': 'circle',
 					'line-color': 'data(faveColor)',
-                    'source-arrow-color': 'data(faveColor)',
-                    'label': 'data(label)',
+          'source-arrow-color': 'data(faveColor)',
+          'label': 'data(label)',
 					'target-arrow-color': 'data(faveColor)'
 				})
 			.selector('edge.questionable')
@@ -460,27 +421,21 @@ function createVNFGraph(data, params) {
 					'target-arrow-shape': 'diamond',
 					'source-arrow-shape': 'diamond'
 				})
-			.selector('.vnf')
+			.selector('.vdu')
 				.css({
-					'background-image': '/5gcatalogue/images/vdu.png',
+					'background-image': '/5gcatalogue/images/vdu_icon_80.png',
 					'width': 80,//'mapData(weight, 40, 80, 20, 60)',
 					'height': 80
 				})
-			.selector('.pnf')
+			.selector('.extcp')
 				.css({
-					'background-image': '/5gcatalogue/images/pnf_icon_80.png',
-					'width': 80,//'mapData(weight, 40, 80, 20, 60)',
-					'height': 80
-				})
-			.selector('.net')
-				.css({
-					'background-image': '/5gcatalogue/images/cp.png',
+					'background-image': '/5gcatalogue/images/cp_icon_50.png',
 					'width': 50,//'mapData(weight, 40, 80, 20, 60)',
 					'height': 50
 				})
-			.selector('.sap')
+			.selector('.net')
 				.css({
-					'background-image': '/5gcatalogue/images/net.png',
+					'background-image': '/5gcatalogue/images/net_icon_50.png',
 					'width': 50,//'mapData(weight, 40, 80, 20, 60)',
 					'height': 50
 				})
@@ -514,8 +469,8 @@ function createVNFGraph(data, params) {
 		  window.cy = this;
 		}
 	});
-	
+
 	cy.minZoom(0.5);
     cy.maxZoom(1.6);
-    
+
 }
