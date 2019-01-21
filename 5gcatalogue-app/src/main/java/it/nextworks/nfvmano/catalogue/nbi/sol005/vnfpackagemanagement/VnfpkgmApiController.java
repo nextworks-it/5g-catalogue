@@ -268,7 +268,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         log.debug("Processing REST request for Uploading VNF Pkg content in VNF Pkg info " + vnfPkgId);
 
         String accept = request.getHeader("Accept");
-        if (accept != null && accept.contains("application/json")) {
+        //if (accept != null && accept.contains("application/json")) {
             if (body.isEmpty()) {
                 return new ResponseEntity<String>("Error message: File is empty!", HttpStatus.BAD_REQUEST);
             }
@@ -312,10 +312,10 @@ public class VnfpkgmApiController implements VnfpkgmApi {
                             HttpStatus.INTERNAL_SERVER_ERROR);
                 }
             }
-        } else {
+        /*} else {
             return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.PRECONDITION_FAILED.value(),
                     "Accept header null or different from application/json"), HttpStatus.PRECONDITION_FAILED);
-        }
+        }*/
     }
 
     public ResponseEntity<Void> uploadVNFPkgFromURI(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId, @ApiParam(value = "", required = true) @Valid @RequestBody UploadVnfPackageFromUriRequest body) {

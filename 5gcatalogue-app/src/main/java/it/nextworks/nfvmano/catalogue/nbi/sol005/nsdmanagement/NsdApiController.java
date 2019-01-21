@@ -241,7 +241,7 @@ public class NsdApiController implements NsdApi {
         log.debug("Processing REST request for Uploading NSD content in NSD info " + nsdInfoId);
 
         String accept = request.getHeader("Accept");
-        if (accept != null && accept.contains("application/json")) {
+        //if (accept != null && accept.contains("application/json")) {
             if (body.isEmpty()) {
                 return new ResponseEntity<String>("Error message: File is empty!", HttpStatus.BAD_REQUEST);
             }
@@ -289,10 +289,10 @@ public class NsdApiController implements NsdApi {
                             HttpStatus.INTERNAL_SERVER_ERROR);
                 }
             }
-        } else {
+        /*} else {
             return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.PRECONDITION_FAILED.value(),
                     "Accept header null or different from application/json"), HttpStatus.PRECONDITION_FAILED);
-        }
+        }*/
     }
 
     public ResponseEntity<PnfdInfo> createPNFDInfo(

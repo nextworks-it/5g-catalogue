@@ -190,6 +190,7 @@ function putFileToURL(resourceUrl, file, callback, params) {
         data: file,
         cache: false,
         "contentType": false,
+        "Accept": application/json
         processData: false
     };
 
