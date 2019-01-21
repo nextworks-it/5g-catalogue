@@ -35,40 +35,52 @@ import java.util.List;
 @Api(value = "vnfpkgm", description = "the vnfpkgm API")
 public interface VnfpkgmApi {
 
-    @ApiOperation(value = "Create Subscription Information", nickname = "createSubscription", notes = "", response = PkgmSubscription.class, tags = {})
-    @ApiResponses(value = {
-            @ApiResponse(code = 201, message = "Status 201", response = PkgmSubscription.class),
-            @ApiResponse(code = 303, message = "Status 303"),
-            @ApiResponse(code = 400, message = "Status 400", response = ProblemDetails.class),
-            @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
-    @RequestMapping(value = "/vnfpkgm/v1/subscriptions",
-            produces = {"application/json", "application/yaml"},
-            method = RequestMethod.POST)
-    ResponseEntity<PkgmSubscription> createSubscription(@ApiParam(value = "", required = true) @Valid @RequestBody PkgmSubscriptionRequest body);
-
-
     @ApiOperation(value = "Create VNF Package Info", nickname = "createVNFPkgInfo", notes = "", response = VnfPkgInfo.class, tags = {})
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "Status 201", response = VnfPkgInfo.class),
             @ApiResponse(code = 400, message = "Status 400", response = ProblemDetails.class),
             @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
     @RequestMapping(value = "/vnfpkgm/v1/vnf_packages",
-            produces = {"application/json", "application/yaml"},
+            produces = {"application/json"},
             consumes = {"application/json"},
             method = RequestMethod.POST)
-    ResponseEntity<VnfPkgInfo> createVNFPkgInfo(@ApiParam(value = "", required = true) @Valid @RequestBody CreateVnfPkgInfoRequest body);
+    ResponseEntity<?> createVNFPkgInfo(@ApiParam(value = "", required = true) @Valid @RequestBody CreateVnfPkgInfoRequest body);
 
-
-    @ApiOperation(value = "Delete Subscription Information", nickname = "deleteSubscription", notes = "", tags = {})
+    @ApiOperation(value = "Query VNF Packages Info", nickname = "getVNFPkgsInfo", notes = "", response = VnfPkgInfo.class, responseContainer = "List", tags = {})
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "Status 204"),
+            @ApiResponse(code = 200, message = "Status 200", response = VnfPkgInfo.class, responseContainer = "List"),
             @ApiResponse(code = 400, message = "Status 400", response = ProblemDetails.class),
             @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
-    @RequestMapping(value = "/vnfpkgm/v1/subscriptions/{subscriptionId}",
-            produces = {"application/json", "application/yaml"},
-            method = RequestMethod.DELETE)
-    ResponseEntity<Void> deleteSubscription(@ApiParam(value = "", required = true) @PathVariable("subscriptionId") String subscriptionId);
+    @RequestMapping(value = "/vnfpkgm/v1/vnf_packages",
+            produces = {"application/json"},
+            method = RequestMethod.GET)
+    ResponseEntity<?> getVNFPkgsInfo();
 
+    @ApiOperation(value = "Query VNF Package Info", nickname = "queryVNFPkgInfo", notes = "", response = VnfPkgInfo.class, tags = {})
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Status 200", response = VnfPkgInfo.class),
+            @ApiResponse(code = 400, message = "Status 400", response = ProblemDetails.class),
+            @ApiResponse(code = 404, message = "Status 404", response = ProblemDetails.class),
+            @ApiResponse(code = 409, message = "Status 409", response = ProblemDetails.class),
+            @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
+    @RequestMapping(value = "/vnfpkgm/v1/vnf_packages/{vnfPkgId}",
+            produces = {"application/json"},
+            method = RequestMethod.GET)
+    ResponseEntity<?> queryVNFPkgInfo(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId);
+
+    @ApiOperation(value = "Update a VNF Package Info", nickname = "updateVNFPkgInfo", notes = "", response = VnfPkgInfoModifications.class, tags = {})
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Status 200", response = VnfPkgInfoModifications.class),
+            @ApiResponse(code = 400, message = "Status 400", response = ProblemDetails.class),
+            @ApiResponse(code = 404, message = "Status 404", response = ProblemDetails.class),
+            @ApiResponse(code = 409, message = "Status 409", response = ProblemDetails.class),
+            @ApiResponse(code = 412, message = "Status 412", response = ProblemDetails.class),
+            @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
+    @RequestMapping(value = "/vnfpkgm/v1/vnf_packages/{vnfPkgId}",
+            produces = {"application/json"},
+            consumes = {"application/json"},
+            method = RequestMethod.PATCH)
+    ResponseEntity<?> updateVNFPkgInfo(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId, @ApiParam(value = "", required = true) @Valid @RequestBody VnfPkgInfoModifications body);
 
     @ApiOperation(value = "Delete a VNF Package", nickname = "deleteVNFPkgInfo", notes = "", tags = {})
     @ApiResponses(value = {
@@ -77,32 +89,9 @@ public interface VnfpkgmApi {
             @ApiResponse(code = 409, message = "Status 409", response = ProblemDetails.class),
             @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
     @RequestMapping(value = "/vnfpkgm/v1/vnf_packages/{vnfPkgId}",
-            produces = {"application/json", "application/yaml"},
+            produces = {"application/json"},
             method = RequestMethod.DELETE)
     ResponseEntity<?> deleteVNFPkgInfo(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId);
-
-
-    @ApiOperation(value = "Query Subscription Information", nickname = "getSubscription", notes = "", response = PkgmSubscription.class, tags = {})
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Status 200", response = PkgmSubscription.class),
-            @ApiResponse(code = 400, message = "Status 400", response = ProblemDetails.class),
-            @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
-    @RequestMapping(value = "/vnfpkgm/v1/subscriptions/{subscriptionId}",
-            produces = {"application/json", "application/yaml"},
-            method = RequestMethod.GET)
-    ResponseEntity<PkgmSubscription> getSubscription(@ApiParam(value = "", required = true) @PathVariable("subscriptionId") String subscriptionId);
-
-
-    @ApiOperation(value = "Query Subscription Information", nickname = "getSubscriptions", notes = "", response = PkgmSubscription.class, responseContainer = "List", tags = {})
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Status 200", response = PkgmSubscription.class, responseContainer = "List"),
-            @ApiResponse(code = 400, message = "Status 400", response = ProblemDetails.class),
-            @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
-    @RequestMapping(value = "/vnfpkgm/v1/subscriptions",
-            produces = {"application/json", "application/yaml"},
-            method = RequestMethod.GET)
-    ResponseEntity<List<PkgmSubscription>> getSubscriptions();
-
 
     @ApiOperation(value = "Get VNF Desriptor in a VNF Package.", nickname = "getVNFD", notes = "", response = Object.class, tags = {})
     @ApiResponses(value = {
@@ -116,7 +105,6 @@ public interface VnfpkgmApi {
             produces = {"application/json", "application/yaml", "text/plain", "application/zip"},
             method = RequestMethod.GET)
     ResponseEntity<?> getVNFD(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId);
-
 
     @ApiOperation(value = "Get VNF Package content.", nickname = "getVNFPkg", notes = "", response = Object.class, tags = {})
     @ApiResponses(value = {
@@ -132,17 +120,31 @@ public interface VnfpkgmApi {
             method = RequestMethod.GET)
     ResponseEntity<?> getVNFPkg(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId, @ApiParam(value = "") @RequestHeader(value = "Range", required = false) String range);
 
-
-    @ApiOperation(value = "Query VNF Packages Info", nickname = "getVNFPkgsInfo", notes = "", response = VnfPkgInfo.class, responseContainer = "List", tags = {})
+    @ApiOperation(value = "Upload VNF Package content.", nickname = "uploadVNFPkg", notes = "", tags = {})
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Status 200", response = VnfPkgInfo.class, responseContainer = "List"),
+            @ApiResponse(code = 202, message = "Status 202"),
             @ApiResponse(code = 400, message = "Status 400", response = ProblemDetails.class),
+            @ApiResponse(code = 404, message = "Status 404", response = ProblemDetails.class),
+            @ApiResponse(code = 409, message = "Status 409", response = ProblemDetails.class),
             @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
-    @RequestMapping(value = "/vnfpkgm/v1/vnf_packages",
-            produces = {"application/json", "application/yaml"},
-            method = RequestMethod.GET)
-    ResponseEntity<?> getVNFPkgsInfo();
+    @RequestMapping(value = "/vnfpkgm/v1/vnf_packages/{vnfPkgId}/package_content",
+            produces = {"application/json"},
+            consumes = {"application/zip", "multipart/form-data"},
+            method = RequestMethod.PUT)
+    ResponseEntity<?> uploadVNFPkg(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId, @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body, @ApiParam(value = "The payload body contains a VNF Package ZIP file. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType);
 
+    @ApiOperation(value = "Upload VNF Package content from URI.", nickname = "uploadVNFPkgFromURI", notes = "", tags = {})
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Status 200"),
+            @ApiResponse(code = 400, message = "Status 400", response = ProblemDetails.class),
+            @ApiResponse(code = 404, message = "Status 404", response = ProblemDetails.class),
+            @ApiResponse(code = 409, message = "Status 409", response = ProblemDetails.class),
+            @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
+    @RequestMapping(value = "/vnfpkgm/v1/vnf_packages/{vnfPkgId}/package_content/upload_from_uri",
+            produces = {"application/json"},
+            consumes = {"application/json"},
+            method = RequestMethod.POST)
+    ResponseEntity<Void> uploadVNFPkgFromURI(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId, @ApiParam(value = "", required = true) @Valid @RequestBody UploadVnfPackageFromUriRequest body);
 
     @ApiOperation(value = "Query VNF Package artifact.", nickname = "queryVNFPkgArtifact", notes = "", response = Object.class, tags = {})
     @ApiResponses(value = {
@@ -156,62 +158,46 @@ public interface VnfpkgmApi {
     @RequestMapping(value = "/vnfpkgm/v1/vnf_packages/{vnfPkgId}/artifacts/{artifactPath}",
             produces = {"application/octet-stream"},
             method = RequestMethod.GET)
-    ResponseEntity<Object> queryVNFPkgArtifact(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId, @ApiParam(value = "", required = true) @PathVariable("artifactPath") String artifactPath, @ApiParam(value = "") @RequestHeader(value = "Range", required = false) String range);
+    ResponseEntity<?> queryVNFPkgArtifact(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId, @ApiParam(value = "", required = true) @PathVariable("artifactPath") String artifactPath, @ApiParam(value = "") @RequestHeader(value = "Range", required = false) String range);
 
-
-    @ApiOperation(value = "Query VNF Package Info", nickname = "queryVNFPkgInfo", notes = "", response = VnfPkgInfo.class, tags = {})
+    @ApiOperation(value = "Create Subscription Information", nickname = "createSubscription", notes = "", response = PkgmSubscription.class, tags = {})
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Status 200", response = VnfPkgInfo.class),
+            @ApiResponse(code = 201, message = "Status 201", response = PkgmSubscription.class),
+            @ApiResponse(code = 303, message = "Status 303"),
             @ApiResponse(code = 400, message = "Status 400", response = ProblemDetails.class),
-            @ApiResponse(code = 404, message = "Status 404", response = ProblemDetails.class),
-            @ApiResponse(code = 409, message = "Status 409", response = ProblemDetails.class),
             @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
-    @RequestMapping(value = "/vnfpkgm/v1/vnf_packages/{vnfPkgId}",
-            produces = {"application/json", "application/yaml"},
-            method = RequestMethod.GET)
-    ResponseEntity<?> queryVNFPkgInfo(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId);
-
-
-    @ApiOperation(value = "Update a VNF Package Info", nickname = "updateVNFPkgInfo", notes = "", response = VnfPkgInfoModifications.class, tags = {})
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Status 200", response = VnfPkgInfoModifications.class),
-            @ApiResponse(code = 400, message = "Status 400", response = ProblemDetails.class),
-            @ApiResponse(code = 404, message = "Status 404", response = ProblemDetails.class),
-            @ApiResponse(code = 409, message = "Status 409", response = ProblemDetails.class),
-            @ApiResponse(code = 412, message = "Status 412", response = ProblemDetails.class),
-            @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
-    @RequestMapping(value = "/vnfpkgm/v1/vnf_packages/{vnfPkgId}",
-            produces = {"application/json", "application/yaml"},
-            consumes = {"application/json"},
-            method = RequestMethod.PATCH)
-    ResponseEntity<?> updateVNFPkgInfo(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId, @ApiParam(value = "", required = true) @Valid @RequestBody VnfPkgInfoModifications body);
-
-
-    @ApiOperation(value = "Upload VNF Package content.", nickname = "uploadVNFPkg", notes = "", tags = {})
-    @ApiResponses(value = {
-            @ApiResponse(code = 202, message = "Status 202"),
-            @ApiResponse(code = 400, message = "Status 400", response = ProblemDetails.class),
-            @ApiResponse(code = 404, message = "Status 404", response = ProblemDetails.class),
-            @ApiResponse(code = 409, message = "Status 409", response = ProblemDetails.class),
-            @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
-    @RequestMapping(value = "/vnfpkgm/v1/vnf_packages/{vnfPkgId}/package_content",
-            produces = {"application/json", "application/yaml"},
-            consumes = {"application/zip", "multipart/form-data"},
-            method = RequestMethod.PUT)
-    ResponseEntity<?> uploadVNFPkg(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId, @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body, @ApiParam(value = "The payload body contains a VNF Package ZIP file. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType);
-
-
-    @ApiOperation(value = "Upload VNF Package content from URI.", nickname = "uploadVNFPkgFromURI", notes = "", tags = {})
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Status 200"),
-            @ApiResponse(code = 400, message = "Status 400", response = ProblemDetails.class),
-            @ApiResponse(code = 404, message = "Status 404", response = ProblemDetails.class),
-            @ApiResponse(code = 409, message = "Status 409", response = ProblemDetails.class),
-            @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
-    @RequestMapping(value = "/vnfpkgm/v1/vnf_packages/{vnfPkgId}/package_content/upload_from_uri",
-            produces = {"application/json", "application/yaml"},
-            consumes = {"application/json"},
+    @RequestMapping(value = "/vnfpkgm/v1/subscriptions",
+            produces = {"application/json"},
             method = RequestMethod.POST)
-    ResponseEntity<Void> uploadVNFPkgFromURI(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId, @ApiParam(value = "", required = true) @Valid @RequestBody UploadVnfPackageFromUriRequest body);
+    ResponseEntity<?> createSubscription(@ApiParam(value = "", required = true) @Valid @RequestBody PkgmSubscriptionRequest body);
 
+    @ApiOperation(value = "Query Subscriptions Information", nickname = "getSubscriptions", notes = "", response = PkgmSubscription.class, responseContainer = "List", tags = {})
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Status 200", response = PkgmSubscription.class, responseContainer = "List"),
+            @ApiResponse(code = 400, message = "Status 400", response = ProblemDetails.class),
+            @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
+    @RequestMapping(value = "/vnfpkgm/v1/subscriptions",
+            produces = {"application/json"},
+            method = RequestMethod.GET)
+    ResponseEntity<?> getSubscriptions();
+
+    @ApiOperation(value = "Query Subscription Information", nickname = "getSubscription", notes = "", response = PkgmSubscription.class, tags = {})
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Status 200", response = PkgmSubscription.class),
+            @ApiResponse(code = 400, message = "Status 400", response = ProblemDetails.class),
+            @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
+    @RequestMapping(value = "/vnfpkgm/v1/subscriptions/{subscriptionId}",
+            produces = {"application/json"},
+            method = RequestMethod.GET)
+    ResponseEntity<?> getSubscription(@ApiParam(value = "", required = true) @PathVariable("subscriptionId") String subscriptionId);
+
+    @ApiOperation(value = "Delete Subscription Information", nickname = "deleteSubscription", notes = "", tags = {})
+    @ApiResponses(value = {
+            @ApiResponse(code = 204, message = "Status 204"),
+            @ApiResponse(code = 400, message = "Status 400", response = ProblemDetails.class),
+            @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
+    @RequestMapping(value = "/vnfpkgm/v1/subscriptions/{subscriptionId}",
+            produces = {"application/json"},
+            method = RequestMethod.DELETE)
+    ResponseEntity<?> deleteSubscription(@ApiParam(value = "", required = true) @PathVariable("subscriptionId") String subscriptionId);
 }
