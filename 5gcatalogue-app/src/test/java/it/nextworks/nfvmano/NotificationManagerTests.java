@@ -75,7 +75,7 @@ public class NotificationManagerTests {
                 e.printStackTrace();
             }
             if (notificationManager == null) {
-                System.out.println("================= Error : null notification service");
+                System.out.println("================= Error : null notification nsdService");
             }
             //notificationManager.acceptNsdOnBoardingNotification(msg);
         } catch (JsonProcessingException e) {

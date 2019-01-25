@@ -42,6 +42,7 @@ public class DummyMANOPlugin extends MANOPlugin {
                 mano,
                 kafkaBootstrapServers,
                 service,
+                null,//TODO add VnfPackageManagementInterface
                 localTopic,
                 remoteTopic,
                 kafkaTemplate

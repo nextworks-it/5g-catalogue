@@ -30,7 +30,7 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.ArchiveBuilder;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.NsdBuilder;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.OsmNsdPackage;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.nsDescriptor.OsmNsdPackage;
 import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
@@ -74,7 +74,7 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
     public OpenSourceMANOR3Plugin(MANOType manoType, MANO mano, String kafkaBootstrapServers,
                                   NsdManagementInterface service, String localTopic, String remoteTopic,
                                   KafkaTemplate<String, String> kafkaTemplate) {
-        super(manoType, mano, kafkaBootstrapServers, service, localTopic, remoteTopic, kafkaTemplate);
+        super(manoType, mano, kafkaBootstrapServers, service, null, localTopic, remoteTopic, kafkaTemplate);//TODO add VnfPackageManagementInterface
         if (MANOType.OSMR3 != manoType) {
             throw new IllegalArgumentException("OSM R3 plugin requires an OSM R3 type MANO");
         }
@@ -200,7 +200,7 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
     private DescriptorTemplate retrieveTemplate(String nsdInfoId)
             throws FailedOperationException, MalformattedElementException, NotExistingEntityException,
             MethodNotImplementedException, NotPermittedOperationException, IOException {
-        Object nsd = service.getNsd(nsdInfoId, true);
+        Object nsd = nsdService.getNsd(nsdInfoId, true);
         if (!(Resource.class.isAssignableFrom(nsd.getClass()))) {
             throw new MethodNotImplementedException(
                     String.format("NSD storage type %s unsupported.", nsd.getClass().getSimpleName()));

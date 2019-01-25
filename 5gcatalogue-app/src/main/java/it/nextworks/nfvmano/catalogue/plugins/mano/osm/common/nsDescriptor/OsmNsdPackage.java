@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.nextworks.nfvmano.catalogue.plugins.mano.osm.common;
+package it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.nsDescriptor;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

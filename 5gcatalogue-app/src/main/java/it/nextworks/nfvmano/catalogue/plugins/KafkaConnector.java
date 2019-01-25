@@ -89,7 +89,7 @@ public class KafkaConnector {
 
     public void init() {
         try {
-            // Initialize the Kafka listener container service for this consumer/plugin
+            // Initialize the Kafka listener container nsdService for this consumer/plugin
 
             // Build the prop map
             Map<String, Object> actual_props = new HashMap<>(DEFAULT_PROPS);
@@ -142,7 +142,7 @@ public class KafkaConnector {
                     log.debug("Error details:", e);
                 }
             });
-            //Start the Kafka listener container service
+            //Start the Kafka listener container nsdService
             container.start();
 
         } catch (Exception e) {

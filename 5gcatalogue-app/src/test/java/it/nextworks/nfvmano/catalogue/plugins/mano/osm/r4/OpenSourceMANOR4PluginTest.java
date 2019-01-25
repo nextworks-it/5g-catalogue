@@ -24,7 +24,7 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.ArchiveBuilder;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.NsdBuilder;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.OsmNsdPackage;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.nsDescriptor.OsmNsdPackage;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.OpenSourceMANOR3Plugin;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
@@ -71,9 +71,9 @@ public class OpenSourceMANOR4PluginTest {
 
 	@BeforeClass
 	public static void connectOsm() {
-		OSMMano osmMano = new OSMMano("testOSM", "10.0.8.31", "admin", "admin", "admin", MANOType.OSMR4);
-		plugin = new OpenSourceMANOR4Plugin(MANOType.OSMR4, osmMano, "blabla", null, null, null, null);
-		// TODO: mock the service
+		OSMMano osmMano = new OSMMano("testOSM", "10.0.2.97", "admin", "admin", "admin", MANOType.OSMR4);
+		plugin = new OpenSourceMANOR4Plugin(MANOType.OSMR4, osmMano, "blabla", null, null,null, null, null);
+		// TODO: mock the nsdService
 	}
 
 	// It's an integration test and depends on OSM.
@@ -86,7 +86,7 @@ public class OpenSourceMANOR4PluginTest {
 
 	@Test
     @Ignore// As above
-	public void testOnBoard() throws InterruptedException, FailedOperationException {
+	public void testOnBoard() throws InterruptedException, FailedOperationException, IOException {
 		init();
 		ClassLoader classLoader = getClass().getClassLoader();
 		File vnfd = new File(classLoader.getResource("Descriptors/OSM/cirros_vnf.tar.gz").getFile());

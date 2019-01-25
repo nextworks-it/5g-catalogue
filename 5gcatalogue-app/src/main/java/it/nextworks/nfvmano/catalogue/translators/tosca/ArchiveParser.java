@@ -172,8 +172,8 @@ public class ArchiveParser {
             }
         }
         if (this.mainServiceTemplate == null) {
-            log.error("CSAR without main service template");
-            throw new MalformattedElementException("CSAR without main service template");
+            log.error("CSAR without main nsdService template");
+            throw new MalformattedElementException("CSAR without main nsdService template");
         }
 
         for (String fName : this.folderNames) {
@@ -203,7 +203,7 @@ public class ArchiveParser {
             parseArchive(input);
 
             if (this.mainServiceTemplate != null) {
-                log.debug("Going to parse main service template...");
+                log.debug("Going to parse main nsdService template...");
                 String mst_content = this.mainServiceTemplate.toString("UTF-8");
                 dt = DescriptorsParser.stringToDescriptorTemplate(mst_content);
             }

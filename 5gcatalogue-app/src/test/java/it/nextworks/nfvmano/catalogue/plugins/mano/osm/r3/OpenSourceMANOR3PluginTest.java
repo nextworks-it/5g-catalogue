@@ -24,8 +24,7 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.ArchiveBuilder;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.NsdBuilder;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.NsdBuilderTest;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.OsmNsdPackage;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.nsDescriptor.OsmNsdPackage;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
@@ -73,7 +72,7 @@ public class OpenSourceMANOR3PluginTest {
     public static void connectOsm() {
         OSMMano osmMano = new OSMMano("testOSM", "10.0.8.26", "admin", "admin", "default", MANOType.OSMR3);
         plugin = new OpenSourceMANOR3Plugin(MANOType.OSMR3, osmMano, "blabla", null, null, null, null);
-        // TODO: mock the service
+        // TODO: mock the nsdService
     }
 
     // It's an integration test and depends on OSM.

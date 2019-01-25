@@ -1,0 +1,134 @@
+package it.nextworks.nfvmano.catalogue.plugins.mano.osm.common;
+
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.vnfDescriptor.*;
+import it.nextworks.nfvmano.catalogue.storage.StorageServiceInterface;
+import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
+import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VDU.VDUComputeNode;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VDU.VDUVirtualBlockStorageNode;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VnfExtCp.VnfExtCpNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.io.File;
+import java.util.*;
+import java.util.stream.Collectors;
+
+
+public class VnfdBuilder {
+
+    private static final Logger log = LoggerFactory.getLogger(VnfdBuilder.class);
+    private final File defaultLogo;
+    private OsmVNFPackage osmPackage;
+    private DescriptorTemplate dt;
+    private int interfacesPosition = 0;
+
+    @Autowired
+    private StorageServiceInterface storageService;
+
+    public VnfdBuilder(File defaultLogo) {
+        this.defaultLogo = defaultLogo;
+    }
+
+    private ConnectionPoint makeCP(String cpName){
+        ConnectionPoint osmCp = new ConnectionPoint();
+        osmCp.setName(cpName);
+        osmCp.setType("VPORT");
+        return osmCp;
+    }
+
+    private ManagementInterface makeMgmtInterface(Map<String, VnfExtCpNode> cpNodes){
+        ManagementInterface mgmtInt = new ManagementInterface();
+        for (Map.Entry<String, VnfExtCpNode> cpNode : cpNodes.entrySet()){
+            List<String> exVirtualLinks = cpNode.getValue().getRequirements().getExternalVirtualLink();
+            for(String exVirtualLink : exVirtualLinks)
+                if(exVirtualLink.endsWith("_mgmt"))
+                    mgmtInt.setCp(cpNode.getKey());
+        }
+        return mgmtInt;
+    }
+
+    private Interface makeVDUInterface(String cpName, VnfExtCpNode cpNode){
+        Interface osmVduInterface = new Interface();
+        osmVduInterface.setExtConnPointRef(cpName);
+        osmVduInterface.setName(cpName);
+        osmVduInterface.setType("EXTERNAL");
+        osmVduInterface.setVirtualInterface(new VirtualInterface("VIRTIO"));
+        osmVduInterface.setPosition(++interfacesPosition);
+        List<String> exVirtualLinks = cpNode.getRequirements().getExternalVirtualLink();
+        for(String exVirtualLink : exVirtualLinks)
+            if(exVirtualLink.endsWith("_mgmt"))
+                osmVduInterface.setMgmtInterface(true);
+        return osmVduInterface;
+    }
+
+    private VDU makeVDU (VDUComputeNode vdu, Map<String, VDUVirtualBlockStorageNode> blockStorageNodes, List<Interface> interfaces){
+        VDU osmVdu = new VDU();
+        String requiredBlockStorageName = vdu.getRequirements().getVirtualStorage().get(0);
+        VDUVirtualBlockStorageNode requiredBlockStorage = blockStorageNodes.get(requiredBlockStorageName);
+        osmVdu.setId(vdu.getProperties().getName());
+        osmVdu.setName(vdu.getProperties().getName());
+        osmVdu.setDescription(vdu.getProperties().getName());
+        osmVdu.setCount(vdu.getProperties().getVduProfile().getMinNumberOfInstances());//TODO it is ok?
+        osmVdu.setImage(requiredBlockStorage.getProperties().getSwImageData().getImageName());
+        osmVdu.setImageChecksum(requiredBlockStorage.getProperties().getSwImageData().getChecksum());
+        osmVdu.setInterfaces(interfaces);
+        osmVdu.setVmFlavor(new VMFlavor(vdu.getCapabilities().getVirtualCompute().getProperties().getVirtualCpu().getNumVirtualCpu(),
+                                        vdu.getCapabilities().getVirtualCompute().getProperties().getVirtualMemory().getVirtualMemSize(),
+                                        requiredBlockStorage.getProperties().getSwImageData().getSize()));
+        return osmVdu;
+    }
+
+    public void parseDescriptorTemplate(DescriptorTemplate template) throws MalformattedElementException {
+        dt = template;
+
+        if (!(dt.getTopologyTemplate().getVNFNodes().size() == 1)) {
+            throw new IllegalArgumentException("Too many Vnfds");
+        }
+
+        Map<String, VnfExtCpNode> cpNodes = dt.getTopologyTemplate().getVnfExtCpNodes();
+        List<ConnectionPoint> osmCps = cpNodes.entrySet()
+                .stream()
+                .map(e -> makeCP(e.getKey()))
+                .collect(Collectors.toList());
+
+        ManagementInterface osmMgmtInterface = makeMgmtInterface(cpNodes);
+
+        List<Interface> osmVduInterfaces = cpNodes.entrySet()
+                .stream()
+                .map(e -> makeVDUInterface(e.getKey(), e.getValue()))
+                .collect(Collectors.toList());
+
+        Map<String, VDUVirtualBlockStorageNode> blockStorageNodes = dt.getTopologyTemplate().getVDUBlockStorageNodes();
+        List<VDU> osmVdus = dt.getTopologyTemplate().getVDUComputeNodes().entrySet()
+                .stream()
+                .map(e -> makeVDU(e.getValue(), blockStorageNodes, osmVduInterfaces))
+                .collect(Collectors.toList());
+
+        VNFNode vnfd = dt.getTopologyTemplate().getVNFNodes().values().iterator().next();
+        List<VNFDescriptor> vnfds = new ArrayList<>();
+        VNFDescriptor osmVnfd = new VNFDescriptor();
+        osmVnfd.setName(vnfd.getProperties().getProductName());
+        osmVnfd.setId(vnfd.getProperties().getDescriptorId());
+        osmVnfd.setShortName(vnfd.getProperties().getProductName());
+        osmVnfd.setDescription(vnfd.getProperties().getProductInfoDescription());
+        osmVnfd.setVendor(vnfd.getProperties().getProvider());
+        osmVnfd.setVersion(vnfd.getProperties().getSoftwareVersion());
+        osmVnfd.setLogo(defaultLogo.getName());//TODO add meaningful logo?
+        osmVnfd.setConnectionPoints(osmCps);
+        osmVnfd.setManagementInterface(osmMgmtInterface);
+        osmVnfd.setVduList(osmVdus);
+
+        vnfds.add(osmVnfd);
+
+        VNFDCatalog vnfdCatalog = new VNFDCatalog();
+        vnfdCatalog.setVnfd(vnfds);
+        osmPackage = new OsmVNFPackage().setVnfdCatalog(vnfdCatalog);
+    }
+
+    public OsmVNFPackage getPackage() {
+        return osmPackage;
+    }
+}

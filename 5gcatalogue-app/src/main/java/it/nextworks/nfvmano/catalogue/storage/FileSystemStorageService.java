@@ -69,9 +69,9 @@ public class FileSystemStorageService implements StorageServiceInterface {
             Path path = loadVnfPkg(vnfdId, version, filename);
             byte[] bytes = Files.readAllBytes(path);
             InputStream input = new ByteArrayInputStream(bytes);
-            log.debug("Going to parse archive {} for retrieving main service template...", filename);
+            log.debug("Going to parse archive {} for retrieving main nsdService template...", filename);
             byte[] mst = ArchiveParser.getMainDescriptorFromArchive(input);
-            log.debug("Extracting main service template in file {}...", vnfPkgsLocation + "/"
+            log.debug("Extracting main nsdService template in file {}...", vnfPkgsLocation + "/"
                     + vnfdId
                     + "/" + version + "/"
                     + filename.substring(0, filename.lastIndexOf('.'))
@@ -101,7 +101,7 @@ public class FileSystemStorageService implements StorageServiceInterface {
 
     @PostConstruct
     public void initStorageService() {
-        log.debug("Initializing file system storage service.");
+        log.debug("Initializing file system storage nsdService.");
         this.nsdsLocation = Paths.get(rootDir + ConfigurationParameters.storageNsdsSubfolder);
         this.vnfPkgsLocation = Paths.get(rootDir + ConfigurationParameters.storageVnfpckgsSubfolder);
         //this.deleteAll();
@@ -256,9 +256,9 @@ public class FileSystemStorageService implements StorageServiceInterface {
             Path path = loadVnfPkg(vnfPkgInfo, filename);
             byte[] bytes = Files.readAllBytes(path);
             InputStream input = new ByteArrayInputStream(bytes);
-            log.debug("Going to parse archive {} for retrieving main service template...", filename);
+            log.debug("Going to parse archive {} for retrieving main nsdService template...", filename);
             byte[] mst = archiveParser.getMainDescriptorFromArchive(input);
-            log.debug("Extracting main service template in file {}...", vnfPkgsLocation + "/"
+            log.debug("Extracting main nsdService template in file {}...", vnfPkgsLocation + "/"
                     + vnfPkgInfo.getVnfdId().toString()
                     + "/" + vnfPkgInfo.getVnfdVersion() + "/"
                     + filename.substring(0, filename.lastIndexOf('.'))
