@@ -97,7 +97,7 @@ public class OpenSourceMANOR3PluginTest {
     }
 
     @Test
-    //@Ignore // As above
+    @Ignore // As above
     public void testOnBoardGenerated() throws InterruptedException, FailedOperationException, IOException, MalformattedElementException {
         init();
         ClassLoader classLoader = getClass().getClassLoader();

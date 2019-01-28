@@ -47,6 +47,12 @@ public class VnfPkgInfoResource {
 
     private String vnfPkgFilename;
 
+    private String vnfdFilename;
+
+    private String metaFilename;
+
+    private String manifestFilename;
+
     public VnfPkgInfoResource() {
     }
 
@@ -190,6 +196,30 @@ public class VnfPkgInfoResource {
 
     public void setVnfPkgFilename(String vnfPkgFilename) {
         this.vnfPkgFilename = vnfPkgFilename;
+    }
+
+    public String getVnfdFilename() {
+        return vnfdFilename;
+    }
+
+    public void setVnfdFilename(String vnfdFilename) {
+        this.vnfdFilename = vnfdFilename;
+    }
+
+    public String getMetaFilename() {
+        return metaFilename;
+    }
+
+    public void setMetaFilename(String metaFilename) {
+        this.metaFilename = metaFilename;
+    }
+
+    public String getManifestFilename() {
+        return manifestFilename;
+    }
+
+    public void setManifestFilename(String manifestFilename) {
+        this.manifestFilename = manifestFilename;
     }
 
     public void isDeletable() throws NotPermittedOperationException {

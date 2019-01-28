@@ -20,7 +20,7 @@ topologyTemplate:
         descriptorId: cb0bcae1-00e7-41fa-b407-ba384e76a3e3
         descriptorVersion: "1.0"
         provider: OSM
-        productName: cirros_vnf
+        productName: cirros_vnf_sol001
         softwareVersion: "1.0"
         productInfoName: cirros_vnf
         productInfoDescription: Cirros VNF

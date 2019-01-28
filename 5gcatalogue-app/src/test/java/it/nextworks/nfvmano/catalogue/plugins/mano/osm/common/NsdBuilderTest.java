@@ -21,6 +21,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.OpenSourceMANOR3Plugin;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -50,7 +51,7 @@ public class NsdBuilderTest {
     }
 
     @Test
-    //@Ignore
+    @Ignore
     public void parseDescriptorTemplate() throws Exception {
         ClassLoader classLoader = getClass().getClassLoader();
         NsdBuilder nsdBuilder = new NsdBuilder(DEF_IMG);
@@ -80,7 +81,7 @@ public class NsdBuilderTest {
     }
 
     @Test
-    //@Ignore
+    @Ignore
     public void archiveTest() throws Exception {
         ClassLoader classLoader = getClass().getClassLoader();
 
@@ -109,7 +110,7 @@ public class NsdBuilderTest {
     }
 
     @Test
-    //@Ignore
+    @Ignore
     public void archiveTestCirros() throws Exception {
         ClassLoader classLoader = getClass().getClassLoader();
 

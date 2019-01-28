@@ -114,7 +114,7 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
 
 
                 log.debug("Searching VNFD with vnfdId {} and version {} in pkg {}", vnfdId, version, fileName);
-                File vnfd_file = FileSystemStorageService.loadVnfdAsFile(vnfdId, version, fileName);
+                File vnfd_file = FileSystemStorageService.loadVnfdAsResource(vnfdId, version, fileName).getFile();
                 DescriptorTemplate vnfd = DescriptorsParser.fileToDescriptorTemplate(vnfd_file);
                 vnfds.putIfAbsent(vnfd.getMetadata().getDescriptorId(), vnfd);
 

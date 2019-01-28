@@ -31,7 +31,6 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.MANORepository;
 import it.nextworks.nfvmano.catalogue.repos.ContentType;
 import it.nextworks.nfvmano.catalogue.repos.NsdInfoRepository;
 import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
-import it.nextworks.nfvmano.catalogue.storage.StorageServiceInterface;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
@@ -62,12 +61,8 @@ public class NsdManagementService implements NsdManagementInterface {
     @Autowired
     private NsdInfoRepository nsdInfoRepo;
 
-    /*
-     * @Autowired private DbPersistencyHandler dbWrapper;
-     */
-
     @Autowired
-    private StorageServiceInterface storageService;
+    private FileSystemStorageService storageService;
 
     @Autowired
     private NotificationManager notificationManager;
@@ -153,7 +148,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     // dbWrapper.deleteNsd(nsdId);
 
                     try {
-                        storageService.deleteNsd(nsdInfo);
+                        storageService.deleteNsd(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion());
                     } catch (Exception e) {
                         log.error("Unable to delete NSD with nsdId {} from fylesystem.", nsdInfo.getNsdId().toString());
                         log.error("Details: ", e);
@@ -208,7 +203,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     throw new FailedOperationException("Found more than one file for NSD in YAML format. Error.");
                 }
                 String nsdFilename = nsdFilenames.get(0);
-                return storageService.loadNsdAsResource(nsdInfo, nsdFilename);
+                return storageService.loadNsdAsResource(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdFilename);
 
                 /*
                  * //String nsdString = DescriptorsParser.descriptorTemplateToString(nsd);
@@ -370,7 +365,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     // pre-set nsdinfo attributes to properly store NSDs
                     nsdInfo.setNsdVersion(dt.getMetadata().getVersion());
 
-                    nsdFilename = storageService.storeNsd(nsdInfo, nsdMpFile);
+                    nsdFilename = storageService.storeNsd(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdMpFile);
 
                     // change contentType to YAML as nsd file is no more zip from now on
                     contentType = ContentType.YAML;
@@ -409,7 +404,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     // pre-set nsdinfo attributes to properly store NSDs
                     nsdInfo.setNsdVersion(dt.getMetadata().getVersion());
 
-                    nsdFilename = storageService.storeNsd(nsdInfo, nsd);
+                    nsdFilename = storageService.storeNsd(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsd);
 
                     log.debug("NSD file successfully stored");
 
@@ -502,7 +497,7 @@ public class NsdManagementService implements NsdManagementInterface {
 
 
             log.debug("Searching VNFD with vnfdId {} and version {} in pkg {}", vnfdId, version, fileName);
-            File vnfd_file = FileSystemStorageService.loadVnfdAsFile(vnfdId, version, fileName);
+            File vnfd_file = storageService.loadVnfdAsResource(vnfdId, version, fileName).getFile();
             DescriptorTemplate vnfd = DescriptorsParser.fileToDescriptorTemplate(vnfd_file);
             vnfds.putIfAbsent(vnfd.getMetadata().getDescriptorId(), vnfd);
         }
