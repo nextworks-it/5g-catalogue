@@ -23,13 +23,14 @@ public class VnfdBuilder {
     private final File defaultLogo;
     private OsmVNFPackage osmPackage;
     private DescriptorTemplate dt;
-    private int interfacesPosition = 0;
+    private int interfacesPosition;
 
     @Autowired
     private StorageServiceInterface storageService;
 
     public VnfdBuilder(File defaultLogo) {
         this.defaultLogo = defaultLogo;
+        this.interfacesPosition = 0;
     }
 
     private ConnectionPoint makeCP(String cpName){

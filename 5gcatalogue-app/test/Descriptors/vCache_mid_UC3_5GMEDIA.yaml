@@ -57,7 +57,7 @@ topologyTemplate:
           checksum: cjfgbjtabvufi4368nbtiab
           containerFormat: BARE
           diskFormat: QCOW2
-          size: 1880
+          size: 2
     
     cp-ens3:
       type: tosca.nodes.nfv.VnfExtCp
