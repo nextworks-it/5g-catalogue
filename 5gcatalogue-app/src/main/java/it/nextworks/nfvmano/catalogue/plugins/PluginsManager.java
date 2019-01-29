@@ -17,6 +17,7 @@ package it.nextworks.nfvmano.catalogue.plugins;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementService;
+import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
 import it.nextworks.nfvmano.catalogue.plugins.mano.*;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.OpenSourceMANOR3Plugin;
@@ -75,7 +76,10 @@ public class PluginsManager {
     private KafkaTemplate<String, String> kafkaTemplate;
 
     @Autowired
-    private NsdManagementService service;
+    private NsdManagementService nsdService;
+
+    @Autowired
+    private VnfPackageManagementInterface vnfdService;
 
     @Autowired
     private MANORepository MANORepository;
@@ -166,13 +170,13 @@ public class PluginsManager {
 
     private MANOPlugin buildMANOPlugin(MANO mano) throws MalformattedElementException {
         if (mano.getManoType().equals(MANOType.DUMMY)) {
-            return new DummyMANOPlugin(mano.getManoType(), mano, bootstrapServers, service, localNsdNotificationTopic,
+            return new DummyMANOPlugin(mano.getManoType(), mano, bootstrapServers, nsdService, localNsdNotificationTopic,
                     remoteNsdNotificationTopic, kafkaTemplate);
         } else if (mano.getManoType().equals(MANOType.OSMR3)) {
-            return new OpenSourceMANOR3Plugin(mano.getManoType(), mano, bootstrapServers, service,
+            return new OpenSourceMANOR3Plugin(mano.getManoType(), mano, bootstrapServers, nsdService,
                     localNsdNotificationTopic, remoteNsdNotificationTopic, kafkaTemplate);
         } else if (mano.getManoType().equals(MANOType.OSMR4)) {
-                return new OpenSourceMANOR4Plugin(mano.getManoType(), mano, bootstrapServers, service,
+                return new OpenSourceMANOR4Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService,
                         localNsdNotificationTopic, remoteNsdNotificationTopic, kafkaTemplate);
         } else {
             throw new MalformattedElementException("Unsupported MANO type. Skipping.");

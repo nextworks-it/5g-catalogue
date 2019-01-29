@@ -1,13 +1,12 @@
 package it.nextworks.nfvmano.libs.osmr4Client;
 
 
-import com.shc.easyjson.JSON;
-import com.shc.easyjson.JSONObject;
-import com.shc.easyjson.JSONValue;
-import com.shc.easyjson.ParseException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import it.nextworks.nfvmano.libs.osmr4Client.nsdManagement.NSDManagementInterface;
 import it.nextworks.nfvmano.libs.osmr4Client.nsdManagement.elements.CreateNsdInfoRequest;
 import it.nextworks.nfvmano.libs.osmr4Client.osmManagement.OSMManagementInterface;
+import it.nextworks.nfvmano.libs.osmr4Client.osmManagement.elements.Token;
+import it.nextworks.nfvmano.libs.osmr4Client.osmManagement.elements.TokenRequest;
 import it.nextworks.nfvmano.libs.osmr4Client.utilities.*;
 import it.nextworks.nfvmano.libs.osmr4Client.vnfpackageManagement.VNFDManagementInterface;
 import it.nextworks.nfvmano.libs.osmr4Client.vnfpackageManagement.elements.CreateVnfPkgInfoRequest;
@@ -23,8 +22,8 @@ import java.util.List;
 
 public class OSMr4Client implements OSMManagementInterface, NSDManagementInterface, VNFDManagementInterface {
 
-    private String      osmIPAddress, user, password, project;
-    private JSONObject  validToken;
+    private String  osmIPAddress, user, password, project;
+    private Token   validToken;
 
     final private String osmManagement = "/admin/v1";
     final private String nsdManagement = "/nsd/v1";
@@ -47,46 +46,39 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
         this.project = project;
 
         HttpResponse response = getAuthenticationToken();
+        if (response.getCode() == HTTP_UNAUTHORIZED)
+                throw new OSMException(response.getContent());
+        ObjectMapper mapper = new ObjectMapper();
         try {
-            validToken = JSON.parse(response.getContent());
-        }catch(ParseException e){
+            validToken = mapper.readValue(response.getContent(), Token.class);
+        }catch(Exception e){
             e.printStackTrace();
         }
-	    if(response.getCode() == HTTP_UNAUTHORIZED)
-            throw new OSMException(validToken.get("detail").getValue());
     }
 
     /**
      * Obtains OSMr4 server address
      * @return IP Address where OSMr4 is running
      */
-    protected String getOSMIPAddress() {
-        return this.osmIPAddress;
-    }
+    protected String getOSMIPAddress() { return this.osmIPAddress; }
 
     /**
      * Obtains OSMr4 user
      * @return User
      */
-    protected String getUser() {
-        return this.user;
-    }
+    protected String getUser() { return this.user; }
 
     /**
      * Obtains OSMr4 password
      * @return Password
      */
-    protected String getPassword() {
-        return this.password;
-    }
+    protected String getPassword() { return this.password; }
 
     /**
      * Obtains OSMr4 project
      * @return Project
      */
-    protected String getProject() {
-        return this.project;
-    }
+    protected String getProject() { return this.project; }
 
     /* OSMManagementInterface */
 
@@ -95,12 +87,13 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
      */
     private void verifyToken(){
 
-        Double tokenExpireTime = new Double (validToken.get("expires").getValue().toString());
+        Double tokenExpireTime = new Double (validToken.getExpires());
         if(tokenExpireTime.longValue()*1000 < System.currentTimeMillis()) {
             HttpResponse response = getAuthenticationToken();
+            ObjectMapper mapper = new ObjectMapper();
             try {
-                validToken = JSON.parse(response.getContent());
-            } catch (ParseException e) {
+                validToken = mapper.readValue(response.getContent(), Token.class);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -117,13 +110,10 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
         headers.add(new BasicHeader("Content-Type", "application/json"));
         headers.add(new BasicHeader("Accept", "application/json"));
 
-        JSONObject body = new JSONObject();
-        body.put("username", new JSONValue(user));
-        body.put("password", new JSONValue(password));
-        body.put("project_id", new JSONValue(project));
+        TokenRequest tokenReq = new TokenRequest(user, password, project);
 
         String url = "https://" + osmIPAddress + ":9999/osm" + osmManagement + "/tokens";
-        return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.GET, headers, body);
+        return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.GET, headers, tokenReq);
     }
 
     /* NSDManagementInterface */
@@ -140,7 +130,7 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
         List<Header> headers = new ArrayList<>();
         headers.add(new BasicHeader("Content-Type", "application/json"));
         headers.add(new BasicHeader("Accept", "application/json"));
-        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.get("id").getValue().toString()));
+        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         CreateNsdInfoRequest body = new CreateNsdInfoRequest();
 
@@ -162,7 +152,7 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
         List<Header> headers = new ArrayList<>();
         headers.add(new BasicHeader("Content-Type", "application/zip"));
         headers.add(new BasicHeader("Accept", "application/json"));
-        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.get("id").getValue().toString()));
+        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + nsdManagement + "/ns_descriptors/" + nsdInfoId + "/nsd_content";
         return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.PUT, headers, content);
@@ -180,7 +170,7 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
 
         List<Header> headers = new ArrayList<>();
         headers.add(new BasicHeader("Accept", "text/plain"));
-        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.get("id").getValue().toString()));
+        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + nsdManagement + "/ns_descriptors/" + nsdInfoId + "/nsd";
         return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.GET, headers, null);
@@ -198,7 +188,7 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
 
         List<Header> headers = new ArrayList<>();
         headers.add(new BasicHeader("Accept", "application/json"));
-        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.get("id").getValue().toString()));
+        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + nsdManagement + "/ns_descriptors/" + nsdInfoId;
         return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.DELETE, headers, null);
@@ -216,7 +206,7 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
 
         List<Header> headers = new ArrayList<>();
         headers.add(new BasicHeader("Accept", "application/zip"));
-        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.get("id").getValue().toString()));
+        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + nsdManagement + "/ns_descriptors/" + nsdInfoId + "/nsd_content";
 
@@ -235,7 +225,7 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
 
         List<Header> headers = new ArrayList<>();
         headers.add(new BasicHeader("Accept", "application/json"));
-        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.get("id").getValue().toString()));
+        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + nsdManagement + "/ns_descriptors/" + nsdInfoId;
         return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.GET, headers, null);
@@ -252,7 +242,7 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
 
         List<Header> headers = new ArrayList<>();
         headers.add(new BasicHeader("Accept", "application/json"));
-        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.get("id").getValue().toString()));
+        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + nsdManagement + "/ns_descriptors";
         return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.GET, headers, null);
@@ -272,7 +262,7 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
         List<Header> headers = new ArrayList<>();
         headers.add(new BasicHeader("Content-Type", "application/json"));
         headers.add(new BasicHeader("Accept", "application/json"));
-        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.get("id").getValue().toString()));
+        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         CreateVnfPkgInfoRequest body = new CreateVnfPkgInfoRequest();
 
@@ -294,7 +284,7 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
         List<Header> headers = new ArrayList<>();
         headers.add(new BasicHeader("Content-Type", "application/zip"));
         headers.add(new BasicHeader("Accept", "application/json"));
-        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.get("id").getValue().toString()));
+        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + vnfdManagement + "/vnf_packages/" + vnfPkgId + "/package_content";
         return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.PUT, headers, content);
@@ -312,7 +302,7 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
 
         List<Header> headers = new ArrayList<>();
         headers.add(new BasicHeader("Accept", "text/plain"));
-        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.get("id").getValue().toString()));
+        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + vnfdManagement + "/vnf_packages/" + vnfPkgId + "/vnfd";
         return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.GET, headers, null);
@@ -330,7 +320,7 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
 
         List<Header> headers = new ArrayList<>();
         headers.add(new BasicHeader("Accept", "application/json"));
-        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.get("id").getValue().toString()));
+        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + vnfdManagement + "/vnf_packages/" + vnfPkgId;
         return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.DELETE, headers, null);
@@ -348,7 +338,7 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
 
         List<Header> headers = new ArrayList<>();
         headers.add(new BasicHeader("Accept", "application/zip"));
-        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.get("id").getValue().toString()));
+        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + vnfdManagement + "/vnf_packages/" + vnfPkgId + "/package_content";
 
@@ -367,7 +357,7 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
 
         List<Header> headers = new ArrayList<>();
         headers.add(new BasicHeader("Accept", "application/json"));
-        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.get("id").getValue().toString()));
+        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + vnfdManagement + "/vnf_packages/" + vnfPkgId;
         return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.GET, headers, null);
@@ -384,7 +374,7 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
 
         List<Header> headers = new ArrayList<>();
         headers.add(new BasicHeader("Accept", "application/json"));
-        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.get("id").getValue().toString()));
+        headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + vnfdManagement + "/vnf_packages";
         return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.GET, headers, null);

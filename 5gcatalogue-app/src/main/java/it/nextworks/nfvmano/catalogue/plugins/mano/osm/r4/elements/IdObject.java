@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class IdObject {
 
     @JsonProperty("id")
-    String id;
+    private String id;
 
     public String getId() {
         return id;
@@ -13,5 +13,12 @@ public class IdObject {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    @Override
+    public String toString() {
+        return "IdObject{" +
+                "id='" + id + '\'' +
+                '}';
     }
 }

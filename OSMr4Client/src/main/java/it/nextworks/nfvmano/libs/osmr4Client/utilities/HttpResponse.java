@@ -111,7 +111,7 @@ public class HttpResponse {
             else {
                 in = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
                 while ((line = in.readLine()) != null)
-                    content.append(line);
+                    content.append(line + "\n");
                 in.close();
             }
             conn.disconnect();

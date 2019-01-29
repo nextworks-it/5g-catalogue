@@ -16,6 +16,7 @@
 package it.nextworks.nfvmano.catalogue.plugins.mano.osm.common;
 
 import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.nsDescriptor.*;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NsVirtualLink.NsVirtualLinkNode;
@@ -112,8 +113,6 @@ public class NsdBuilder {
                 }
             }
         }
-
-
 
         /*List<ConstituentVnfd> constituentVnfds = dt.getTopologyTemplate().getVNFNodes().values()
                 .stream()

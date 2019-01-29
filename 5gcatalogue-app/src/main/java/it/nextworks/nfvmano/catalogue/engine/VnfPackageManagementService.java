@@ -278,7 +278,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
 
     @Override
     public void uploadVnfPkg(String vnfPkgInfoId, MultipartFile vnfPkg, ContentType contentType) throws FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
-        log.debug("Processing request to upload VNF Pkg content for NSD info " + vnfPkgInfoId);
+        log.debug("Processing request to upload VNF Pkg content for VNFD info " + vnfPkgInfoId);
         VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
 
         if (vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.CREATED) {

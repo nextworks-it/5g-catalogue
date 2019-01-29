@@ -1,7 +1,6 @@
 package it.nextworks.nfvmano.libs.osmr4Client.utilities;
 
-import com.shc.easyjson.JSON;
-import com.shc.easyjson.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.Header;
 import javax.net.ssl.*;
 import java.io.*;
@@ -46,6 +45,7 @@ public class HttpConnection {
         URL url_;
         HttpURLConnection conn = null;
         HttpResponse response;
+        ObjectMapper mapper = new ObjectMapper();
 
         try {
             url_ = new URL(url);
@@ -63,29 +63,23 @@ public class HttpConnection {
             conn.connect();
 
             if(body != null) {
+                OutputStream out = conn.getOutputStream();
                 if(body instanceof File) {
-                    File file = (File)body;
+                    File file = (File) body;
                     // Write the actual file contents
-                    OutputStream out = conn.getOutputStream();
                     FileInputStream inputStreamToLogFile = new FileInputStream(file);
                     int bytesRead;
                     byte[] dataBuffer = new byte[1024];
-                    while((bytesRead = inputStreamToLogFile.read(dataBuffer)) != -1) {
+                    while ((bytesRead = inputStreamToLogFile.read(dataBuffer)) != -1) {
                         out.write(dataBuffer, 0, bytesRead);
                     }
-                    out.flush();
-
-                    // Close the streams
-                    out.close();
-                }
-                else if(body instanceof JSONObject) {
-                    JSONObject json = (JSONObject)body;
-                    DataOutputStream out;
-                    out = new DataOutputStream(conn.getOutputStream());
-                    out.writeBytes(JSON.write(json));
                 }
                 else
-                    throw new OSMException("Unsupported file type in OSM -> " + body.getClass());
+                    mapper.writeValue(out, body);
+
+                out.flush();
+                // Close the streams
+                out.close();
             }
         } catch (MalformedURLException e) {
             e.printStackTrace();

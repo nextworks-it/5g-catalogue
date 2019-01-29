@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
+import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
 import it.nextworks.nfvmano.catalogue.messages.*;
 import it.nextworks.nfvmano.catalogue.plugins.KafkaConnector;
 import it.nextworks.nfvmano.catalogue.plugins.Plugin;
@@ -43,7 +44,8 @@ public abstract class MANOPlugin
     protected MANOType manoType;
     protected MANO mano;
     protected KafkaConnector connector;
-    protected NsdManagementInterface service;
+    protected NsdManagementInterface nsdService;
+    protected VnfPackageManagementInterface vnfdService;
     protected KafkaTemplate<String, String> kafkaTemplate;
     private String remoteTopic;
 
@@ -51,7 +53,8 @@ public abstract class MANOPlugin
             MANOType manoType,
             MANO mano,
             String kafkaBootstrapServers,
-            NsdManagementInterface service,
+            NsdManagementInterface nsdService,
+            VnfPackageManagementInterface vnfdService,
             String localTopic,
             String remoteTopic,
             KafkaTemplate<String, String> kafkaTemplate
@@ -59,7 +62,8 @@ public abstract class MANOPlugin
         super(mano.getManoId(), PluginType.MANO);
         this.manoType = manoType;
         this.mano = mano;
-        this.service = service;
+        this.nsdService = nsdService;
+        this.vnfdService = vnfdService;
         this.remoteTopic = remoteTopic;
         if (this.mano.getManoType() != this.manoType) {
             throw new IllegalArgumentException("Mano type and Mano do not agree.");

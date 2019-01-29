@@ -283,42 +283,6 @@ public class FileSystemStorageService {
         }
     }
 
-    /*public static Resource loadVnfdAsResource(String vnfdId, String version, String filename) throws NotExistingEntityException, IOException {
-        log.debug("Searching file " + filename);
-        try {
-            Path path = loadVnfPkg(vnfdId, version, filename);
-            byte[] bytes = Files.readAllBytes(path);
-            InputStream input = new ByteArrayInputStream(bytes);
-            log.debug("Going to parse archive {} for retrieving main service template...", filename);
-            byte[] mst = ArchiveParser.getMainDescriptorFromArchive(input);
-            log.debug("Extracting main service template in file {}...", vnfPkgsLocation + "/"
-                    + vnfdId
-                    + "/" + version + "/"
-                    + filename.substring(0, filename.lastIndexOf('.'))
-                    + "_vnfd.yaml");
-            FileUtils.writeByteArrayToFile(new File(vnfPkgsLocation + "/"
-                    + vnfdId
-                    + "/" + version + "/"
-                    + filename.substring(0, filename.lastIndexOf('.'))
-                    + "_vnfd.yaml"), mst);
-            Path mst_path = Paths.get(vnfPkgsLocation + "/"
-                    + vnfdId
-                    + "/" + version + "/"
-                    + filename.substring(0, filename.lastIndexOf('.'))
-                    + "_vnfd.yaml");
-            Resource resource = new UrlResource(mst_path.toUri());
-            if (resource.exists() || resource.isReadable()) {
-                log.debug("Found file " + filename.substring(0, filename.lastIndexOf('.'))
-                        + "_vnfd.yaml");
-                return resource;
-            } else {
-                throw new NotExistingEntityException("Could not read file: " + filename);
-            }
-        } catch (MalformedURLException e) {
-            throw new NotExistingEntityException("Could not read file: " + filename, e);
-        }
-    }*/
-
     public static Stream<Path> loadAllNsds() throws FailedOperationException {
         log.debug("Loading all files from file system");
         try {

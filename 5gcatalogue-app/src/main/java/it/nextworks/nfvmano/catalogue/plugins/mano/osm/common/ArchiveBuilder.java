@@ -19,6 +19,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.nsDescriptor.OsmNsdPackage;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.vnfDescriptor.OsmVNFPackage;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.slf4j.Logger;
@@ -51,7 +53,7 @@ public class ArchiveBuilder {
 
     public File makeNewArchive(OsmNsdPackage ymlFile, String readmeContent, File logoFile) {
         if (!(ymlFile.getNsdCatalog().getNsd().size() == 1)) {
-            throw new IllegalArgumentException("Too many nsds in file.");
+            throw new IllegalArgumentException("Too many Nsds in file.");
         }
         String nsdId = ymlFile.getNsdCatalog().getNsd().get(0).getId();
         File folder = makeFolder(nsdId);
@@ -78,8 +80,37 @@ public class ArchiveBuilder {
         return makeNewArchive(ymlFile, "", defaultLogo);
     }
 
-    private File makeFolder(String nsdId) {
-        File folder = new File(tmpDir, nsdId);
+    public File makeNewArchive(OsmVNFPackage ymlFile, String readmeContent, File logoFile, File cloudInitFile) {
+        if (!(ymlFile.getVnfdCatalog().getVnfd().size() == 1)) {
+            throw new IllegalArgumentException("Too many Vnfds in file.");
+        }
+        String vnfdId = ymlFile.getVnfdCatalog().getVnfd().get(0).getId();
+        File folder = makeFolder(vnfdId);
+        makeReadme(readmeContent, folder);
+        makeYml(ymlFile, vnfdId, folder);
+        File iconsFolder = makeSubFolder(folder, "icons");
+        File cloudInitFolder = makeSubFolder(folder, "cloud_init");
+        copyIcon(iconsFolder, logoFile);
+        if(cloudInitFile != null)
+            copyIcon(cloudInitFolder, cloudInitFile);
+        // TODO checksum
+        return compress(folder);
+    }
+
+    public File makeNewArchive(OsmVNFPackage ymlFile, File logoFile) {
+        return makeNewArchive(ymlFile, "", logoFile, null);
+    }
+
+    public File makeNewArchive(OsmVNFPackage ymlFile, String readmeContent) {
+        return makeNewArchive(ymlFile, readmeContent, defaultLogo, null);
+    }
+
+    public File makeNewArchive(OsmVNFPackage ymlFile) {
+        return makeNewArchive(ymlFile, "", defaultLogo, null);
+    }
+
+    private File makeFolder(String Id) {
+        File folder = new File(tmpDir, Id);
         if (folder.isDirectory()) {
             log.debug("Temporary folder {} already existing. Overwriting.", folder.getAbsolutePath());
             if (!rmRecursively(folder)) {
@@ -147,6 +178,22 @@ public class ArchiveBuilder {
         }
     }
 
+    private void makeYml(OsmVNFPackage ymlContent, String vnfdId, File folder) {
+        File vnfdFile = new File(folder, vnfdId + "_vnfd.yaml");
+        ObjectMapper ymlMapper = new ObjectMapper(new YAMLFactory());
+        ymlMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        try {
+            List<String> strings = Arrays.asList(ymlMapper.writeValueAsString(ymlContent).split("\n"));
+            Files.write(vnfdFile.toPath(), strings);
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("Invalid package provided");
+        } catch (IOException e) {
+            throw new IllegalStateException(
+                    String.format("Could not write nsd file %s. Error: %s", vnfdFile.getAbsolutePath(), e.getMessage())
+            );
+        }
+    }
+
     private void makeReadme(String readmeContent, File folder) {
         File readme = new File(folder, "README");
         List<String> strings = Arrays.asList(readmeContent.split("\n"));
@@ -172,7 +219,7 @@ public class ArchiveBuilder {
         return newFolder;
     }
 
-    private void copyIcon(File iconFolder, File icon) {
+    private void copyIcon(File iconFolder, File icon) {//TODO rename
         try {
             Files.copy(icon.toPath(), new File(iconFolder, icon.getName()).toPath());
         } catch (IOException e) {

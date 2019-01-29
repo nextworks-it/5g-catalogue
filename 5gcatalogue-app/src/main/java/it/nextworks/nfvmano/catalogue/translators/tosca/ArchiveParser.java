@@ -115,6 +115,7 @@ public class ArchiveParser {
                 log.error(e.getMessage());
             }
         }
+
         if (mainServiceTemplate == null) {
             log.error("CSAR without main service template");
             throw new MalformattedElementException("CSAR without main service template");
