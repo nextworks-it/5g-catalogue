@@ -30,10 +30,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 @Service
 public class VnfPackageManagementService implements VnfPackageManagementInterface {
@@ -296,6 +296,8 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             throw new MalformattedElementException("VNF Pkg " + vnfPkgInfoId + " upload request with wrong content-type.");
         }
 
+        checkZipArchive(vnfPkg);
+
         try {
             csarInfo = archiveParser.archiveToMainDescriptor(vnfPkg);
             dt = csarInfo.getMst();
@@ -478,5 +480,32 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         }
         log.debug("VNF Pkg with vnfPkgInfoId " + vnfPkgInfoId + " successfully onboarded by all expected consumers.");
         return PackageOnboardingStateType.ONBOARDED;
+    }
+
+    private void checkZipArchive(MultipartFile vnfPkg) throws FailedOperationException {
+
+        byte[] bytes = new byte[0];
+        try {
+            bytes = vnfPkg.getBytes();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        InputStream is = new ByteArrayInputStream(bytes);
+
+        ZipInputStream zis = new ZipInputStream(is);
+
+        try {
+            zis.getNextEntry();
+        } catch (IOException e) {
+            throw new FailedOperationException("CSAR Archive is corrupted: " + e.getMessage());
+        }
+
+        try {
+            zis.closeEntry();
+            zis.close();
+        } catch (IOException e) {
+            throw new FailedOperationException("CSAR Archive is corrupted: " + e.getMessage());
+        }
     }
 }

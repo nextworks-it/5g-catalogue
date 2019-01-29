@@ -15,10 +15,11 @@
  */
 package it.nextworks.nfvmano.catalogue.plugins.mano.osm.r4;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.girtel.osmclient.utils.HTTPResponse;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
+import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
 import it.nextworks.nfvmano.catalogue.messages.*;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdDeletionNotification;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnboardingNotification;
@@ -26,22 +27,32 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r4.elements.IdObject;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r4.elements.OsmR4InfoObject;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.ArchiveBuilder;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.NsdBuilder;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.OsmNsdPackage;
+import it.nextworks.nfvmano.catalogue.repos.VnfPkgInfoRepository;
+import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
+import it.nextworks.nfvmano.libs.osmr4Client.OSMr4Client;
+import it.nextworks.nfvmano.libs.osmr4Client.utilities.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.kafka.core.KafkaTemplate;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.List;
+
+
 
 public class OpenSourceMANOR4Plugin extends MANOPlugin {
 
@@ -52,9 +63,12 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
     private static final File DEF_IMG = new File(
             OpenSourceMANOR4Plugin.class.getClassLoader().getResource("nxw_logo.png").getFile()
     );
+
     private final OSMMano osm;
-    // TODO: OSMR4 client var
-    // private OSMClient osmClient;
+
+    private OSMr4Client osmr4Client;
+
+    private Map<String, String> catalogIdToOsmId;
 
     public OpenSourceMANOR4Plugin(MANOType manoType, MANO mano, String kafkaBootstrapServers,
                                   NsdManagementInterface service, String localTopic, String remoteTopic,
@@ -64,6 +78,7 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
             throw new IllegalArgumentException("OSM R4 plugin requires an OSM R4 type MANO");
         }
         osm = (OSMMano) mano;
+        catalogIdToOsmId = new HashMap<>();
     }
 
     @Override
@@ -73,13 +88,11 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
     }
 
     void initOsmConnection() {
-        // TODO: init OSMR4 client var
-        // osmClient = new OSMClient(osm.getIpAddress(), osm.getUsername(), osm.getPassword(), osm.getProject());
+        osmr4Client = new OSMr4Client(osm.getIpAddress(), osm.getUsername(), osm.getPassword(), osm.getProject());
         log.info("OSM R4 instance addr {}, user {}, project {} connected.", osm.getIpAddress(), osm.getUsername(),
                 osm.getProject());
     }
 
-    // TODO: to be updated according to new descriptor format in OSMR4
     @Override
     public void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) {
         log.info("Received NSD onboarding notificationfor NSD {} info id {}.", notification.getNsdId(),
@@ -88,16 +101,31 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
         try {
             DescriptorTemplate descriptorTemplate = retrieveTemplate(notification.getNsdInfoId());
             NsdBuilder nsdBuilder = new NsdBuilder(DEF_IMG);
-            nsdBuilder.parseDescriptorTemplate(descriptorTemplate, null);
+            Map<String, VNFNode> vnfNodes = descriptorTemplate.getTopologyTemplate().getVNFNodes();
+            Map<String, DescriptorTemplate> vnfds = new HashMap<>();
+            for (Map.Entry<String, VNFNode> vnfNodeEntry : vnfNodes.entrySet()) {
+                String vnfdId = vnfNodeEntry.getValue().getProperties().getDescriptorId();
+                String version = vnfNodeEntry.getValue().getProperties().getDescriptorVersion();
+                String fileName = vnfNodeEntry.getValue().getProperties().getProductName().concat(".yaml");
+                fileName = "Definitions/" + fileName;
+                try {
+                    log.debug("Searching VNFD with vnfdId {} and version {}: {}", vnfdId, version, fileName);
+                    File vnfd_file = FileSystemStorageService.loadVnfdAsResource(vnfdId, version, fileName).getFile();
+                    DescriptorTemplate vnfd = DescriptorsParser.fileToDescriptorTemplate(vnfd_file);
+                    vnfds.putIfAbsent(vnfd.getMetadata().getDescriptorId(), vnfd);
+                } catch (NotExistingEntityException e) {
+                    log.error("VNFD with vnfdId " + vnfdId + " and version " + version + " does not exist in storage: " + e.getMessage());
+                } catch (IOException e) {
+                    log.error("Unable to read VNFD with vnfdId " + vnfdId + " and version " + version + ": " + e.getMessage());
+                }
+            }
+            nsdBuilder.parseDescriptorTemplate(descriptorTemplate, vnfds);
             OsmNsdPackage packageData = nsdBuilder.getPackage();
-
             ArchiveBuilder archiver = new ArchiveBuilder(TMP_DIR, DEF_IMG);
             File archive = archiver.makeNewArchive(packageData, "Generated by NXW Catalogue");
-
-            String tId = onBoardPackage(archive, notification.getOperationId().toString());
+            onBoardNsPackage(archive, notification.getNsdInfoId(), notification.getOperationId().toString());
             log.info("Successfully uploaded nsd {} with info ID {}.", notification.getNsdId(),
                     notification.getNsdInfoId());
-            log.debug("tId: {}", tId);
             sendNotification(new NsdOnBoardingNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(),
                     notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
                     osm.getManoId()));
@@ -116,7 +144,6 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
         log.debug("Body: {}", notification);
     }
 
-    // TODO: to be updated according to new descriptor format in OSMR4
     @Override
     public void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification) {
         log.info("Received NSD deletion notification for NSD {} info id {}.", notification.getNsdId(),
@@ -171,66 +198,98 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
         return new File(resource.getFile());
     }
 
-    String onBoardPackage(File file, String opId) throws FailedOperationException {
-        log.info("Onboarding package, opId: {}.", opId);
-        // TODO: call OSMR4 client upload
-        HTTPResponse httpResponse = null; // osmClient.uploadPackage(file);
-        return parseResponseReturning(httpResponse, opId, true);
+    private String convertCatalogIdToOsmId(String catalogId) throws FailedOperationException{
+        String osmId = catalogIdToOsmId.get(catalogId);
+        if(osmId == null)
+            throw new FailedOperationException("Id not present in OSM");
+        return osmId;
     }
 
-    void deleteNsd(String nsdId, String opId) throws FailedOperationException {
-        log.info("Deleting nsd {}, opId: {}.", nsdId, opId);
-        // TODO: call OSMR4 client delete
-        HTTPResponse httpResponse = null; // osmClient.deleteNSD(nsdId);
-        parseResponse(httpResponse, opId);
+    void onBoardNsPackage(File file, String nsdInfoId, String opId) throws FailedOperationException {
+        log.info("Onboarding ns package, opId: {}.", opId);
+        // Create the NS descriptor resource
+        HttpResponse httpResponse = osmr4Client.createNsd();
+        IdObject content = parseResponse(httpResponse, opId, IdObject.class).get(0);
+        String osmNsdInfoId = content.getId();
+        // Upload NS descriptor content
+        httpResponse = osmr4Client.uploadNsdContent(osmNsdInfoId, file);
+        parseResponse(httpResponse, opId, null );
+        catalogIdToOsmId.put(nsdInfoId, osmNsdInfoId);
+        log.info("Package onboarding successful. OpId: {}.", opId);
     }
 
-    void deleteVnfd(String vnfdId, String opId) throws FailedOperationException {
-        log.info("Deleting vnfd {}, opId: {}.", vnfdId, opId);
-        // TODO: call OSMR4 client delete
-        HTTPResponse httpResponse = null; // osmClient.deleteVNFD(vnfdId);
-        parseResponse(httpResponse, opId);
+    void deleteNsd(String nsdInfoId, String opId) throws FailedOperationException {
+        log.info("Deleting nsd {}, opId: {}.", nsdInfoId, opId);
+        String osmNsdInfoId = convertCatalogIdToOsmId(nsdInfoId);
+        HttpResponse httpResponse = osmr4Client.deleteNsd(osmNsdInfoId);
+        parseResponse(httpResponse, opId, null);
+        catalogIdToOsmId.remove(nsdInfoId);
+        log.info("Nsd deleting successful. OpId: {}.", opId);
     }
 
-    List<String> getNsdIdList() {
-        // TODO: call OSMR4 client get
-        return null; // osmClient.getNSDList().stream().map(OSMComponent::toString).collect(Collectors.toList());
+    List<String> getNsdIdList() throws FailedOperationException {
+        log.info("Getting nsd id list.");
+        HttpResponse httpResponse = osmr4Client.getNsdInfoList();
+        List<OsmR4InfoObject> objList = parseResponse(httpResponse, null, OsmR4InfoObject.class);
+        return objList.stream().map(OsmR4InfoObject::getDescriptorId).collect(Collectors.toList());
     }
 
-    List<String> getVnfdIdList() {
-        // TODO: call OSMR4 client get
-        return null; // osmClient.getVNFDList().stream().map(OSMComponent::toString).collect(Collectors.toList());
+    void onBoardVnfPackage(File file, String vnfdInfoId, String opId) throws FailedOperationException {
+        log.info("Onboarding vnf package, opId: {}.", opId);
+        // Create the VNF descriptor resource
+        HttpResponse httpResponse = osmr4Client.createVnfPackage();
+        IdObject content = parseResponse(httpResponse, opId, IdObject.class).get(0);
+        String osmVnfdInfoId = content.getId();
+        // Upload VNF descriptor content
+        httpResponse = osmr4Client.uploadVnfPackageContent(osmVnfdInfoId, file);
+        parseResponse(httpResponse, opId, null );
+        catalogIdToOsmId.put(vnfdInfoId, osmVnfdInfoId);
+        log.info("Package onboarding successful. OpId: {}.", opId);
     }
 
-    private void parseResponse(HTTPResponse httpResponse, String opId) throws FailedOperationException {
-        parseResponseReturning(httpResponse, opId, false);
-        // Ignoring the return value
+    void deleteVnfd(String vnfdInfoId, String opId) throws FailedOperationException {
+        log.info("Deleting vnfd {}, opId: {}.", vnfdInfoId, opId);
+        String osmVnfdInfoId = convertCatalogIdToOsmId(vnfdInfoId);
+        HttpResponse httpResponse = osmr4Client.deleteVnfPackage(osmVnfdInfoId);
+        parseResponse(httpResponse, opId, null);
+        catalogIdToOsmId.remove(vnfdInfoId);
+        log.info("Vnfd deleting successful. OpId: {}.", opId);
     }
 
-    private String parseResponseReturning(HTTPResponse httpResponse, String opId, boolean transaction)
-            throws FailedOperationException {
+    List<String> getVnfdIdList() throws FailedOperationException{
+        log.info("Getting vnfd id list.");
+        HttpResponse httpResponse = osmr4Client.getVnfPackageList();
+        List<OsmR4InfoObject> objList = parseResponse(httpResponse, null, OsmR4InfoObject.class);
+        return objList.stream().map(OsmR4InfoObject::getDescriptorId).collect(Collectors.toList());
+    }
+
+    private static <T> List<T> parseResponse(HttpResponse httpResponse, String opId, Class<T> clazz) throws FailedOperationException {
+        List<T> objList = new ArrayList<>();
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
+        mapper.enable(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT);
+        mapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+
         if ((httpResponse.getCode() >= 300) || (httpResponse.getCode() < 200)) {
-            log.error("Unexpected response code {}: {}. OpId: {}.", httpResponse.getCode(), httpResponse.getMessage(),
-                    opId);
+            log.error("Unexpected response code {}: {}. OpId: {}.", httpResponse.getCode(), httpResponse.getMessage(), opId);
             log.debug("Response content: {}.", httpResponse.getContent());
             throw new FailedOperationException(String.format("Unexpected code from MANO: %s", httpResponse.getCode()));
         }
         // else, code is 2XX
-        log.info("Package onboarding successful. OpId: {}.", opId);
-        if (transaction) {
-            ObjectMapper mapper = new ObjectMapper();
+        if(clazz == null)
+            return null;
+        if(httpResponse.getFilePath() != null)
+            objList.add(clazz.cast(httpResponse.getFilePath().toFile()));
+        else
             try {
-                TransactionResponse transactionResponse = mapper.readValue(httpResponse.getContent(),
-                        TransactionResponse.class);
-                return transactionResponse.transactionId;
-            } catch (IOException e) {
-                log.error("Could not read transaction ID from response: {}.", e.getMessage());
-                log.debug("Exception details: ", e);
-                throw new FailedOperationException("Could not read transaction ID from MANO response");
+                Class<T[]> arrayClass = (Class<T[]>) Class.forName("[L" + clazz.getName() + ";");
+                objList = Arrays.asList(mapper.readValue(httpResponse.getContent(), arrayClass));
+            }catch (Exception e) {
+                log.error("Could not obtain objects form response: {}.", e.getMessage());
+                e.printStackTrace();
+                throw new FailedOperationException("Could not obtain objects from MANO response");
             }
-        }
-        // else, return the content, which will probably go unused.
-        return httpResponse.getContent();
+        return objList;
     }
 
     // TODO: to be implemented according to new descriptor format in OSMR4
@@ -249,11 +308,6 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
     @Override
     public void acceptVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) throws MethodNotImplementedException {
 
-    }
-
-    private static class TransactionResponse {
-        @JsonProperty("transaction_id")
-        String transactionId;
     }
 
     // TODO

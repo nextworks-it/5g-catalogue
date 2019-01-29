@@ -1,0 +1,17 @@
+package it.nextworks.nfvmano.catalogue.plugins.mano.osm.r4.elements;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public class IdObject {
+
+    @JsonProperty("id")
+    String id;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+}
