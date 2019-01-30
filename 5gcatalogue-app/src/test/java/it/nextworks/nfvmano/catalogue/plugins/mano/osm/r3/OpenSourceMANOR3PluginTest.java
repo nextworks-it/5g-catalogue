@@ -54,13 +54,11 @@ import static org.junit.Assert.assertTrue;
 @SpringBootTest
 public class OpenSourceMANOR3PluginTest {
 
-    private static OpenSourceMANOR3Plugin plugin;
-
     private static final File TMP_DIR = new File("/tmp");
-
     private static final File DEF_IMG = new File(
             OpenSourceMANOR3Plugin.class.getClassLoader().getResource("nxw_logo.png").getFile()
     );
+    private static OpenSourceMANOR3Plugin plugin;
 
     static DescriptorTemplate readFile(String path, Charset encoding) throws IOException {
         byte[] encoded = Files.readAllBytes(Paths.get(path));
@@ -140,7 +138,7 @@ public class OpenSourceMANOR3PluginTest {
 
         System.out.println("===============================================================================================");
         String result = plugin.onBoardPackage(nsd, "test_onb_nsd");
-        System.out.println("Onboard results: " +result);
+        System.out.println("Onboard results: " + result);
         System.out.println("===============================================================================================");
         // Sleep for OSM to finish
         Thread.sleep(1000);

@@ -1,0 +1,9 @@
+TOSCA-Meta-File-Version: 1.0
+CSAR-Version: 1.0
+CreatedBy: Nextworks S.r.l.
+Entry-Definitions: Definitions/cirros_vnfd_sol001.yaml
+Entry-Manifest: cirros_vnfd_sol001.mf
+Entry-Change-Log: Files/ChangeLog.txt
+Entry-Tests: Files/Tests/tests_information.txt
+Entry-Licenses: Files/Licenses/LICENSE
+Entry-Certificate: Files/cirros_vnfd_sol001.cert

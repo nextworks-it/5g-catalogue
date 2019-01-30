@@ -16,9 +16,10 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANORepository;
 import it.nextworks.nfvmano.catalogue.repos.ContentType;
 import it.nextworks.nfvmano.catalogue.repos.VnfPkgInfoRepository;
-import it.nextworks.nfvmano.catalogue.storage.StorageServiceInterface;
+import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
 import it.nextworks.nfvmano.catalogue.translators.tosca.ArchiveParser;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
+import it.nextworks.nfvmano.catalogue.translators.tosca.elements.CSARInfo;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
@@ -29,10 +30,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 @Service
 public class VnfPackageManagementService implements VnfPackageManagementInterface {
@@ -43,7 +44,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
     private VnfPkgInfoRepository vnfPkgInfoRepository;
 
     @Autowired
-    private StorageServiceInterface storageService;
+    private FileSystemStorageService storageService;
 
     @Autowired
     private NotificationManager notificationManager;
@@ -126,7 +127,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                     UUID vnfdId = vnfPkgInfoResource.getVnfdId();
 
                     try {
-                        storageService.deleteVnfPkg(vnfPkgInfoResource);
+                        storageService.deleteVnfPkg(vnfPkgInfoResource.getVnfdId().toString(), vnfPkgInfoResource.getVnfdVersion());
                     } catch (Exception e) {
                         log.error("Unable to delete VNF Pkg with vnfdId {} from fylesystem.", vnfPkgInfoResource.getVnfdId().toString());
                         log.error("Details: ", e);
@@ -195,7 +196,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
     }
 
     @Override
-    public Object getVnfd(String vnfPkgInfoId, boolean isInternalRequest) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
+    public Object getVnfd(String vnfPkgInfoId, boolean isInternalRequest) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException {
         log.debug("Processing request to retrieve a VNFD content for VNF Pkg info " + vnfPkgInfoId);
 
         VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
@@ -208,18 +209,13 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         log.debug("Internal VNFD ID: " + vnfdId);
 
 
-        String vnfPkgFilename = vnfPkgInfoResource.getVnfPkgFilename();
-        if (vnfPkgFilename == null) {
+        String vnfdFilename = vnfPkgInfoResource.getVnfdFilename();
+        if (vnfdFilename == null) {
             log.error("Found zero file for VNFD in YAML format. Error.");
             throw new FailedOperationException("Found zero file for VNFD in YAML format. Error.");
         }
 
-        try {
-            return storageService.loadVnfdAsResource(vnfPkgInfoResource, vnfPkgFilename);
-        } catch (IOException e) {
-            log.error("Error while processing VNF Pkg for retrieving VNFD: " + e.getMessage());
-            throw new FailedOperationException("Error while processing VNF Pkg for retrieving VNFD: " + e.getMessage());
-        }
+        return storageService.loadVnfdAsResource(vnfPkgInfoResource.getVnfdId().toString(), vnfPkgInfoResource.getVnfdVersion(), vnfdFilename);
     }
 
     @Override
@@ -245,7 +241,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                     throw new FailedOperationException("Found zero file for VNF Pkg in ZIP format. Error.");
                 }
 
-                return storageService.loadVnfPkgAsResource(vnfPkgInfoResource, vnfPkgFilename);
+                return storageService.loadVnfPkgAsResource(vnfPkgInfoResource.getVnfdId().toString(), vnfPkgInfoResource.getVnfdVersion(), vnfPkgFilename);
             }
 
             default: {
@@ -292,6 +288,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
 
         String vnfPkgFilename = null;
         DescriptorTemplate dt = null;
+        CSARInfo csarInfo = null;
         UUID vnfdId = null;
 
         if (contentType != ContentType.ZIP) {
@@ -299,8 +296,12 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             throw new MalformattedElementException("VNF Pkg " + vnfPkgInfoId + " upload request with wrong content-type.");
         }
 
+        checkZipArchive(vnfPkg);
+
         try {
-            dt = archiveParser.archiveToMainDescriptor(vnfPkg);
+            csarInfo = archiveParser.archiveToMainDescriptor(vnfPkg);
+            dt = csarInfo.getMst();
+            vnfPkgFilename = csarInfo.getVnfPkgFilename();
 
             vnfdId = UUID.fromString(dt.getMetadata().getDescriptorId());
             vnfPkgInfoResource.setVnfdId(vnfdId);
@@ -310,7 +311,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             vnfPkgInfoResource.setVnfdVersion(dt.getMetadata().getVersion());
             vnfPkgInfoResource.setVnfProvider(dt.getMetadata().getVendor());
 
-            vnfPkgFilename = storageService.storeVnfPkg(vnfPkgInfoResource, vnfPkg);
+            //vnfPkgFilename = storageService.storeVnfPkg(vnfPkgInfoResource.getVnfdId().toString(), vnfPkgInfoResource.getVnfdVersion(), vnfPkg);
 
             log.debug("VNF Pkg file successfully stored: " + vnfPkgFilename);
         } catch (IOException e) {
@@ -350,6 +351,9 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         vnfPkgInfoResource.setVnfProductName(vnfName);
         vnfPkgInfoResource.setContentType(contentType);
         vnfPkgInfoResource.setVnfPkgFilename(vnfPkgFilename);
+        vnfPkgInfoResource.setVnfdFilename(csarInfo.getVnfdFilename());
+        vnfPkgInfoResource.setMetaFilename(csarInfo.getMetaFilename());
+        vnfPkgInfoResource.setManifestFilename(csarInfo.getMfFilename());
 
         // TODO: request to Policy Manager for retrieving the MANO Plugins list,
         // now all plugins are expected to be consumers
@@ -476,5 +480,32 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         }
         log.debug("VNF Pkg with vnfPkgInfoId " + vnfPkgInfoId + " successfully onboarded by all expected consumers.");
         return PackageOnboardingStateType.ONBOARDED;
+    }
+
+    private void checkZipArchive(MultipartFile vnfPkg) throws FailedOperationException {
+
+        byte[] bytes = new byte[0];
+        try {
+            bytes = vnfPkg.getBytes();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        InputStream is = new ByteArrayInputStream(bytes);
+
+        ZipInputStream zis = new ZipInputStream(is);
+
+        try {
+            zis.getNextEntry();
+        } catch (IOException e) {
+            throw new FailedOperationException("CSAR Archive is corrupted: " + e.getMessage());
+        }
+
+        try {
+            zis.closeEntry();
+            zis.close();
+        } catch (IOException e) {
+            throw new FailedOperationException("CSAR Archive is corrupted: " + e.getMessage());
+        }
     }
 }

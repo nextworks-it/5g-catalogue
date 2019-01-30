@@ -16,9 +16,9 @@ nsd:nsd-catalog:
         # vnfd-id-ref is the id of the VNFD
         # Multiple constituent VNFDs can be specified
         - member-vnf-index: 1
-          vnfd-id-ref: cirros_vnfd
+          vnfd-id-ref: cb0bcae1-00e7-41fa-b407-ba384e76a3e3
         - member-vnf-index: 2
-          vnfd-id-ref: cirros_vnfd
+          vnfd-id-ref: cb0bcae1-00e7-41fa-b407-ba384e76a3e3
       
       
       vld:
@@ -38,8 +38,8 @@ nsd:nsd-catalog:
             # vnfd-id-ref - VNFD id
             # vnfd-connection-point-ref - connection point name in the VNFD
             - member-vnf-index-ref: 1
-              vnfd-id-ref: cirros_vnfd
+              vnfd-id-ref: cb0bcae1-00e7-41fa-b407-ba384e76a3e3
               vnfd-connection-point-ref: eth0
             - member-vnf-index-ref: 2
-              vnfd-id-ref: cirros_vnfd
+              vnfd-id-ref: cb0bcae1-00e7-41fa-b407-ba384e76a3e3
               vnfd-connection-point-ref: eth0

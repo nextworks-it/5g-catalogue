@@ -110,18 +110,14 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
 
                 String vnfdId = vnfNodeEntry.getValue().getProperties().getDescriptorId();
                 String version = vnfNodeEntry.getValue().getProperties().getDescriptorVersion();
-                String fileName = vnfNodeEntry.getValue().getProperties().getProductName().concat(".zip");
+                String fileName = vnfNodeEntry.getValue().getProperties().getProductName().concat(".yaml");
+                fileName = "Definitions/" + fileName;
 
-                try {
-                    log.debug("Searching VNFD with vnfdId {} and version {} in pkg {}", vnfdId, version, fileName);
-                    File vnfd_file = FileSystemStorageService.loadVnfdAsFile(vnfdId, version, fileName);
-                    DescriptorTemplate vnfd = DescriptorsParser.fileToDescriptorTemplate(vnfd_file);
-                    vnfds.putIfAbsent(vnfd.getMetadata().getDescriptorId(), vnfd);
-                } catch (NotExistingEntityException e) {
-                    log.error("VNFD with vnfdId " + vnfdId + " and version " + version + " does not exist in storage: " + e.getMessage());
-                } catch (IOException e) {
-                    log.error("Unable to read VNFD with vnfdId " + vnfdId + " and version " + version + ": " + e.getMessage());
-                }
+                log.debug("Searching VNFD with vnfdId {} and version {}: {}", vnfdId, version, fileName);
+                File vnfd_file = FileSystemStorageService.loadVnfdAsResource(vnfdId, version, fileName).getFile();
+                DescriptorTemplate vnfd = DescriptorsParser.fileToDescriptorTemplate(vnfd_file);
+                vnfds.putIfAbsent(vnfd.getMetadata().getDescriptorId(), vnfd);
+
             }
 
             nsdBuilder.parseDescriptorTemplate(descriptorTemplate, vnfds);

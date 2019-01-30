@@ -22,7 +22,7 @@ var stopRefreshing = false;
 
 function refresh(btnFlag) {
 	if(stopRefreshing && !Boolean(btnFlag)) {
-//		console.log("stop refreshing: "+ stopRefreshing);
+		//console.log("stop refreshing: "+ stopRefreshing);
 		return;
 	}
 	$(document).ready(function () {
@@ -35,7 +35,7 @@ function refresh(btnFlag) {
 }
 
 function scrollPageTo(offset) {
-    // For Chrome, Safari and Opera
+  // For Chrome, Safari and Opera
 	var body = document.body;
 	// Firefox and IE places the overflow at the <html> level, unless else is specified.
 	// Therefore, we use the documentElement property for these two browsers
@@ -97,15 +97,15 @@ function showResultMessage(success, msg) {
 function loadFromFile(type, evt, elementId, resId) {
     //Retrieve the first (and only!) File from the FileList object
     var file = evt.target.files;
-	console.log(file[0]);
+		//console.log(file[0]);
     if (file.length < 1)
-		return;
-	if (type == 'ZIP') {
-		readZipFile(file[0], elementId, resId);
-	} else {
-		console.log("Json File in div: " + elementId);
-		var elem = document.getElementById(elementId);
-		console.log("Json File in div: " + elementId + " " + elem);
+			return;
+		if (type == 'ZIP') {
+			readZipFile(file[0], elementId, resId);
+		} else {
+			//console.log("Json File in div: " + elementId);
+			var elem = document.getElementById(elementId);
+			//console.log("Json File in div: " + elementId + " " + elem);
 		if(!elem)
 			return;
 		openTextFile(evt, elem);
@@ -113,7 +113,7 @@ function loadFromFile(type, evt, elementId, resId) {
 }
 
 function readZipFile(file, containerId, resId) {
-	console.log(file);
+	//console.log(file);
 	zip.workerScripts = {
 		deflater: ['../../plugins/zip_js/z-worker.js', '../../plugins/zip_js/deflate.js'],
 		inflater: ['../../plugins/zip_js/z-worker.js', '../../plugins/zip_js/inflate.js']
@@ -152,7 +152,7 @@ function readZipFile(file, containerId, resId) {
 			return false;
 		}
 		entries.forEach(function(entry) {
-//			console.log('filename: ' + entry.filename);
+			//console.log('filename: ' + entry.filename);
 			model.getEntryFile(entry, function(blobURL) {
 				var subdiv = document.createElement('div');
 				$(subdiv).load(blobURL, null, function() {
@@ -182,7 +182,7 @@ function openTextFile(event, container) {
 		alert("Invalid file");
 		return;
 	}
-//  console.log("type = " + f.type);
+	//console.log("type = " + f.type);
 	var reader = new FileReader();
 
 	reader.onload = function(event) {
@@ -308,11 +308,16 @@ function createLinkSet(id, resId, btnNames, btnCallbacks) {
 									</a>';
 				} else if (btnCallbacks[i].toLowerCase().indexOf("open") >= 0) {
 						text += '<a title="View" class="btn btn-link">\
-								<i class="fa fa-eye" "buttonModal_'+ btnCallbacks[i] + '"  data-toggle="modal" data-target="#' + btnCallbacks[i] + id + '" data-id="' + id + '"></i>\
+								<i class="fa fa-file-code-o" "buttonModal_'+ btnCallbacks[i] + '"  data-toggle="modal" data-target="#' + btnCallbacks[i] + id + '" data-id="' + id + '"></i>\
 								</a>';
-				}  else if (btnNames[i].toLowerCase().indexOf("graph") >= 0) {
+				}  else if (btnNames[i].toLowerCase().indexOf("nsd graph") >= 0) {
 					text += '<a title="Graph"class="btn btn-link">\
-								<i class="fa fa-area-chart"  onclick=getAllNsdInfos("' + id + '",' + btnCallbacks[i] + ',"response")></i>\
+								<i class="fa fa-eye"  onclick=getAllNsdInfos("' + id + '",' + btnCallbacks[i] + ',"response")></i>\
+							</a>';
+				}
+				else if (btnNames[i].toLowerCase().indexOf("vnf graph") >= 0) {
+					text += '<a title="Graph"class="btn btn-link">\
+								<i class="fa fa-eye"  onclick=getAllVnfInfos("' + id + '",' + btnCallbacks[i] + ',"response")></i>\
 							</a>';
 				}
 			}
@@ -353,11 +358,9 @@ function createButton(id, resId, btnName, btnCallback) {
     } else if (btnCallback.toLowerCase().indexOf("open") >= 0 ||
 			   btnCallback.toLowerCase().indexOf("update") >= 0) {
 			text += ' buttonModal_'+ btnCallback + '" data-toggle="modal" data-target="#' + btnCallback + id + '" data-id="' + id + '">';
-    }  else if (btnName.toLowerCase().indexOf("graph") >= 0) {
-		text += '" onclick=getAllNsdInfos("' + id + '",' + btnCallback + ',"response")>';
-	}
+    }
 	text += btnName + '</button>';
-//	console.log("button: \n" + text);
+	//console.log("button: \n" + text);
 
 	return text;
 }

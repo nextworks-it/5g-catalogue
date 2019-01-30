@@ -20,6 +20,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import it.nextworks.nfvmano.catalogue.repos.DescriptorTemplateRepository;
 import it.nextworks.nfvmano.catalogue.translators.tosca.ArchiveParser;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
+import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NsVirtualLink.NsVirtualLinkNode;
@@ -180,8 +181,12 @@ public class ToscaTranslatorTests {
 
             DescriptorTemplate descriptorTemplate = null;
             try {
-                descriptorTemplate = archiveParser.archiveToMainDescriptor(mp_file);
+                descriptorTemplate = archiveParser.archiveToMainDescriptor(mp_file).getMst();
             } catch (MalformattedElementException e) {
+                System.out.println("Unable to parse CSAR: " + e.getMessage());
+                e.printStackTrace();
+                return;
+            } catch (FailedOperationException e) {
                 System.out.println("Unable to parse CSAR: " + e.getMessage());
                 e.printStackTrace();
                 return;

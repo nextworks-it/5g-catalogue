@@ -30,12 +30,13 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANORepository;
 import it.nextworks.nfvmano.catalogue.repos.ContentType;
 import it.nextworks.nfvmano.catalogue.repos.NsdInfoRepository;
-import it.nextworks.nfvmano.catalogue.storage.StorageServiceInterface;
+import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,12 +61,8 @@ public class NsdManagementService implements NsdManagementInterface {
     @Autowired
     private NsdInfoRepository nsdInfoRepo;
 
-    /*
-     * @Autowired private DbPersistencyHandler dbWrapper;
-     */
-
     @Autowired
-    private StorageServiceInterface storageService;
+    private FileSystemStorageService storageService;
 
     @Autowired
     private NotificationManager notificationManager;
@@ -151,7 +148,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     // dbWrapper.deleteNsd(nsdId);
 
                     try {
-                        storageService.deleteNsd(nsdInfo);
+                        storageService.deleteNsd(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion());
                     } catch (Exception e) {
                         log.error("Unable to delete NSD with nsdId {} from fylesystem.", nsdInfo.getNsdId().toString());
                         log.error("Details: ", e);
@@ -206,7 +203,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     throw new FailedOperationException("Found more than one file for NSD in YAML format. Error.");
                 }
                 String nsdFilename = nsdFilenames.get(0);
-                return storageService.loadNsdAsResource(nsdInfo, nsdFilename);
+                return storageService.loadNsdAsResource(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdFilename);
 
                 /*
                  * //String nsdString = DescriptorsParser.descriptorTemplateToString(nsd);
@@ -316,18 +313,25 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
-    public synchronized void uploadNsd(String nsdInfoId, MultipartFile nsd, ContentType contentType)
-            throws Exception, FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException,
-            MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
+    public synchronized void uploadNsd(String nsdInfoId, MultipartFile nsd, ContentType contentType) throws MalformattedElementException, FailedOperationException, NotExistingEntityException, NotPermittedOperationException, MethodNotImplementedException {
+
         log.debug("Processing request to upload NSD content for NSD info " + nsdInfoId);
+
         NsdInfoResource nsdInfo = getNsdInfoResource(nsdInfoId);
+
         if (nsdInfo.getNsdOnboardingState() != NsdOnboardingStateType.CREATED) {
             log.error("NSD info " + nsdInfoId + " not in CREATED onboarding state.");
             throw new NotPermittedOperationException("NSD info " + nsdInfoId + " not in CREATED onboarding state.");
         }
 
         // convert to File
-        File inputFile = convertToFile(nsd);
+        File inputFile = null;
+        try {
+            inputFile = convertToFile(nsd);
+        } catch (Exception e) {
+            log.error("Error while parsing NSD in zip format: " + e.getMessage());
+            throw new MalformattedElementException("Error while parsing NSD.");
+        }
 
         String nsdFilename = null;
         DescriptorTemplate dt = null;
@@ -336,6 +340,7 @@ public class NsdManagementService implements NsdManagementInterface {
         // pre-set nsdinfo attributes to properly store NSDs
         // UUID nsdId = UUID.randomUUID();
 
+        boolean vnfsIn = false;
 
         switch (contentType) {
             case ZIP: {
@@ -349,15 +354,18 @@ public class NsdManagementService implements NsdManagementInterface {
 
                     dt = DescriptorsParser.fileToDescriptorTemplate(nsdFile);
 
+                    checkVNFPkgs(dt);
+
                     nsdId = UUID.fromString(dt.getMetadata().getDescriptorId());
                     nsdInfo.setNsdId(nsdId);
 
                     log.debug("NSD successfully parsed - its content is: \n"
                             + DescriptorsParser.descriptorTemplateToString(dt));
+
                     // pre-set nsdinfo attributes to properly store NSDs
                     nsdInfo.setNsdVersion(dt.getMetadata().getVersion());
 
-                    nsdFilename = storageService.storeNsd(nsdInfo, nsdMpFile);
+                    nsdFilename = storageService.storeNsd(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdMpFile);
 
                     // change contentType to YAML as nsd file is no more zip from now on
                     contentType = ContentType.YAML;
@@ -367,13 +375,16 @@ public class NsdManagementService implements NsdManagementInterface {
                     if (!nsdFile.delete()) {
                         log.warn("Could not delete temporary NSD zip content file");
                     }
-
                 } catch (IOException e) {
                     log.error("Error while parsing NSD in zip format: " + e.getMessage());
                     throw new MalformattedElementException("Error while parsing NSD.");
+                } catch (NotExistingEntityException e) {
+                    throw new NotPermittedOperationException("Unable to onboard NSD because one or more related VNF Pkgs are missing in local storage: " + e.getMessage());
+                } catch (MalformattedElementException e) {
+                    throw new MalformattedElementException("Unable to onboard NSD because VNFDs info are missing or malformed: " + e.getMessage());
                 } catch (Exception e) {
                     log.error("Error while parsing NSD in zip format: " + e.getMessage());
-                    throw new MalformattedElementException(e.getMessage());
+                    throw new MalformattedElementException("Error while parsing NSD.");
                 }
                 break;
             }
@@ -383,6 +394,8 @@ public class NsdManagementService implements NsdManagementInterface {
 
                     dt = DescriptorsParser.fileToDescriptorTemplate(inputFile);
 
+                    checkVNFPkgs(dt);
+
                     nsdId = UUID.fromString(dt.getMetadata().getDescriptorId());
                     nsdInfo.setNsdId(nsdId);
 
@@ -391,13 +404,17 @@ public class NsdManagementService implements NsdManagementInterface {
                     // pre-set nsdinfo attributes to properly store NSDs
                     nsdInfo.setNsdVersion(dt.getMetadata().getVersion());
 
-                    nsdFilename = storageService.storeNsd(nsdInfo, nsd);
+                    nsdFilename = storageService.storeNsd(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsd);
 
                     log.debug("NSD file successfully stored");
 
                 } catch (IOException e) {
                     log.error("Error while parsing NSD in yaml format: " + e.getMessage());
                     throw new MalformattedElementException("Error while parsing NSD.");
+                } catch (NotExistingEntityException e) {
+                    throw new NotPermittedOperationException("Unable to onboard NSD because one or more related VNF Pkgs are missing in local storage: " + e.getMessage());
+                } catch (MalformattedElementException e) {
+                    throw new MalformattedElementException("Unable to onboard NSD because VNFDs info are missing or malformed: " + e.getMessage());
                 }
                 break;
             }
@@ -463,6 +480,28 @@ public class NsdManagementService implements NsdManagementInterface {
         notificationManager.sendNsdOnBoardingNotification(msg);
 
         log.debug("NSD content uploaded and nsdOnBoardingNotification delivered");
+    }
+
+    public void checkVNFPkgs(DescriptorTemplate nsd) throws NotExistingEntityException, MalformattedElementException, IOException {
+
+        log.debug("Checking VNF Pkgs availability for NSD " + nsd.getMetadata().getDescriptorId() + " with version " + nsd.getMetadata().getVersion());
+
+        Map<String, VNFNode> vnfNodes = nsd.getTopologyTemplate().getVNFNodes();
+        Map<String, DescriptorTemplate> vnfds = new HashMap<>();
+
+        for (Map.Entry<String, VNFNode> vnfNodeEntry : vnfNodes.entrySet()) {
+
+            String vnfdId = vnfNodeEntry.getValue().getProperties().getDescriptorId();
+            String version = vnfNodeEntry.getValue().getProperties().getDescriptorVersion();
+            String fileName = vnfNodeEntry.getValue().getProperties().getProductName().concat(".zip");
+
+
+            log.debug("Searching VNFD with vnfdId {} and version {} in pkg {}", vnfdId, version, fileName);
+            File vnfd_file = storageService.loadVnfdAsResource(vnfdId, version, fileName).getFile();
+            DescriptorTemplate vnfd = DescriptorsParser.fileToDescriptorTemplate(vnfd_file);
+            vnfds.putIfAbsent(vnfd.getMetadata().getDescriptorId(), vnfd);
+        }
+
     }
 
     public synchronized void updateNsdInfoOperationStatus(String nsdInfoId, String manoId, OperationStatus opStatus,

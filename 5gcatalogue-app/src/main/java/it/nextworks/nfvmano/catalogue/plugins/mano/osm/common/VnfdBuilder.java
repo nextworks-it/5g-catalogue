@@ -1,7 +1,7 @@
 package it.nextworks.nfvmano.catalogue.plugins.mano.osm.common;
 
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.vnfDescriptor.*;
-import it.nextworks.nfvmano.catalogue.storage.StorageServiceInterface;
+import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VDU.VDUComputeNode;
@@ -26,7 +26,7 @@ public class VnfdBuilder {
     private int interfacesPosition;
 
     @Autowired
-    private StorageServiceInterface storageService;
+    private FileSystemStorageService storageService;
 
     public VnfdBuilder(File defaultLogo) {
         this.defaultLogo = defaultLogo;

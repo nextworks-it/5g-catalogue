@@ -61,7 +61,7 @@ public class NsdApiController implements NsdApi {
         this.request = request;
     }
 
-    public ResponseEntity<NsdInfo> createNsdInfo(
+    public ResponseEntity<?> createNsdInfo(
             @ApiParam(value = "", required = true) @Valid @RequestBody CreateNsdInfoRequest body) {
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
@@ -70,57 +70,103 @@ public class NsdApiController implements NsdApi {
                 NsdInfo nsdInfo = nsdManagementService.createNsdInfo(body);
                 return new ResponseEntity<NsdInfo>(nsdInfo, HttpStatus.CREATED);
             } catch (MalformattedElementException e) {
-                return new ResponseEntity<NsdInfo>(HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
+                        "NSD info cannot be created"), HttpStatus.BAD_REQUEST);
             } catch (Exception e) {
                 log.error("Exception while creating NSD info: " + e.getMessage());
-                return new ResponseEntity<NsdInfo>(HttpStatus.INTERNAL_SERVER_ERROR);
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                        "NSD info cannot be created"), HttpStatus.INTERNAL_SERVER_ERROR);
             }
-
-            /*
-             * try { return new ResponseEntity<NsdInfo>(objectMapper.readValue(
-             * "{  \"nsdOnboardingState\" : { },  \"vnfPkgIds\" : [ \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" ],  \"_links\" : {    \"self\" : \"http://example.com/aeiou\",    \"nsd_content\" : \"http://example.com/aeiou\"  },  \"nestedNsdInfoIds\" : [ \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" ],  \"nsdUsageState\" : { },  \"pnfdInfoIds\" : [ \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" ],  \"nsdInvariantId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"nsdDesigner\" : \"nsdDesigner\",  \"nsdVersion\" : \"nsdVersion\",  \"onboardingFailureDetails\" : {    \"instance\" : \"http://example.com/aeiou\",    \"detail\" : \"detail\",    \"type\" : \"http://example.com/aeiou\",    \"title\" : \"title\",    \"status\" : 0  },  \"nsdId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"nsdName\" : \"nsdName\",  \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"nsdOperationalState\" : { },  \"userDefinedData\" : { }}"
-             * , NsdInfo.class), HttpStatus.NOT_IMPLEMENTED); } catch (IOException e) {
-             * log.error("Couldn't serialize response for content type application/json",
-             * e); return new ResponseEntity<NsdInfo>(HttpStatus.INTERNAL_SERVER_ERROR); }
-             */
         } else
-            return new ResponseEntity<NsdInfo>(HttpStatus.BAD_REQUEST);
-
-        // return new ResponseEntity<NsdInfo>(HttpStatus.NOT_IMPLEMENTED);
+            return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.PRECONDITION_FAILED.value(),
+                    "Accept header null or different from application/json"), HttpStatus.PRECONDITION_FAILED);
     }
 
-    public ResponseEntity<PnfdInfo> createPNFDInfo(
-            @ApiParam(value = "", required = true) @Valid @RequestBody PnfdInfo body) {
+    public ResponseEntity<?> getNSDsInfo() {
+        log.debug("Processing REST request to retrieve all NSD infos");
+        String accept = request.getHeader("Accept");
+
+        // TODO: process URI parameters for filters and attributes. At the moment it returns all the NSDs info
+        if (accept != null && accept.contains("application/json")) {
+            try {
+                List<NsdInfo> nsdInfos = nsdManagementService.getAllNsdInfos();
+                log.debug("NSD infos retrieved");
+                return new ResponseEntity<List<NsdInfo>>(nsdInfos, HttpStatus.OK);
+            } catch (Exception e) {
+                log.error("General exception while retrieving set of NSD infos: " + e.getMessage());
+                return new ResponseEntity<ProblemDetails>(
+                        Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                                "General exception while retrieving set of NSD infos: " + e.getMessage()),
+                        HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } else
+            return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.PRECONDITION_FAILED.value(),
+                    "Accept header null or different from application/json"), HttpStatus.PRECONDITION_FAILED);
+    }
+
+    public ResponseEntity<?> getNSDInfo(
+            @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId) {
+        String accept = request.getHeader("Accept");
+
+        log.debug("Processing REST request to retrieve NSD info " + nsdInfoId);
+        if (accept != null && accept.contains("application/json")) {
+            try {
+                NsdInfo nsdInfo = nsdManagementService.getNsdInfo(nsdInfoId);
+                log.debug("NSD info retrieved");
+                return new ResponseEntity<NsdInfo>(nsdInfo, HttpStatus.OK);
+            } catch (NotExistingEntityException e) {
+                log.error("NSD info " + nsdInfoId + " not found");
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
+                        "NSD info " + nsdInfoId + " not found"), HttpStatus.NOT_FOUND);
+            } catch (MalformattedElementException e) {
+                log.error("NSD info " + nsdInfoId + " cannot be found: not acceptable NSD Info ID format");
+                return new ResponseEntity<ProblemDetails>(
+                        Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
+                                "NSD info " + nsdInfoId + " cannot be found: not acceptable NSD Info ID format"),
+                        HttpStatus.BAD_REQUEST);
+            } catch (Exception e) {
+                log.error("NSD info " + nsdInfoId + " cannot be retrieved: general internal error");
+                return new ResponseEntity<ProblemDetails>(
+                        Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                                "NSD info " + nsdInfoId + " cannot be retrieved: general internal error"),
+                        HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } else
+            return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.PRECONDITION_FAILED.value(),
+                    "Accept header null or different from application/json"), HttpStatus.PRECONDITION_FAILED);
+    }
+
+    public ResponseEntity<?> updateNSDInfo(
+            @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
+            @ApiParam(value = "", required = true) @Valid @RequestBody NsdInfoModifications body) {
+
+        log.debug("Processing REST request for Updating NSD info " + nsdInfoId);
+        if (body == null) {
+            return new ResponseEntity<String>("Error message: Body is empty!", HttpStatus.BAD_REQUEST);
+        }
+
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
-                return new ResponseEntity<PnfdInfo>(objectMapper.readValue(
-                        "{  \"pnfdName\" : \"pnfdName\",  \"pnfdUsageState\" : { },  \"pnfdOnboardingState\" : { },  \"_links\" : {    \"pnfd_content\" : \"http://example.com/aeiou\",    \"self\" : \"http://example.com/aeiou\"  },  \"onboardingFailureDetails\" : {    \"instance\" : \"http://example.com/aeiou\",    \"detail\" : \"detail\",    \"type\" : \"http://example.com/aeiou\",    \"title\" : \"title\",    \"status\" : 0  },  \"pnfdProvider\" : \"pnfdProvider\",  \"pnfdVersion\" : \"pnfdVersion\",  \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"pnfdId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"pnfdInvariantId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"userDefinedData\" : { }}",
-                        PnfdInfo.class), HttpStatus.NOT_IMPLEMENTED);
-            } catch (IOException e) {
-                log.error("Couldn't serialize response for content type application/json", e);
-                return new ResponseEntity<PnfdInfo>(HttpStatus.INTERNAL_SERVER_ERROR);
+                NsdInfoModifications nsdInfoMods = nsdManagementService.updateNsdInfo(body, nsdInfoId);
+                return new ResponseEntity<NsdInfoModifications>(nsdInfoMods, HttpStatus.OK);
+            } catch (NotExistingEntityException e) {
+                log.error("Impossible to update NSD info: " + e.getMessage());
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
+                        "Impossible to update NSD info: " + e.getMessage()), HttpStatus.NOT_FOUND);
+            } catch (MalformattedElementException e) {
+                log.error("Impossible to update NSD info: " + e.getMessage());
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
+                        "Impossible to update NSD info: " + e.getMessage()), HttpStatus.BAD_REQUEST);
+            } catch (NotPermittedOperationException e) {
+                log.error("Impossible to update NSD info: " + e.getMessage());
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
+                        "Impossible to update NSD info: " + e.getMessage()), HttpStatus.CONFLICT);
             }
+        } else {
+            return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.PRECONDITION_FAILED.value(),
+                    "Accept header null or different from application/json"), HttpStatus.PRECONDITION_FAILED);
         }
-
-        return new ResponseEntity<PnfdInfo>(HttpStatus.NOT_IMPLEMENTED);
-    }
-
-    public ResponseEntity<NsdmSubscription> createSubscription(
-            @ApiParam(value = "", required = true) @Valid @RequestBody NsdmSubscriptionRequest body) {
-        String accept = request.getHeader("Accept");
-        if (accept != null && accept.contains("application/json")) {
-            try {
-                return new ResponseEntity<NsdmSubscription>(objectMapper.readValue(
-                        "{  \"filter\" : {    \"nsdOnboardingState\" : { },    \"pnfdName\" : \"pnfdName\",    \"pnfdUsageState\" : { },    \"nsdInfoId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",    \"vnfPkgIds\" : [ \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" ],    \"pnfdOnboardingState\" : { },    \"nestedNsdInfoIds\" : [ \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" ],    \"nsdUsageState\" : { },    \"pnfdId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",    \"pnfdInfoIds\" : [ \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" ],    \"nsdInvariantId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",    \"nsdDesigner\" : \"nsdDesigner\",    \"nsdVersion\" : \"nsdVersion\",    \"pnfdProvider\" : \"pnfdProvider\",    \"pnfdVersion\" : \"pnfdVersion\",    \"nsdId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",    \"nsdName\" : \"nsdName\",    \"notificationTypes\" : [ { }, { } ],    \"pnfdInvariantId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",    \"nsdOperationalState\" : { }  },  \"_links\" : {    \"self\" : \"http://example.com/aeiou\"  },  \"callbackUri\" : \"http://example.com/aeiou\",  \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\"}",
-                        NsdmSubscription.class), HttpStatus.NOT_IMPLEMENTED);
-            } catch (IOException e) {
-                log.error("Couldn't serialize response for content type application/json", e);
-                return new ResponseEntity<NsdmSubscription>(HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-        }
-
-        return new ResponseEntity<NsdmSubscription>(HttpStatus.NOT_IMPLEMENTED);
     }
 
     public ResponseEntity<?> deleteNSDInfo(
@@ -147,24 +193,12 @@ public class NsdApiController implements NsdApi {
                             "NSD info " + nsdInfoId + " cannot be removed: not acceptable NSD Info ID format"),
                     HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
-            log.error("NSD info " + nsdInfoId + " cannot be removed: general internal error.");
+            log.error("NSD info " + nsdInfoId + " cannot be removed: general internal error");
             return new ResponseEntity<ProblemDetails>(
                     Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                            "NSD info " + nsdInfoId + " cannot be removed: general internal error."),
+                            "NSD info " + nsdInfoId + " cannot be removed: general internal error"),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
-    }
-
-    public ResponseEntity<Void> deletePNFDInfo(
-            @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId) {
-        String accept = request.getHeader("Accept");
-        return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
-    }
-
-    public ResponseEntity<Void> deleteSubscription(
-            @ApiParam(value = "", required = true) @PathVariable("subscriptionId") String subscriptionId) {
-        String accept = request.getHeader("Accept");
-        return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
     }
 
     public ResponseEntity<?> getNSD(@ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
@@ -174,7 +208,7 @@ public class NsdApiController implements NsdApi {
         // TODO: consistency between accept values and input format when onboarding
         // should be better checked.
         // TODO: probably we should select the format based on the accept values. At the
-        // moment the format is selected based on the original input type,
+        // at the moment the format is selected based on the original input type,
         // that is maintained in the DB.
         log.debug("Processing REST request to retrieve NSD for NSD info ID " + nsdInfoId);
 
@@ -197,107 +231,72 @@ public class NsdApiController implements NsdApi {
                             "NSD for NSD info ID " + nsdInfoId + " not found: " + e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
-        /*
-         * if (accept != null && accept.contains("application/json")) { try { return new
-         * ResponseEntity<Object>(objectMapper.readValue("\"{}\"", Object.class),
-         * HttpStatus.NOT_IMPLEMENTED); } catch (IOException e) {
-         * log.error("Couldn't serialize response for content type application/json",
-         * e); return new ResponseEntity<Object>(HttpStatus.INTERNAL_SERVER_ERROR); } }
-         *
-         * return new ResponseEntity<Object>(HttpStatus.NOT_IMPLEMENTED);
-         */
     }
 
-    public ResponseEntity<?> getNSDInfo(
-            @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId) {
+    public ResponseEntity<?> uploadNSD(
+            @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
+            @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
+            @ApiParam(value = "The payload body contains a copy of the file representing the NSD or a ZIP file that contains the file or multiple files representing the NSD, as specified above. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType) {
+
+        log.debug("Processing REST request for Uploading NSD content in NSD info " + nsdInfoId);
+
         String accept = request.getHeader("Accept");
-        /*
-         * if (accept != null && accept.contains("application/json")) { try { return new
-         * ResponseEntity<NsdInfo>(objectMapper.readValue(
-         * "{  \"nsdOnboardingState\" : { },  \"vnfPkgIds\" : [ \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" ],  \"_links\" : {    \"self\" : \"http://example.com/aeiou\",    \"nsd_content\" : \"http://example.com/aeiou\"  },  \"nestedNsdInfoIds\" : [ \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" ],  \"nsdUsageState\" : { },  \"pnfdInfoIds\" : [ \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" ],  \"nsdInvariantId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"nsdDesigner\" : \"nsdDesigner\",  \"nsdVersion\" : \"nsdVersion\",  \"onboardingFailureDetails\" : {    \"instance\" : \"http://example.com/aeiou\",    \"detail\" : \"detail\",    \"type\" : \"http://example.com/aeiou\",    \"title\" : \"title\",    \"status\" : 0  },  \"nsdId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"nsdName\" : \"nsdName\",  \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"nsdOperationalState\" : { },  \"userDefinedData\" : { }}"
-         * , NsdInfo.class), HttpStatus.NOT_IMPLEMENTED); } catch (IOException e) {
-         * log.error("Couldn't serialize response for content type application/json",
-         * e); return new ResponseEntity<NsdInfo>(HttpStatus.INTERNAL_SERVER_ERROR); } }
-         *
-         * return new ResponseEntity<NsdInfo>(HttpStatus.NOT_IMPLEMENTED);
-         */
-        log.debug("Processing REST request to retrieve NSD info " + nsdInfoId);
-        if (accept != null && accept.contains("application/json")) {
-            try {
-                NsdInfo nsdInfo = nsdManagementService.getNsdInfo(nsdInfoId);
-                log.debug("NSD info retrieved");
-                return new ResponseEntity<NsdInfo>(nsdInfo, HttpStatus.OK);
-            } catch (NotExistingEntityException e) {
-                log.error("NSD info " + nsdInfoId + " not found");
-                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
-                        "NSD info " + nsdInfoId + " not found"), HttpStatus.NOT_FOUND);
-            } catch (MalformattedElementException e) {
-                log.error("NSD info " + nsdInfoId + " cannot be found: not acceptable NSD Info ID format");
-                return new ResponseEntity<ProblemDetails>(
-                        Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
-                                "NSD info " + nsdInfoId + " cannot be found: not acceptable NSD Info ID format"),
-                        HttpStatus.BAD_REQUEST);
-            } catch (Exception e) {
-                log.error("NSD info " + nsdInfoId + " cannot be retrieved: general internal error.");
-                return new ResponseEntity<ProblemDetails>(
-                        Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                                "NSD info " + nsdInfoId + " cannot be retrieved: general internal error."),
-                        HttpStatus.INTERNAL_SERVER_ERROR);
+        //if (accept != null && accept.contains("application/json")) {
+            if (body.isEmpty()) {
+                return new ResponseEntity<String>("Error message: File is empty!", HttpStatus.BAD_REQUEST);
             }
-        } else
-            return new ResponseEntity<String>("Unacceptable ACCEPT header type.", HttpStatus.BAD_REQUEST);
+
+            // TODO: the content-type as per SOL005 v2.4.1 should be text/plain or application/zip
+
+            if (!contentType.startsWith("multipart/form-data")) {
+                // TODO: to be implemented later on
+                return new ResponseEntity<String>("Unable to parse content " + contentType, HttpStatus.NOT_IMPLEMENTED);
+            } else {
+                try {
+                    ContentType type = null;
+                    log.debug("NSD content file name is: " + body.getOriginalFilename());
+                    if (body.getOriginalFilename().endsWith("zip")) {
+                        type = ContentType.ZIP;
+                    } else if (body.getOriginalFilename().endsWith("yaml")) {
+                        type = ContentType.YAML;
+                    } else {
+                        // TODO: to be implemented later on
+                        return new ResponseEntity<String>("Unable to parse file type that is not .zip or .yaml",
+                                HttpStatus.NOT_IMPLEMENTED);
+                    }
+                    nsdManagementService.uploadNsd(nsdInfoId, body, type);
+                    log.debug("Upload processing done");
+                    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+                    // TODO: check if we need to introduce the asynchronous mode
+                } catch (NotPermittedOperationException | AlreadyExistingEntityException e) {
+                    log.error("Impossible to upload NSD: " + e.getMessage());
+                    return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
+                            "Impossible to upload NSD: " + e.getMessage()), HttpStatus.CONFLICT);
+                } catch (MalformattedElementException e) {
+                    log.error("Impossible to upload NSD: " + e.getMessage());
+                    return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
+                            "Impossible to upload NSD: " + e.getMessage()), HttpStatus.BAD_REQUEST);
+                } catch (NotExistingEntityException e) {
+                    log.error("Impossible to upload NSD: " + e.getMessage());
+                    return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
+                            "Impossible to upload NSD: " + e.getMessage()), HttpStatus.NOT_FOUND);
+                } catch (Exception e) {
+                    log.error("General exception while uploading NSD content: " + e.getMessage());
+                    log.error("Details: ", e);
+                    return new ResponseEntity<ProblemDetails>(
+                            Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                                    "General exception while uploading NSD content: " + e.getMessage()),
+                            HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+            }
+        /*} else {
+            return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.PRECONDITION_FAILED.value(),
+                    "Accept header null or different from application/json"), HttpStatus.PRECONDITION_FAILED);
+        }*/
     }
 
-    public ResponseEntity<?> getNSDsInfo() {
-        log.debug("Processing REST request to retrieve all NSD infos.");
-        String accept = request.getHeader("Accept");
-        /*
-         * if (accept != null && accept.contains("application/json")) { try { return new
-         * ResponseEntity<List<NsdInfo>>(objectMapper.readValue(
-         * "[ {  \"nsdOnboardingState\" : { },  \"vnfPkgIds\" : [ \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" ],  \"_links\" : {    \"self\" : \"http://example.com/aeiou\",    \"nsd_content\" : \"http://example.com/aeiou\"  },  \"nestedNsdInfoIds\" : [ \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" ],  \"nsdUsageState\" : { },  \"pnfdInfoIds\" : [ \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" ],  \"nsdInvariantId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"nsdDesigner\" : \"nsdDesigner\",  \"nsdVersion\" : \"nsdVersion\",  \"onboardingFailureDetails\" : {    \"instance\" : \"http://example.com/aeiou\",    \"detail\" : \"detail\",    \"type\" : \"http://example.com/aeiou\",    \"title\" : \"title\",    \"status\" : 0  },  \"nsdId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"nsdName\" : \"nsdName\",  \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"nsdOperationalState\" : { },  \"userDefinedData\" : { }}, {  \"nsdOnboardingState\" : { },  \"vnfPkgIds\" : [ \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" ],  \"_links\" : {    \"self\" : \"http://example.com/aeiou\",    \"nsd_content\" : \"http://example.com/aeiou\"  },  \"nestedNsdInfoIds\" : [ \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" ],  \"nsdUsageState\" : { },  \"pnfdInfoIds\" : [ \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" ],  \"nsdInvariantId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"nsdDesigner\" : \"nsdDesigner\",  \"nsdVersion\" : \"nsdVersion\",  \"onboardingFailureDetails\" : {    \"instance\" : \"http://example.com/aeiou\",    \"detail\" : \"detail\",    \"type\" : \"http://example.com/aeiou\",    \"title\" : \"title\",    \"status\" : 0  },  \"nsdId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"nsdName\" : \"nsdName\",  \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"nsdOperationalState\" : { },  \"userDefinedData\" : { }} ]"
-         * , List.class), HttpStatus.NOT_IMPLEMENTED); } catch (IOException e) {
-         * log.error("Couldn't serialize response for content type application/json",
-         * e); return new
-         * ResponseEntity<List<NsdInfo>>(HttpStatus.INTERNAL_SERVER_ERROR); } }
-         *
-         * return new ResponseEntity<List<NsdInfo>>(HttpStatus.NOT_IMPLEMENTED);
-         */
-        // TODO: process URI parameters for filters and attributes. At the moment it returns all the NSD infos.
-        if (accept != null && accept.contains("application/json")) {
-            try {
-                List<NsdInfo> nsdInfos = nsdManagementService.getAllNsdInfos();
-                log.debug("NSD infos retrieved");
-                return new ResponseEntity<List<NsdInfo>>(nsdInfos, HttpStatus.OK);
-            } catch (Exception e) {
-                log.error("General exception while retrieving set of NSD infos: " + e.getMessage());
-                return new ResponseEntity<ProblemDetails>(
-                        Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                                "General exception while retrieving set of NSD infos: " + e.getMessage()),
-                        HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-        } else
-            return new ResponseEntity<String>("Unacceptable ACCEPT header type.", HttpStatus.BAD_REQUEST);
-    }
-
-    public ResponseEntity<Object> getPNFD(
-            @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId) {
-        String accept = request.getHeader("Accept");
-        if (accept != null && accept.contains("application/json")) {
-            try {
-                return new ResponseEntity<Object>(objectMapper.readValue("\"{}\"", Object.class),
-                        HttpStatus.NOT_IMPLEMENTED);
-            } catch (IOException e) {
-                log.error("Couldn't serialize response for content type application/json", e);
-                return new ResponseEntity<Object>(HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-        }
-
-        return new ResponseEntity<Object>(HttpStatus.NOT_IMPLEMENTED);
-    }
-
-    public ResponseEntity<PnfdInfo> getPNFDInfo(
-            @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId) {
+    public ResponseEntity<PnfdInfo> createPNFDInfo(
+            @ApiParam(value = "", required = true) @Valid @RequestBody PnfdInfo body) {
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
@@ -331,8 +330,76 @@ public class NsdApiController implements NsdApi {
         return new ResponseEntity<List<PnfdInfo>>(HttpStatus.NOT_IMPLEMENTED);
     }
 
-    public ResponseEntity<NsdmSubscription> getSubscription(
-            @ApiParam(value = "", required = true) @PathVariable("subscriptionId") String subscriptionId) {
+    public ResponseEntity<PnfdInfo> getPNFDInfo(
+            @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId) {
+        String accept = request.getHeader("Accept");
+        if (accept != null && accept.contains("application/json")) {
+            try {
+                return new ResponseEntity<PnfdInfo>(objectMapper.readValue(
+                        "{  \"pnfdName\" : \"pnfdName\",  \"pnfdUsageState\" : { },  \"pnfdOnboardingState\" : { },  \"_links\" : {    \"pnfd_content\" : \"http://example.com/aeiou\",    \"self\" : \"http://example.com/aeiou\"  },  \"onboardingFailureDetails\" : {    \"instance\" : \"http://example.com/aeiou\",    \"detail\" : \"detail\",    \"type\" : \"http://example.com/aeiou\",    \"title\" : \"title\",    \"status\" : 0  },  \"pnfdProvider\" : \"pnfdProvider\",  \"pnfdVersion\" : \"pnfdVersion\",  \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"pnfdId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"pnfdInvariantId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"userDefinedData\" : { }}",
+                        PnfdInfo.class), HttpStatus.NOT_IMPLEMENTED);
+            } catch (IOException e) {
+                log.error("Couldn't serialize response for content type application/json", e);
+                return new ResponseEntity<PnfdInfo>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
+
+        return new ResponseEntity<PnfdInfo>(HttpStatus.NOT_IMPLEMENTED);
+    }
+
+    public ResponseEntity<PnfdInfoModifications> updatePNFDInfo(
+            @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId,
+            @ApiParam(value = "", required = true) @Valid @RequestBody PnfdInfoModifications body) {
+        String accept = request.getHeader("Accept");
+        if (accept != null && accept.contains("application/json")) {
+            try {
+                return new ResponseEntity<PnfdInfoModifications>(
+                        objectMapper.readValue("{  \"userDefinedData\" : { }}", PnfdInfoModifications.class),
+                        HttpStatus.NOT_IMPLEMENTED);
+            } catch (IOException e) {
+                log.error("Couldn't serialize response for content type application/json", e);
+                return new ResponseEntity<PnfdInfoModifications>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
+
+        return new ResponseEntity<PnfdInfoModifications>(HttpStatus.NOT_IMPLEMENTED);
+    }
+
+    public ResponseEntity<Void> deletePNFDInfo(
+            @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId) {
+        String accept = request.getHeader("Accept");
+        return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
+    }
+
+    public ResponseEntity<Object> getPNFD(
+            @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId) {
+        String accept = request.getHeader("Accept");
+        if (accept != null && accept.contains("application/json")) {
+            try {
+                return new ResponseEntity<Object>(objectMapper.readValue("\"{}\"", Object.class),
+                        HttpStatus.NOT_IMPLEMENTED);
+            } catch (IOException e) {
+                log.error("Couldn't serialize response for content type application/json", e);
+                return new ResponseEntity<Object>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
+
+        return new ResponseEntity<Object>(HttpStatus.NOT_IMPLEMENTED);
+    }
+
+    public ResponseEntity<Void> uploadPNFD(
+            @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId,
+            @ApiParam(value = "", required = true) @Valid @RequestBody Object body,
+            @ApiParam(value = "The request shall set the \"Content-Type\" HTTP header to \"text/plain\".") @RequestHeader(value = "Content-Type", required = false) String contentType) {
+        String accept = request.getHeader("Accept");
+
+        // TODO: the content-type as per SOL005 v2.4.1 should be text/plain
+        return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
+    }
+
+
+    public ResponseEntity<NsdmSubscription> createSubscription(
+            @ApiParam(value = "", required = true) @Valid @RequestBody NsdmSubscriptionRequest body) {
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
@@ -364,127 +431,27 @@ public class NsdApiController implements NsdApi {
         return new ResponseEntity<List<NsdmSubscription>>(HttpStatus.NOT_IMPLEMENTED);
     }
 
-    public ResponseEntity<?> updateNSDInfo(
-            @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
-            @ApiParam(value = "", required = true) @Valid @RequestBody NsdInfoModifications body) {
 
-        log.debug("Processing REST request for Updating NSD info " + nsdInfoId);
-        if (body == null) {
-            return new ResponseEntity<String>("Error message: Body is empty!", HttpStatus.BAD_REQUEST);
-        }
+    public ResponseEntity<NsdmSubscription> getSubscription(
+            @ApiParam(value = "", required = true) @PathVariable("subscriptionId") String subscriptionId) {
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
-                NsdInfoModifications nsdInfoMods = nsdManagementService.updateNsdInfo(body, nsdInfoId);
-                return new ResponseEntity<NsdInfoModifications>(nsdInfoMods, HttpStatus.OK);
-            } catch (NotExistingEntityException e) {
-                log.error("Impossible to update NSD info: " + e.getMessage());
-                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
-                        "Impossible to update NSD info: " + e.getMessage()), HttpStatus.NOT_FOUND);
-            } catch (MalformattedElementException e) {
-                log.error("Impossible to update NSD info: " + e.getMessage());
-                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
-                        "Impossible to update NSD info: " + e.getMessage()), HttpStatus.BAD_REQUEST);
-            } catch (NotPermittedOperationException e) {
-                log.error("Impossible to update NSD info: " + e.getMessage());
-                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
-                        "Impossible to update NSD info: " + e.getMessage()), HttpStatus.CONFLICT);
-            }
-        } else {
-            return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.PRECONDITION_FAILED.value(),
-                    "Accept header null or different from application/json."), HttpStatus.PRECONDITION_FAILED);
-        }
-
-    }
-
-    public ResponseEntity<PnfdInfoModifications> updatePNFDInfo(
-            @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId,
-            @ApiParam(value = "", required = true) @Valid @RequestBody PnfdInfoModifications body) {
-        String accept = request.getHeader("Accept");
-        if (accept != null && accept.contains("application/json")) {
-            try {
-                return new ResponseEntity<PnfdInfoModifications>(
-                        objectMapper.readValue("{  \"userDefinedData\" : { }}", PnfdInfoModifications.class),
-                        HttpStatus.NOT_IMPLEMENTED);
+                return new ResponseEntity<NsdmSubscription>(objectMapper.readValue(
+                        "{  \"filter\" : {    \"nsdOnboardingState\" : { },    \"pnfdName\" : \"pnfdName\",    \"pnfdUsageState\" : { },    \"nsdInfoId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",    \"vnfPkgIds\" : [ \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" ],    \"pnfdOnboardingState\" : { },    \"nestedNsdInfoIds\" : [ \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" ],    \"nsdUsageState\" : { },    \"pnfdId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",    \"pnfdInfoIds\" : [ \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" ],    \"nsdInvariantId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",    \"nsdDesigner\" : \"nsdDesigner\",    \"nsdVersion\" : \"nsdVersion\",    \"pnfdProvider\" : \"pnfdProvider\",    \"pnfdVersion\" : \"pnfdVersion\",    \"nsdId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",    \"nsdName\" : \"nsdName\",    \"notificationTypes\" : [ { }, { } ],    \"pnfdInvariantId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",    \"nsdOperationalState\" : { }  },  \"_links\" : {    \"self\" : \"http://example.com/aeiou\"  },  \"callbackUri\" : \"http://example.com/aeiou\",  \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\"}",
+                        NsdmSubscription.class), HttpStatus.NOT_IMPLEMENTED);
             } catch (IOException e) {
                 log.error("Couldn't serialize response for content type application/json", e);
-                return new ResponseEntity<PnfdInfoModifications>(HttpStatus.INTERNAL_SERVER_ERROR);
+                return new ResponseEntity<NsdmSubscription>(HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }
 
-        return new ResponseEntity<PnfdInfoModifications>(HttpStatus.NOT_IMPLEMENTED);
+        return new ResponseEntity<NsdmSubscription>(HttpStatus.NOT_IMPLEMENTED);
     }
 
-    public ResponseEntity<?> uploadNSD(
-            @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
-            @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
-            // @ApiParam(value = "", required = true) @Valid @RequestBody Object body,
-            @ApiParam(value = "The payload body contains a copy of the file representing the NSD or a ZIP file that contains the file or multiple files representing the NSD, as specified above. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType) {
-
-        log.debug("Processing REST request for Uploading NSD content in NSD info " + nsdInfoId);
-        if (body.isEmpty()) {
-            return new ResponseEntity<String>("Error message: File is empty!", HttpStatus.BAD_REQUEST);
-        }
-
-        if (!contentType.startsWith("multipart/form-data")) {
-            // TODO: to be implemented later on
-            return new ResponseEntity<String>("Unable to parse content " + contentType, HttpStatus.NOT_IMPLEMENTED);
-        } else {
-            try {
-                ContentType type = null;
-                log.debug("NSD content file name is: " + body.getOriginalFilename());
-                if (body.getOriginalFilename().endsWith("zip")) {
-                    type = ContentType.ZIP;
-                } else if (body.getOriginalFilename().endsWith("yaml")) {
-                    type = ContentType.YAML;
-                } else {
-                    // TODO: to be implemented later on
-                    return new ResponseEntity<String>("Unable to parse file type that is not .zip or .yaml",
-                            HttpStatus.NOT_IMPLEMENTED);
-                }
-                // nsdManagementService.uploadNsd(nsdInfoId, (String)body, ContentType.YAML);
-                nsdManagementService.uploadNsd(nsdInfoId, body, type);
-                log.debug("Upload processing done");
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-                // TODO: check if we need to introduce the asynchronous mode
-            } catch (NotPermittedOperationException | AlreadyExistingEntityException e) {
-                log.error("Impossible to upload NSD: " + e.getMessage());
-                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
-                        "Impossible to upload NSD: " + e.getMessage()), HttpStatus.CONFLICT);
-            } catch (MalformattedElementException e) {
-                log.error("Impossible to upload NSD: " + e.getMessage());
-                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
-                        "Impossible to upload NSD: " + e.getMessage()), HttpStatus.BAD_REQUEST);
-            } catch (NotExistingEntityException e) {
-                log.error("Impossible to upload NSD: " + e.getMessage());
-                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
-                        "Impossible to upload NSD: " + e.getMessage()), HttpStatus.NOT_FOUND);
-            } catch (Exception e) {
-                log.error("General exception while uploading NSD content: " + e.getMessage());
-                log.error("Details: ", e);
-                return new ResponseEntity<ProblemDetails>(
-                        Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                                "General exception while uploading NSD content: " + e.getMessage()),
-                        HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-        }
-        /*
-         * if (accept != null && accept.contains("application/json")) { try { return new
-         * ResponseEntity<Object>(objectMapper.readValue("\"{}\"", Object.class),
-         * HttpStatus.NOT_IMPLEMENTED); } catch (IOException e) {
-         * log.error("Couldn't serialize response for content type application/json",
-         * e); return new ResponseEntity<Object>(HttpStatus.INTERNAL_SERVER_ERROR); } }
-         *
-         * return new ResponseEntity<Object>(HttpStatus.NOT_IMPLEMENTED);
-         */
-    }
-
-    public ResponseEntity<Void> uploadPNFD(
-            @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId,
-            @ApiParam(value = "", required = true) @Valid @RequestBody Object body,
-            @ApiParam(value = "The request shall set the \"Content-Type\" HTTP header to \"text/plain\".") @RequestHeader(value = "Content-Type", required = false) String contentType) {
+    public ResponseEntity<Void> deleteSubscription(
+            @ApiParam(value = "", required = true) @PathVariable("subscriptionId") String subscriptionId) {
         String accept = request.getHeader("Accept");
         return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
     }
-
 }

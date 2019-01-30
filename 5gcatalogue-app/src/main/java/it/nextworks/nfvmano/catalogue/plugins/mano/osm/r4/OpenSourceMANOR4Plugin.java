@@ -107,10 +107,12 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
             for (Map.Entry<String, VNFNode> vnfNodeEntry : vnfNodes.entrySet()) {
                 String vnfdId = vnfNodeEntry.getValue().getProperties().getDescriptorId();
                 String version = vnfNodeEntry.getValue().getProperties().getDescriptorVersion();
-                String fileName = vnfNodeEntry.getValue().getProperties().getProductName().concat(".zip");
+                String fileName = vnfNodeEntry.getValue().getProperties().getProductName().concat(".yaml");
+                fileName = "Definitions/" + fileName;
                 try {
-                    log.debug("Searching Vnfd with vnfdId {} and version {} in pkg {}", vnfdId, version, fileName);
-                    File vnfd_file = FileSystemStorageService.loadVnfdAsFile(vnfdId, version, fileName);
+                    log.debug("Searching VNFD with vnfdId {} and version {}: {}", vnfdId, version, fileName);
+                    File vnfd_file = FileSystemStorageService.loadVnfdAsResource(vnfdId, version, fileName).getFile();
+
                     DescriptorTemplate vnfd = DescriptorsParser.fileToDescriptorTemplate(vnfd_file);
                     vnfds.putIfAbsent(vnfd.getMetadata().getDescriptorId(), vnfd);
                 } catch (NotExistingEntityException e) {
