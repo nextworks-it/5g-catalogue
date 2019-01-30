@@ -28,6 +28,8 @@ public class Vld {
     private String shortName;
     private String mgmtNetwork;
 
+    private String vimNetworkName;
+
     public Vld() {
 
     }
@@ -97,5 +99,17 @@ public class Vld {
         this.mgmtNetwork = mgmtNetwork;
         return this;
     }
+
+    @JsonProperty("vim-network-name")
+    public String getVimNetworkName() {
+        return vimNetworkName;
+    }
+
+    @JsonProperty("vim-network-name")
+    public Vld setVimNetworkName(String vimNetworkName) {
+        this.vimNetworkName = vimNetworkName;
+        return this;
+    }
+
 
 }

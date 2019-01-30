@@ -72,14 +72,31 @@ public class VnfdBuilder {
         osmVdu.setId(vdu.getProperties().getName());
         osmVdu.setName(vdu.getProperties().getName());
         osmVdu.setDescription(vdu.getProperties().getName());
-        osmVdu.setCount(vdu.getProperties().getVduProfile().getMinNumberOfInstances());//TODO it is ok?
+        osmVdu.setCount(vdu.getProperties().getVduProfile().getMinNumberOfInstances());
         osmVdu.setImage(requiredBlockStorage.getProperties().getSwImageData().getImageName());
-        osmVdu.setImageChecksum(requiredBlockStorage.getProperties().getSwImageData().getChecksum());
         osmVdu.setInterfaces(interfaces);
         osmVdu.setVmFlavor(new VMFlavor(vdu.getCapabilities().getVirtualCompute().getProperties().getVirtualCpu().getNumVirtualCpu(),
                                         vdu.getCapabilities().getVirtualCompute().getProperties().getVirtualMemory().getVirtualMemSize(),
                                         requiredBlockStorage.getProperties().getSwImageData().getSize()));
         return osmVdu;
+    }
+
+    private List<ScalingGroupDescriptor> makeScalingGroupDescriptor(VDUComputeNode vdu){
+        List<ScalingGroupDescriptor> descriptors = new ArrayList<>();
+        ScalingGroupDescriptor scalingByOne = new ScalingGroupDescriptor();
+        scalingByOne.setMinInstanceCount(vdu.getProperties().getVduProfile().getMinNumberOfInstances());
+        scalingByOne.setMaxInstanceCount(vdu.getProperties().getVduProfile().getMaxNumberOfInstances());
+        scalingByOne.setName("scale_by_one");
+        List<ScalingPolicy> scalingPolicies = new ArrayList<>();
+        ScalingPolicy scalingPolicy = new ScalingPolicy("manual_scale", "manual");
+        scalingPolicies.add(scalingPolicy);
+        scalingByOne.setScalingPolicies(scalingPolicies);
+        List<VduReference> vdusRef = new ArrayList<>();
+        VduReference vduRef = new VduReference(vdu.getProperties().getName());
+        vdusRef.add(vduRef);
+        scalingByOne.setVduList(vdusRef);
+        descriptors.add(scalingByOne);
+        return descriptors;
     }
 
     public void parseDescriptorTemplate(DescriptorTemplate template) throws MalformattedElementException {
@@ -103,10 +120,17 @@ public class VnfdBuilder {
                 .collect(Collectors.toList());
 
         Map<String, VDUVirtualBlockStorageNode> blockStorageNodes = dt.getTopologyTemplate().getVDUBlockStorageNodes();
-        List<VDU> osmVdus = dt.getTopologyTemplate().getVDUComputeNodes().entrySet()
+        Map<String, VDUComputeNode> vduComputeNodes = dt.getTopologyTemplate().getVDUComputeNodes();
+        List<VDU> osmVdus = vduComputeNodes.entrySet()
                 .stream()
                 .map(e -> makeVDU(e.getValue(), blockStorageNodes, osmVduInterfaces))
                 .collect(Collectors.toList());
+
+        // For the moment considers only one Vdu per VNF
+        VDUComputeNode vdu = vduComputeNodes.values().iterator().next();
+        List<ScalingGroupDescriptor> scalingGroupDescriptors = null;
+        if((vdu.getProperties().getVduProfile().getMaxNumberOfInstances() - vdu.getProperties().getVduProfile().getMinNumberOfInstances()) > 0)
+            scalingGroupDescriptors = makeScalingGroupDescriptor(vdu);
 
         VNFNode vnfd = dt.getTopologyTemplate().getVNFNodes().values().iterator().next();
         List<VNFDescriptor> vnfds = new ArrayList<>();
@@ -121,6 +145,7 @@ public class VnfdBuilder {
         osmVnfd.setConnectionPoints(osmCps);
         osmVnfd.setManagementInterface(osmMgmtInterface);
         osmVnfd.setVduList(osmVdus);
+        osmVnfd.setScalingGroupDescriptor(scalingGroupDescriptors);
 
         vnfds.add(osmVnfd);
 

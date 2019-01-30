@@ -2,6 +2,7 @@ package it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.vnfDescriptor;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.HashMap;
@@ -10,22 +11,36 @@ import java.util.Map;
 
 public class ScalingPolicy {
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String name;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private boolean enabled;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonProperty("scaling-type")
     private String scalingType;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonProperty("scale-in-operation-type")
     private String scaleInOperationType;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonProperty("scale-out-operation-type")
     private String scaleOutOperationType;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonProperty("threshold-time")
     private Integer thresholdTime;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonProperty("cooldown-time")
     private Integer cooldownTime;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonProperty("scaling-criteria")
     private List<ScalingCriteria> scalingCriteria;
 
     private Map<String, Object> otherProperties = new HashMap<String, Object>();
+
+    public ScalingPolicy(String name, String scalingType){
+        this.name = name;
+        this.scalingType = scalingType;
+        this.enabled = true;
+    }
 
     public String getName() {
         return name;

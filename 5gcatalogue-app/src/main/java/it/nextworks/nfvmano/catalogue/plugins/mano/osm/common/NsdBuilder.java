@@ -63,6 +63,7 @@ public class NsdBuilder {
                 .setShortName(vlId)
                 .setMgmtNetwork(vlId.endsWith("_mgmt") ? "true" : "false") // TODO
                 .setType("ELAN")
+                .setVimNetworkName(vlId)
                 .setVnfdConnectionPointRef(
                         vlToVnfMapping.getOrDefault(vlId, Collections.emptyMap()).entrySet()
                                 .stream()

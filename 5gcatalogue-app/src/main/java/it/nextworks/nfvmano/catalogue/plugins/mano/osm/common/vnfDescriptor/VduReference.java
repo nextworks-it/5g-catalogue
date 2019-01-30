@@ -2,6 +2,7 @@ package it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.vnfDescriptor;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.HashMap;
@@ -9,11 +10,17 @@ import java.util.Map;
 
 public class VduReference {
 
-    @JsonProperty("vdu-id-ref ")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonProperty("vdu-id-ref")
     private String vduIdRef;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Integer count;
 
     private Map<String, Object> otherProperties = new HashMap<String, Object>();
+
+    public VduReference(String vduIdRef){
+        this.vduIdRef = vduIdRef;
+    }
 
     public String getVduIdRef() {
         return vduIdRef;
