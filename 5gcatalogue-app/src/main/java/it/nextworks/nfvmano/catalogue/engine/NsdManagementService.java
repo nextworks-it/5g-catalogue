@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import it.nextworks.nfvmano.catalogue.engine.resources.NotificationResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
+import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
 import it.nextworks.nfvmano.catalogue.messages.CatalogueMessageType;
 import it.nextworks.nfvmano.catalogue.messages.NsdDeletionNotificationMessage;
 import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
@@ -30,6 +31,7 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANORepository;
 import it.nextworks.nfvmano.catalogue.repos.ContentType;
 import it.nextworks.nfvmano.catalogue.repos.NsdInfoRepository;
+import it.nextworks.nfvmano.catalogue.repos.VnfPkgInfoRepository;
 import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
@@ -69,6 +71,9 @@ public class NsdManagementService implements NsdManagementInterface {
 
     @Autowired
     private MANORepository MANORepository;
+
+    @Autowired
+    private VnfPkgInfoRepository vnfPkgInfoRepository;
 
     private Map<String, Map<String, NotificationResource>> operationIdToConsumersAck = new HashMap<>();
 
@@ -340,7 +345,7 @@ public class NsdManagementService implements NsdManagementInterface {
         // pre-set nsdinfo attributes to properly store NSDs
         // UUID nsdId = UUID.randomUUID();
 
-        boolean vnfsIn = false;
+        List<DescriptorTemplate> includedVnfds = new ArrayList<>();
 
         switch (contentType) {
             case ZIP: {
@@ -354,7 +359,7 @@ public class NsdManagementService implements NsdManagementInterface {
 
                     dt = DescriptorsParser.fileToDescriptorTemplate(nsdFile);
 
-                    checkVNFPkgs(dt);
+                    includedVnfds = checkVNFPkgs(dt);
 
                     nsdId = UUID.fromString(dt.getMetadata().getDescriptorId());
                     nsdInfo.setNsdId(nsdId);
@@ -394,7 +399,7 @@ public class NsdManagementService implements NsdManagementInterface {
 
                     dt = DescriptorsParser.fileToDescriptorTemplate(inputFile);
 
-                    checkVNFPkgs(dt);
+                    includedVnfds = checkVNFPkgs(dt);
 
                     nsdId = UUID.fromString(dt.getMetadata().getDescriptorId());
                     nsdInfo.setNsdId(nsdId);
@@ -475,6 +480,7 @@ public class NsdManagementService implements NsdManagementInterface {
 
         NsdOnBoardingNotificationMessage msg = new NsdOnBoardingNotificationMessage(nsdInfo.getId().toString(), nsdId.toString(),
                 operationId, ScopeType.LOCAL, OperationStatus.SENT);
+        msg.setIncludedVnfds(includedVnfds);
 
         // send notification over kafka bus
         notificationManager.sendNsdOnBoardingNotification(msg);
@@ -482,25 +488,38 @@ public class NsdManagementService implements NsdManagementInterface {
         log.debug("NSD content uploaded and nsdOnBoardingNotification delivered");
     }
 
-    public void checkVNFPkgs(DescriptorTemplate nsd) throws NotExistingEntityException, MalformattedElementException, IOException {
+    public List<DescriptorTemplate> checkVNFPkgs(DescriptorTemplate nsd) throws NotExistingEntityException, MalformattedElementException, IOException {
 
         log.debug("Checking VNF Pkgs availability for NSD " + nsd.getMetadata().getDescriptorId() + " with version " + nsd.getMetadata().getVersion());
 
         Map<String, VNFNode> vnfNodes = nsd.getTopologyTemplate().getVNFNodes();
-        Map<String, DescriptorTemplate> vnfds = new HashMap<>();
+        //Map<String, DescriptorTemplate> vnfds = new HashMap<>();
+        List<DescriptorTemplate> includedVnfds = new ArrayList<>();
 
         for (Map.Entry<String, VNFNode> vnfNodeEntry : vnfNodes.entrySet()) {
 
             String vnfdId = vnfNodeEntry.getValue().getProperties().getDescriptorId();
             String version = vnfNodeEntry.getValue().getProperties().getDescriptorVersion();
-            String fileName = vnfNodeEntry.getValue().getProperties().getProductName().concat(".zip");
 
+            Optional<VnfPkgInfoResource> optional = vnfPkgInfoRepository.findByVnfdId(UUID.fromString(vnfdId));
+            VnfPkgInfoResource vnfPkgInfoResource = null;
+            if (optional.isPresent()) {
+                vnfPkgInfoResource = optional.get();
+            } else {
+                throw new NotExistingEntityException("VNFD filename for vnfdId " + vnfdId + " not find in DB");
+            }
+            String fileName = vnfPkgInfoResource.getVnfdFilename();
 
-            log.debug("Searching VNFD with vnfdId {} and version {} in pkg {}", vnfdId, version, fileName);
+            log.debug("Searching VNFD {} with vnfdId {} and version {}", fileName, vnfdId, version);
             File vnfd_file = storageService.loadVnfdAsResource(vnfdId, version, fileName).getFile();
             DescriptorTemplate vnfd = DescriptorsParser.fileToDescriptorTemplate(vnfd_file);
-            vnfds.putIfAbsent(vnfd.getMetadata().getDescriptorId(), vnfd);
+            //vnfds.putIfAbsent(vnfd.getMetadata().getDescriptorId(), vnfd);
+            if (!includedVnfds.contains(vnfd)) {
+                includedVnfds.add(vnfd);
+            }
         }
+
+        return includedVnfds;
 
     }
 

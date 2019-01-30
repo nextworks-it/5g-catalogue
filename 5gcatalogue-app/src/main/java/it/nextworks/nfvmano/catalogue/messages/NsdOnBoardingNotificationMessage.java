@@ -16,11 +16,15 @@
 package it.nextworks.nfvmano.catalogue.messages;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
+import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class NsdOnBoardingNotificationMessage extends CatalogueMessage {
@@ -30,6 +34,9 @@ public class NsdOnBoardingNotificationMessage extends CatalogueMessage {
 
     @JsonInclude(Include.NON_NULL)
     private String pluginId;
+
+    @JsonIgnore
+    private List<DescriptorTemplate> includedVnfds = new ArrayList<>();
 
     @JsonCreator
     public NsdOnBoardingNotificationMessage(
@@ -72,5 +79,13 @@ public class NsdOnBoardingNotificationMessage extends CatalogueMessage {
     @JsonProperty("notifierId")
     public String getPluginId() {
         return pluginId;
+    }
+
+    public List<DescriptorTemplate> getIncludedVnfds() {
+        return includedVnfds;
+    }
+
+    public void setIncludedVnfds(List<DescriptorTemplate> includedVnfds) {
+        this.includedVnfds = includedVnfds;
     }
 }

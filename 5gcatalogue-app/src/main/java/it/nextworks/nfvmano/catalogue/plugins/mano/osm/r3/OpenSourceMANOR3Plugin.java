@@ -21,6 +21,7 @@ import com.girtel.osmclient.OSMClient;
 import com.girtel.osmclient.OSMComponent;
 import com.girtel.osmclient.utils.HTTPResponse;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
+import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
 import it.nextworks.nfvmano.catalogue.messages.*;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdDeletionNotification;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnboardingNotification;
@@ -30,13 +31,17 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.ArchiveBuilder;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.NsdBuilder;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.VnfdBuilder;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.nsDescriptor.OsmNsdPackage;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.vnfDescriptor.OsmVNFPackage;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r4.elements.IdObject;
 import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
+import it.nextworks.nfvmano.libs.osmr4Client.utilities.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -63,7 +68,7 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
 
     private static final Logger log = LoggerFactory.getLogger(OpenSourceMANOR3Plugin.class);
 
-    private static final File TMP_DIR = new File("/tmp");
+    private static final File TMP_DIR = new File("/tmp/osmr3");
 
     private static final File DEF_IMG = new File(
             OpenSourceMANOR3Plugin.class.getClassLoader().getResource("nxw_logo.png").getFile()
@@ -72,9 +77,9 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
     private OSMClient osmClient;
 
     public OpenSourceMANOR3Plugin(MANOType manoType, MANO mano, String kafkaBootstrapServers,
-                                  NsdManagementInterface service, String localTopic, String remoteTopic,
+                                  NsdManagementInterface nsdService, VnfPackageManagementInterface vnfdService, String localTopic, String remoteTopic,
                                   KafkaTemplate<String, String> kafkaTemplate) {
-        super(manoType, mano, kafkaBootstrapServers, service, null, localTopic, remoteTopic, kafkaTemplate);//TODO add VnfPackageManagementInterface
+        super(manoType, mano, kafkaBootstrapServers, nsdService, vnfdService, localTopic, remoteTopic, kafkaTemplate);
         if (MANOType.OSMR3 != manoType) {
             throw new IllegalArgumentException("OSM R3 plugin requires an OSM R3 type MANO");
         }
@@ -102,25 +107,7 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
             DescriptorTemplate descriptorTemplate = retrieveTemplate(notification.getNsdInfoId());
             NsdBuilder nsdBuilder = new NsdBuilder(DEF_IMG);
 
-            Map<String, VNFNode> vnfNodes = descriptorTemplate.getTopologyTemplate().getVNFNodes();
-
-            Map<String, DescriptorTemplate> vnfds = new HashMap<>();
-
-            for (Map.Entry<String, VNFNode> vnfNodeEntry : vnfNodes.entrySet()) {
-
-                String vnfdId = vnfNodeEntry.getValue().getProperties().getDescriptorId();
-                String version = vnfNodeEntry.getValue().getProperties().getDescriptorVersion();
-                String fileName = vnfNodeEntry.getValue().getProperties().getProductName().concat(".yaml");
-                fileName = "Definitions/" + fileName;
-
-                log.debug("Searching VNFD with vnfdId {} and version {}: {}", vnfdId, version, fileName);
-                File vnfd_file = FileSystemStorageService.loadVnfdAsResource(vnfdId, version, fileName).getFile();
-                DescriptorTemplate vnfd = DescriptorsParser.fileToDescriptorTemplate(vnfd_file);
-                vnfds.putIfAbsent(vnfd.getMetadata().getDescriptorId(), vnfd);
-
-            }
-
-            nsdBuilder.parseDescriptorTemplate(descriptorTemplate, vnfds);
+            nsdBuilder.parseDescriptorTemplate(descriptorTemplate, notification.getIncludedVnfds());
             OsmNsdPackage packageData = nsdBuilder.getPackage();
 
             ArchiveBuilder archiver = new ArchiveBuilder(TMP_DIR, DEF_IMG);
@@ -193,25 +180,65 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
         log.debug("Body: {}", notification);
     }
 
-    private DescriptorTemplate retrieveTemplate(String nsdInfoId)
-            throws FailedOperationException, MalformattedElementException, NotExistingEntityException,
-            MethodNotImplementedException, NotPermittedOperationException, IOException {
-        Object nsd = nsdService.getNsd(nsdInfoId, true);
-        if (!(Resource.class.isAssignableFrom(nsd.getClass()))) {
-            throw new MethodNotImplementedException(
-                    String.format("NSD storage type %s unsupported.", nsd.getClass().getSimpleName()));
+    // TODO: to be implemented according to descriptor format in OSMR3
+    @Override
+    public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) {
+        log.info("Received Vnfd onboarding notificationfor Vnfd {} info ID {}.", notification.getVnfdId(),
+                notification.getVnfPkgInfoId());
+        log.debug("Body: {}", notification);
+
+        try {
+            DescriptorTemplate descriptorTemplate = retrieveVnfdTemplate(notification.getVnfPkgInfoId());
+            VnfdBuilder vnfdBuilder = new VnfdBuilder(DEF_IMG);
+            vnfdBuilder.parseDescriptorTemplate(descriptorTemplate);
+            OsmVNFPackage packageData = vnfdBuilder.getPackage();
+            ArchiveBuilder archiver = new ArchiveBuilder(TMP_DIR, DEF_IMG);
+            File archive = archiver.makeNewArchive(packageData, "Generated by NXW Catalogue");
+            String tId = onBoardPackage(archive, notification.getOperationId().toString());
+            log.info("Successfully uploaded VNFD {} with info ID {}.", notification.getVnfdId(),
+                    notification.getVnfdId());
+            log.debug("tId: {}", tId);
+            log.info("Successfully uploaded VNFD {} with info ID {}.", notification.getVnfdId(),
+                    notification.getVnfPkgInfoId());
+            sendNotification(new VnfPkgOnBoardingNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(),
+                    notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
+                    osm.getManoId()));
+        } catch (Exception e) {
+            log.error("Could not onboard VNFD: {}", e.getMessage());
+            log.debug("Error details: ", e);
+            sendNotification(new VnfPkgOnBoardingNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(),
+                    notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
+                    osm.getManoId()));
         }
-        Resource resource = (Resource) nsd;
-        return DescriptorsParser.fileToDescriptorTemplate(resource.getFile());
     }
 
-    private File loadFile(String filename) {
-        ClassLoader classLoader = getClass().getClassLoader();
-        URL resource = classLoader.getResource(filename);
-        if (resource == null) {
-            throw new IllegalArgumentException(String.format("Invalid resource %s", filename));
+    // TODO: to be implemented according to descriptor format in OSMR3
+    @Override
+    public void acceptVnfPkgChangeNotification(VnfPkgChangeNotificationMessage notification) {
+        log.info("Received VNF Pkg change notification.");
+        log.debug("Body: {}", notification);
+    }
+
+    // TODO: to be implemented according to descriptor format in OSMR3
+    @Override
+    public void acceptVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) {
+        log.info("Received Vnfd deletion notification for Vnfd {} info ID {}.", notification.getVnfPkgInfoId(),
+                notification.getVnfPkgInfoId());
+        log.debug("Body: {}", notification);
+        try {
+            deleteVnfd(notification.getVnfPkgInfoId(), notification.getOperationId().toString());
+            log.info("Successfully deleted Vnfd {} with info ID {}.", notification.getVnfdId(),
+                    notification.getVnfPkgInfoId());
+            sendNotification(new VnfPkgDeletionNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(),
+                    notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
+                    osm.getManoId()));
+        } catch (Exception e) {
+            log.error("Could not delete Vnfd: {}", e.getMessage());
+            log.debug("Error details: ", e);
+            sendNotification(new VnfPkgDeletionNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(),
+                    notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
+                    osm.getManoId()));
         }
-        return new File(resource.getFile());
     }
 
     String onBoardPackage(File file, String opId) throws FailedOperationException {
@@ -271,22 +298,37 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
         return httpResponse.getContent();
     }
 
-    // TODO: to be implemented according to descriptor format in OSMR3
-    @Override
-    public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
-
+    private DescriptorTemplate retrieveTemplate(String nsdInfoId)
+            throws FailedOperationException, MalformattedElementException, NotExistingEntityException,
+            MethodNotImplementedException, NotPermittedOperationException, IOException {
+        Object nsd = nsdService.getNsd(nsdInfoId, true);
+        if (!(Resource.class.isAssignableFrom(nsd.getClass()))) {
+            throw new MethodNotImplementedException(
+                    String.format("NSD storage type %s unsupported.", nsd.getClass().getSimpleName()));
+        }
+        Resource resource = (Resource) nsd;
+        return DescriptorsParser.fileToDescriptorTemplate(resource.getFile());
     }
 
-    // TODO: to be implemented according to descriptor format in OSMR3
-    @Override
-    public void acceptVnfPkgChangeNotification(VnfPkgChangeNotificationMessage notification) throws MethodNotImplementedException {
-
+    private DescriptorTemplate retrieveVnfdTemplate(String vnfdInfoId)
+            throws FailedOperationException, MalformattedElementException, NotExistingEntityException,
+            MethodNotImplementedException, NotPermittedOperationException, IOException {
+        Object vnfd = vnfdService.getVnfd(vnfdInfoId, true);
+        if (!(Resource.class.isAssignableFrom(vnfd.getClass()))) {
+            throw new MethodNotImplementedException(
+                    String.format("VNFD storage type %s unsupported.", vnfd.getClass().getSimpleName()));
+        }
+        Resource resource = (Resource) vnfd;
+        return DescriptorsParser.fileToDescriptorTemplate(resource.getFile());
     }
 
-    // TODO: to be implemented according to descriptor format in OSMR3
-    @Override
-    public void acceptVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) throws MethodNotImplementedException {
-
+    private File loadFile(String filename) {
+        ClassLoader classLoader = getClass().getClassLoader();
+        URL resource = classLoader.getResource(filename);
+        if (resource == null) {
+            throw new IllegalArgumentException(String.format("Invalid resource %s", filename));
+        }
+        return new File(resource.getFile());
     }
 
     private static class TransactionResponse {

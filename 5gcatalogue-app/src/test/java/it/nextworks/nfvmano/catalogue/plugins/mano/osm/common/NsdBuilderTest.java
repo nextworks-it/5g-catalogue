@@ -33,7 +33,9 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -65,12 +67,12 @@ public class NsdBuilderTest {
         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
 
         DescriptorTemplate vnfd_dt = readFile(
-                new File(classLoader.getResource("Descriptors/cirros_vnfd_sol001.yaml").getFile()).getPath(),
+                new File(classLoader.getResource("Descriptors/Definitions/cirros_vnfd_sol001.yaml").getFile()).getPath(),
                 StandardCharsets.UTF_8
         );
 
-        Map<String, DescriptorTemplate> vnfds = new HashMap<>();
-        vnfds.putIfAbsent(vnfd_dt.getMetadata().getDescriptorId(), vnfd_dt);
+        List<DescriptorTemplate> vnfds = new ArrayList<>();
+        vnfds.add(vnfd_dt);
 
         nsdBuilder.parseDescriptorTemplate(dt, vnfds);
 
@@ -97,41 +99,12 @@ public class NsdBuilderTest {
         NsdBuilder nsdBuilder = new NsdBuilder(DEF_IMG);
 
         DescriptorTemplate vnfd_dt = readFile(
-                new File(classLoader.getResource("Descriptors/cirros_vnfd_sol001.yaml").getFile()).getPath(),
+                new File(classLoader.getResource("Descriptors/Definitions/cirros_vnfd_sol001.yaml").getFile()).getPath(),
                 StandardCharsets.UTF_8
         );
 
-        Map<String, DescriptorTemplate> vnfds = new HashMap<>();
-        vnfds.putIfAbsent(vnfd_dt.getMetadata().getDescriptorId(), vnfd_dt);
-
-        nsdBuilder.parseDescriptorTemplate(dt, vnfds);
-        File archive = archiveBuilder.makeNewArchive(nsdBuilder.getPackage(), "README CONTENT");
-        System.out.println("NSD archive created in: " + archive.getAbsolutePath());
-    }
-
-    @Test
-    @Ignore
-    public void archiveTestCirros() throws Exception {
-        ClassLoader classLoader = getClass().getClassLoader();
-
-        DescriptorTemplate dt = readFile(
-                new File(classLoader.getResource("Descriptors/two_cirros_example_tosca.yaml").getFile()).getPath(),
-                StandardCharsets.UTF_8
-        );
-
-        ArchiveBuilder archiveBuilder = new ArchiveBuilder(
-                new File("/tmp"),
-                DEF_IMG
-        );
-        NsdBuilder nsdBuilder = new NsdBuilder(DEF_IMG);
-
-        DescriptorTemplate vnfd_dt = readFile(
-                new File(classLoader.getResource("Descriptors/cirros_vnfd_sol001.yaml").getFile()).getPath(),
-                StandardCharsets.UTF_8
-        );
-
-        Map<String, DescriptorTemplate> vnfds = new HashMap<>();
-        vnfds.putIfAbsent(vnfd_dt.getMetadata().getDescriptorId(), vnfd_dt);
+        List<DescriptorTemplate> vnfds = new ArrayList<>();
+        vnfds.add(vnfd_dt);
 
         nsdBuilder.parseDescriptorTemplate(dt, vnfds);
         File archive = archiveBuilder.makeNewArchive(nsdBuilder.getPackage(), "README CONTENT");
