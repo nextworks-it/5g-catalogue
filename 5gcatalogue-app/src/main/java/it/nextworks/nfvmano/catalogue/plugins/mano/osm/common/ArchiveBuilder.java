@@ -101,8 +101,8 @@ public class ArchiveBuilder {
         return makeNewArchive(ymlFile, "", logoFile, null);
     }
 
-    public File makeNewArchive(OsmVNFPackage ymlFile, String readmeContent) {
-        return makeNewArchive(ymlFile, readmeContent, defaultLogo, null);
+    public File makeNewArchive(OsmVNFPackage ymlFile, String readmeContent, File cloudInit) {
+        return makeNewArchive(ymlFile, readmeContent, defaultLogo, cloudInit);
     }
 
     public File makeNewArchive(OsmVNFPackage ymlFile) {

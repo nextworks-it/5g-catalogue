@@ -16,6 +16,7 @@
 package it.nextworks.nfvmano.catalogue.messages;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -27,6 +28,9 @@ public class VnfPkgDeletionNotificationMessage extends CatalogueMessage {
 
     private final String vnfPkgInfoId;
     private final String vnfdId;
+
+    @JsonIgnore
+    private String vnfName;
 
     @JsonInclude(Include.NON_NULL)
     private String pluginId;
@@ -71,5 +75,13 @@ public class VnfPkgDeletionNotificationMessage extends CatalogueMessage {
     @JsonProperty("notifierId")
     public String getPluginId() {
         return pluginId;
+    }
+
+    public String getVnfName() {
+        return vnfName;
+    }
+
+    public void setVnfName(String vnfName) {
+        this.vnfName = vnfName;
     }
 }
