@@ -127,6 +127,7 @@ public class CatalogueApplicationTests {
                 mano,
                 kafkaBootstrapServers,
                 null,
+                null,
                 localNsdNotificationTopic,
                 remoteNsdNotificationTopic,
                 kafkaTemplate
@@ -198,6 +199,7 @@ public class CatalogueApplicationTests {
                 MANOType.OSMR3,
                 osmMano,
                 kafkaBootstrapServers,
+                null,
                 null,
                 localNsdNotificationTopic,
                 remoteNsdNotificationTopic,

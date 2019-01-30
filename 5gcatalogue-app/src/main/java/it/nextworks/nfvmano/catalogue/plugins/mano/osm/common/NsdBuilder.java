@@ -75,7 +75,7 @@ public class NsdBuilder {
                 );
     }
 
-    public void parseDescriptorTemplate(DescriptorTemplate template, Map<String, DescriptorTemplate> vnfds) throws MalformattedElementException {
+    public void parseDescriptorTemplate(DescriptorTemplate template, List<DescriptorTemplate> vnfds) throws MalformattedElementException {
         dt = template;
 
         if (!(dt.getTopologyTemplate().getNSNodes().size() == 1)) {
@@ -93,8 +93,8 @@ public class NsdBuilder {
         for (Map.Entry<String, VNFNode> vnfNode : vnfNodes.entrySet()) {
             String vnfdId = vnfNode.getValue().getProperties().getDescriptorId();
 
-            for (Map.Entry<String, DescriptorTemplate> vnfd : vnfds.entrySet()) {
-                if (vnfdId.equalsIgnoreCase(vnfd.getValue().getTopologyTemplate().getVNFNodes().entrySet().iterator().next().getValue().getProperties().getDescriptorId())) {
+            for (DescriptorTemplate vnfd : vnfds) {
+                if (vnfdId.equalsIgnoreCase(vnfd.getTopologyTemplate().getVNFNodes().entrySet().iterator().next().getValue().getProperties().getDescriptorId())) {
                     ConstituentVnfd constituentVnfd = new ConstituentVnfd().setVnfdIdRef(vnfdId);
                     constituentVnfds.add(constituentVnfd);
 
@@ -102,7 +102,7 @@ public class NsdBuilder {
 
                     for (String vlId : vls) {
                         vlToVnfMapping.putIfAbsent(vlId, new HashMap<>());
-                        List<VirtualLinkPair> pairs = vnfd.getValue().getTopologyTemplate().getSubstituitionMappings().getRequirements().getVirtualLink();
+                        List<VirtualLinkPair> pairs = vnfd.getTopologyTemplate().getSubstituitionMappings().getRequirements().getVirtualLink();
                         for (VirtualLinkPair pair : pairs) {
                             if (pair.getVl().equalsIgnoreCase(vlId)) {
                                 String cpId = pair.getCp();

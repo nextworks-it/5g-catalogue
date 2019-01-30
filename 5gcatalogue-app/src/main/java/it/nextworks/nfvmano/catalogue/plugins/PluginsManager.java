@@ -173,7 +173,7 @@ public class PluginsManager {
             return new DummyMANOPlugin(mano.getManoType(), mano, bootstrapServers, nsdService, localNsdNotificationTopic,
                     remoteNsdNotificationTopic, kafkaTemplate);
         } else if (mano.getManoType().equals(MANOType.OSMR3)) {
-            return new OpenSourceMANOR3Plugin(mano.getManoType(), mano, bootstrapServers, nsdService,
+            return new OpenSourceMANOR3Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService,
                     localNsdNotificationTopic, remoteNsdNotificationTopic, kafkaTemplate);
         } else if (mano.getManoType().equals(MANOType.OSMR4)) {
                 return new OpenSourceMANOR4Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService,

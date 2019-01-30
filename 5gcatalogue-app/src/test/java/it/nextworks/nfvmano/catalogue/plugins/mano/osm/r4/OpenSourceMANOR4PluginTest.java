@@ -44,9 +44,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -57,7 +55,7 @@ public class OpenSourceMANOR4PluginTest {
 
 	private static OpenSourceMANOR4Plugin plugin;
 
-	private static final File TMP_DIR = new File("/tmp");
+	private static final File TMP_DIR = new File("/tmp/osmr4");
 
 	private static final File DEF_IMG = new File(
 			OpenSourceMANOR3Plugin.class.getClassLoader().getResource("nxw_logo.png").getFile()
@@ -101,7 +99,7 @@ public class OpenSourceMANOR4PluginTest {
 
 	@Test
 	@Ignore // As above
-	public void testOnBoardNSGenerated() throws InterruptedException, FailedOperationException, IOException, MalformattedElementException {
+	public void testOnBoardGenerated() throws InterruptedException, FailedOperationException, IOException, MalformattedElementException {
 		// Prerequisite: have the related VNFD (cirros_vnf) with id cb0bcae1-00e7-41fa-b407-ba384e76a3e3 loaded into OSM
 		init();
 		ClassLoader classLoader = getClass().getClassLoader();
@@ -117,12 +115,12 @@ public class OpenSourceMANOR4PluginTest {
 		mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
 
 		DescriptorTemplate vnfd_dt = readFile(
-				new File(classLoader.getResource("Descriptors/cirros_vnfd_sol001.yaml").getFile()).getPath(),
+				new File(classLoader.getResource("Descriptors/Definitions/cirros_vnfd_sol001.yaml").getFile()).getPath(),
 				StandardCharsets.UTF_8
 		);
 
-		Map<String, DescriptorTemplate> vnfds = new HashMap<>();
-		vnfds.putIfAbsent(vnfd_dt.getMetadata().getDescriptorId(), vnfd_dt);
+		List<DescriptorTemplate> vnfds = new ArrayList<>();
+		vnfds.add(vnfd_dt);
 
 		nsdBuilder.parseDescriptorTemplate(dt, vnfds);
 
