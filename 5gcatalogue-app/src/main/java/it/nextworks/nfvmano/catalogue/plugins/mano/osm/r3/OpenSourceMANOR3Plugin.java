@@ -205,7 +205,7 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
         log.info("Received PNFD deletion notification.");
         log.debug("Body: {}", notification);
     }
-    
+
     @Override
     public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) {
         log.info("Received Vnfd onboarding notificationfor Vnfd {} info ID {}.", notification.getVnfdId(),

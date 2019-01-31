@@ -47,6 +47,11 @@ function prepareEnv()
     mvn clean install
     cd ../NFV_MANO_SOL001_LIBS_DESCRIPTORS
     mvn clean install
+    
+log "BUILDING OSM R4 CLIENT..."
+    cd ../../5g-catalogue/OSMr4Client
+    mvn clean install
+    cd ..
 }
 
 function compileApp()
