@@ -2,7 +2,7 @@
 <class-diagram version="1.2.2" icons="true" always-add-relationships="false" generalizations="true" realizations="true" 
   associations="true" dependencies="false" nesting-relationships="true" router="FAN">  
   <interface id="1" language="java" 
-    name="it.nextworks.nfvmano.catalogue.plugins.mano.VnfdNotificationsConsumerInterface" project="Catalogue" 
+    name="it.nextworks.nfvmano.catalogue.messages.VnfPkgNotificationsConsumerInterface" project="Catalogue"
     file="/Catalogue/src/main/java/it/nextworks/nfvmano/catalogue/plugins/mano/VnfdNotificationsConsumerInterface.java" 
     binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="313" y="266"/>    
@@ -22,7 +22,7 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </enumeration>  
-  <interface id="3" language="java" name="it.nextworks.nfvmano.catalogue.plugins.mano.NsdNotificationsConsumerInterface" 
+  <interface id="3" language="java" name="it.nextworks.nfvmano.catalogue.messages.NsdNotificationsConsumerInterface"
     project="Catalogue" 
     file="/Catalogue/src/main/java/it/nextworks/nfvmano/catalogue/plugins/mano/NsdNotificationsConsumerInterface.java" 
     binary="false" corner="BOTTOM_RIGHT">    

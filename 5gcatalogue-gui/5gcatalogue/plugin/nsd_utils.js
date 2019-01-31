@@ -24,7 +24,7 @@ function getNsdInfo(nsdInfoId, callback, elemId) {
 
 function fillNSDsCounter(data, params) {
     var countDiv = document.getElementById(params[0]);
-	
+
 	//console.log(JSON.stringify(data, null, 4));
 	countDiv.innerHTML = data.length;
 }
@@ -35,18 +35,18 @@ function deleteNsdInfo(nsdInfoId, resId) {
 
 function updateNsdInfo(nsdInfoId, elemId) {
     var opState = document.getElementById(elemId).value;
-    
+
     var jsonObj = JSON.parse("{}");
     jsonObj['nsdOperationalState'] = opState;
     var json = JSON.stringify(jsonObj, null, 4);
-    
+
     console.log("NsdInfoModifications: " + json);
     patchJsonRequestToURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId, json, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully updated."]);
 }
 
 function loadNSDFile(elemId, resId) {
     var files = document.getElementById(elemId).files;
-    
+
     if (files && files.length > 0) {
         createNsdInfoId(files[0], resId);
     } else {
@@ -58,18 +58,18 @@ function createNsdInfoId(file, resId) {
     // TODO: handle also userDefinedData
     var jsonObj = {"userDefinedData" : {} };
     var json = JSON.stringify(jsonObj, null, 4);
-    
+
     postJsonToURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors", json, uploadNsdContent, [file, resId]);
 }
 
 function uploadNsdContent(data, params) {
     console.log(JSON.stringify(data, null, 4));
-    
+
     var formData = new FormData();
     formData.append("file", params[0]);
     formData.append("pippo","pluto");
     var nsdInfoId = data['id'];
-    
+
     putFileToURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content", formData, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully updated."]);
 }
 
@@ -80,6 +80,7 @@ function getDescription(descrId) {
 }
 
 function printDescription(data, params){
+    console.log(data);
     var yamlObj = jsyaml.load(data);
     console.log(yamlObj);
     document.getElementById(params[1]).innerHTML = ' - ' + params[0] + ' - ' + yamlObj['description'];
@@ -95,6 +96,26 @@ function getNSD(nsdInfoId, elemId, callback) {
     getFileFromURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content", callback, [nsdInfoId, elemId]);
 }
 
+function showNsdGraphCanvas(data,params) {
+    console.log(params[0]);
+    console.log(params[1]);
+    console.log(data)
+    console.log(data.lenght);
+    for (var i in data) {
+        console.log(data[i]['id']);
+        if (data[i]['id'] === params[0]){
+            var nsdName= data[i]['nsdName'];
+            console.log(nsdName);
+        }
+        document.getElementById("graphOf_"+ data[i]['id']).style.display = "none";
+    }
+
+    document.getElementById("graphOf_"+ params[0]).style.display = "block";
+    var dataId ='cy_'+params[0];
+    console.log("dataid="+dataId);
+    document.getElementById(dataId).innerHTML = '<script>'+getNSD(params[0],dataId, createNSDGraph);+'</script>';
+}
+
 function createNsdInfosTable(data, params) {
     //console.log(JSON.stringify(data, null, 4));
     //console.log(params);
@@ -106,13 +127,13 @@ function createNsdInfosTable(data, params) {
         return;
     }
     if (!data || data.length == 0) {
-	//console.log('No NS Instances');
+	      //console.log('No NS Instances');
         table.innerHTML = '<tr>No NSDs stored in Catalogue</tr>';
         return;
     }
     var btnFlag = true;
-    var header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Operational State', 'Onboarding State'], btnFlag, false);
-    var cbacks = ['openNSD_', 'nsd_graph.html?nsdId=', 'updateNsdInfo_', 'deleteNsdInfo'];
+    var header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Operational State', 'Onboarding State','Actions'], btnFlag, false);
+    var cbacks = ['openNSD_', 'showNsdGraphCanvas', 'updateNsdInfo_', 'deleteNsdInfo'];
     var names = ['View NSD', 'View NSD Graph', 'Change NSD OpState', 'Delete NSD'];
     var columns = [['nsdName'], ['nsdVersion'], ['nsdDesigner'], ['nsdOperationalState'], ['nsdOnboardingState']];
 
@@ -122,7 +143,7 @@ function createNsdInfosTable(data, params) {
     for (var i in data) {
         rows +=  createNsdInfosTableRow(data[i], btnFlag, cbacks, names, columns, resId);
     }
-    
+
     table.innerHTML += rows + '</tbody>';
 }
 
@@ -132,43 +153,76 @@ function createNsdInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
     var text = '';
     var btnText = '';
     if (btnFlag) {
-        btnText += createActionButton(data['id'], resId, names, cbacks);
+        //btnText += createActionButton(data['id'], resId, names, cbacks);
+        btnText += createLinkSet(data['id'], resId, names, cbacks);
         createUpdateNsdInfoModal(data['id'], data['nsdOperationalState'], "updateNsdInfosModals");
         creteNSDViewModal(data['id'], "nsdViewModals");
+        createCanvas(data);
     }
 
-	text += '<tr>';
-	for (var i in columns) {
-	    var values = [];
-	    getValuesFromKeyPath(data, columns[i], values);
-	    //console.log(values);
+  	text += '<tr>';
+  	for (var i in columns) {
+  	    var values = [];
+  	    getValuesFromKeyPath(data, columns[i], values);
+  	    //console.log(values);
 
-	    var subText = '<td>';
-	    var subTable = '<table class="table table-borderless">';
+  	    var subText = '<td>';
+  	    var subTable = '<table class="table table-borderless">';
 
-	    if (data.hasOwnProperty(columns[i][0])) {
-            if(values instanceof Array && values.length > 1) {
-                for (var v in values) {
-                    subTable += '<tr><td>' + values[v] + '</td><tr>';
-                }
-                subText += subTable + '</table>';
-            } else {
-                subText += values;
-            }
-	    }
-	    subText += '</td>';
-	    text += subText;
-	}
-    text += btnText + '</tr>';   
+  	    if (data.hasOwnProperty(columns[i][0])) {
+              if(values instanceof Array && values.length > 1) {
+                  for (var v in values) {
+                      subTable += '<tr><td>' + values[v] + '</td><tr>';
+                  }
+                  subText += subTable + '</table>';
+              } else {
+                  subText += values;
+              }
+  	    }
+  	    subText += '</td>';
+  	    text += subText;
+  	}
+    text += btnText + '</tr>';
 
     return text;
 }
 
+function createCanvas(data){
+    console.log(data);
+    console.log('Canvas per grafico' +  data['id']);
+    var dataId ='cy_'+data['id'];
+    var nsdName=data['nsdName'];
+    var graphName="graphOf_" + data['id'];
+    document.getElementById("nsdGraphCanvas").innerHTML += '<div id="' + graphName + '" class="graph_canvas" style="display: none";>\
+                                                            <div class="col-md-12">\
+                                                            <div class="x_panel">\
+                                                                <div class="x_title">\
+                                                                <h2>NETWORK SERVICE DESCRIPTOR GRAPH - ' + nsdName + ' <small></small></h2>\
+                                                                <div class="clearfix"></div>\
+                                                                </div>\
+                                                                <div class="x_content">\
+                                                                <style>\
+                                                                    #' + dataId + '{\
+                                                                    min-height: 600px;\
+                                                                    width: auto;\
+                                                                    left: 0;\
+                                                                    top: 0;\
+                                                                    }\
+                                                                </style>\
+                                                                <div id="'+dataId+'"></div>\
+                                                                </div>\
+                                                            </div>\
+                                                            </div>\
+                                                        </div>';
+
+}
+
+
 function creteNSDViewModal(nsdInfoId, modalsContainerId) {
-              
+
     console.log('Creating view modal for nsdInfoId: ' + nsdInfoId);
     var container = document.getElementById(modalsContainerId);
-    
+
     if (container) {
         var text = '<div id="openNSD_' + nsdInfoId + '" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">\
                     <div class="modal-dialog modal-lg">\
@@ -188,17 +242,17 @@ function creteNSDViewModal(nsdInfoId, modalsContainerId) {
                       </div>\
                     </div>\
                 </div>';
-        
-            container.innerHTML += text;          
+
+            container.innerHTML += text;
             getNSD(nsdInfoId, 'viewNSDContent_' + nsdInfoId, fillNSDViewModal);
-    }  
+    }
 }
 
 function fillNSDViewModal(data, params) {
-    
+
     var yamlObj = jsyaml.load(data);
     //console.log(yamlObj);
-    
+
     var yaml = jsyaml.dump(data, {
         indent: 4,
         styles: {
@@ -206,7 +260,7 @@ function fillNSDViewModal(data, params) {
         '!!null' : 'camelcase'
         }
     });
-    
+
     //console.log(yaml);
     var nsdInfoId = params[0];
     var textArea = document.getElementById(params[1]);
@@ -214,9 +268,9 @@ function fillNSDViewModal(data, params) {
 }
 
 function createUpdateNsdInfoModal(nsdInfoId, opState, modalsContainerId) {
-    
+
     var container = document.getElementById(modalsContainerId);
-    
+
     if (container) {
         var text = '<div id="updateNsdInfo_' + nsdInfoId + '" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">\
                     <div class="modal-dialog modal-lg">\
@@ -251,17 +305,18 @@ function createUpdateNsdInfoModal(nsdInfoId, opState, modalsContainerId) {
                       </div>\
                     </div>\
                 </div>';
-        
+
         container.innerHTML += text;
     }
 }
 
 function createNSDGraph(data, params) {
+    console.log(params[1]);
     var yamlObj = jsyaml.load(data);
-    //console.log(yamlObj);
+    console.log(yamlObj);
     var nodeTempl=yamlObj['topologyTemplate']['nodeTemplates'];
     //console.log(nodeTempl);
-    
+
     var nodes = [];
     var edges = [];
 
@@ -282,14 +337,14 @@ function createNSDGraph(data, params) {
                 //console.log(key);
                 edges.push({ group: 'edges', data: { source: key, target: value1.split('/')[0], faveColor: '#706f6f', strength: 70 }});
                 //console.log(nodes);
-            });    
+            });
         }
         //console.log(nodes);
     });
 
 
     var cy = cytoscape({
-		container: document.getElementById('cy'),
+        container: document.getElementById(params[1]),
 
 		layout: {
 			name: 'cose',
@@ -385,7 +440,7 @@ function createNSDGraph(data, params) {
 		  window.cy = this;
 		}
 	});
-	
-	//cy.minZoom(0.8);
+
+	cy.minZoom(0.5);
 	cy.maxZoom(1.6);
 }

@@ -1,0 +1,14 @@
+metadata:
+	vnf_product_name: cirros
+	vnf_provider_id: OSM
+	vnf_package_version: 1.0
+	vnf_release_date_time: 2017-01-01T10:00+03:00
+
+monitoring:
+	main_monitoring_descriptor:
+		Source: Files/Monitoring/cirros_monitoring.yaml
+
+configuration:
+	cloud_init:
+	Source: Files/Scripts/cloud.init
+

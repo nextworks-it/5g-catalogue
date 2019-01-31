@@ -14,6 +14,7 @@
 * limitations under the License.
 */
 
+//var catalogueAddr = '10.0.8.44';
 var catalogueAddr = window.location.hostname;
 var cataloguePort = '8083';
 
@@ -21,7 +22,7 @@ var stopRefreshing = false;
 
 function refresh(btnFlag) {
 	if(stopRefreshing && !Boolean(btnFlag)) {
-//		console.log("stop refreshing: "+ stopRefreshing);
+		//console.log("stop refreshing: "+ stopRefreshing);
 		return;
 	}
 	$(document).ready(function () {
@@ -34,7 +35,7 @@ function refresh(btnFlag) {
 }
 
 function scrollPageTo(offset) {
-    // For Chrome, Safari and Opera
+  // For Chrome, Safari and Opera
 	var body = document.body;
 	// Firefox and IE places the overflow at the <html> level, unless else is specified.
 	// Therefore, we use the documentElement property for these two browsers
@@ -53,7 +54,7 @@ function clearForms(parentId, flag) {
 		//console.log(elems[i])
 		elems[i].reset();
 	}
-	
+
 	if (flag) {
 		var modal = document.getElementById(parentId);
 		modal.style = 'display:none';
@@ -89,37 +90,37 @@ function showResultMessage(success, msg) {
 		}
 	}
 	text += '<button class="btn btn-info" onclick="refresh(' + flag + ');"><i class="fa fa-refresh"></i> Refresh</button></div>';
-    elem.innerHTML = text;	
+    elem.innerHTML = text;
 	scrollPageTo(elem.offsetTop);
 }
 
 function loadFromFile(type, evt, elementId, resId) {
     //Retrieve the first (and only!) File from the FileList object
     var file = evt.target.files;
-	console.log(file[0]);
+		//console.log(file[0]);
     if (file.length < 1)
-		return;
-	if (type == 'ZIP') {
-		readZipFile(file[0], elementId, resId);
-	} else {
-		console.log("Json File in div: " + elementId);
-		var elem = document.getElementById(elementId);
-		console.log("Json File in div: " + elementId + " " + elem);
+			return;
+		if (type == 'ZIP') {
+			readZipFile(file[0], elementId, resId);
+		} else {
+			//console.log("Json File in div: " + elementId);
+			var elem = document.getElementById(elementId);
+			//console.log("Json File in div: " + elementId + " " + elem);
 		if(!elem)
 			return;
 		openTextFile(evt, elem);
-	}	
+	}
 }
 
 function readZipFile(file, containerId, resId) {
-	console.log(file);
+	//console.log(file);
 	zip.workerScripts = {
 		deflater: ['../../plugins/zip_js/z-worker.js', '../../plugins/zip_js/deflate.js'],
 		inflater: ['../../plugins/zip_js/z-worker.js', '../../plugins/zip_js/inflate.js']
 	};
 	var model = (function() {
 		var URL = this.webkitURL || this.mozURL || this.URL;
-	
+
 		return {
 			getEntries : function(file, onend) {
 				zip.createReader(new zip.BlobReader(file), function(zipReader) {
@@ -128,7 +129,7 @@ function readZipFile(file, containerId, resId) {
 				}, onerror);
 			},
 			getEntryFile : function(entry, onend, onprogress) {
-				var writer, zipFileEntry;	
+				var writer, zipFileEntry;
 				function getData() {
 					entry.getData(writer, function(blob) {
 						var blobURL = URL.createObjectURL(blob);
@@ -136,10 +137,10 @@ function readZipFile(file, containerId, resId) {
 					}, onprogress);
 				}
 				writer = new zip.BlobWriter();
-				getData();				
+				getData();
 			}
 		};
-	})();	
+	})();
 	model.getEntries(file, function(entries) {
 		var cnt = 0;
 		entries.forEach(function(entry) {
@@ -151,7 +152,7 @@ function readZipFile(file, containerId, resId) {
 			return false;
 		}
 		entries.forEach(function(entry) {
-//			console.log('filename: ' + entry.filename);
+			//console.log('filename: ' + entry.filename);
 			model.getEntryFile(entry, function(blobURL) {
 				var subdiv = document.createElement('div');
 				$(subdiv).load(blobURL, null, function() {
@@ -165,7 +166,7 @@ function readZipFile(file, containerId, resId) {
 			});
 		});
 	});
-	
+
 	function onerror(message) {
 		if(!message || message == undefined)
 			message = 'Error';
@@ -181,15 +182,15 @@ function openTextFile(event, container) {
 		alert("Invalid file");
 		return;
 	}
-//  console.log("type = " + f.type);
+	//console.log("type = " + f.type);
 	var reader = new FileReader();
-	
+
 	reader.onload = function(event) {
 		console.log("File read: " + event.target.result);
 		container.innerHTML = event.target.result;
 		console.log(container.innerHTML);
 	};
-	
+
 	reader.readAsText(file);
 }
 
@@ -203,7 +204,7 @@ function createTableHeaderFromObject(data, btnFlag, cols) {
 				return true;
             if (key.indexOf('password') >= 0)
 				return true;
-			
+
 			text += '<th>' + key + '</th>';
 		});
 		if (btnFlag) {
@@ -211,13 +212,13 @@ function createTableHeaderFromObject(data, btnFlag, cols) {
 		}
 	}
 	text += '</tr></thead>';
-    
+
 	return text;
 }
 
 function createTableHeaderByValues(cols, btnFlag, checkbFlag) {
     var text = '<thead><tr>';
-	
+
 	if (cols) {
 		if(checkbFlag) {
 			text +='<th><input type="checkbox" class="checkbox-toggle purge-check" style="display: none"></th>'
@@ -237,7 +238,7 @@ function createTableHeaderByValues(cols, btnFlag, checkbFlag) {
 
 function hideElement(elem, flag) {
 	if (flag) {
-		elem.style.display = 'none';	
+		elem.style.display = 'none';
 	} else {
 		if(elem.tagName.toLowerCase() == 'table')
 			elem.style.display = 'table';
@@ -283,16 +284,71 @@ function createActionButton(id, resId, btnNames, btnCallbacks) {
 	if(btnNames instanceof Array) {
 		if(btnNames.length == btnCallbacks.length) {
 			text += createDropdownButton(id, resId, btnNames, btnCallbacks);
-		}		
+		}
 	} else {
 		text +=  createButton(id, resId, btnNames, btnCallbacks);
 	}
-	text += '</td>';	
+	text += '</td>';
+	return text;
+}
+
+function createLinkSet(id, resId, btnNames, btnCallbacks) {
+	var text = '<td>';
+	if(btnNames instanceof Array) {
+		if(btnNames.length == btnCallbacks.length) {
+			for(var i=0; i<btnNames.length; i++) {
+				if (btnCallbacks[i].toLowerCase().indexOf("delete") >= 0 ||
+					btnCallbacks[i].toLowerCase().indexOf("get") >= 0) {
+					text += '<a title="Delete"class="btn btn-link">\
+							<i class="fa fa-close"  onclick=' + btnCallbacks[i] + '("' + id + '","' + resId + '")></i>\
+							</a>';
+				} else if (btnCallbacks[i].toLowerCase().indexOf("update") >= 0) {
+							text += '<a title="Operational State"class="btn btn-link">\
+										<i class="fa fa-gear" "buttonModal_'+ btnCallbacks[i] + '"  data-toggle="modal" data-target="#' + btnCallbacks[i] + id + '" data-id="' + id + '"></i>\
+									</a>';
+				} else if (btnCallbacks[i].toLowerCase().indexOf("open") >= 0) {
+						text += '<a title="View" class="btn btn-link">\
+								<i class="fa fa-file-code-o" "buttonModal_'+ btnCallbacks[i] + '"  data-toggle="modal" data-target="#' + btnCallbacks[i] + id + '" data-id="' + id + '"></i>\
+								</a>';
+				}  else if (btnNames[i].toLowerCase().indexOf("nsd graph") >= 0) {
+					text += '<a title="Graph"class="btn btn-link">\
+								<i class="fa fa-eye"  onclick=getAllNsdInfos("' + id + '",' + btnCallbacks[i] + ',"response")></i>\
+							</a>';
+				}
+				else if (btnNames[i].toLowerCase().indexOf("vnf graph") >= 0) {
+					text += '<a title="Graph"class="btn btn-link">\
+								<i class="fa fa-eye"  onclick=getAllVnfInfos("' + id + '",' + btnCallbacks[i] + ',"response")></i>\
+							</a>';
+				}
+			}
+		}
+	}	else {
+		if (btnCallbacks.toLowerCase().indexOf("delete") >= 0 ||
+					btnCallbacks.toLowerCase().indexOf("get") >= 0) {
+					text += '<a class="btn btn-link">\
+							<i class="fa fa-close" onclick=' + btnCallbacks + '("' + id + '","' + resId + '")></i>\
+							</a>';
+				} else if (btnCallbacks.toLowerCase().indexOf("view") >= 0) {
+						text += '<a class="btn btn-link">\
+								<i class="fa fa-eye" onclick="location.href=\'' + btnCallbacks + id + '\'"></i>\
+								</a>';
+				} else if (btnCallbacks.toLowerCase().indexOf("open") >= 0 ||
+						btnCallbacks.toLowerCase().indexOf("update") >= 0) {
+							text += '<a class="btn btn-link">\
+										<i class="fa fa-gear buttonModal_'+ btnCallbacks + '" data-toggle="modal" data-target="#' + btnCallbacks + id + '" data-id="' + id + '"></i>\
+									</a>';
+				}  else if (btnNames.toLowerCase().indexOf("graph") >= 0) {
+					text += '<a class="btn btn-link">\
+								<i class="fa fa-area-chart" onclick=getAllNsdInfos("' + id + '",' + btnCallbacks + ',"response")></i>\
+							</a>';
+				}
+			}
+	text += '</td>';
 	return text;
 }
 
 function createButton(id, resId, btnName, btnCallback) {
-	
+
 	var text = 	'<button type="button" class="btn btn-info btn-sm btn-block';
 	if (btnCallback.toLowerCase().indexOf("delete") >= 0 ||
 		btnCallback.toLowerCase().indexOf("get") >= 0) {
@@ -302,12 +358,10 @@ function createButton(id, resId, btnName, btnCallback) {
     } else if (btnCallback.toLowerCase().indexOf("open") >= 0 ||
 			   btnCallback.toLowerCase().indexOf("update") >= 0) {
 			text += ' buttonModal_'+ btnCallback + '" data-toggle="modal" data-target="#' + btnCallback + id + '" data-id="' + id + '">';
-    }  else if (btnName.toLowerCase().indexOf("graph") >= 0) {
-		text += '" onclick="location.href=\'' + btnCallback + id + '\'">';
-	} 
+    }
 	text += btnName + '</button>';
-//	console.log("button: \n" + text);
-    
+	//console.log("button: \n" + text);
+
 	return text;
 }
 
@@ -321,6 +375,6 @@ function createDropdownButton(id, resId, btnNames, btnCallbacks) {
 		console.log(btnNames[i]);
 	}
 	text += '</ul></div>';		//<input type="text" class="form-control">
-	
+
 	return text;
 }

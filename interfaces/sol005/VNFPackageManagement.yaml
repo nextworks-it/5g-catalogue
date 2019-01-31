@@ -669,7 +669,12 @@ definitions:
         $ref: 'NSDManagement.yaml#/definitions/KeyValuePairs'
       _links:
         type: string
-        format: uri
+        $ref: '#/definitions/VnfPkgLinksType'
+
+  VnfPkgLinksType:
+    type: object
+    description: Links to resources related to this resource.
+    properties:
       self:
         type: string
         format: uri

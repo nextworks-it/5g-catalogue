@@ -15,107 +15,157 @@
 */-->
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <!-- Meta, title, CSS, favicons, etc. -->
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>5G APP & SERVICE CATALOGUE</title>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <!-- Meta, title, CSS, favicons, etc. -->
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!--#include virtual="/5gcatalogue/templates/scripts_head.html" -->
-        
-  </head>
+  <title>5G APP & SERVICE CATALOGUE</title>
 
-  <body class="nav-md">
-    <div class="container body">
-      <div class="main_container">
-        
-        <!--#include virtual="/5gcatalogue/templates/side_top_bar.html" -->
-        
-        <!-- page content -->
-        <div class="right_col" role="main">
-          <div class="">
-            
-            <div class="row top_titles">
-              <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                <div class="tile-stats">
-                  <div class="icon"><i class="fa fa-file-o"></i></div>
-                  <div class="count" id="count-NSD">0</div>
-                  <h3><a href="./pages/nsd/nsds.html">NS Descriptors</a></h3>
-                  <p></p>
+  <!--#include virtual="/5gcatalogue/templates/scripts_head.html" -->
+
+</head>
+
+<body class="nav-md">
+  <div class="container body">
+    <div class="main_container">
+
+      <!--#include virtual="/5gcatalogue/templates/side_top_bar.html" -->
+
+      <!-- page content -->
+      <div class="right_col" role="main">
+
+        <!-- top tiles -->
+
+        <div class="row tile_count">
+          <div class="col-sm-2 col-xs-10 tile_stats_count">
+            <p></p>
+            <p></p>
+            <span class="count_top"></span>
+            <div class="count">Home</div>
+            <!--<span class="count_bottom">Last Onboarded<i class="green"></i></span>-->
+          </div>
+          <div class="col-sm-2 col-xs-10 tile_stats_count">
+            <p></p>
+            <span class="count_top"><i class="fa fa-file-o"></i> NS Descriptors</span>
+            <div class="count" id="count-NSD">0</div>
+            <!--<span class="count_bottom">Last Onboarded<i class="green"></i></span>-->
+          </div>
+          <div class="col-sm-2 col-xs-10 tile_stats_count">
+            <p></p>
+            <span class="count_top"><i class="fa fa-file-archive-o"></i> VNF Packages</span>
+            <div class="count" id="count-VNF">0</div>
+            <!--<span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>3% </i> From last Week</span>-->
+          </div>
+          <div class="col-sm-2 col-xs-10 tile_stats_count">
+            <p></p>
+            <span class="count_top"><i class="fa fa-file"></i> MEC APP Packages</span>
+            <div class="count" id="count-APPD">0</div>
+            <!--<span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>34% </i> From last Week</span>-->
+          </div>
+          <div class="col-sm-2 col-xs-10 tile_stats_count">
+            <p></p>
+            <span class="count_top"><i class="fa fa-cube"></i> PNF Descriptors</span>
+            <div class="count" id="count-PNF">0</div>
+            <!--<span class="count_bottom"><i class="red"><i class="fa fa-sort-desc"></i>12% </i> From last Week</span>-->
+          </div>
+          <div class="col-sm-2 col-xs-10 tile_stats_count">
+            <p></p>
+            <span class="count_top"><i class="fa fa-file-text"></i> SDN APP Packages</span>
+            <div class="count" id="count-SDNAPP">0</div>
+            <!--<span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>34% </i> From last Week</span>-->
+          </div>
+        </div>
+
+        <!-- /top tiles-->
+
+
+        <div class="">
+          <div class="row top_tiles">
+            <div class="animated flipInY  col-sm-12 col-xs-12" onclick="location.href='./pages/nsd/nsds.html'">
+              <div class="tile-stats" onmouseover='style.backgroundColor="#fff0"' onmouseout='style.backgroundColor="#fff"'>
+                <div class="icon"><i class="fa fa-file-o"></i></div>
+                <!--<div class="count" id="count-NSD">None</div>
+                  <h3>NS Descriptors</h3>-->
+                <div class="count">
+                  <h1>NS Descriptors</h1>
                 </div>
+                <h3>View Details</h3>
               </div>
             </div>
-            
-            <div class="row top_titles">
-              <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                <div class="tile-stats">
-                  <div class="icon"><i class="fa fa-file-archive-o"></i></div>
-                  <div class="count" id="count-VNF">0</div>
-                  <h3><a href="./pages/vnf/vnfs.html">VNF Packages</a></h3>
-                  <p></p>
+            <div class="animated flipInY  col-sm-12 col-xs-12" onclick="location.href='./pages/vnf/vnfds.html'">
+              <div class="tile-stats" onmouseover='style.backgroundColor="#fff0"' onmouseout='style.backgroundColor="#fff"'>
+                <div class="icon"><i class="fa fa-file-archive-o"></i></div>
+                <div class="count">
+                  <h1>VNF Packages</h1>
                 </div>
-              </div>
-              <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                <div class="tile-stats">
-                  <div class="icon"><i class="fa fa-file"></i></div>
-                  <div class="count" id="count-APPD">0</div>
-                  <h3><a href="./pages/appd/appds.html">MEC APP Packages</a></h3>
-                  <p></p>
-                </div>
-              </div>
-              <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                <div class="tile-stats">
-                  <div class="icon"><i class="fa fa-cube"></i></div>
-                  <div class="count" id="count-PNF">0</div>
-                  <h3><a href="./pages/pnf/pnfs.html">PNF Descriptors</a></h3>
-                  <p></p>
-                </div>
+                <h3>View Details</h3>
               </div>
             </div>
-
-            <div class="row top_titles">
-              <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                <div class="tile-stats">
-                  <div class="icon"><i class="fa fa-file-text"></i></div>
-                  <div class="count" id="count-SDNAPP">0</div>
-                  <h3><a href="./pages/sdnapp/sdnapps.html">SDN APP Packages</a></h3>
-                  <p></p>
+            <div class="animated flipInY   col-sm-12 col-xs-12" onclick="location.href='./pages/appd/appds.html'">
+              <div class="tile-stats" onmouseover='style.backgroundColor="#fff0"' onmouseout='style.backgroundColor="#fff"'>
+                <div class="icon"><i class="fa fa-file"></i></div>
+                <div class="count">
+                  <h1>MEC APP Packages</h1>
                 </div>
+                <h3>View Details</h3>
               </div>
             </div>
-
-            <div class="row">
-              <div class="col-md-4">
-              </div>
-
-              <div class="col-md-4">
-              </div>
-
-              <div class="col-md-4">
+            <div class="animated flipInY  col-sm-12 col-xs-12" onclick="location.href='./pages/pnf/pnfds.html'">
+              <div class="tile-stats" onmouseover='style.backgroundColor="#fff0"' onmouseout='style.backgroundColor="#fff"'>
+                <div class="icon"><i class="fa fa-cube"></i></div>
+                <div class="count">
+                  <h1>PNF Descriptors</h1>
+                </div>
+                <h3>View Details</h3>
               </div>
             </div>
-            
-            <div class="row">
-              <div class="col-md-6" id="response">
+            <div class="animated flipInY c col-sm-12 col-xs-12" onclick="location.href='./pages/sdnapp/sdnapps.html'">
+              <div class="tile-stats" onmouseover='style.backgroundColor="#fff0"' onmouseout='style.backgroundColor="#fff"'>
+                <div class="icon"><i class="fa fa-file-text"></i></div>
+                <div class="count">
+                  <h1>SDN APP Packages</h1>
+                </div>
+                <h3>View Details</h3>
               </div>
             </div>
           </div>
-        </div>
-        <!-- /page content -->
 
-        <!-- footer content -->
-        <!--#include virtual="/5gcatalogue/templates/footer.html" -->
-        <!-- /footer content -->
+
+          <div class="row">
+            <div class="col-md-4">
+            </div>
+
+            <div class="col-md-4">
+            </div>
+
+            <div class="col-md-4">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6" id="response">
+            </div>
+          </div>
+        </div>
       </div>
+      <!-- /page content -->
+
+      <!-- footer content -->
+      <!--#include virtual="/5gcatalogue/templates/footer.html" -->
+      <!-- /footer content -->
     </div>
-    
-    <!--#include virtual="/5gcatalogue/templates/scripts_foot.html" -->
-    
-    <!-- CATALOGUE COUNTERS -->
-    <script>getAllNsdInfos("count-NSD",fillNSDsCounter,"response");</script>
-    
-  </body>
+  </div>
+
+  <!--#include virtual="/5gcatalogue/templates/scripts_foot.html" -->
+
+  <!-- CATALOGUE COUNTERS -->
+  <script>getAllNsdInfos("count-NSD", fillNSDsCounter, "response");</script>
+  <script>getAllVnfInfos("count-VNF", fillVNFsCounter, "response");</script>
+
+</body>
+
 </html>
