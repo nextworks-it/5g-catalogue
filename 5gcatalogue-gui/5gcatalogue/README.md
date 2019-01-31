@@ -23,7 +23,7 @@ Edit apache2.conf adding the following lines:
 </Directory>
 ```
 
-- NOTE: the path must point at the directory that includes also the WEB GUI template "gentelella", i.e. "catalogue-webui"
+- NOTE: the path must point at the directory that includes also the WEB GUI template "gentelella", i.e. "5gcatalogue-webui"
 
 ```
 $ cd /etc/apache2/sites-enabled/
