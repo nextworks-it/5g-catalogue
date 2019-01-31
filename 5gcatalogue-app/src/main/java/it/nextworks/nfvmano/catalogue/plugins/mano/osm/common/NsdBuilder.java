@@ -15,6 +15,7 @@
  */
 package it.nextworks.nfvmano.catalogue.plugins.mano.osm.common;
 
+import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.nsDescriptor.*;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
@@ -76,7 +77,7 @@ public class NsdBuilder {
                 );
     }
 
-    public void parseDescriptorTemplate(DescriptorTemplate template, List<DescriptorTemplate> vnfds) throws MalformattedElementException {
+    public void parseDescriptorTemplate(DescriptorTemplate template, List<DescriptorTemplate> vnfds, MANOType manoType) throws MalformattedElementException {
         dt = template;
 
         if (!(dt.getTopologyTemplate().getNSNodes().size() == 1)) {
@@ -154,18 +155,21 @@ public class NsdBuilder {
                 .collect(Collectors.toList());
 
         List<Nsd> nsds = new ArrayList<>();
-        nsds.add(
-                new Nsd()
-                        .setId(nsd.getProperties().getDescriptorId())
-                        .setName(nsd.getProperties().getName())
-                        .setShortName(nsd.getProperties().getName())
-                        .setDescription(dt.getDescription()) // TODO: this is not ideal.
-                        .setVendor(nsd.getProperties().getDesigner())
-                        .setVersion(nsd.getProperties().getVersion())
-                        .setLogo(defaultLogo.getName()) // TODO get logo?
-                        .setConstituentVnfd(constituentVnfds)
-                        .setVld(vlds)
-        );
+        Nsd osmNsd = new Nsd()
+                .setId(nsd.getProperties().getDescriptorId())
+                .setShortName(nsd.getProperties().getName())
+                .setDescription(dt.getDescription()) // TODO: this is not ideal.
+                .setVendor(nsd.getProperties().getDesigner())
+                .setVersion(nsd.getProperties().getVersion())
+                .setLogo(defaultLogo.getName()) // TODO get logo?
+                .setConstituentVnfd(constituentVnfds)
+                .setVld(vlds);
+        if (manoType == MANOType.OSMR3)
+            osmNsd.setName(nsd.getProperties().getDescriptorId());
+        else if (manoType == MANOType.OSMR4)
+            osmNsd.setName(nsd.getProperties().getName());
+        nsds.add(osmNsd);
+
         NsdCatalog nsdCatalog = new NsdCatalog().setNsd(nsds);
         osmPackage = new OsmNsdPackage().setNsdCatalog(nsdCatalog);
     }

@@ -2,6 +2,7 @@ package it.nextworks.nfvmano.catalogue.plugins.mano.osm.common;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.vnfDescriptor.*;
 import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
@@ -101,7 +102,7 @@ public class VnfdBuilder {
         return descriptors;
     }
 
-    public void parseDescriptorTemplate(DescriptorTemplate template) throws MalformattedElementException {
+    public void parseDescriptorTemplate(DescriptorTemplate template, MANOType manoType) throws MalformattedElementException {
         dt = template;
 
         if (!(dt.getTopologyTemplate().getVNFNodes().size() == 1)) {
@@ -137,8 +138,11 @@ public class VnfdBuilder {
         VNFNode vnfd = dt.getTopologyTemplate().getVNFNodes().values().iterator().next();
         List<VNFDescriptor> vnfds = new ArrayList<>();
         VNFDescriptor osmVnfd = new VNFDescriptor();
-        osmVnfd.setName(vnfd.getProperties().getProductName());
         osmVnfd.setId(vnfd.getProperties().getDescriptorId());
+        if (manoType == MANOType.OSMR3)
+            osmVnfd.setName(vnfd.getProperties().getDescriptorId());
+        else if (manoType == MANOType.OSMR4)
+            osmVnfd.setName(vnfd.getProperties().getProductName());
         osmVnfd.setShortName(vnfd.getProperties().getProductName());
         osmVnfd.setDescription(vnfd.getProperties().getProductInfoDescription());
         osmVnfd.setVendor(vnfd.getProperties().getProvider());

@@ -18,6 +18,7 @@ package it.nextworks.nfvmano.catalogue.plugins.mano.osm.common;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.OpenSourceMANOR3Plugin;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
@@ -74,7 +75,7 @@ public class NsdBuilderTest {
         List<DescriptorTemplate> vnfds = new ArrayList<>();
         vnfds.add(vnfd_dt);
 
-        nsdBuilder.parseDescriptorTemplate(dt, vnfds);
+        nsdBuilder.parseDescriptorTemplate(dt, vnfds, MANOType.OSMR4);
 
         ObjectMapper ymlMapper = new ObjectMapper(new YAMLFactory());
         ymlMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
@@ -106,7 +107,7 @@ public class NsdBuilderTest {
         List<DescriptorTemplate> vnfds = new ArrayList<>();
         vnfds.add(vnfd_dt);
 
-        nsdBuilder.parseDescriptorTemplate(dt, vnfds);
+        nsdBuilder.parseDescriptorTemplate(dt, vnfds, MANOType.OSMR4);
         File archive = archiveBuilder.makeNewArchive(nsdBuilder.getPackage(), "README CONTENT");
         System.out.println("NSD archive created in: " + archive.getAbsolutePath());
     }

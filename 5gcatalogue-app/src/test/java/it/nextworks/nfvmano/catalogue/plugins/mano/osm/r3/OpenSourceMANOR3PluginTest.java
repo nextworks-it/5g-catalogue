@@ -118,7 +118,7 @@ public class OpenSourceMANOR3PluginTest {
         List<DescriptorTemplate> vnfds = new ArrayList<>();
         vnfds.add(vnfd_dt);
 
-        nsdBuilder.parseDescriptorTemplate(dt, vnfds);
+        nsdBuilder.parseDescriptorTemplate(dt, vnfds, MANOType.OSMR3);
 
         OsmNsdPackage packageData = nsdBuilder.getPackage();
 
