@@ -29,7 +29,6 @@ public class VnfPkgDeletionNotificationMessage extends CatalogueMessage {
     private final String vnfPkgInfoId;
     private final String vnfdId;
 
-    @JsonIgnore
     private String vnfName;
 
     @JsonInclude(Include.NON_NULL)
@@ -77,6 +76,7 @@ public class VnfPkgDeletionNotificationMessage extends CatalogueMessage {
         return pluginId;
     }
 
+    @JsonProperty("vnfName")
     public String getVnfName() {
         return vnfName;
     }

@@ -95,7 +95,10 @@ public class NsdBuilder {
             String vnfdId = vnfNode.getValue().getProperties().getDescriptorId();
 
             for (DescriptorTemplate vnfd : vnfds) {
-                if (vnfdId.equalsIgnoreCase(vnfd.getTopologyTemplate().getVNFNodes().entrySet().iterator().next().getValue().getProperties().getDescriptorId())) {
+                String id = vnfd.getTopologyTemplate().getVNFNodes().entrySet().iterator().next().getValue().getProperties().getDescriptorId();
+                if (vnfdId.equalsIgnoreCase(id)) {
+                    log.debug("Matching vnfdId {} in NSD with vnfdId {} in VNFDs list", vnfdId, id);
+
                     ConstituentVnfd constituentVnfd = new ConstituentVnfd().setVnfdIdRef(vnfdId);
                     constituentVnfds.add(constituentVnfd);
 
@@ -141,6 +144,7 @@ public class NsdBuilder {
                 )
                 .collect(Collectors.toList());*/
         for (int i = 0; i < constituentVnfds.size(); i++) {
+            log.debug("Constituent VNFD: " + constituentVnfds.get(i).getVnfdIdRef());
             constituentVnfds.get(i).setMemberVnfIndex(i + 1);
         }
 
@@ -153,7 +157,7 @@ public class NsdBuilder {
         nsds.add(
                 new Nsd()
                         .setId(nsd.getProperties().getDescriptorId())
-                        .setName(nsd.getProperties().getDescriptorId())
+                        .setName(nsd.getProperties().getName())
                         .setShortName(nsd.getProperties().getName())
                         .setDescription(dt.getDescription()) // TODO: this is not ideal.
                         .setVendor(nsd.getProperties().getDesigner())
