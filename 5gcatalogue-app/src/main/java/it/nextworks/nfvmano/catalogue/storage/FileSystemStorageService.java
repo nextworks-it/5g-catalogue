@@ -237,7 +237,13 @@ public class FileSystemStorageService {
 
     public static Path loadCloudInit(String vnfdId, String version, String filename) {
         log.debug("Loading file " + filename + " for VNFD " + vnfdId);
-        Path location = Paths.get(vnfPkgsLocation + "/" + vnfdId + "/" + version + "/Files/Scripts");
+        Path location = Paths.get(vnfPkgsLocation + "/" + vnfdId + "/" + version);
+        return location.resolve(filename);
+    }
+
+    public static Path loadMf(String vnfdId, String version, String filename) {
+        log.debug("Loading file " + filename + " for VNFD " + vnfdId);
+        Path location = Paths.get(vnfPkgsLocation + "/" + vnfdId + "/" + version);
         return location.resolve(filename);
     }
 
@@ -293,6 +299,22 @@ public class FileSystemStorageService {
         log.debug("Searching file " + filename);
         try {
             Path file = loadCloudInit(vnfdId, version, filename);
+            Resource resource = new UrlResource(file.toUri());
+            if (resource.exists() || resource.isReadable()) {
+                log.debug("Found file " + filename);
+                return resource;
+            } else {
+                throw new NotExistingEntityException("Could not read file: " + filename);
+            }
+        } catch (MalformedURLException e) {
+            throw new NotExistingEntityException("Could not read file: " + filename, e);
+        }
+    }
+
+    public static Resource loadVnfPkgMfAsResource(String vnfdId, String version, String filename) throws NotExistingEntityException {
+        log.debug("Searching file " + filename);
+        try {
+            Path file = loadMf(vnfdId, version, filename);
             Resource resource = new UrlResource(file.toUri());
             if (resource.exists() || resource.isReadable()) {
                 log.debug("Found file " + filename);
