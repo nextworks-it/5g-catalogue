@@ -338,14 +338,14 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new MalformattedElementException("Error while parsing NSD.");
         }
 
-        String nsdFilename = null;
-        DescriptorTemplate dt = null;
-        UUID nsdId = null;
+        String nsdFilename;
+        DescriptorTemplate dt;
+        UUID nsdId;
 
         // pre-set nsdinfo attributes to properly store NSDs
         // UUID nsdId = UUID.randomUUID();
 
-        List<DescriptorTemplate> includedVnfds = new ArrayList<>();
+        List<String> includedVnfds;
 
         switch (contentType) {
             case ZIP: {
@@ -389,7 +389,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     throw new MalformattedElementException("Unable to onboard NSD because VNFDs info are missing or malformed: " + e.getMessage());
                 } catch (Exception e) {
                     log.error("Error while parsing NSD in zip format: " + e.getMessage());
-                    throw new MalformattedElementException("Error while parsing NSD.");
+                    throw new MalformattedElementException("Error while parsing NSD: " +  e.getMessage());
                 }
                 break;
             }
@@ -488,13 +488,13 @@ public class NsdManagementService implements NsdManagementInterface {
         log.debug("NSD content uploaded and nsdOnBoardingNotification delivered");
     }
 
-    public List<DescriptorTemplate> checkVNFPkgs(DescriptorTemplate nsd) throws NotExistingEntityException, MalformattedElementException, IOException {
+    public List<String> checkVNFPkgs(DescriptorTemplate nsd) throws NotExistingEntityException, MalformattedElementException, IOException, NotPermittedOperationException {
 
         log.debug("Checking VNF Pkgs availability for NSD " + nsd.getMetadata().getDescriptorId() + " with version " + nsd.getMetadata().getVersion());
 
         Map<String, VNFNode> vnfNodes = nsd.getTopologyTemplate().getVNFNodes();
         //Map<String, DescriptorTemplate> vnfds = new HashMap<>();
-        List<DescriptorTemplate> includedVnfds = new ArrayList<>();
+        List<String> includedVnfds = new ArrayList<>();
 
         for (Map.Entry<String, VNFNode> vnfNodeEntry : vnfNodes.entrySet()) {
 
@@ -502,7 +502,7 @@ public class NsdManagementService implements NsdManagementInterface {
             String version = vnfNodeEntry.getValue().getProperties().getDescriptorVersion();
 
             Optional<VnfPkgInfoResource> optional = vnfPkgInfoRepository.findByVnfdId(UUID.fromString(vnfdId));
-            VnfPkgInfoResource vnfPkgInfoResource = null;
+            VnfPkgInfoResource vnfPkgInfoResource;
             if (optional.isPresent()) {
                 vnfPkgInfoResource = optional.get();
             } else {
@@ -513,9 +513,18 @@ public class NsdManagementService implements NsdManagementInterface {
             log.debug("Searching VNFD {} with vnfdId {} and version {}", fileName, vnfdId, version);
             File vnfd_file = storageService.loadVnfdAsResource(vnfdId, version, fileName).getFile();
             DescriptorTemplate vnfd = DescriptorsParser.fileToDescriptorTemplate(vnfd_file);
+
+            log.debug("VNFD successfully parsed - its content is: \n"
+                    + DescriptorsParser.descriptorTemplateToString(vnfd));
+
+
             //vnfds.putIfAbsent(vnfd.getMetadata().getDescriptorId(), vnfd);
-            if (!includedVnfds.contains(vnfd)) {
-                includedVnfds.add(vnfd);
+            if (!includedVnfds.contains(vnfPkgInfoResource.getId().toString())) {
+                includedVnfds.add(vnfPkgInfoResource.getId().toString());
+            }
+
+            if (includedVnfds.isEmpty()) {
+                throw new NotPermittedOperationException("VNFDs listed in NSD are not available in Catalogue's storage");
             }
         }
 

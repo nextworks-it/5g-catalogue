@@ -139,6 +139,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                     log.debug("VNF Pkg {} locally removed. Sending vnfPkgDeletionNotificationMessage to bus.", vnfdId);
 
                     VnfPkgDeletionNotificationMessage msg = new VnfPkgDeletionNotificationMessage(vnfPkgInfoId, vnfdId.toString(), operationId, ScopeType.LOCAL, OperationStatus.SENT);
+                    msg.setVnfName(vnfPkgInfoResource.getVnfProductName());
                     notificationManager.sendVnfPkgDeletionNotification(msg);
                 }
 
@@ -368,6 +369,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         // send notification over kafka bus
         VnfPkgOnBoardingNotificationMessage msg =
                 new VnfPkgOnBoardingNotificationMessage(vnfPkgInfoId, vnfdId.toString(), operationId, ScopeType.LOCAL, OperationStatus.SENT);
+        msg.setCsarInfo(csarInfo);
         notificationManager.sendVnfPkgOnBoardingNotification(msg);
 
         log.debug("VNF Pkg content uploaded and vnfPkgOnBoardingNotification delivered");

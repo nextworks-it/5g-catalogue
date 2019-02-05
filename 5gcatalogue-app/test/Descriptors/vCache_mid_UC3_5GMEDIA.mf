@@ -1,0 +1,13 @@
+metadata:
+	vnf_product_name: vCache_mid_UC3_5GMEDIA
+	vnf_provider_id: NXW
+	vnf_package_version: 1.11
+	vnf_release_date_time: 2017-01-01T10:00+03:00
+
+monitoring:
+	main_monitoring_descriptor:
+		Source: Files/Monitoring/vcache_mid_monitoring.yaml
+
+configuration:
+	cloud_init:
+		Source: Files/Scripts/cloud-init.txt

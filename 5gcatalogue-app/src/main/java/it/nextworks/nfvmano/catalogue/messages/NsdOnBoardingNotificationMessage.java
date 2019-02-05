@@ -35,8 +35,7 @@ public class NsdOnBoardingNotificationMessage extends CatalogueMessage {
     @JsonInclude(Include.NON_NULL)
     private String pluginId;
 
-    @JsonIgnore
-    private List<DescriptorTemplate> includedVnfds = new ArrayList<>();
+    private List<String> includedVnfds = new ArrayList<>();
 
     @JsonCreator
     public NsdOnBoardingNotificationMessage(
@@ -81,11 +80,11 @@ public class NsdOnBoardingNotificationMessage extends CatalogueMessage {
         return pluginId;
     }
 
-    public List<DescriptorTemplate> getIncludedVnfds() {
+    public List<String> getIncludedVnfds() {
         return includedVnfds;
     }
 
-    public void setIncludedVnfds(List<DescriptorTemplate> includedVnfds) {
+    public void setIncludedVnfds(List<String> includedVnfds) {
         this.includedVnfds = includedVnfds;
     }
 }

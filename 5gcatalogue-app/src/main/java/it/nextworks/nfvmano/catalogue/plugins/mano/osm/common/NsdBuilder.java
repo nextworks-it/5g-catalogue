@@ -15,6 +15,7 @@
  */
 package it.nextworks.nfvmano.catalogue.plugins.mano.osm.common;
 
+import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.nsDescriptor.*;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
@@ -76,7 +77,7 @@ public class NsdBuilder {
                 );
     }
 
-    public void parseDescriptorTemplate(DescriptorTemplate template, List<DescriptorTemplate> vnfds) throws MalformattedElementException {
+    public void parseDescriptorTemplate(DescriptorTemplate template, List<DescriptorTemplate> vnfds, MANOType manoType) throws MalformattedElementException {
         dt = template;
 
         if (!(dt.getTopologyTemplate().getNSNodes().size() == 1)) {
@@ -95,7 +96,10 @@ public class NsdBuilder {
             String vnfdId = vnfNode.getValue().getProperties().getDescriptorId();
 
             for (DescriptorTemplate vnfd : vnfds) {
-                if (vnfdId.equalsIgnoreCase(vnfd.getTopologyTemplate().getVNFNodes().entrySet().iterator().next().getValue().getProperties().getDescriptorId())) {
+                String id = vnfd.getTopologyTemplate().getVNFNodes().entrySet().iterator().next().getValue().getProperties().getDescriptorId();
+                if (vnfdId.equalsIgnoreCase(id)) {
+                    log.debug("Matching vnfdId {} in NSD with vnfdId {} in VNFDs list", vnfdId, id);
+
                     ConstituentVnfd constituentVnfd = new ConstituentVnfd().setVnfdIdRef(vnfdId);
                     constituentVnfds.add(constituentVnfd);
 
@@ -141,6 +145,7 @@ public class NsdBuilder {
                 )
                 .collect(Collectors.toList());*/
         for (int i = 0; i < constituentVnfds.size(); i++) {
+            log.debug("Constituent VNFD: " + constituentVnfds.get(i).getVnfdIdRef());
             constituentVnfds.get(i).setMemberVnfIndex(i + 1);
         }
 
@@ -150,18 +155,21 @@ public class NsdBuilder {
                 .collect(Collectors.toList());
 
         List<Nsd> nsds = new ArrayList<>();
-        nsds.add(
-                new Nsd()
-                        .setId(nsd.getProperties().getDescriptorId())
-                        .setName(nsd.getProperties().getDescriptorId())
-                        .setShortName(nsd.getProperties().getName())
-                        .setDescription(dt.getDescription()) // TODO: this is not ideal.
-                        .setVendor(nsd.getProperties().getDesigner())
-                        .setVersion(nsd.getProperties().getVersion())
-                        .setLogo(defaultLogo.getName()) // TODO get logo?
-                        .setConstituentVnfd(constituentVnfds)
-                        .setVld(vlds)
-        );
+        Nsd osmNsd = new Nsd()
+                .setId(nsd.getProperties().getDescriptorId())
+                .setShortName(nsd.getProperties().getName())
+                .setDescription(dt.getDescription()) // TODO: this is not ideal.
+                .setVendor(nsd.getProperties().getDesigner())
+                .setVersion(nsd.getProperties().getVersion())
+                .setLogo(defaultLogo.getName()) // TODO get logo?
+                .setConstituentVnfd(constituentVnfds)
+                .setVld(vlds);
+        if (manoType == MANOType.OSMR3)
+            osmNsd.setName(nsd.getProperties().getDescriptorId());
+        else if (manoType == MANOType.OSMR4)
+            osmNsd.setName(nsd.getProperties().getName());
+        nsds.add(osmNsd);
+
         NsdCatalog nsdCatalog = new NsdCatalog().setNsd(nsds);
         osmPackage = new OsmNsdPackage().setNsdCatalog(nsdCatalog);
     }

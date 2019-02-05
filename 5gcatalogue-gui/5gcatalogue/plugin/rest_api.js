@@ -108,7 +108,7 @@ function postJsonToURL(resourceUrl, jsonData, callback, params) {
     }).fail(function (response) {
         console.log(response);
         if (callback == showResultMessage) {
-            callback(false, params[1]);
+            callback(false, params[0]);
         }
     });
 }
@@ -190,7 +190,6 @@ function putFileToURL(resourceUrl, file, callback, params) {
         data: file,
         cache: false,
         "contentType": false,
-        "Accept": application/json
         processData: false
     };
 
@@ -206,7 +205,7 @@ function putFileToURL(resourceUrl, file, callback, params) {
         console.log(response);
 
         if (callback == showResultMessage) {
-            callback(false, params[1]);
+            callback(true, params[0]);
         }
     });
 }

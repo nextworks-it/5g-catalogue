@@ -2,41 +2,40 @@ toscaDefinitionsVersion: tosca_simple_yaml_1_2
 description: vCache mid descriptor
 
 metadata:
-  descriptorId: e8d2567d-05f8-4a3a-9cee-4c4be7712504
+  descriptorId: af4178d5-8b5e-4b9f-a56a-61be55b6a201
   vendor: Nextworks
   version: "1.11"
 
 topologyTemplate:
-  
   substitutionMappings:
     nodeType: tosca.nodes.nfv.VNF
     requirements:
-      virtualLink: [{cp: cp-ens3, vl: vm_mgmt}, {cp: cp-ens7, vl: cache_net}, {cp: cp-ens6, vl: user_net}]
-  
+      virtualLink: [{cp: cp-ens3, vl: vm_mgmt}, {cp: cp-ens7, vl: origin_net}, {cp: cp-ens6, vl: cache_net}]
+
   nodeTemplates:
-    
+
     vCACHE_VNF:
       type: tosca.nodes.nfv.VNF
       properties:
-        descriptorId: e8d2567d-05f8-4a3a-9cee-4c4be7712504
+        descriptorId: af4178d5-8b5e-4b9f-a56a-61be55b6a201
         descriptorVersion: "1.11"
         provider: Nextworks
-        productName: vCache_edge_UC3_5GMEDIA
+        productName: vCache_mid_UC3_5GMEDIA
         softwareVersion: "1.11"
-        productInfoName: vCache_edge_UC3_5GMEDIA
-        productInfoDescription: vCache descriptor for EdgeCache
+        productInfoName: vCache_mid_UC3_5GMEDIA
+        productInfoDescription: vCache descriptor for MidCache
         vnfmInfo:
           - JuJu
         flavourId: simple
         flavourDescription: Simple deployment flavour
-    
+
     vCache_vdu:
       type: tosca.nodes.nfv.Vdu.Compute
       properties:
-        name: vCache_edge_vdu
+        name: vCache_mid_vdu
         vduProfile:
           minNumberOfInstances: 1
-          maxNumberOfInstances: 2
+          maxNumberOfInstances: 1
       capabilities:
         virtualCompute:
           properties:
@@ -46,7 +45,7 @@ topologyTemplate:
               numVirtualCpu: 4
       requirements:
         virtualStorage: [vCache_storage]
-    
+
     vCache_storage:
       type: tosca.nodes.nfv.Vdu.VirtualBlockStorage
       properties:
@@ -59,7 +58,7 @@ topologyTemplate:
           containerFormat: BARE
           diskFormat: QCOW2
           size: 2
-    
+
     cp-ens3:
       type: tosca.nodes.nfv.VnfExtCp
       properties:
@@ -69,23 +68,23 @@ topologyTemplate:
         description: mgmt interface
       requirements:
         externalVirtualLink: [vm_mgmt]
-    
+
     cp-ens7:
       type: tosca.nodes.nfv.VnfExtCp
       properties:
         protocol: [associatedLayerProtocol: IPV4]
         layerProtocols: [IPV4]
         role: LEAF
-        description: mid cache interface
+        description: origin interface
       requirements:
-        externalVirtualLink: [cache_net]
-    
+        externalVirtualLink: [origin_net]
+
     cp-ens6:
       type: tosca.nodes.nfv.VnfExtCp
       properties:
         protocol: [associatedLayerProtocol: IPV4]
         layerProtocols: [IPV4]
         role: LEAF
-        description: user interface
+        description: cache interface
       requirements:
-        externalVirtualLink: [user_net]
+        externalVirtualLink: [cache_net]
