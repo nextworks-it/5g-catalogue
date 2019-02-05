@@ -81,7 +81,7 @@ public class VnfdBuilder {
         osmVdu.setInterfaces(interfaces);
         osmVdu.setVmFlavor(new VMFlavor(vdu.getCapabilities().getVirtualCompute().getProperties().getVirtualCpu().getNumVirtualCpu(),
                                         vdu.getCapabilities().getVirtualCompute().getProperties().getVirtualMemory().getVirtualMemSize(),
-                                        requiredBlockStorage.getProperties().getSwImageData().getSize()));
+                                        requiredBlockStorage.getProperties().getVirtualBlockStorageData().getSizeOfStorage()));
         return osmVdu;
     }
 
