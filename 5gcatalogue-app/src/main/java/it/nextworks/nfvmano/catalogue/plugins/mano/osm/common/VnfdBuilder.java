@@ -37,6 +37,7 @@ public class VnfdBuilder {
         ConnectionPoint osmCp = new ConnectionPoint();
         osmCp.setName(cpName);
         osmCp.setType("VPORT");
+        osmCp.setPortSecurityEnabled(false);
         return osmCp;
     }
 
@@ -144,6 +145,8 @@ public class VnfdBuilder {
         osmVnfd.setLogo(defaultLogo.getName());//TODO add meaningful logo?
         osmVnfd.setConnectionPoints(osmCps);
         osmVnfd.setManagementInterface(osmMgmtInterface);
+        // Set cloud-init file
+        osmVdus.get(0).setCloudInitFile(vnfd.getInterfaces().getVnflcm().getInstantiate().getImplementation());
         osmVnfd.setVduList(osmVdus);
         osmVnfd.setScalingGroupDescriptor(scalingGroupDescriptors);
 
