@@ -38,16 +38,16 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
      */
     public OSMr4Client(String osmIPAddress, String user, String password, String project) {
 
-        HttpConnection.disableSslVerification();
+        OSMHttpConnection.disableSslVerification();
 
         this.osmIPAddress = osmIPAddress;
         this.user = user;
         this.password = password;
         this.project = project;
 
-        HttpResponse response = getAuthenticationToken();
+        OSMHttpResponse response = getAuthenticationToken();
         if (response.getCode() == HTTP_UNAUTHORIZED)
-                throw new OSMException(response.getContent());
+                throw new RuntimeException(response.getContent());
         ObjectMapper mapper = new ObjectMapper();
         try {
             validToken = mapper.readValue(response.getContent(), Token.class);
@@ -89,7 +89,7 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
 
         Double tokenExpireTime = new Double (validToken.getExpires());
         if(tokenExpireTime.longValue()*1000 < System.currentTimeMillis()) {
-            HttpResponse response = getAuthenticationToken();
+            OSMHttpResponse response = getAuthenticationToken();
             ObjectMapper mapper = new ObjectMapper();
             try {
                 validToken = mapper.readValue(response.getContent(), Token.class);
@@ -101,10 +101,10 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
 
     /**
      * Obtains Authentication Token
-     * @return HttpResponse containing a valid token
+     * @return OSMHttpResponse containing a valid token
      */
     @Override
-    public HttpResponse getAuthenticationToken(){
+    public OSMHttpResponse getAuthenticationToken(){
 
         List<Header> headers = new ArrayList<>();
         headers.add(new BasicHeader("Content-Type", "application/json"));
@@ -113,17 +113,17 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
         TokenRequest tokenReq = new TokenRequest(user, password, project);
 
         String url = "https://" + osmIPAddress + ":9999/osm" + osmManagement + "/tokens";
-        return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.GET, headers, tokenReq);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, tokenReq);
     }
 
     /* NSDManagementInterface */
 
     /**
      * Create a new NS descriptor resource
-     * @return HttpResponse containing the NS descriptor resource ID
+     * @return OSMHttpResponse containing the NS descriptor resource ID
      */
     @Override
-    public HttpResponse createNsd(){
+    public OSMHttpResponse createNsd(){
 
         verifyToken();
 
@@ -135,17 +135,17 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
         CreateNsdInfoRequest body = new CreateNsdInfoRequest();
 
         String url = "https://" + osmIPAddress + ":9999/osm" + nsdManagement + "/ns_descriptors";
-        return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.POST, headers, body);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.POST, headers, body);
     }
 
     /**
      * Upload the content of a NSD
      * @param nsdInfoId NS descriptor resource ID
      * @param content Zip file with the content
-     * @return HttpResponse containing the result of the request
+     * @return OSMHttpResponse containing the result of the request
      */
     @Override
-    public HttpResponse uploadNsdContent(String nsdInfoId, File content){
+    public OSMHttpResponse uploadNsdContent(String nsdInfoId, File content){
 
         verifyToken();
 
@@ -155,16 +155,16 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
         headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + nsdManagement + "/ns_descriptors/" + nsdInfoId + "/nsd_content";
-        return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.PUT, headers, content);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.PUT, headers, content);
     }
 
     /**
      * Obtains the NS descriptor resource
      * @param nsdInfoId NS descriptor resource ID
-     * @return HttpResponse containing the NS descriptor
+     * @return OSMHttpResponse containing the NS descriptor
      */
     @Override
-    public HttpResponse getNsd(String nsdInfoId){
+    public OSMHttpResponse getNsd(String nsdInfoId){
 
         verifyToken();
 
@@ -173,16 +173,16 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
         headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + nsdManagement + "/ns_descriptors/" + nsdInfoId + "/nsd";
-        return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.GET, headers, null);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null);
     }
 
     /**
      * Delete an individual NS descriptor resource
      * @param nsdInfoId NS descriptor resource ID
-     * @return HttpResponse containing the result of the request
+     * @return OSMHttpResponse containing the result of the request
      */
     @Override
-    public HttpResponse deleteNsd(String nsdInfoId) {
+    public OSMHttpResponse deleteNsd(String nsdInfoId) {
 
         verifyToken();
 
@@ -191,16 +191,16 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
         headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + nsdManagement + "/ns_descriptors/" + nsdInfoId;
-        return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.DELETE, headers, null);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.DELETE, headers, null);
     }
 
     /**
      * Fetch the content of a NSD
      * @param nsdInfoId NS descriptor resource ID
-     * @return HttpResponse containing the local path of the downloaded zip file
+     * @return OSMHttpResponse containing the local path of the downloaded zip file
      */
     @Override
-    public HttpResponse getNsdContent(String nsdInfoId){
+    public OSMHttpResponse getNsdContent(String nsdInfoId){
 
         verifyToken();
 
@@ -210,16 +210,16 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
 
         String url = "https://" + osmIPAddress + ":9999/osm" + nsdManagement + "/ns_descriptors/" + nsdInfoId + "/nsd_content";
 
-        return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.GET, headers, null);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null);
     }
 
     /**
      * Read information about an individual NS descriptor resource
      * @param nsdInfoId NS descriptor resource ID
-     * @return HttpResponse containing the information
+     * @return OSMHttpResponse containing the information
      */
     @Override
-    public HttpResponse getNsdInfo(String nsdInfoId){
+    public OSMHttpResponse getNsdInfo(String nsdInfoId){
 
         verifyToken();
 
@@ -228,15 +228,15 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
         headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + nsdManagement + "/ns_descriptors/" + nsdInfoId;
-        return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.GET, headers, null);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null);
     }
 
     /**
      * Query information about multiple NS descriptor resources
-     * @return HttpResponse containing the information
+     * @return OSMHttpResponse containing the information
      */
     @Override
-    public HttpResponse getNsdInfoList(){
+    public OSMHttpResponse getNsdInfoList(){
 
         verifyToken();
 
@@ -245,17 +245,17 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
         headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + nsdManagement + "/ns_descriptors";
-        return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.GET, headers, null);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null);
     }
 
     /* VNFDManagementInterface */
 
     /**
      * Create a new VNF package resource
-     * @return HttpResponse containing the VNF package resource ID
+     * @return OSMHttpResponse containing the VNF package resource ID
      */
     @Override
-    public HttpResponse createVnfPackage(){
+    public OSMHttpResponse createVnfPackage(){
 
         verifyToken();
 
@@ -267,17 +267,17 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
         CreateVnfPkgInfoRequest body = new CreateVnfPkgInfoRequest();
 
         String url = "https://" + osmIPAddress + ":9999/osm" + vnfdManagement + "/vnf_packages";
-        return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.POST, headers, body);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.POST, headers, body);
     }
 
     /**
      * Upload the content of a VNF package
      * @param vnfPkgId VNF package resource ID
      * @param content Zip file with the content
-     * @return HttpResponse containing the result of the request
+     * @return OSMHttpResponse containing the result of the request
      */
     @Override
-    public HttpResponse uploadVnfPackageContent(String vnfPkgId, File content){
+    public OSMHttpResponse uploadVnfPackageContent(String vnfPkgId, File content){
 
         verifyToken();
 
@@ -287,16 +287,16 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
         headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + vnfdManagement + "/vnf_packages/" + vnfPkgId + "/package_content";
-        return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.PUT, headers, content);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.PUT, headers, content);
     }
 
     /**
      * Obtains the VNF descriptor resource
      * @param vnfPkgId NS descriptor resource ID
-     * @return HttpResponse containing the VNF descriptor
+     * @return OSMHttpResponse containing the VNF descriptor
      */
     @Override
-    public HttpResponse getVnfd(String vnfPkgId){
+    public OSMHttpResponse getVnfd(String vnfPkgId){
 
         verifyToken();
 
@@ -305,16 +305,16 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
         headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + vnfdManagement + "/vnf_packages/" + vnfPkgId + "/vnfd";
-        return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.GET, headers, null);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null);
     }
 
     /**
      * Delete an individual VNF package resource
      * @param vnfPkgId VNF package resource ID
-     * @return HttpResponse containing the result of the request
+     * @return OSMHttpResponse containing the result of the request
      */
     @Override
-    public HttpResponse deleteVnfPackage(String vnfPkgId){
+    public OSMHttpResponse deleteVnfPackage(String vnfPkgId){
 
         verifyToken();
 
@@ -323,16 +323,16 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
         headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + vnfdManagement + "/vnf_packages/" + vnfPkgId;
-        return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.DELETE, headers, null);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.DELETE, headers, null);
     }
 
     /**
      * Fetch an on-boarded VNF package
      * @param vnfPkgId VNF package resource ID
-     * @return HttpResponse containing the local path of the downloaded zip file
+     * @return OSMHttpResponse containing the local path of the downloaded zip file
      */
     @Override
-    public HttpResponse getVnfPackageContent(String vnfPkgId){
+    public OSMHttpResponse getVnfPackageContent(String vnfPkgId){
 
         verifyToken();
 
@@ -342,16 +342,16 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
 
         String url = "https://" + osmIPAddress + ":9999/osm" + vnfdManagement + "/vnf_packages/" + vnfPkgId + "/package_content";
 
-        return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.GET, headers, null);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null);
     }
 
     /**
      * Read information about an individual VNF package resource
      * @param vnfPkgId VNF package resource ID
-     * @return HttpResponse containing the information
+     * @return OSMHttpResponse containing the information
      */
     @Override
-    public HttpResponse getVnfPackageInfo(String vnfPkgId){
+    public OSMHttpResponse getVnfPackageInfo(String vnfPkgId){
 
         verifyToken();
 
@@ -360,15 +360,15 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
         headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + vnfdManagement + "/vnf_packages/" + vnfPkgId;
-        return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.GET, headers, null);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null);
     }
 
     /**
      * Query information about multiple VNF package resources
-     * @return HttpResponse containing the information
+     * @return OSMHttpResponse containing the information
      */
     @Override
-    public HttpResponse getVnfPackageList(){
+    public OSMHttpResponse getVnfPackageList(){
 
         verifyToken();
 
@@ -377,7 +377,7 @@ public class OSMr4Client implements OSMManagementInterface, NSDManagementInterfa
         headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + vnfdManagement + "/vnf_packages";
-        return HttpConnection.establishHTTPConnection(url, HttpConnection.HttpMethod.GET, headers, null);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null);
     }
 }
 

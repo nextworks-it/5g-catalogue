@@ -1,7 +1,5 @@
 package it.nextworks.nfvmano.catalogue.plugins.mano.osm.common;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.vnfDescriptor.*;
 import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
