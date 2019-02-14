@@ -1,7 +1,5 @@
 package it.nextworks.nfvmano.catalogue.plugins.mano.osm.common;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.vnfDescriptor.*;
 import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
@@ -40,6 +38,7 @@ public class VnfdBuilder {
         ConnectionPoint osmCp = new ConnectionPoint();
         osmCp.setName(cpName);
         osmCp.setType("VPORT");
+        osmCp.setPortSecurityEnabled(false);
         return osmCp;
     }
 
@@ -80,15 +79,15 @@ public class VnfdBuilder {
         osmVdu.setInterfaces(interfaces);
         osmVdu.setVmFlavor(new VMFlavor(vdu.getCapabilities().getVirtualCompute().getProperties().getVirtualCpu().getNumVirtualCpu(),
                                         vdu.getCapabilities().getVirtualCompute().getProperties().getVirtualMemory().getVirtualMemSize(),
-                                        requiredBlockStorage.getProperties().getSwImageData().getSize()));
+                                        requiredBlockStorage.getProperties().getVirtualBlockStorageData().getSizeOfStorage()));
         return osmVdu;
     }
 
     private List<ScalingGroupDescriptor> makeScalingGroupDescriptor(VDUComputeNode vdu){
         List<ScalingGroupDescriptor> descriptors = new ArrayList<>();
         ScalingGroupDescriptor scalingByOne = new ScalingGroupDescriptor();
-        scalingByOne.setMinInstanceCount(vdu.getProperties().getVduProfile().getMinNumberOfInstances());
-        scalingByOne.setMaxInstanceCount(vdu.getProperties().getVduProfile().getMaxNumberOfInstances());
+        scalingByOne.setMinInstanceCount(vdu.getProperties().getVduProfile().getMinNumberOfInstances() - 1);
+        scalingByOne.setMaxInstanceCount(vdu.getProperties().getVduProfile().getMaxNumberOfInstances() - 1);
         scalingByOne.setName("scale_by_one");
         List<ScalingPolicy> scalingPolicies = new ArrayList<>();
         ScalingPolicy scalingPolicy = new ScalingPolicy("manual_scale", "manual");
@@ -150,6 +149,8 @@ public class VnfdBuilder {
         osmVnfd.setLogo(defaultLogo.getName());//TODO add meaningful logo?
         osmVnfd.setConnectionPoints(osmCps);
         osmVnfd.setManagementInterface(osmMgmtInterface);
+        // Set cloud-init file
+        osmVdus.get(0).setCloudInitFile(vnfd.getInterfaces().getVnflcm().getInstantiate().getImplementation());
         osmVnfd.setVduList(osmVdus);
         osmVnfd.setScalingGroupDescriptor(scalingGroupDescriptors);
 

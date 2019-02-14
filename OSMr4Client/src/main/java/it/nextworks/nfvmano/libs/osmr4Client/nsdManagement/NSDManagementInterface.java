@@ -1,16 +1,16 @@
 package it.nextworks.nfvmano.libs.osmr4Client.nsdManagement;
 
-import it.nextworks.nfvmano.libs.osmr4Client.utilities.HttpResponse;
+import it.nextworks.nfvmano.libs.osmr4Client.utilities.OSMHttpResponse;
 
 import java.io.File;
 
 public interface NSDManagementInterface {
 
-    HttpResponse createNsd();
-    HttpResponse uploadNsdContent(String nsdInfoId, File content);
-    HttpResponse getNsd(String nsdInfoId);
-    HttpResponse getNsdInfo(String nsdInfoId);
-    HttpResponse deleteNsd(String nsdInfoId);
-    HttpResponse getNsdContent(String nsdInfoId);
-    HttpResponse getNsdInfoList();
+    OSMHttpResponse createNsd();
+    OSMHttpResponse uploadNsdContent(String nsdInfoId, File content);
+    OSMHttpResponse getNsd(String nsdInfoId);
+    OSMHttpResponse getNsdInfo(String nsdInfoId);
+    OSMHttpResponse deleteNsd(String nsdInfoId);
+    OSMHttpResponse getNsdContent(String nsdInfoId);
+    OSMHttpResponse getNsdInfoList();
 }

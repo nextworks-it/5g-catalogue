@@ -9,27 +9,21 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
-public class HttpConnection {
+public class OSMHttpConnection {
 
     /**
-     * HTTP methods
+     * OSM HTTP methods
      */
-    public enum HttpMethod {
+    public enum OSMHttpMethod {
 
         GET("GET"), POST("POST"), DELETE("DELETE"), PUT("PUT");
 
         private String method;
 
-        HttpMethod(String method)
-        {
-            this.method = method;
-        }
+        OSMHttpMethod(String method) { this.method = method; }
 
         @Override
-        public String toString()
-        {
-            return method;
-        }
+        public String toString() { return method; }
     }
 
     /**
@@ -40,11 +34,11 @@ public class HttpConnection {
      * @param body HTTP body
      * @return HttpResponse message
      */
-    public static HttpResponse establishHTTPConnection(String url, HttpMethod method, List<Header> headers, Object body) {
+    public static OSMHttpResponse establishOSMHttpConnection(String url, OSMHttpMethod method, List<Header> headers, Object body) {
 
         URL url_;
         HttpURLConnection conn = null;
-        HttpResponse response;
+        OSMHttpResponse response;
         ObjectMapper mapper = new ObjectMapper();
 
         try {
@@ -81,15 +75,11 @@ public class HttpConnection {
                 // Close the streams
                 out.close();
             }
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (ProtocolException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        response = HttpResponse.getResponseFromHTTPConnection(conn);
+        response = OSMHttpResponse.getResponseFromOSMHttpConnection(conn);
         return response;
     }
 
