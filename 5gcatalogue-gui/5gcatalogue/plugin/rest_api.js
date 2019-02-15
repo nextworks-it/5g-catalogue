@@ -46,7 +46,7 @@ function getFileFromURL(resourceUrl, callback, params) {
     };
 
     $.ajax(settings).done(function (response) {
-        //console.log(response);
+        console.log(response);
         callback(response, params);
     }).fail(function (response) {
         console.log(response);
@@ -79,7 +79,6 @@ function getFromURLWithAuth(resourceUrl, callback, params) {
                 location.href = '../403.html';
             }
         });
-
     }
 }
 
@@ -99,7 +98,6 @@ function postJsonToURL(resourceUrl, jsonData, callback, params) {
 
     $.ajax(settings).done(function (response) {
         console.log(response);
-
         if (callback == showResultMessage) {
             callback(true, params[0]);
         } else {
@@ -108,7 +106,9 @@ function postJsonToURL(resourceUrl, jsonData, callback, params) {
     }).fail(function (response) {
         console.log(response);
         if (callback == showResultMessage) {
-            callback(false, params[0]);
+            var errorMsg = "Status code: " + response.responseJSON.status;
+            errorMsg +=  " Reason: " + response.responseJSON.detail;
+            callback(false, errorMsg);
         }
     });
 }
@@ -118,7 +118,6 @@ function postToURLWithAuth(resourceUrl, callback, params) {
     if (!checkUser('username')) {
         redirectToError('401');
     } else {
-
         var settings = {
             "async": true,
             "crossDomain": true,
@@ -195,7 +194,6 @@ function putFileToURL(resourceUrl, file, callback, params) {
 
     $.ajax(settings).done(function (response) {
         console.log(response);
-
         if (callback == showResultMessage) {
             callback(true, params[0]);
         } else {
@@ -203,9 +201,10 @@ function putFileToURL(resourceUrl, file, callback, params) {
         }
     }).fail(function (response) {
         console.log(response);
-
         if (callback == showResultMessage) {
-            callback(true, params[0]);
+            var errorMsg = "Status code: " + response.responseJSON.status;
+            errorMsg +=  " Reason: " + response.responseJSON.detail;
+            callback(false, errorMsg);
         }
     });
 }
@@ -252,12 +251,18 @@ function deleteRequestToURL(resourceUrl, callback, params) {
 
     $.ajax(settings).done(function (response) {
         console.log(response);
-        callback(true, params[0]);
+        if (callback == showResultMessage) {
+            callback(true, params[0]);
+        } else {
+            callback(response, params);
+        }
     }).fail(function (response) {
         console.log(response);
-      	var errorMsg = "Status code: " + response.responseJSON.status;
-      	errorMsg +=  " Reason: " + response.responseJSON.detail;
-      	callback(false, errorMsg);
+        if (callback == showResultMessage) {
+            var errorMsg = "Status code: " + response.responseJSON.status;
+            errorMsg +=  " Reason: " + response.responseJSON.detail;
+            callback(false, errorMsg);
+        }
     });
 }
 
@@ -277,8 +282,17 @@ function patchJsonRequestToURL(resourceUrl, jsonData, callback, params) {
 
     $.ajax(settings).done(function (response) {
         console.log(response);
-        callback(true, params[0]);
+        if (callback == showResultMessage) {
+            callback(true, params[0]);
+        } else {
+            callback(response, params);
+        }
     }).fail(function (response) {
         console.log(response);
+        if (callback == showResultMessage) {
+            var errorMsg = "Status code: " + response.responseJSON.status;
+            errorMsg +=  " Reason: " + response.responseJSON.detail;
+            callback(false, errorMsg);
+        }
     });
 }

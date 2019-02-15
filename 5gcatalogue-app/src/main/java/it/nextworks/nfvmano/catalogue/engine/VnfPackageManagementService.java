@@ -161,8 +161,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         log.debug("Processing request to update VNF Pkg info: " + vnfPkgInfoId);
         VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
 
-        if (vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.ONBOARDED
-                || vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.PROCESSING) {
+        if (vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.ONBOARDED) {
             if (vnfPkgInfoModifications.getOperationalState() != null) {
                 if (vnfPkgInfoResource.getOperationalState() == vnfPkgInfoModifications.getOperationalState()) {
                     log.error("VNF Pkg operational state already "

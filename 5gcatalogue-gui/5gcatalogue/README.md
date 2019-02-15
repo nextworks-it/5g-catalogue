@@ -16,7 +16,7 @@ $ cd /etc/apache2/
 Edit apache2.conf adding the following lines:
 
 ```
-<Directory <path_to_web_gui_repo>/5gcatalogue-gui>
+<Directory <path_to_web_gui_repo>/catalogue-webgui>
         Options Indexes FollowSymLinks Includes
         AllowOverride None
         Require all granted
@@ -32,7 +32,7 @@ $ cd /etc/apache2/sites-enabled/
 Edit 000-default.conf:
 
 ```
-DocumentRoot <path_to_web_gui_repo>/5gcatalogue-gui
+DocumentRoot <path_to_web_gui_repo>/catalogue-webgui
 ```
 
 ```

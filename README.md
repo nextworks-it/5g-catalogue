@@ -69,7 +69,7 @@ For the versions available, see tags on this repository.
 
 ## Authors
 
-* **Francesca Moscatelli**, **Giacomo Bernini**, **Giada Landi**, **Marco Capitani** - [Nextworks S.r.l.](http://www.nextworks.it)
+* **Francesca Moscatelli**, **Giacomo Bernini**, **Giada Landi**, **Marco Capitani**, **Leonardo Agueci** - [Nextworks S.r.l.](http://www.nextworks.it)
 
 ## License
 

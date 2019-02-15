@@ -134,7 +134,6 @@ public class NsdManagementService implements NsdManagementInterface {
 
         if (nsdInfoId == null)
             throw new MalformattedElementException("Invalid NSD info ID.");
-
         try {
             UUID id = UUID.fromString(nsdInfoId);
 
@@ -145,6 +144,26 @@ public class NsdManagementService implements NsdManagementInterface {
 
                 NsdInfoResource nsdInfo = optional.get();
                 nsdInfo.isDeletable();
+
+                List<UUID> vnfPkgInfoIds = nsdInfo.getVnfPkgIds();
+
+                for (UUID vnfPkgInfoId : vnfPkgInfoIds) {
+                    Optional<VnfPkgInfoResource> vnfPkgOptional = vnfPkgInfoRepository.findById(vnfPkgInfoId);
+
+                    if (vnfPkgOptional.isPresent()) {
+                        log.debug("Found vnfd with info Id {} while deleting nsd with info Id {}", vnfPkgInfoId, nsdInfoId);
+                        VnfPkgInfoResource vnfPkgInfoResource = vnfPkgOptional.get();
+                        List<String> parentNsds = vnfPkgInfoResource.getParentNsds();
+                        for (Iterator<String> iter = parentNsds.listIterator(); iter.hasNext();) {
+                            String nsdId = iter.next();
+                            if (nsdId.equalsIgnoreCase(nsdInfo.getNsdId().toString())) {
+                                iter.remove();
+                            }
+                        }
+                        vnfPkgInfoResource.setParentNsds(parentNsds);
+                        vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
+                    }
+                }
 
                 log.debug("The NSD info can be removed.");
                 if (nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.ONBOARDED) {
@@ -463,6 +482,14 @@ public class NsdManagementService implements NsdManagementInterface {
         nsdInfo.setContentType(contentType);
         nsdInfo.addNsdFilename(nsdFilename);
 
+        List<UUID> vnfPkgIds = new ArrayList<>();
+        for (String vnfdInfoId : includedVnfds) {
+            log.debug("Adding vnfPkgInfo Id {} to vnfPkgs list in nsdInfo", vnfdInfoId);
+            log.debug("Adding vnfPkgInfo Id {} to vnfPkgs list in nsdInfo", vnfdInfoId);
+            vnfPkgIds.add(UUID.fromString(vnfdInfoId));
+        }
+        nsdInfo.setVnfPkgIds(vnfPkgIds);
+
         // clean tmp files
         if (!inputFile.delete()) {
             log.warn("Could not delete temporary NSD content file");
@@ -496,6 +523,8 @@ public class NsdManagementService implements NsdManagementInterface {
         //Map<String, DescriptorTemplate> vnfds = new HashMap<>();
         List<String> includedVnfds = new ArrayList<>();
 
+        List<VnfPkgInfoResource> vnfPkgInfoResources = new ArrayList<>();
+
         for (Map.Entry<String, VNFNode> vnfNodeEntry : vnfNodes.entrySet()) {
 
             String vnfdId = vnfNodeEntry.getValue().getProperties().getDescriptorId();
@@ -517,10 +546,9 @@ public class NsdManagementService implements NsdManagementInterface {
             log.debug("VNFD successfully parsed - its content is: \n"
                     + DescriptorsParser.descriptorTemplateToString(vnfd));
 
-
-            //vnfds.putIfAbsent(vnfd.getMetadata().getDescriptorId(), vnfd);
             if (!includedVnfds.contains(vnfPkgInfoResource.getId().toString())) {
                 includedVnfds.add(vnfPkgInfoResource.getId().toString());
+                vnfPkgInfoResources.add(vnfPkgInfoResource);
             }
 
             if (includedVnfds.isEmpty()) {
@@ -528,8 +556,14 @@ public class NsdManagementService implements NsdManagementInterface {
             }
         }
 
-        return includedVnfds;
+        for (VnfPkgInfoResource resource : vnfPkgInfoResources) {
+            List<String> parentNsds = resource.getParentNsds();
+            parentNsds.add(nsd.getMetadata().getDescriptorId());
+            resource.setParentNsds(parentNsds);
+            vnfPkgInfoRepository.saveAndFlush(resource);
+        }
 
+        return includedVnfds;
     }
 
     public synchronized void updateNsdInfoOperationStatus(String nsdInfoId, String manoId, OperationStatus opStatus,
