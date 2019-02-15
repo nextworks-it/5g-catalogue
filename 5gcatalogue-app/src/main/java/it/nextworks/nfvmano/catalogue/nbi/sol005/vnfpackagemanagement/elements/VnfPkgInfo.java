@@ -18,13 +18,11 @@ package it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboardingStateType;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * VnfPkgInfo
@@ -76,6 +74,9 @@ public class VnfPkgInfo {
 
     @JsonProperty("_links")
     private VnfPkgLinksType links = null;
+
+    @JsonProperty("manosOnboardingStatus")
+    private Map<String, PackageOnboardingStateType> manoIdToOnboardingStatus = new HashMap<>();
 
     public VnfPkgInfo id(UUID id) {
         this.id = id;
@@ -396,6 +397,13 @@ public class VnfPkgInfo {
         this.links = links;
     }
 
+    public Map<String, PackageOnboardingStateType> getManoIdToOnboardingStatus() {
+        return manoIdToOnboardingStatus;
+    }
+
+    public void setManoIdToOnboardingStatus(Map<String, PackageOnboardingStateType> manoIdToOnboardingStatus) {
+        this.manoIdToOnboardingStatus = manoIdToOnboardingStatus;
+    }
 
     @Override
     public boolean equals(java.lang.Object o) {

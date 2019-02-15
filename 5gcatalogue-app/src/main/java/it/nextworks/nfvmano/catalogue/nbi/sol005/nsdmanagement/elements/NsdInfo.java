@@ -22,10 +22,7 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * This type represents a response for the query NSD operation.
@@ -82,6 +79,9 @@ public class NsdInfo {
 
     @JsonProperty("_links")
     private NsdLinksType links = null;
+
+    @JsonProperty("manosOnboardingStatus")
+    private Map<String, NsdOnboardingStateType> manoIdToOnboardingStatus = new HashMap<>();
 
     public NsdInfo id(UUID id) {
         this.id = id;
@@ -436,6 +436,14 @@ public class NsdInfo {
 
     public void setLinks(NsdLinksType links) {
         this.links = links;
+    }
+
+    public Map<String, NsdOnboardingStateType> getManoIdToOnboardingStatus() {
+        return manoIdToOnboardingStatus;
+    }
+
+    public void setManoIdToOnboardingStatus(Map<String, NsdOnboardingStateType> manoIdToOnboardingStatus) {
+        this.manoIdToOnboardingStatus = manoIdToOnboardingStatus;
     }
 
     @Override

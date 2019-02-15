@@ -11,6 +11,7 @@ import it.nextworks.nfvmano.catalogue.messages.ScopeType;
 import it.nextworks.nfvmano.catalogue.messages.VnfPkgDeletionNotificationMessage;
 import it.nextworks.nfvmano.catalogue.messages.VnfPkgOnBoardingNotificationMessage;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboardingStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.*;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANORepository;
@@ -395,6 +396,33 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         vnfPkgInfo.setVnfProductName(vnfPkgInfoResource.getVnfProductName());
         vnfPkgInfo.setVnfProvider(vnfPkgInfoResource.getVnfProvider());
         vnfPkgInfo.setVnfSoftwareVersion(vnfPkgInfoResource.getVnfSoftwareVersion());
+
+        Map<String, NotificationResource> acksMap = vnfPkgInfoResource.getAcknowledgedOnboardOpConsumers();
+        Map<String, PackageOnboardingStateType> manoIdToOnboardingStatus = new HashMap<>();
+        for (Map.Entry<String, NotificationResource> entry : acksMap.entrySet()) {
+            if (entry.getValue().getOperation() == CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION) {
+                PackageOnboardingStateType pkgOnboardingStateType = PackageOnboardingStateType.UPLOADING;
+                switch (entry.getValue().getOpStatus()){
+                    case SENT:
+                        pkgOnboardingStateType = PackageOnboardingStateType.UPLOADING;
+                        break;
+                    case RECEIVED:
+                        pkgOnboardingStateType = PackageOnboardingStateType.PROCESSING;
+                        break;
+                    case PROCESSING:
+                        pkgOnboardingStateType = PackageOnboardingStateType.PROCESSING;
+                        break;
+                    case FAILED:
+                        pkgOnboardingStateType = PackageOnboardingStateType.FAILED;
+                        break;
+                    case SUCCESSFULLY_DONE:
+                        pkgOnboardingStateType = PackageOnboardingStateType.ONBOARDED;
+                }
+                manoIdToOnboardingStatus.putIfAbsent(entry.getKey(), pkgOnboardingStateType);
+            }
+        }
+
+        vnfPkgInfo.setManoIdToOnboardingStatus(manoIdToOnboardingStatus);
         return vnfPkgInfo;
     }
 

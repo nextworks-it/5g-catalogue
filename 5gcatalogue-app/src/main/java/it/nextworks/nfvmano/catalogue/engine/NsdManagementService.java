@@ -365,6 +365,7 @@ public class NsdManagementService implements NsdManagementInterface {
         // UUID nsdId = UUID.randomUUID();
 
         List<String> includedVnfds;
+        NsdOnboardingStateType onboardingStateType = NsdOnboardingStateType.UPLOADING;
 
         switch (contentType) {
             case ZIP: {
@@ -401,12 +402,24 @@ public class NsdManagementService implements NsdManagementInterface {
                     }
                 } catch (IOException e) {
                     log.error("Error while parsing NSD in zip format: " + e.getMessage());
+                    onboardingStateType = NsdOnboardingStateType.FAILED;
+                    nsdInfo.setNsdOnboardingState(onboardingStateType);
+                    nsdInfoRepo.saveAndFlush(nsdInfo);
                     throw new MalformattedElementException("Error while parsing NSD.");
                 } catch (NotExistingEntityException e) {
+                    onboardingStateType = NsdOnboardingStateType.FAILED;
+                    nsdInfo.setNsdOnboardingState(onboardingStateType);
+                    nsdInfoRepo.saveAndFlush(nsdInfo);
                     throw new NotPermittedOperationException("Unable to onboard NSD because one or more related VNF Pkgs are missing in local storage: " + e.getMessage());
                 } catch (MalformattedElementException e) {
+                    onboardingStateType = NsdOnboardingStateType.FAILED;
+                    nsdInfo.setNsdOnboardingState(onboardingStateType);
+                    nsdInfoRepo.saveAndFlush(nsdInfo);
                     throw new MalformattedElementException("Unable to onboard NSD because VNFDs info are missing or malformed: " + e.getMessage());
                 } catch (Exception e) {
+                    onboardingStateType = NsdOnboardingStateType.FAILED;
+                    nsdInfo.setNsdOnboardingState(onboardingStateType);
+                    nsdInfoRepo.saveAndFlush(nsdInfo);
                     log.error("Error while parsing NSD in zip format: " + e.getMessage());
                     throw new MalformattedElementException("Error while parsing NSD: " +  e.getMessage());
                 }
@@ -434,10 +447,19 @@ public class NsdManagementService implements NsdManagementInterface {
 
                 } catch (IOException e) {
                     log.error("Error while parsing NSD in yaml format: " + e.getMessage());
+                    onboardingStateType = NsdOnboardingStateType.FAILED;
+                    nsdInfo.setNsdOnboardingState(onboardingStateType);
+                    nsdInfoRepo.saveAndFlush(nsdInfo);
                     throw new MalformattedElementException("Error while parsing NSD.");
                 } catch (NotExistingEntityException e) {
+                    onboardingStateType = NsdOnboardingStateType.FAILED;
+                    nsdInfo.setNsdOnboardingState(onboardingStateType);
+                    nsdInfoRepo.saveAndFlush(nsdInfo);
                     throw new NotPermittedOperationException("Unable to onboard NSD because one or more related VNF Pkgs are missing in local storage: " + e.getMessage());
                 } catch (MalformattedElementException e) {
+                    onboardingStateType = NsdOnboardingStateType.FAILED;
+                    nsdInfo.setNsdOnboardingState(onboardingStateType);
+                    nsdInfoRepo.saveAndFlush(nsdInfo);
                     throw new MalformattedElementException("Unable to onboard NSD because VNFDs info are missing or malformed: " + e.getMessage());
                 }
                 break;
@@ -445,11 +467,17 @@ public class NsdManagementService implements NsdManagementInterface {
 
             default: {
                 log.error("Unsupported content type: " + contentType.toString());
+                onboardingStateType = NsdOnboardingStateType.FAILED;
+                nsdInfo.setNsdOnboardingState(onboardingStateType);
+                nsdInfoRepo.saveAndFlush(nsdInfo);
                 throw new MethodNotImplementedException("Unsupported content type: " + contentType.toString());
             }
         }
 
         if (nsdFilename == null || dt == null) {
+            onboardingStateType = NsdOnboardingStateType.FAILED;
+            nsdInfo.setNsdOnboardingState(onboardingStateType);
+            nsdInfoRepo.saveAndFlush(nsdInfo);
             throw new FailedOperationException("Invalid internal structures");
         }
 
@@ -457,7 +485,7 @@ public class NsdManagementService implements NsdManagementInterface {
         // nsdInfo.setNsdId(nsdId);
         // TODO: here it is actually onboarded only locally and just in the DB. To be
         // updated when we will implement also the package uploading
-        nsdInfo.setNsdOnboardingState(NsdOnboardingStateType.PROCESSING);
+        nsdInfo.setNsdOnboardingState(NsdOnboardingStateType.LOCAL_ONBOARDED);
         nsdInfo.setNsdOperationalState(NsdOperationalStateType.ENABLED);
         nsdInfo.setNsdDesigner(dt.getMetadata().getVendor());
         nsdInfo.setNsdInvariantId(UUID.fromString(dt.getMetadata().getDescriptorId()));
@@ -646,6 +674,34 @@ public class NsdManagementService implements NsdManagementInterface {
         kvp.putAll(nsdInfoResource.getUserDefinedData());
         nsdInfo.setUserDefinedData(kvp);
         nsdInfo.setVnfPkgIds(nsdInfoResource.getVnfPkgIds());
+
+        Map<String, NotificationResource> acksMap = nsdInfoResource.getAcknowledgedOnboardOpConsumers();
+        Map<String, NsdOnboardingStateType> manoIdToOnboardingStatus = new HashMap<>();
+        for (Entry<String, NotificationResource> entry : acksMap.entrySet()) {
+            if (entry.getValue().getOperation() == CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION) {
+                NsdOnboardingStateType nsdOnboardingStateType = NsdOnboardingStateType.UPLOADING;
+                switch (entry.getValue().getOpStatus()){
+                    case SENT:
+                        nsdOnboardingStateType = NsdOnboardingStateType.UPLOADING;
+                        break;
+                    case RECEIVED:
+                        nsdOnboardingStateType = NsdOnboardingStateType.PROCESSING;
+                        break;
+                    case PROCESSING:
+                        nsdOnboardingStateType = NsdOnboardingStateType.PROCESSING;
+                        break;
+                    case FAILED:
+                        nsdOnboardingStateType = NsdOnboardingStateType.FAILED;
+                        break;
+                    case SUCCESSFULLY_DONE:
+                        nsdOnboardingStateType = NsdOnboardingStateType.ONBOARDED;
+                }
+                manoIdToOnboardingStatus.putIfAbsent(entry.getKey(), nsdOnboardingStateType);
+            }
+        }
+
+        nsdInfo.setManoIdToOnboardingStatus(manoIdToOnboardingStatus);
+
         return nsdInfo;
     }
 

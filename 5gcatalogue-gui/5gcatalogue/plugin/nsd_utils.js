@@ -63,7 +63,7 @@ function createNsdInfoId(file, resId) {
 }
 
 function uploadNsdContent(data, params) {
-    console.log(JSON.stringify(data, null, 4));
+    //console.log(JSON.stringify(data, null, 4));
 
     var formData = new FormData();
     formData.append("file", params[0]);
@@ -132,10 +132,10 @@ function createNsdInfosTable(data, params) {
         return;
     }
     var btnFlag = true;
-    var header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Operational State', 'Onboarding State','Actions'], btnFlag, false);
+    var header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Operational State', 'Onboarding State', 'MANOs Onboarding State', 'Actions'], btnFlag, false);
     var cbacks = ['openNSD_', 'showNsdGraphCanvas', 'updateNsdInfo_', 'deleteNsdInfo'];
     var names = ['View NSD', 'View NSD Graph', 'Change NSD OpState', 'Delete NSD'];
-    var columns = [['nsdName'], ['nsdVersion'], ['nsdDesigner'], ['nsdOperationalState'], ['nsdOnboardingState']];
+    var columns = [['nsdName'], ['nsdVersion'], ['nsdDesigner'], ['nsdOperationalState'], ['nsdOnboardingState'], ['manosOnboardingStatus']];
 
     table.innerHTML = header + '<tbody>';
 
@@ -167,17 +167,23 @@ function createNsdInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
   	    //console.log(values);
 
   	    var subText = '<td>';
-  	    var subTable = '<table class="table table-borderless">';
+  	    var subTable = '<table class="table table-bordered">';
 
   	    if (data.hasOwnProperty(columns[i][0])) {
-              if(values instanceof Array && values.length > 1) {
-                  for (var v in values) {
-                      subTable += '<tr><td>' + values[v] + '</td><tr>';
-                  }
-                  subText += subTable + '</table>';
-              } else {
-                  subText += values;
-              }
+            if(values instanceof Array && values.length > 1) {
+                for (var v in values) {
+                    subTable += '<tr><td>' + values[v] + '</td><tr>';
+                }
+                subText += subTable + '</table>';
+            } else if (values[0] instanceof Object) {
+                var manoAcks = values[0];
+                $.each(manoAcks, function(key, value) {
+                    subTable += '<tr><td>'+ key + '</td><td>' + value + '</td><tr>';
+                });
+                subText += subTable + '</table>';
+            } else {
+                subText += values;
+            }
   	    }
   	    subText += '</td>';
   	    text += subText;

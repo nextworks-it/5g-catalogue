@@ -29,7 +29,11 @@ public enum PackageOnboardingStateType {
 
     PROCESSING("PROCESSING"),
 
-    ONBOARDED("ONBOARDED");
+    ONBOARDED("ONBOARDED"),
+
+    LOCAL_ONBOARDED("LOCAL_ONBOARDED"),
+
+    FAILED("FAILED");
 
     private String value;
 
