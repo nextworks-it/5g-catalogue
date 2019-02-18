@@ -52,8 +52,8 @@ topologyTemplate:
         virtualBlockStorageData:
           sizeOfStorage: 20
         swImageData:
-          imageName: vCache-ubuntu-49-shrink
-          version: "0.4.9"
+          imageName: vCache-ubuntu-50-shrink
+          version: "0.5.0"
           checksum: cjfgbjtabvufi4368nbtiab
           containerFormat: BARE
           diskFormat: QCOW2
