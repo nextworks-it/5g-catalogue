@@ -12,9 +12,7 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
 import javax.persistence.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 public class VnfPkgInfoResource {
@@ -33,6 +31,7 @@ public class VnfPkgInfoResource {
     private PackageOperationalStateType operationalState;
     private PackageUsageStateType usageState;
 
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @ElementCollection(fetch = FetchType.EAGER)
     @Fetch(FetchMode.SELECT)
     private Map<String, String> userDefinedData = new HashMap<>();
@@ -52,6 +51,11 @@ public class VnfPkgInfoResource {
     private String metaFilename;
 
     private String manifestFilename;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
+    private List<String> parentNsds = new ArrayList<>();
 
     public VnfPkgInfoResource() {
     }
@@ -222,10 +226,20 @@ public class VnfPkgInfoResource {
         this.manifestFilename = manifestFilename;
     }
 
+    public List<String> getParentNsds() {
+        return parentNsds;
+    }
+
+    public void setParentNsds(List<String> parentNsds) {
+        this.parentNsds = parentNsds;
+    }
+
     public void isDeletable() throws NotPermittedOperationException {
         if (operationalState != PackageOperationalStateType.DISABLED)
             throw new NotPermittedOperationException("VNF Pkg info " + this.id + " cannot be deleted because not DISABLED");
         if (usageState != PackageUsageStateType.NOT_IN_USE)
+            throw new NotPermittedOperationException("VNF Pkg info " + this.id + " cannot be deleted because IN USE");
+        if (!parentNsds.isEmpty())
             throw new NotPermittedOperationException("VNF Pkg info " + this.id + " cannot be deleted because IN USE");
     }
 }

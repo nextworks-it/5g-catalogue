@@ -10,10 +10,10 @@ import java.nio.file.StandardCopyOption;
 import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
 
 /**
- * This class represents a HTTP Response
+ * This class represents an OSM HTTP Response
  *
  */
-public class HttpResponse {
+public class OSMHttpResponse {
 
     private Integer code;
     private String  message;
@@ -28,7 +28,7 @@ public class HttpResponse {
      * @param content HTTP content
      * @param receivedFilePath Local path of the downloaded file, if any
      */
-    private HttpResponse(Integer code, String message, String content, Path receivedFilePath) {
+    private OSMHttpResponse(Integer code, String message, String content, Path receivedFilePath) {
         this.code = code;
         this.message = message;
         this.content = content;
@@ -36,44 +36,31 @@ public class HttpResponse {
     }
 
     /**
-     * Obtains HTTP code, e.c. 200
+     * Obtains HTTP code
      * @return HTTP code
      */
-    public Integer getCode()
-    {
-        return code;
-    }
+    public Integer getCode() { return code; }
 
     /**
-     * Obtains HTTP message, e.c. OK
+     * Obtains HTTP message
      * @return HTTP message
      */
-    public String getMessage()
-    {
-        return message;
-    }
+    public String getMessage() { return message; }
 
     /**
      * Obtains HTTP response content
      * @return HTTP response content
      */
-    public String getContent()
-    {
-        return content;
-    }
+    public String getContent() { return content; }
 
     /**
      * Obtains the local path of the received file
      * @return the local path of the received file
      */
-    public Path getFilePath()
-    {
-        return receivedFilePath;
-    }
+    public Path getFilePath() { return receivedFilePath; }
 
     @Override
     public String toString() {
-
         return "Status : (" + code + ", " + message + ")\r\n" +
                 "Content : \n " + content + "\r\n";
     }
@@ -83,11 +70,11 @@ public class HttpResponse {
      * @param conn HTTP Connection to process
      * @return HTTP Response
      */
-    public static HttpResponse getResponseFromHTTPConnection(HttpURLConnection conn) {
+    public static OSMHttpResponse getResponseFromOSMHttpConnection(HttpURLConnection conn) {
 
-        BufferedReader in;
         int code = 0;
         String message = "";
+        BufferedReader bufferReader;
         StringBuilder content = new StringBuilder();
         Path filePath = null;
 
@@ -103,16 +90,16 @@ public class HttpResponse {
                     Files.copy(conn.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
                 }
                 else {
-                    in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                    while ((line = in.readLine()) != null)
+                    bufferReader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                    while ((line = bufferReader.readLine()) != null)
                         content.append(line + "\n");
                 }
             }
             else {
-                in = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
-                while ((line = in.readLine()) != null)
+                bufferReader = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
+                while ((line = bufferReader.readLine()) != null)
                     content.append(line + "\n");
-                in.close();
+                bufferReader.close();
             }
             conn.disconnect();
 
@@ -120,6 +107,6 @@ public class HttpResponse {
             e.printStackTrace();
         }
 
-        return new HttpResponse(code, message, content.toString(), filePath);
+        return new OSMHttpResponse(code, message, content.toString(), filePath);
     }
 }

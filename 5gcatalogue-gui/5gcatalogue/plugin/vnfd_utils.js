@@ -132,10 +132,10 @@ function createVnfInfosTable(data, params) {
         return;
     }
     var btnFlag = true;
-    var header = createTableHeaderByValues(['Name', 'Version', 'Provider', 'Operational State', 'Onboarding State','Actions'], btnFlag, false);
+    var header = createTableHeaderByValues(['Name', 'Version', 'Provider', 'Operational State', 'Onboarding State', 'MANOs Onboarding State', 'Actions'], btnFlag, false);
     var cbacks = ['openVNF_', 'showVnfGraphCanvas','updateVnfInfo_', 'deleteVnfInfo'];
     var names = ['View VNF', 'View VNF Graph', 'Change VNF OpState', 'Delete VNF'];
-    var columns = [['vnfProductName'], ['vnfdVersion'], ['vnfProvider'], ['operationalState'], ['onboardingState']];
+    var columns = [['vnfProductName'], ['vnfdVersion'], ['vnfProvider'], ['operationalState'], ['onboardingState'], ['manosOnboardingStatus']];
 
     table.innerHTML = header + '<tbody>';
 
@@ -167,13 +167,18 @@ function createVnfInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
 	    //console.log(values);
 
 	    var subText = '<td>';
-	    var subTable = '<table class="table table-borderless">';
+	    var subTable = '<table class="table table-bordered">';
 
 	    if (data.hasOwnProperty(columns[i][0])) {
             if(values instanceof Array && values.length > 1) {
                 for (var v in values) {
                     subTable += '<tr><td>' + values[v] + '</td><tr>';
                 }
+                subText += subTable + '</table>';
+            } else if (values[0] instanceof Object) {
+                $.each(values[0], function(key, value) {
+                    subTable += '<tr><td>'+ key + '</td><td>' + value + '</td><tr>';
+                });
                 subText += subTable + '</table>';
             } else {
                 subText += values;
@@ -188,8 +193,7 @@ function createVnfInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
 }
 
 function createVnfCanvas(data){
-    console.log(data);
-    console.log('Canvas per grafico' +  data['id']);
+    //console.log(data);
     var dataId ='cy_'+data['id'];
     var vnfProductName=data['vnfProductName'];
     var graphName="graphOf_" + data['id'];

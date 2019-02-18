@@ -42,10 +42,9 @@ import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import it.nextworks.nfvmano.libs.osmr4Client.OSMr4Client;
-import it.nextworks.nfvmano.libs.osmr4Client.utilities.HttpResponse;
+import it.nextworks.nfvmano.libs.osmr4Client.utilities.OSMHttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.kafka.core.KafkaTemplate;
 
@@ -348,7 +347,7 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
     void onBoardNsPackage(File file, String nsdInfoId, String opId) throws FailedOperationException {
         log.info("Onboarding ns package, opId: {}.", opId);
         // Create the NS descriptor resource
-        HttpResponse httpResponse = osmr4Client.createNsd();
+        OSMHttpResponse httpResponse = osmr4Client.createNsd();
         IdObject content = parseResponse(httpResponse, opId, IdObject.class).get(0);
         String osmNsdInfoId = content.getId();
         // Upload NS descriptor content
@@ -361,7 +360,7 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
     void deleteNsd(String nsdInfoId, String opId) throws FailedOperationException {
         log.info("Deleting nsd {}, opId: {}.", nsdInfoId, opId);
         String osmNsdInfoId = convertCatalogIdToOsmId(nsdInfoId);
-        HttpResponse httpResponse = osmr4Client.deleteNsd(osmNsdInfoId);
+        OSMHttpResponse httpResponse = osmr4Client.deleteNsd(osmNsdInfoId);
         parseResponse(httpResponse, opId, null);
         catalogIdToOsmId.remove(nsdInfoId);
         log.info("Nsd deleting successful. OpId: {}.", opId);
@@ -369,7 +368,7 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
 
     List<String> getNsdIdList() throws FailedOperationException {
         log.info("Getting nsd id list.");
-        HttpResponse httpResponse = osmr4Client.getNsdInfoList();
+        OSMHttpResponse httpResponse = osmr4Client.getNsdInfoList();
         List<OsmR4InfoObject> objList = parseResponse(httpResponse, null, OsmR4InfoObject.class);
         return objList.stream().map(OsmR4InfoObject::getDescriptorId).collect(Collectors.toList());
     }
@@ -377,7 +376,7 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
     void onBoardVnfPackage(File file, String vnfdInfoId, String opId) throws FailedOperationException {
         log.info("Onboarding vnf package, opId: {}.", opId);
         // Create the VNF descriptor resource
-        HttpResponse httpResponse = osmr4Client.createVnfPackage();
+        OSMHttpResponse httpResponse = osmr4Client.createVnfPackage();
         IdObject content = parseResponse(httpResponse, opId, IdObject.class).get(0);
         String osmVnfdInfoId = content.getId();
         // Upload VNF descriptor content
@@ -390,7 +389,7 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
     void deleteVnfd(String vnfdInfoId, String opId) throws FailedOperationException {
         log.info("Deleting vnfd {}, opId: {}.", vnfdInfoId, opId);
         String osmVnfdInfoId = convertCatalogIdToOsmId(vnfdInfoId);
-        HttpResponse httpResponse = osmr4Client.deleteVnfPackage(osmVnfdInfoId);
+        OSMHttpResponse httpResponse = osmr4Client.deleteVnfPackage(osmVnfdInfoId);
         parseResponse(httpResponse, opId, null);
         catalogIdToOsmId.remove(vnfdInfoId);
         log.info("Vnfd deleting successful. OpId: {}.", opId);
@@ -398,12 +397,12 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
 
     List<String> getVnfdIdList() throws FailedOperationException{
         log.info("Getting vnfd id list.");
-        HttpResponse httpResponse = osmr4Client.getVnfPackageList();
+        OSMHttpResponse httpResponse = osmr4Client.getVnfPackageList();
         List<OsmR4InfoObject> objList = parseResponse(httpResponse, null, OsmR4InfoObject.class);
         return objList.stream().map(OsmR4InfoObject::getDescriptorId).collect(Collectors.toList());
     }
 
-    private static <T> List<T> parseResponse(HttpResponse httpResponse, String opId, Class<T> clazz) throws FailedOperationException {
+    private static <T> List<T> parseResponse(OSMHttpResponse httpResponse, String opId, Class<T> clazz) throws FailedOperationException {
         List<T> objList = new ArrayList<>();
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);

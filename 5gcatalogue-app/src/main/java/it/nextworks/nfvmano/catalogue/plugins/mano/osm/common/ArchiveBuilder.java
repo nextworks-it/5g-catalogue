@@ -63,7 +63,7 @@ public class ArchiveBuilder {
         makeSubFolder(folder, "scripts");
         makeSubFolder(folder, "vnf_config");
         File iconsFolder = makeSubFolder(folder, "icons");
-        copyIcon(iconsFolder, logoFile);
+        copyFile(iconsFolder, logoFile);
         // TODO checksum
         return compress(folder);
     }
@@ -90,9 +90,9 @@ public class ArchiveBuilder {
         makeYml(ymlFile, vnfdId, folder);
         File iconsFolder = makeSubFolder(folder, "icons");
         File cloudInitFolder = makeSubFolder(folder, "cloud_init");
-        copyIcon(iconsFolder, logoFile);
+        copyFile(iconsFolder, logoFile);
         if(cloudInitFile != null)
-            copyIcon(cloudInitFolder, cloudInitFile);
+            copyFile(cloudInitFolder, cloudInitFile);
         // TODO checksum
         return compress(folder);
     }
@@ -219,14 +219,14 @@ public class ArchiveBuilder {
         return newFolder;
     }
 
-    private void copyIcon(File iconFolder, File icon) {//TODO rename
+    private void copyFile(File fileFolder, File file) {
         try {
-            Files.copy(icon.toPath(), new File(iconFolder, icon.getName()).toPath());
+            Files.copy(file.toPath(), new File(fileFolder, file.getName()).toPath());
         } catch (IOException e) {
             String msg = String.format(
                     "Cannot copy icon file %s to folder %s",
-                    icon.getAbsolutePath(),
-                    iconFolder.getAbsolutePath()
+                    file.getAbsolutePath(),
+                    fileFolder.getAbsolutePath()
             );
             throw new IllegalArgumentException(msg);
         }
