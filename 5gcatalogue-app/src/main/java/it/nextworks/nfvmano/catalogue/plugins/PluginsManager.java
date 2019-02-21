@@ -16,6 +16,7 @@
 package it.nextworks.nfvmano.catalogue.plugins;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.io.CharStreams;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementService;
 import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
 import it.nextworks.nfvmano.catalogue.plugins.mano.*;
@@ -30,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -38,8 +40,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 @Service
@@ -122,9 +123,13 @@ public class PluginsManager {
 
                 if (resources != null) {
                     for (int i = 0; i < resources.length; i++) {
-                        if (resources[i].isFile()) {
+                        if (resources[i].isFile() || resources[i] instanceof ClassPathResource) {
                             try {
-                                File tmp = resources[i].getFile();
+                                InputStream resourcee = resources[i].getInputStream();
+                                String tmp;
+                                try (final Reader reader = new InputStreamReader(resourcee)) {
+                                    tmp = CharStreams.toString(reader);
+                                }
                                 log.debug("Loading MANO configuration from config file #" + i + ".");
                                 MANO newMano = mapper.readValue(tmp, MANO.class);
                                 log.debug("Successfully loaded configuration for MANO with manoId: "
