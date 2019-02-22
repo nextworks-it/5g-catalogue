@@ -226,7 +226,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
 
         VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
         if ((!isInternalRequest) && (vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.ONBOARDED
-                && vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.PROCESSING)) {
+                && vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.LOCAL_ONBOARDED)) {
             log.error("VNF Pkg info " + vnfPkgInfoId + " does not have an onboarded VNF Pkg yet");
             throw new NotPermittedOperationException("VNF Pkg info " + vnfPkgInfoId + " does not have an onboarded VNF Pkg yet");
         }
@@ -499,12 +499,12 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                             entry.getKey());
 
                     // TODO: Decide how to handle MANO onboarding failures.
-                    return PackageOnboardingStateType.PROCESSING;
+                    return PackageOnboardingStateType.LOCAL_ONBOARDED;
                 } else if (entry.getValue().getOpStatus() == OperationStatus.SENT
                         || entry.getValue().getOpStatus() == OperationStatus.RECEIVED
                         || entry.getValue().getOpStatus() == OperationStatus.PROCESSING) {
                     log.debug("VNF Pkg with vnfPkgInfoId {} onboarding still in progress for mano with manoId {}.");
-                    return PackageOnboardingStateType.PROCESSING;
+                    return PackageOnboardingStateType.LOCAL_ONBOARDED;
                 }
             }
         }
