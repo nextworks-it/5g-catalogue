@@ -328,7 +328,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         }
 
         log.debug("Updating VNF Pkg info");
-        vnfPkgInfoResource.setOnboardingState(PackageOnboardingStateType.PROCESSING);
+        vnfPkgInfoResource.setOnboardingState(PackageOnboardingStateType.LOCAL_ONBOARDED);
         vnfPkgInfoResource.setOperationalState(PackageOperationalStateType.ENABLED);
         vnfPkgInfoResource.setVnfProvider(dt.getMetadata().getVendor());
         vnfPkgInfoResource.setVnfdVersion(dt.getMetadata().getVersion());
