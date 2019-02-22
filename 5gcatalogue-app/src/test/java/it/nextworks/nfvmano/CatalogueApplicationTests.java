@@ -33,6 +33,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.nio.file.Paths;
 import java.util.UUID;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -130,7 +131,9 @@ public class CatalogueApplicationTests {
                 null,
                 localNsdNotificationTopic,
                 remoteNsdNotificationTopic,
-                kafkaTemplate
+                kafkaTemplate,
+                Paths.get("/tmp/osmr3"),
+                Paths.get("nxw_logo.png")
         );
         plugin.init();
 
@@ -203,7 +206,9 @@ public class CatalogueApplicationTests {
                 null,
                 localNsdNotificationTopic,
                 remoteNsdNotificationTopic,
-                kafkaTemplate
+                kafkaTemplate,
+                Paths.get("/tmp/osmr3"),
+                Paths.get("nxw_logo.png")
         );
         osmPlugin.init();
 

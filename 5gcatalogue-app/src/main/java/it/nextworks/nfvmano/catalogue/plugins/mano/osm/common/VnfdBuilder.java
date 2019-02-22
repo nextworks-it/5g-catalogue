@@ -150,7 +150,10 @@ public class VnfdBuilder {
         osmVnfd.setConnectionPoints(osmCps);
         osmVnfd.setManagementInterface(osmMgmtInterface);
         // Set cloud-init file
-        osmVdus.get(0).setCloudInitFile(vnfd.getInterfaces().getVnflcm().getInstantiate().getImplementation());
+        if(vnfd.getInterfaces() != null &&
+                vnfd.getInterfaces().getVnflcm() != null &&
+                    vnfd.getInterfaces().getVnflcm().getInstantiate() != null)
+            osmVdus.get(0).setCloudInitFile(vnfd.getInterfaces().getVnflcm().getInstantiate().getImplementation());
         osmVnfd.setVduList(osmVdus);
         osmVnfd.setScalingGroupDescriptor(scalingGroupDescriptors);
 

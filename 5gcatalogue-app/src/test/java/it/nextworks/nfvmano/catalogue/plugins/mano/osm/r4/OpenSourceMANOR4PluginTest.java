@@ -70,7 +70,7 @@ public class OpenSourceMANOR4PluginTest {
 	@BeforeClass
 	public static void connectOsm() {
 		OSMMano osmMano = new OSMMano("testOSM", "10.0.2.97", "admin", "admin", "admin", MANOType.OSMR4);
-		plugin = new OpenSourceMANOR4Plugin(MANOType.OSMR4, osmMano, "blabla", null, null,null, null, null);
+		plugin = new OpenSourceMANOR4Plugin(MANOType.OSMR4, osmMano, "blabla", null, null,null, null, null, Paths.get("/etc/osmr4"), Paths.get("nxw_logo.png"));
 		// TODO: mock the nsdService
 	}
 
