@@ -123,6 +123,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
 
                 log.debug("The VNF Pkg info can be removed.");
                 if (vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.ONBOARDED
+                        || vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.LOCAL_ONBOARDED
                         || vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.PROCESSING) {
                     log.debug("The VNF Pkg info is associated to an onboarded VNF Pkg. Removing it.");
                     UUID vnfdId = vnfPkgInfoResource.getVnfdId();

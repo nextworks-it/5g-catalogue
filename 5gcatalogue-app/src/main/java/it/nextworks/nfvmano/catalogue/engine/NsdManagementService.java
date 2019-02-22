@@ -166,7 +166,9 @@ public class NsdManagementService implements NsdManagementInterface {
                 }
 
                 log.debug("The NSD info can be removed.");
-                if (nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.ONBOARDED) {
+                if (nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.ONBOARDED
+                        || nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.LOCAL_ONBOARDED
+                        || nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.PROCESSING) {
                     log.debug("The NSD info is associated to an onboarded NSD. Removing it.");
                     UUID nsdId = nsdInfo.getNsdId();
                     // dbWrapper.deleteNsd(nsdId);
