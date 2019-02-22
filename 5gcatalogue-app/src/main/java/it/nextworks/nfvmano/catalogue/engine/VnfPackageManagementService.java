@@ -204,7 +204,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
 
         VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
         if ((!isInternalRequest) && (vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.ONBOARDED
-                && vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.PROCESSING)) {
+                && vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.LOCAL_ONBOARDED)) {
             log.error("VNF Pkg info " + vnfPkgInfoId + " does not have an onboarded VNFD yet");
             throw new NotPermittedOperationException("VNF Pkg info " + vnfPkgInfoId + " does not have an onboarded VNFD yet");
         }
