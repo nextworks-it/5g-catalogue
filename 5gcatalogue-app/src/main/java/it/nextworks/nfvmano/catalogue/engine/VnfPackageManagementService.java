@@ -163,7 +163,8 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         log.debug("Processing request to update VNF Pkg info: " + vnfPkgInfoId);
         VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
 
-        if (vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.ONBOARDED) {
+        if (vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.ONBOARDED
+            || vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.LOCAL_ONBOARDED) {
             if (vnfPkgInfoModifications.getOperationalState() != null) {
                 if (vnfPkgInfoResource.getOperationalState() == vnfPkgInfoModifications.getOperationalState()) {
                     log.error("VNF Pkg operational state already "
@@ -192,7 +193,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             log.debug("VnfPkgInfoResource successfully updated.");
         } else {
             log.error("VNF Pkg onboarding state not ONBOARDED. Cannot update VNF Pkg info.");
-            throw new NotPermittedOperationException("VNF Pkg onboarding state not ONBOARDED. Cannot update VNF Pkg info.");
+            throw new NotPermittedOperationException("VNF Pkg onboarding state not ONBOARDED/LOCAL_ONBOARDED. Cannot update VNF Pkg info.");
         }
         return vnfPkgInfoModifications;
     }

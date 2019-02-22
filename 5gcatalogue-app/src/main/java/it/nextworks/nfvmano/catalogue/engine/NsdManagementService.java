@@ -305,7 +305,8 @@ public class NsdManagementService implements NsdManagementInterface {
         log.debug("Processing request to update NSD info: " + nsdInfoId);
         NsdInfoResource nsdInfo = getNsdInfoResource(nsdInfoId);
 
-        if (nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.ONBOARDED) {
+        if (nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.ONBOARDED
+            || nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.LOCAL_ONBOARDED) {
             if (nsdInfoModifications.getNsdOperationalState() != null) {
                 if (nsdInfo.getNsdOperationalState() == nsdInfoModifications.getNsdOperationalState()) {
                     log.error("NSD operational state already "
