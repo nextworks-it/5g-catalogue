@@ -26,6 +26,7 @@ import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdDele
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnboardingNotification;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOPlugin;
+import it.nextworks.nfvmano.catalogue.plugins.mano.MANORepository;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.VnfdBuilder;
@@ -58,8 +59,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.List;
 
-
-
 public class OpenSourceMANOR4Plugin extends MANOPlugin {
 
     private static final Logger log = LoggerFactory.getLogger(OpenSourceMANOR4Plugin.class);
@@ -70,21 +69,21 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
 
     private OSMr4Client osmr4Client;
 
-    private Map<String, String> catalogIdToOsmId;
-
     private Path osmDirPath;
 
     private static File osmDir;
 
+    private MANORepository MANORepository;
+
     public OpenSourceMANOR4Plugin(MANOType manoType, MANO mano, String kafkaBootstrapServers,
-                                  NsdManagementInterface nsdService, VnfPackageManagementInterface vnfdService, String localTopic, String remoteTopic,
+                                  NsdManagementInterface nsdService, VnfPackageManagementInterface vnfdService, MANORepository MANORepository, String localTopic, String remoteTopic,
                                   KafkaTemplate<String, String> kafkaTemplate, Path osmDirPath, Path logoPath) {
         super(manoType, mano, kafkaBootstrapServers, nsdService, vnfdService, localTopic, remoteTopic, kafkaTemplate);
         if (MANOType.OSMR4 != manoType) {
             throw new IllegalArgumentException("OSM R4 plugin requires an OSM R4 type MANO");
         }
         osm = (OSMMano) mano;
-        catalogIdToOsmId = new HashMap<>();
+        this.MANORepository = MANORepository;
         this.osmDirPath = osmDirPath;
         this.logo = new File(logoPath.toUri());
     }
@@ -333,10 +332,10 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
         return new File(resource.getFile());
     }
 
-    private String convertCatalogIdToOsmId(String catalogId) throws FailedOperationException{
-        String osmId = catalogIdToOsmId.get(catalogId);
+    private String translateCatalogIdToOsmId(String catalogId) throws FailedOperationException{
+        String osmId = osm.getOsmIdTranslation().get(catalogId);
         if(osmId == null)
-            throw new FailedOperationException("Id not present in OSM");
+            throw new FailedOperationException("Could not find the corresponding ID in OSM");
         return osmId;
     }
 
@@ -349,16 +348,18 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
         // Upload NS descriptor content
         httpResponse = osmr4Client.uploadNsdContent(osmNsdInfoId, file);
         parseResponse(httpResponse, opId, null );
-        catalogIdToOsmId.put(nsdInfoId, osmNsdInfoId);
+        osm.getOsmIdTranslation().put(nsdInfoId, osmNsdInfoId);
+        MANORepository.saveAndFlush(osm);
         log.info("Package onboarding successful. OpId: {}.", opId);
     }
 
     void deleteNsd(String nsdInfoId, String opId) throws FailedOperationException {
         log.info("Deleting nsd {}, opId: {}.", nsdInfoId, opId);
-        String osmNsdInfoId = convertCatalogIdToOsmId(nsdInfoId);
+        String osmNsdInfoId = translateCatalogIdToOsmId(nsdInfoId);
         OSMHttpResponse httpResponse = osmr4Client.deleteNsd(osmNsdInfoId);
         parseResponse(httpResponse, opId, null);
-        catalogIdToOsmId.remove(nsdInfoId);
+        osm.getOsmIdTranslation().remove(nsdInfoId);
+        MANORepository.saveAndFlush(osm);
         log.info("Nsd deleting successful. OpId: {}.", opId);
     }
 
@@ -378,16 +379,18 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
         // Upload VNF descriptor content
         httpResponse = osmr4Client.uploadVnfPackageContent(osmVnfdInfoId, file);
         parseResponse(httpResponse, opId, null );
-        catalogIdToOsmId.put(vnfdInfoId, osmVnfdInfoId);
+        osm.getOsmIdTranslation().put(vnfdInfoId, osmVnfdInfoId);
+        MANORepository.saveAndFlush(osm);
         log.info("Package onboarding successful. OpId: {}.", opId);
     }
 
     void deleteVnfd(String vnfdInfoId, String opId) throws FailedOperationException {
         log.info("Deleting vnfd {}, opId: {}.", vnfdInfoId, opId);
-        String osmVnfdInfoId = convertCatalogIdToOsmId(vnfdInfoId);
+        String osmVnfdInfoId = translateCatalogIdToOsmId(vnfdInfoId);
         OSMHttpResponse httpResponse = osmr4Client.deleteVnfPackage(osmVnfdInfoId);
         parseResponse(httpResponse, opId, null);
-        catalogIdToOsmId.remove(vnfdInfoId);
+        osm.getOsmIdTranslation().remove(vnfdInfoId);
+        MANORepository.saveAndFlush(osm);
         log.info("Vnfd deleting successful. OpId: {}.", opId);
     }
 

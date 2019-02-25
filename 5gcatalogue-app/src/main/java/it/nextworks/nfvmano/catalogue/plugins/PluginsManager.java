@@ -75,10 +75,10 @@ public class PluginsManager {
     private String defaultManoType;
 
     @Value ("${catalogue.osmr3.localTmpDir}")
-    private Path osmr3TmpDir;
+    private Path osmr3Dir;
 
     @Value ("${catalogue.osmr4.localTmpDir}")
-    private Path osmr4TmpDir;
+    private Path osmr4Dir;
 
     @Value ("${catalogue.logo}")
     private Path logo;
@@ -189,10 +189,10 @@ public class PluginsManager {
                     remoteNsdNotificationTopic, kafkaTemplate);
         } else if (mano.getManoType().equals(MANOType.OSMR3)) {
             return new OpenSourceMANOR3Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService,
-                    localNsdNotificationTopic, remoteNsdNotificationTopic, kafkaTemplate, osmr3TmpDir, logo);
+                    localNsdNotificationTopic, remoteNsdNotificationTopic, kafkaTemplate, osmr3Dir, logo);
         } else if (mano.getManoType().equals(MANOType.OSMR4)) {
-                return new OpenSourceMANOR4Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService,
-                        localNsdNotificationTopic, remoteNsdNotificationTopic, kafkaTemplate, osmr4TmpDir, logo);
+                return new OpenSourceMANOR4Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, MANORepository,
+                        localNsdNotificationTopic, remoteNsdNotificationTopic, kafkaTemplate, osmr4Dir, logo);
         } else {
             throw new MalformattedElementException("Unsupported MANO type. Skipping.");
         }

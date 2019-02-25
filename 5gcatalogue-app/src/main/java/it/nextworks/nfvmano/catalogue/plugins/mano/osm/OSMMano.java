@@ -15,12 +15,20 @@
  */
 package it.nextworks.nfvmano.catalogue.plugins.mano.osm;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Created by Marco Capitani on 20/08/18.
@@ -34,6 +42,10 @@ public class OSMMano extends MANO {
     private String username;
     private String password;
     private String project;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
+    private Map<String, String> osmIdTranslation;
 
     public OSMMano() {
         // JPA only
@@ -45,6 +57,7 @@ public class OSMMano extends MANO {
         this.username = username;
         this.password = password;
         this.project = project;
+        this.osmIdTranslation = new HashMap<>();
     }
 
     @JsonProperty("ipAddress")
@@ -66,6 +79,8 @@ public class OSMMano extends MANO {
     public String getProject() {
         return project;
     }
+
+    public Map<String, String> getOsmIdTranslation() { return osmIdTranslation; }
 
     public void isValid() throws MalformattedElementException {
         if (this.ipAddress == null)
