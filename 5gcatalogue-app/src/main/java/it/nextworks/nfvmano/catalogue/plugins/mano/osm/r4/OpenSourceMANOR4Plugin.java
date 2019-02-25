@@ -63,21 +63,17 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
 
     private static final Logger log = LoggerFactory.getLogger(OpenSourceMANOR4Plugin.class);
 
-    private final File logo;
-
-    private final OSMMano osm;
-
-    private OSMr4Client osmr4Client;
-
-    private Path osmDirPath;
-
-    private static File osmDir;
-
-    private MANORepository MANORepository;
+    private final File      logo;
+    private final OSMMano   osm;
+    private OSMr4Client     osmr4Client;
+    private Path            osmDirPath;
+    private static File     osmDir;
+    private MANORepository  MANORepository;
 
     public OpenSourceMANOR4Plugin(MANOType manoType, MANO mano, String kafkaBootstrapServers,
-                                  NsdManagementInterface nsdService, VnfPackageManagementInterface vnfdService, MANORepository MANORepository, String localTopic, String remoteTopic,
-                                  KafkaTemplate<String, String> kafkaTemplate, Path osmDirPath, Path logoPath) {
+                                    NsdManagementInterface nsdService, VnfPackageManagementInterface vnfdService,
+                                        MANORepository MANORepository, String localTopic, String remoteTopic,
+                                            KafkaTemplate<String, String> kafkaTemplate, Path osmDirPath, Path logoPath) {
         super(manoType, mano, kafkaBootstrapServers, nsdService, vnfdService, localTopic, remoteTopic, kafkaTemplate);
         if (MANOType.OSMR4 != manoType) {
             throw new IllegalArgumentException("OSM R4 plugin requires an OSM R4 type MANO");
@@ -108,8 +104,7 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
 
     @Override
     public void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) {
-        log.info("Received NSD onboarding notificationfor Nsd {} info ID {}.", notification.getNsdId(),
-                notification.getNsdInfoId());
+        log.info("Received NSD onboarding notificationfor Nsd {} info ID {}.", notification.getNsdId(), notification.getNsdInfoId());
         log.debug("Body: {}", notification);
         try {
             DescriptorTemplate descriptorTemplate = retrieveNsdTemplate(notification.getNsdInfoId());
