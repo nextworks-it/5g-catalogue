@@ -94,10 +94,10 @@ topologyTemplate:
       type: tosca.nodes.nfv.VNF
       properties:
         descriptorId: af4178d5-8b5e-4b9f-a56a-61be55b6a201
-        descriptorVersion: "1.11"
+        descriptorVersion: "1.13"
         provider: Nextworks
         productName: vCache_mid_UC3_5GMEDIA
-        softwareVersion: v1.11
+        softwareVersion: v1.13
         productInfoName: mid vCache for UHD vCDN
         productInfoDescription: mid vCache for UHD vCDN
         vnfmInfo:
@@ -120,10 +120,10 @@ topologyTemplate:
       type: tosca.nodes.nfv.VNF
       properties:
         descriptorId: e8d2567d-05f8-4a3a-9cee-4c4be7712504
-        descriptorVersion: "1.11"
+        descriptorVersion: "1.13"
         provider: Nextworks
         productName: vCache_edge_UC3_5GMEDIA
-        softwareVersion: v1.11
+        softwareVersion: v1.13
         productInfoName: edge vCache for UHD vCDN
         productInfoDescription: edge vCache for UHD vCDN
         vnfmInfo:
