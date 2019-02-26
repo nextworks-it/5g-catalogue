@@ -28,7 +28,7 @@ import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
 import it.nextworks.nfvmano.catalogue.messages.ScopeType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.*;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
-import it.nextworks.nfvmano.catalogue.plugins.mano.MANORepository;
+import it.nextworks.nfvmano.catalogue.repos.MANORepository;
 import it.nextworks.nfvmano.catalogue.repos.ContentType;
 import it.nextworks.nfvmano.catalogue.repos.NsdInfoRepository;
 import it.nextworks.nfvmano.catalogue.repos.VnfPkgInfoRepository;

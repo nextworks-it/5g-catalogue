@@ -66,7 +66,7 @@ public class OpenSourceMANOR3PluginTest {
 
     @BeforeClass
     public static void connectOsm() {
-        OSMMano osmMano = new OSMMano("testOSM", "10.0.8.26", "admin", "admin", "default", MANOType.OSMR3);
+        OSMMano osmMano = new OSMMano("testOSM", "10.0.8.26", "admin", "admin", "default", MANOType.OSMR3, new ArrayList<>());
         plugin = new OpenSourceMANOR3Plugin(MANOType.OSMR3, osmMano, "blabla", null, null, null, null, null, Paths.get("/etc/osmr3"), Paths.get("nxw_logo.png"));
         // TODO: mock the nsdService
     }

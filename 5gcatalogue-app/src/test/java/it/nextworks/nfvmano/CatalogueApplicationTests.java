@@ -34,6 +34,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.UUID;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -119,7 +120,8 @@ public class CatalogueApplicationTests {
                 "admin",
                 "admin",
                 "default",
-                MANOType.OSMR3
+                MANOType.OSMR3,
+                new ArrayList<>()
         );
 
         //create r3 mano plugin
@@ -194,7 +196,8 @@ public class CatalogueApplicationTests {
                 "admin",
                 "admin",
                 "default",
-                MANOType.OSMR3
+                MANOType.OSMR3,
+                new ArrayList<>()
         );
 
         //create r3 mano plugin
