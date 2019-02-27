@@ -44,8 +44,8 @@ public class NotificationManagerTests {
     @Autowired
     private NotificationManager notificationManager;
 
-    @Value("${kafkatopic.remote.nsd}")
-    private String remoteNsdNotificationTopic;
+    @Value("${kafkatopic.remote}")
+    private String remoteNotificationTopic;
 
     @Test
     @Ignore
@@ -67,7 +67,7 @@ public class NotificationManagerTests {
         try {
             String json = mapper.writeValueAsString(msg);
             System.out.println("REMOTE ON-BOARDING MSG: " + json);
-            kafkaTemplate.send(remoteNsdNotificationTopic, json);
+            kafkaTemplate.send(remoteNotificationTopic, json);
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {

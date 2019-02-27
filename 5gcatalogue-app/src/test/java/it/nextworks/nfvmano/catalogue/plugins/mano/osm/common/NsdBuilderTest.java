@@ -22,9 +22,11 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.OpenSourceMANOR3Plugin;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -43,9 +45,16 @@ import java.util.Map;
 @SpringBootTest
 public class NsdBuilderTest {
 
-    private static final File DEF_IMG = new File(
-            OpenSourceMANOR3Plugin.class.getClassLoader().getResource("nxw_logo.png").getFile()
-    );
+    @Value("${catalogue.logo}")
+    private String logoPath;
+
+    private File DEF_IMG;
+
+    @Before
+    public void setUp() {
+        DEF_IMG = new File(
+                OpenSourceMANOR3Plugin.class.getClassLoader().getResource(logoPath).getFile());
+    }
 
     static DescriptorTemplate readFile(String path, Charset encoding) throws IOException {
         byte[] encoded = Files.readAllBytes(Paths.get(path));

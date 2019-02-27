@@ -47,11 +47,17 @@ public class CatalogueApplicationTests {
     @Value("${kafka.bootstrap-servers}")
     private String kafkaBootstrapServers;
 
-    @Value("${kafkatopic.local.nsd}")
-    private String localNsdNotificationTopic;
+    @Value("${kafkatopic.local}")
+    private String localNotificationTopic;
 
-    @Value("${kafkatopic.remote.nsd}")
-    private String remoteNsdNotificationTopic;
+    @Value("${kafkatopic.remote}")
+    private String remoteNotificationTopic;
+
+    @Value("${catalogue.osmr3.localDir}")
+    private String osmr3LocalDir;
+
+    @Value("${catalogue.logo}")
+    private String logoPath;
 
     @Test
     public void contextLoads() {
@@ -73,8 +79,8 @@ public class CatalogueApplicationTests {
                 mano,
                 kafkaBootstrapServers,
                 null,
-                localNsdNotificationTopic,
-                remoteNsdNotificationTopic,
+                localNotificationTopic,
+                remoteNotificationTopic,
                 kafkaTemplate
         );
         plugin.init();
@@ -131,11 +137,11 @@ public class CatalogueApplicationTests {
                 kafkaBootstrapServers,
                 null,
                 null,
-                localNsdNotificationTopic,
-                remoteNsdNotificationTopic,
+                localNotificationTopic,
+                remoteNotificationTopic,
                 kafkaTemplate,
-                Paths.get("/tmp/osmr3"),
-                Paths.get("nxw_logo.png")
+                Paths.get(osmr3LocalDir),
+                Paths.get(logoPath)
         );
         plugin.init();
 
@@ -183,8 +189,8 @@ public class CatalogueApplicationTests {
                 mano,
                 kafkaBootstrapServers,
                 null,
-                localNsdNotificationTopic,
-                remoteNsdNotificationTopic,
+                localNotificationTopic,
+                remoteNotificationTopic,
                 kafkaTemplate
         );
         plugin.init();
@@ -207,11 +213,11 @@ public class CatalogueApplicationTests {
                 kafkaBootstrapServers,
                 null,
                 null,
-                localNsdNotificationTopic,
-                remoteNsdNotificationTopic,
+                localNotificationTopic,
+                remoteNotificationTopic,
                 kafkaTemplate,
-                Paths.get("/tmp/osmr3"),
-                Paths.get("nxw_logo.png")
+                Paths.get(osmr3LocalDir),
+                Paths.get(logoPath)
         );
         osmPlugin.init();
 
