@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.nextworks.nfvmano.catalogue.plugins.mano;
+package it.nextworks.nfvmano.catalogue.repos;
 
+import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
+import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

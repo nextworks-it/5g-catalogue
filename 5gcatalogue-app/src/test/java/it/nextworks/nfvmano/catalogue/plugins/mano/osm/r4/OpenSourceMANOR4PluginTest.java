@@ -35,6 +35,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -53,13 +54,17 @@ import static org.junit.Assert.assertTrue;
 @SpringBootTest
 public class OpenSourceMANOR4PluginTest {
 
+	@Value("${catalogue.osmr4.localDir}")
+	private static String osmr4LocalDir;
+
+	@Value("${catalogue.logo}")
+	private static String logoPath;
+
 	private static OpenSourceMANOR4Plugin plugin;
 
-	private static final File TMP_DIR = new File("/tmp/osmr4");
+	private static File TMP_DIR;
 
-	private static final File DEF_IMG = new File(
-			OpenSourceMANOR3Plugin.class.getClassLoader().getResource("nxw_logo.png").getFile()
-	);
+	private static File DEF_IMG;
 
 	static DescriptorTemplate readFile(String path, Charset encoding) throws IOException {
 		byte[] encoded = Files.readAllBytes(Paths.get(path));
@@ -69,7 +74,9 @@ public class OpenSourceMANOR4PluginTest {
 
 	@BeforeClass
 	public static void connectOsm() {
-		OSMMano osmMano = new OSMMano("testOSM", "10.0.2.97", "admin", "admin", "admin", MANOType.OSMR4);
+		TMP_DIR = new File(osmr4LocalDir);
+		DEF_IMG = new File(OpenSourceMANOR4Plugin.class.getClassLoader().getResource(logoPath).getFile());
+		OSMMano osmMano = new OSMMano("testOSM", "10.0.2.97", "admin", "admin", "admin", MANOType.OSMR4, new ArrayList<>());
 		plugin = new OpenSourceMANOR4Plugin(MANOType.OSMR4, osmMano,  "blabla", null, null,null, null,null, null, Paths.get("/etc/osmr4"), Paths.get("nxw_logo.png"));
 		// TODO: mock the nsdService
 	}

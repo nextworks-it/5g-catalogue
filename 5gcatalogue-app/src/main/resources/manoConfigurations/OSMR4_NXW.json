@@ -4,5 +4,6 @@
   "ipAddress": "10.0.8.31",
   "username": "admin",
   "password": "admin",
-  "project": "admin"
+  "project": "admin",
+  "vimAccounts": ["NXW_OS"]
 }

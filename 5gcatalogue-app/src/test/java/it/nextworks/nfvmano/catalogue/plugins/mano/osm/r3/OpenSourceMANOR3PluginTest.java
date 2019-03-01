@@ -34,6 +34,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -52,10 +53,14 @@ import static org.junit.Assert.assertTrue;
 @SpringBootTest
 public class OpenSourceMANOR3PluginTest {
 
-    private static final File TMP_DIR = new File("/tmp/osmr3");
-    private static final File DEF_IMG = new File(
-            OpenSourceMANOR3Plugin.class.getClassLoader().getResource("nxw_logo.png").getFile()
-    );
+    @Value("${catalogue.osmr3.localDir}")
+    private static String osmr3LocalDir;
+
+    @Value("${catalogue.logo}")
+    private static String logoPath;
+
+    private static File TMP_DIR;
+    private static File DEF_IMG;
     private static OpenSourceMANOR3Plugin plugin;
 
     static DescriptorTemplate readFile(String path, Charset encoding) throws IOException {
@@ -66,7 +71,9 @@ public class OpenSourceMANOR3PluginTest {
 
     @BeforeClass
     public static void connectOsm() {
-        OSMMano osmMano = new OSMMano("testOSM", "10.0.8.26", "admin", "admin", "default", MANOType.OSMR3);
+        TMP_DIR = new File(osmr3LocalDir);
+        DEF_IMG = new File(OpenSourceMANOR3Plugin.class.getClassLoader().getResource(logoPath).getFile());
+        OSMMano osmMano = new OSMMano("testOSM", "10.0.8.26", "admin", "admin", "default", MANOType.OSMR3, new ArrayList<>());
         plugin = new OpenSourceMANOR3Plugin(MANOType.OSMR3, osmMano, "blabla", null, null, null, null, null, Paths.get("/etc/osmr3"), Paths.get("nxw_logo.png"));
         // TODO: mock the nsdService
     }
