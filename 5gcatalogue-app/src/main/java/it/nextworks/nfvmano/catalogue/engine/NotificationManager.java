@@ -61,7 +61,7 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 
     @Value("${kafkatopic.remote}")
     private String remoteNotificationTopic;
-    
+
     @Autowired
     private NsdManagementService nsdMgmtService;
 
