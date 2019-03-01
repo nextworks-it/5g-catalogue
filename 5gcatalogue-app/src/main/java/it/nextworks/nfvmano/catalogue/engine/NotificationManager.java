@@ -56,11 +56,11 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
     @Value("${kafka.bootstrap-servers}")
     private String kafkaBootstrapServers;
 
-    @Value("${kafkatopic.local.nsd}")
-    private String localNsdNotificationTopic;
+    @Value("${kafkatopic.local}")
+    private String localNotificationTopic;
 
-    @Value("${kafkatopic.remote.nsd}")
-    private String remoteNsdNotificationTopic;
+    @Value("${kafkatopic.remote}")
+    private String remoteNotificationTopic;
 
     @Autowired
     private NsdManagementService nsdMgmtService;
@@ -75,7 +75,7 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
     @PostConstruct
     public void init() {
         log.debug("Initializing notification manager.");
-        initializeKafkaConnector("ENGINE_NOTIFICATION_MANAGER", kafkaBootstrapServers, remoteNsdNotificationTopic);
+        initializeKafkaConnector("ENGINE_NOTIFICATION_MANAGER", kafkaBootstrapServers, remoteNotificationTopic);
     }
 
     public KafkaConnector getConnector() {
@@ -133,12 +133,12 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 
             String json = mapper.writeValueAsString(notification);
 
-            log.debug("Sending json message over kafka bus on topic " + localNsdNotificationTopic + "\n" + json);
+            log.debug("Sending json message over kafka bus on topic " + localNotificationTopic + "\n" + json);
 
             if (skipKafka) {
                 log.debug(" ---- TEST MODE: skipping post to kafka bus ----");
             } else {
-                kafkaTemplate.send(localNsdNotificationTopic, json);
+                kafkaTemplate.send(localNotificationTopic, json);
 
                 log.debug("Message sent.");
             }
@@ -166,12 +166,12 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 
             String json = mapper.writeValueAsString(notification);
 
-            log.debug("Sending json message over kafka bus on topic " + localNsdNotificationTopic + "\n" + json);
+            log.debug("Sending json message over kafka bus on topic " + localNotificationTopic + "\n" + json);
 
             if (skipKafka) {
                 log.debug(" ---- TEST MODE: skipping post to kafka bus ----");
             } else {
-                kafkaTemplate.send(localNsdNotificationTopic, json);
+                kafkaTemplate.send(localNotificationTopic, json);
 
                 log.debug("Message sent.");
             }
@@ -391,12 +391,12 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 
             String json = mapper.writeValueAsString(notification);
 
-            log.debug("Sending json message over kafka bus on topic " + localNsdNotificationTopic + "\n" + json);
+            log.debug("Sending json message over kafka bus on topic " + localNotificationTopic + "\n" + json);
 
             if (skipKafka) {
                 log.debug(" ---- TEST MODE: skipping post to kafka bus ----");
             } else {
-                kafkaTemplate.send(localNsdNotificationTopic, json);
+                kafkaTemplate.send(localNotificationTopic, json);
 
                 log.debug("Message sent.");
             }
@@ -422,12 +422,12 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 
             String json = mapper.writeValueAsString(notification);
 
-            log.debug("Sending json message over kafka bus on topic " + localNsdNotificationTopic + "\n" + json);
+            log.debug("Sending json message over kafka bus on topic " + localNotificationTopic + "\n" + json);
 
             if (skipKafka) {
                 log.debug(" ---- TEST MODE: skipping post to kafka bus ----");
             } else {
-                kafkaTemplate.send(localNsdNotificationTopic, json);
+                kafkaTemplate.send(localNotificationTopic, json);
 
                 log.debug("Message sent.");
             }
