@@ -33,6 +33,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.UUID;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -45,11 +47,17 @@ public class CatalogueApplicationTests {
     @Value("${kafka.bootstrap-servers}")
     private String kafkaBootstrapServers;
 
-    @Value("${kafkatopic.local.nsd}")
-    private String localNsdNotificationTopic;
+    @Value("${kafkatopic.local}")
+    private String localNotificationTopic;
 
-    @Value("${kafkatopic.remote.nsd}")
-    private String remoteNsdNotificationTopic;
+    @Value("${kafkatopic.remote}")
+    private String remoteNotificationTopic;
+
+    @Value("${catalogue.osmr3.localDir}")
+    private String osmr3LocalDir;
+
+    @Value("${catalogue.logo}")
+    private String logoPath;
 
     @Test
     public void contextLoads() {
@@ -71,8 +79,8 @@ public class CatalogueApplicationTests {
                 mano,
                 kafkaBootstrapServers,
                 null,
-                localNsdNotificationTopic,
-                remoteNsdNotificationTopic,
+                localNotificationTopic,
+                remoteNotificationTopic,
                 kafkaTemplate
         );
         plugin.init();
@@ -118,7 +126,8 @@ public class CatalogueApplicationTests {
                 "admin",
                 "admin",
                 "default",
-                MANOType.OSMR3
+                MANOType.OSMR3,
+                new ArrayList<>()
         );
 
         //create r3 mano plugin
@@ -128,9 +137,11 @@ public class CatalogueApplicationTests {
                 kafkaBootstrapServers,
                 null,
                 null,
-                localNsdNotificationTopic,
-                remoteNsdNotificationTopic,
-                kafkaTemplate
+                localNotificationTopic,
+                remoteNotificationTopic,
+                kafkaTemplate,
+                Paths.get(osmr3LocalDir),
+                Paths.get(logoPath)
         );
         plugin.init();
 
@@ -178,8 +189,8 @@ public class CatalogueApplicationTests {
                 mano,
                 kafkaBootstrapServers,
                 null,
-                localNsdNotificationTopic,
-                remoteNsdNotificationTopic,
+                localNotificationTopic,
+                remoteNotificationTopic,
                 kafkaTemplate
         );
         plugin.init();
@@ -191,7 +202,8 @@ public class CatalogueApplicationTests {
                 "admin",
                 "admin",
                 "default",
-                MANOType.OSMR3
+                MANOType.OSMR3,
+                new ArrayList<>()
         );
 
         //create r3 mano plugin
@@ -201,9 +213,11 @@ public class CatalogueApplicationTests {
                 kafkaBootstrapServers,
                 null,
                 null,
-                localNsdNotificationTopic,
-                remoteNsdNotificationTopic,
-                kafkaTemplate
+                localNotificationTopic,
+                remoteNotificationTopic,
+                kafkaTemplate,
+                Paths.get(osmr3LocalDir),
+                Paths.get(logoPath)
         );
         osmPlugin.init();
 

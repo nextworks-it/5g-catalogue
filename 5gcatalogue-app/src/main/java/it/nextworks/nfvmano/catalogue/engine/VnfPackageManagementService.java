@@ -11,10 +11,9 @@ import it.nextworks.nfvmano.catalogue.messages.ScopeType;
 import it.nextworks.nfvmano.catalogue.messages.VnfPkgDeletionNotificationMessage;
 import it.nextworks.nfvmano.catalogue.messages.VnfPkgOnBoardingNotificationMessage;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboardingStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.*;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
-import it.nextworks.nfvmano.catalogue.plugins.mano.MANORepository;
+import it.nextworks.nfvmano.catalogue.repos.MANORepository;
 import it.nextworks.nfvmano.catalogue.repos.ContentType;
 import it.nextworks.nfvmano.catalogue.repos.VnfPkgInfoRepository;
 import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
@@ -33,7 +32,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.util.*;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 @Service
@@ -123,6 +121,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
 
                 log.debug("The VNF Pkg info can be removed.");
                 if (vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.ONBOARDED
+                        || vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.LOCAL_ONBOARDED
                         || vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.PROCESSING) {
                     log.debug("The VNF Pkg info is associated to an onboarded VNF Pkg. Removing it.");
                     UUID vnfdId = vnfPkgInfoResource.getVnfdId();
@@ -162,7 +161,8 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         log.debug("Processing request to update VNF Pkg info: " + vnfPkgInfoId);
         VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
 
-        if (vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.ONBOARDED) {
+        if (vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.ONBOARDED
+            || vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.LOCAL_ONBOARDED) {
             if (vnfPkgInfoModifications.getOperationalState() != null) {
                 if (vnfPkgInfoResource.getOperationalState() == vnfPkgInfoModifications.getOperationalState()) {
                     log.error("VNF Pkg operational state already "
@@ -191,7 +191,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             log.debug("VnfPkgInfoResource successfully updated.");
         } else {
             log.error("VNF Pkg onboarding state not ONBOARDED. Cannot update VNF Pkg info.");
-            throw new NotPermittedOperationException("VNF Pkg onboarding state not ONBOARDED. Cannot update VNF Pkg info.");
+            throw new NotPermittedOperationException("VNF Pkg onboarding state not ONBOARDED/LOCAL_ONBOARDED. Cannot update VNF Pkg info.");
         }
         return vnfPkgInfoModifications;
     }
@@ -202,7 +202,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
 
         VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
         if ((!isInternalRequest) && (vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.ONBOARDED
-                && vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.PROCESSING)) {
+                && vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.LOCAL_ONBOARDED)) {
             log.error("VNF Pkg info " + vnfPkgInfoId + " does not have an onboarded VNFD yet");
             throw new NotPermittedOperationException("VNF Pkg info " + vnfPkgInfoId + " does not have an onboarded VNFD yet");
         }
@@ -225,7 +225,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
 
         VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
         if ((!isInternalRequest) && (vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.ONBOARDED
-                && vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.PROCESSING)) {
+                && vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.LOCAL_ONBOARDED)) {
             log.error("VNF Pkg info " + vnfPkgInfoId + " does not have an onboarded VNF Pkg yet");
             throw new NotPermittedOperationException("VNF Pkg info " + vnfPkgInfoId + " does not have an onboarded VNF Pkg yet");
         }
@@ -328,7 +328,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         }
 
         log.debug("Updating VNF Pkg info");
-        vnfPkgInfoResource.setOnboardingState(PackageOnboardingStateType.PROCESSING);
+        vnfPkgInfoResource.setOnboardingState(PackageOnboardingStateType.LOCAL_ONBOARDED);
         vnfPkgInfoResource.setOperationalState(PackageOperationalStateType.ENABLED);
         vnfPkgInfoResource.setVnfProvider(dt.getMetadata().getVendor());
         vnfPkgInfoResource.setVnfdVersion(dt.getMetadata().getVersion());
@@ -498,12 +498,12 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                             entry.getKey());
 
                     // TODO: Decide how to handle MANO onboarding failures.
-                    return PackageOnboardingStateType.PROCESSING;
+                    return PackageOnboardingStateType.LOCAL_ONBOARDED;
                 } else if (entry.getValue().getOpStatus() == OperationStatus.SENT
                         || entry.getValue().getOpStatus() == OperationStatus.RECEIVED
                         || entry.getValue().getOpStatus() == OperationStatus.PROCESSING) {
                     log.debug("VNF Pkg with vnfPkgInfoId {} onboarding still in progress for mano with manoId {}.");
-                    return PackageOnboardingStateType.PROCESSING;
+                    return PackageOnboardingStateType.LOCAL_ONBOARDED;
                 }
             }
         }

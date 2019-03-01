@@ -15,12 +15,18 @@
  */
 package it.nextworks.nfvmano.catalogue.plugins.mano.osm;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import java.util.*;
 
 /**
  * Created by Marco Capitani on 20/08/18.
@@ -35,16 +41,28 @@ public class OSMMano extends MANO {
     private String password;
     private String project;
 
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
+    private List<String> vimAccounts = new ArrayList<>();
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
+    private Map<String, String> osmIdTranslation;
+
     public OSMMano() {
         // JPA only
     }
 
-    public OSMMano(String manoId, String ipAddress, String username, String password, String project, MANOType manoType) {
+    public OSMMano(String manoId, String ipAddress, String username, String password, String project, MANOType manoType, List<String> vimAccounts) {
         super(manoId, manoType);
         this.ipAddress = ipAddress;
         this.username = username;
         this.password = password;
         this.project = project;
+        this.vimAccounts = vimAccounts;
+        this.osmIdTranslation = new HashMap<>();
     }
 
     @JsonProperty("ipAddress")
@@ -65,6 +83,21 @@ public class OSMMano extends MANO {
     @JsonProperty("project")
     public String getProject() {
         return project;
+    }
+
+    @JsonProperty("vimAccounts")
+    public List<String> getVimAccounts() {
+        return vimAccounts;
+    }
+
+    public Map<String, String> getOsmIdTranslation() { return osmIdTranslation; }
+
+    public void setVimAccounts(List<String> vimAccounts) {
+        this.vimAccounts = vimAccounts;
+    }
+
+    public void setOsmIdTranslation(Map<String, String> osmIdTranslation) {
+        this.osmIdTranslation = osmIdTranslation;
     }
 
     public void isValid() throws MalformattedElementException {

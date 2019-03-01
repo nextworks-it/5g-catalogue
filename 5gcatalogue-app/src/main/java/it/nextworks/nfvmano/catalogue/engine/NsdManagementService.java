@@ -28,7 +28,7 @@ import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
 import it.nextworks.nfvmano.catalogue.messages.ScopeType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.*;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
-import it.nextworks.nfvmano.catalogue.plugins.mano.MANORepository;
+import it.nextworks.nfvmano.catalogue.repos.MANORepository;
 import it.nextworks.nfvmano.catalogue.repos.ContentType;
 import it.nextworks.nfvmano.catalogue.repos.NsdInfoRepository;
 import it.nextworks.nfvmano.catalogue.repos.VnfPkgInfoRepository;
@@ -166,7 +166,9 @@ public class NsdManagementService implements NsdManagementInterface {
                 }
 
                 log.debug("The NSD info can be removed.");
-                if (nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.ONBOARDED) {
+                if (nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.ONBOARDED
+                        || nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.LOCAL_ONBOARDED
+                        || nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.PROCESSING) {
                     log.debug("The NSD info is associated to an onboarded NSD. Removing it.");
                     UUID nsdId = nsdInfo.getNsdId();
                     // dbWrapper.deleteNsd(nsdId);
@@ -205,7 +207,8 @@ public class NsdManagementService implements NsdManagementInterface {
             MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
         log.debug("Processing request to retrieve an NSD content for NSD info " + nsdInfoId);
         NsdInfoResource nsdInfo = getNsdInfoResource(nsdInfoId);
-        if ((!isInternalRequest) && (nsdInfo.getNsdOnboardingState() != NsdOnboardingStateType.ONBOARDED)) {
+        if ((!isInternalRequest) && (nsdInfo.getNsdOnboardingState() != NsdOnboardingStateType.ONBOARDED
+            && nsdInfo.getNsdOnboardingState() != NsdOnboardingStateType.LOCAL_ONBOARDED)) {
             log.error("NSD info " + nsdInfoId + " does not have an onboarded NSD yet");
             throw new NotPermittedOperationException("NSD info " + nsdInfoId + " does not have an onboarded NSD yet");
         }
@@ -302,7 +305,8 @@ public class NsdManagementService implements NsdManagementInterface {
         log.debug("Processing request to update NSD info: " + nsdInfoId);
         NsdInfoResource nsdInfo = getNsdInfoResource(nsdInfoId);
 
-        if (nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.ONBOARDED) {
+        if (nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.ONBOARDED
+            || nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.LOCAL_ONBOARDED) {
             if (nsdInfoModifications.getNsdOperationalState() != null) {
                 if (nsdInfo.getNsdOperationalState() == nsdInfoModifications.getNsdOperationalState()) {
                     log.error("NSD operational state already "
@@ -638,12 +642,12 @@ public class NsdManagementService implements NsdManagementInterface {
                             entry.getKey());
 
                     // TODO: Decide how to handle MANO onboarding failures.
-                    return NsdOnboardingStateType.PROCESSING;
+                    return NsdOnboardingStateType.LOCAL_ONBOARDED;
                 } else if (entry.getValue().getOpStatus() == OperationStatus.SENT
                         || entry.getValue().getOpStatus() == OperationStatus.RECEIVED
                         || entry.getValue().getOpStatus() == OperationStatus.PROCESSING) {
                     log.debug("NSD with nsdInfoId {} onboarding still in progress for mano with manoId {}.");
-                    return NsdOnboardingStateType.PROCESSING;
+                    return NsdOnboardingStateType.LOCAL_ONBOARDED;
                 }
             }
         }
