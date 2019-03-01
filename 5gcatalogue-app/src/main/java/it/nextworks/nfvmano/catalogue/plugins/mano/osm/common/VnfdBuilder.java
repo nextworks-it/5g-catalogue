@@ -19,13 +19,13 @@ public class VnfdBuilder {
 
     private static final Logger log = LoggerFactory.getLogger(VnfdBuilder.class);
 
-    private final File          defaultLogo;
+    private final File          logo;
     private OsmVNFPackage       osmPackage;
     private int                 interfacesPosition;
 
-    public VnfdBuilder(File defaultLogo) {
+    public VnfdBuilder(File logo) {
 
-        this.defaultLogo = defaultLogo;
+        this.logo = logo;
         this.interfacesPosition = 0;
     }
 
@@ -45,9 +45,13 @@ public class VnfdBuilder {
         for (Map.Entry<String, VnfExtCpNode> cpNode : cpNodes.entrySet()){
             List<String> exVirtualLinks = cpNode.getValue().getRequirements().getExternalVirtualLink();
             for(String exVirtualLink : exVirtualLinks)
-                if(exVirtualLink.endsWith("_mgmt"))
+                if(exVirtualLink.endsWith("_mgmt") || exVirtualLink.startsWith("mgmt_"))
                     mgmtInt.setCp(cpNode.getKey());
         }
+
+        //Set first cp as management
+        if(mgmtInt.getCp() == null)
+            mgmtInt.setCp(cpNodes.keySet().iterator().next());
 
         return mgmtInt;
     }
@@ -62,7 +66,7 @@ public class VnfdBuilder {
         osmVduInterface.setPosition(++interfacesPosition);
         List<String> exVirtualLinks = cpNode.getRequirements().getExternalVirtualLink();
         for(String exVirtualLink : exVirtualLinks)
-            if(exVirtualLink.endsWith("_mgmt"))
+            if(exVirtualLink.endsWith("_mgmt") || exVirtualLink.startsWith("mgmt_"))
                 osmVduInterface.setMgmtInterface(true);
 
         return osmVduInterface;
@@ -166,9 +170,9 @@ public class VnfdBuilder {
 
         osmVnfd.setVendor(vnfd.getProperties().getProvider());
 
-        osmVnfd.setVersion(vnfd.getProperties().getSoftwareVersion());
+        osmVnfd.setVersion(vnfd.getProperties().getDescriptorVersion());
 
-        osmVnfd.setLogo(defaultLogo.getName());//TODO add meaningful logo?
+        osmVnfd.setLogo(logo.getName());//TODO add meaningful logo?
 
         osmVnfd.setConnectionPoints(osmCps);
 
