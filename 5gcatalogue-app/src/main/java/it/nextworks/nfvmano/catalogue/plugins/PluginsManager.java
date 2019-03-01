@@ -68,7 +68,7 @@ public class PluginsManager {
     @Value("${kafkatopic.local}")
     private String localNotificationTopic;
 
-    @Value("${kafkatopic.remote")
+    @Value("${kafkatopic.remote}")
     private String remoteNotificationTopic;
 
     @Value("${catalogue.defaultMANOType}")
