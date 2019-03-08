@@ -185,7 +185,7 @@ public class PluginsManager {
 
     private MANOPlugin buildMANOPlugin(MANO mano) throws MalformattedElementException {
         if (mano.getManoType().equals(MANOType.DUMMY)) {
-            return new DummyMANOPlugin(mano.getManoType(), mano, bootstrapServers, nsdService, localNotificationTopic,
+            return new DummyMANOPlugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, localNotificationTopic,
                     remoteNotificationTopic, kafkaTemplate);
         } else if (mano.getManoType().equals(MANOType.OSMR3)) {
             return new OpenSourceMANOR3Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService,

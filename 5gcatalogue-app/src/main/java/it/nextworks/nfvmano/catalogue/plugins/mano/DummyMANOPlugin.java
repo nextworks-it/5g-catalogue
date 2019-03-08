@@ -16,6 +16,7 @@
 package it.nextworks.nfvmano.catalogue.plugins.mano;
 
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
+import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
 import it.nextworks.nfvmano.catalogue.messages.*;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdDeletionNotification;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnboardingNotification;
@@ -32,7 +33,8 @@ public class DummyMANOPlugin extends MANOPlugin {
             MANOType manoType,
             MANO mano,
             String kafkaBootstrapServers,
-            NsdManagementInterface service,
+            NsdManagementInterface nsdService,
+            VnfPackageManagementInterface vnfdService,
             String localTopic,
             String remoteTopic,
             KafkaTemplate<String, String> kafkaTemplate
@@ -41,8 +43,8 @@ public class DummyMANOPlugin extends MANOPlugin {
                 manoType,
                 mano,
                 kafkaBootstrapServers,
-                service,
-                null,//TODO add VnfPackageManagementInterface
+                nsdService,
+                vnfdService,
                 localTopic,
                 remoteTopic,
                 kafkaTemplate
