@@ -91,7 +91,7 @@ public class ArchiveBuilder {
         File iconsFolder = makeSubFolder(folder, "icons");
         File cloudInitFolder = makeSubFolder(folder, "cloud_init");
         copyFile(iconsFolder, logoFile);
-        if(cloudInitFile != null)
+        if (cloudInitFile != null)
             copyFile(cloudInitFolder, cloudInitFile);
         // TODO checksum
         return compress(folder);

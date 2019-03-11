@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,29 +34,53 @@ public class OsmR4InfoObject {
         this.admin = admin;
     }
 
-    public String getVendor() { return vendor; }
+    public String getVendor() {
+        return vendor;
+    }
 
-    public void setVendor(String vendor) { this.vendor = vendor; }
+    public void setVendor(String vendor) {
+        this.vendor = vendor;
+    }
 
-    public String getName() { return name; }
+    public String getName() {
+        return name;
+    }
 
-    public void setName(String name) { this.name = name; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public String getId() { return id; }
+    public String getId() {
+        return id;
+    }
 
-    public void setId(String id) { this.id = id; }
+    public void setId(String id) {
+        this.id = id;
+    }
 
-    public String getDescriptorId() { return descriptorId; }
+    public String getDescriptorId() {
+        return descriptorId;
+    }
 
-    public void setDescriptorId(String descriptorId) { this.descriptorId = descriptorId; }
+    public void setDescriptorId(String descriptorId) {
+        this.descriptorId = descriptorId;
+    }
 
-    public String getVersion() { return version; }
+    public String getVersion() {
+        return version;
+    }
 
-    public void setVersion(String version) { this.version = version; }
+    public void setVersion(String version) {
+        this.version = version;
+    }
 
-    public String getDescription() { return description; }
+    public String getDescription() {
+        return description;
+    }
 
-    public void setDescription(String description) { this.description = description; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
     @JsonAnyGetter
     public Map<String, Object> any() {

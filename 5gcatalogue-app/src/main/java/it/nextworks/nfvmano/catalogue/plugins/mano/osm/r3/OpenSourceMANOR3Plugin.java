@@ -71,16 +71,11 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
 	*/
 
     private static final Logger log = LoggerFactory.getLogger(OpenSourceMANOR3Plugin.class);
-
-    private final File logo;
-
-    private final OSMMano osm;
-
-    private OSMClient osmClient;
-
-    private Path osmDirPath;
-
     private static File osmDir;
+    private final File logo;
+    private final OSMMano osm;
+    private OSMClient osmClient;
+    private Path osmDirPath;
 
     public OpenSourceMANOR3Plugin(MANOType manoType, MANO mano, String kafkaBootstrapServers,
                                   NsdManagementInterface nsdService, VnfPackageManagementInterface vnfdService, String localTopic, String remoteTopic,

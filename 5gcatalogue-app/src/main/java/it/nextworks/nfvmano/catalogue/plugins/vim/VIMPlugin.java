@@ -25,8 +25,6 @@ import it.nextworks.nfvmano.catalogue.messages.*;
 import it.nextworks.nfvmano.catalogue.plugins.KafkaConnector;
 import it.nextworks.nfvmano.catalogue.plugins.Plugin;
 import it.nextworks.nfvmano.catalogue.plugins.PluginType;
-import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
-import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -182,13 +182,13 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
     }
 
     @Override
-    public void sendPnfdOnBoardingNotification(PnfdOnboardingNotification notification)
+    public void sendPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification)
             throws MethodNotImplementedException {
         throw new MethodNotImplementedException("sendPnfdOnBoardingNotification method not implemented");
     }
 
     @Override
-    public void sendPnfdDeletionNotification(PnfdDeletionNotification notification)
+    public void sendPnfdDeletionNotification(PnfdDeletionNotificationMessage notification)
             throws MethodNotImplementedException {
         throw new MethodNotImplementedException("sendPnfdDeletionNotification method not implemented");
     }

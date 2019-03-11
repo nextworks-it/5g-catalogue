@@ -25,64 +25,54 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class NsdOnBoardingNotificationMessage extends CatalogueMessage {
+public class PnfdOnBoardingNotificationMessage extends CatalogueMessage {
 
-    private final String nsdInfoId;
-    private final String nsdId;
+    private final String pnfdInfoId;
+    private final String pnfdId;
 
     @JsonInclude(Include.NON_NULL)
     private String pluginId;
 
-    private List<String> includedVnfds = new ArrayList<>();
-
     @JsonCreator
-    public NsdOnBoardingNotificationMessage(
-            @JsonProperty("nsdInfoId") String nsdInfoId,
-            @JsonProperty("nsdId") String nsdId,
+    public PnfdOnBoardingNotificationMessage(
+            @JsonProperty("pnfdInfoId") String pnfdInfoId,
+            @JsonProperty("pnfdId") String pnfdId,
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus,
             @JsonProperty("notifierId") String pluginId
     ) {
-        super(CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION, operationId, scope, opStatus);
-        this.nsdInfoId = nsdInfoId;
-        this.nsdId = nsdId;
+        super(CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION, operationId, scope, opStatus);
+        this.pnfdInfoId = pnfdInfoId;
+        this.pnfdId = pnfdId;
         this.pluginId = pluginId;
     }
 
-    public NsdOnBoardingNotificationMessage(
-            @JsonProperty("nsdInfoId") String nsdInfoId,
-            @JsonProperty("nsdId") String nsdId,
+    public PnfdOnBoardingNotificationMessage(
+            @JsonProperty("pnfdInfoId") String pnfdInfoId,
+            @JsonProperty("pnfdId") String pnfdId,
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus
     ) {
-        super(CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION, operationId, scope, opStatus);
-        this.nsdInfoId = nsdInfoId;
-        this.nsdId = nsdId;
+        super(CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION, operationId, scope, opStatus);
+        this.pnfdInfoId = pnfdInfoId;
+        this.pnfdId = pnfdId;
         this.pluginId = null;
     }
 
-    @JsonProperty("nsdInfoId")
-    public String getNsdInfoId() {
-        return nsdInfoId;
+    @JsonProperty("pnfdInfoId")
+    public String getPnfdInfoId() {
+        return pnfdInfoId;
     }
 
-    @JsonProperty("nsdId")
-    public String getNsdId() {
-        return nsdId;
+    @JsonProperty("pnfdId")
+    public String getPnfdId() {
+        return pnfdId;
     }
 
     @JsonProperty("notifierId")
     public String getPluginId() {
         return pluginId;
-    }
-
-    public List<String> getIncludedVnfds() {
-        return includedVnfds;
-    }
-
-    public void setIncludedVnfds(List<String> includedVnfds) {
-        this.includedVnfds = includedVnfds;
     }
 }

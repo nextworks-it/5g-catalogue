@@ -11,9 +11,9 @@ topologyTemplate:
     nodeType: tosca.nodes.nfv.VNF
     requirements:
       virtualLink: [{cp: cp-ens3, vl: vm_mgmt}, {cp: cp-ens7, vl: origin_net}, {cp: cp-ens6, vl: cache_net}]
-
+  
   nodeTemplates:
-
+    
     vCACHE_VNF:
       type: tosca.nodes.nfv.VNF
       properties:
@@ -28,7 +28,7 @@ topologyTemplate:
           - JuJu
         flavourId: simple
         flavourDescription: Simple deployment flavour
-
+    
     vCache_vdu:
       type: tosca.nodes.nfv.Vdu.Compute
       properties:
@@ -45,7 +45,7 @@ topologyTemplate:
               numVirtualCpu: 4
       requirements:
         virtualStorage: [vCache_storage]
-
+    
     vCache_storage:
       type: tosca.nodes.nfv.Vdu.VirtualBlockStorage
       properties:
@@ -58,7 +58,7 @@ topologyTemplate:
           containerFormat: BARE
           diskFormat: QCOW2
           size: 2
-
+    
     cp-ens3:
       type: tosca.nodes.nfv.VnfExtCp
       properties:
@@ -68,7 +68,7 @@ topologyTemplate:
         description: mgmt interface
       requirements:
         externalVirtualLink: [vm_mgmt]
-
+    
     cp-ens7:
       type: tosca.nodes.nfv.VnfExtCp
       properties:
@@ -78,7 +78,7 @@ topologyTemplate:
         description: origin interface
       requirements:
         externalVirtualLink: [origin_net]
-
+    
     cp-ens6:
       type: tosca.nodes.nfv.VnfExtCp
       properties:

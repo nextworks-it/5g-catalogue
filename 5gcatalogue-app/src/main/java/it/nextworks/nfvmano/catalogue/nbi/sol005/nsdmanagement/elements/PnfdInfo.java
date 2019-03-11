@@ -22,6 +22,8 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -65,6 +67,9 @@ public class PnfdInfo {
 
     @JsonProperty("_links")
     private PnfdLinksType links = null;
+
+    @JsonProperty("manosOnboardingStatus")
+    private Map<String, PnfdOnboardingStateType> manoIdToOnboardingStatus = new HashMap<>();
 
     public PnfdInfo id(UUID id) {
         this.id = id;
@@ -306,6 +311,14 @@ public class PnfdInfo {
 
     public void setLinks(PnfdLinksType links) {
         this.links = links;
+    }
+
+    public Map<String, PnfdOnboardingStateType> getManoIdToOnboardingStatus() {
+        return manoIdToOnboardingStatus;
+    }
+
+    public void setManoIdToOnboardingStatus(Map<String, PnfdOnboardingStateType> manoIdToOnboardingStatus) {
+        this.manoIdToOnboardingStatus = manoIdToOnboardingStatus;
     }
 
     @Override

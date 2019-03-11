@@ -40,7 +40,10 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -74,13 +77,13 @@ public class PluginsManager {
     @Value("${catalogue.defaultMANOType}")
     private String defaultManoType;
 
-    @Value ("${catalogue.osmr3.localDir}")
+    @Value("${catalogue.osmr3.localDir}")
     private Path osmr3Dir;
 
-    @Value ("${catalogue.osmr4.localDir}")
+    @Value("${catalogue.osmr4.localDir}")
     private Path osmr4Dir;
 
-    @Value ("${catalogue.logo}")
+    @Value("${catalogue.logo}")
     private Path logo;
 
     @Autowired
@@ -191,8 +194,8 @@ public class PluginsManager {
             return new OpenSourceMANOR3Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService,
                     localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr3Dir, logo);
         } else if (mano.getManoType().equals(MANOType.OSMR4)) {
-                return new OpenSourceMANOR4Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, MANORepository,
-                        localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr4Dir, logo);
+            return new OpenSourceMANOR4Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, MANORepository,
+                    localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr4Dir, logo);
         } else {
             throw new MalformattedElementException("Unsupported MANO type. Skipping.");
         }
@@ -216,7 +219,7 @@ public class PluginsManager {
                 log.debug("Processing request for creating " + type + "Plugin.");
                 OSMMano osmMano = (OSMMano) mano;
                 OSMMano targetOsmMano = new OSMMano(osmMano.getManoId(), osmMano.getIpAddress(), osmMano.getUsername(),
-                            osmMano.getPassword(), osmMano.getProject(), type, osmMano.getVimAccounts());
+                        osmMano.getPassword(), osmMano.getProject(), type, osmMano.getVimAccounts());
                 targetOsmMano.isValid();
                 log.debug("Persisting OSM MANO with manoId: " + manoId);
                 OSMMano createdMano = MANORepository.saveAndFlush(targetOsmMano);

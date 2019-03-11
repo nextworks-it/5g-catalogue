@@ -5,5 +5,7 @@
   "username": "admin",
   "password": "admin",
   "domain": "default",
-  "manoRefIds": ["NXW_OSMR4.0"]
+  "manoRefIds": [
+    "NXW_OSMR4.0"
+  ]
 }

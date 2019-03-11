@@ -242,53 +242,53 @@ public class NsdApiController implements NsdApi {
 
         String accept = request.getHeader("Accept");
         //if (accept != null && accept.contains("application/json")) {
-            if (body.isEmpty()) {
-                return new ResponseEntity<String>("Error message: File is empty!", HttpStatus.BAD_REQUEST);
-            }
+        if (body.isEmpty()) {
+            return new ResponseEntity<String>("Error message: File is empty!", HttpStatus.BAD_REQUEST);
+        }
 
-            // TODO: the content-type as per SOL005 v2.4.1 should be text/plain or application/zip
+        // TODO: the content-type as per SOL005 v2.4.1 should be text/plain or application/zip
 
-            if (!contentType.startsWith("multipart/form-data")) {
-                // TODO: to be implemented later on
-                return new ResponseEntity<String>("Unable to parse content " + contentType, HttpStatus.NOT_IMPLEMENTED);
-            } else {
-                try {
-                    ContentType type = null;
-                    log.debug("NSD content file name is: " + body.getOriginalFilename());
-                    if (body.getOriginalFilename().endsWith("zip")) {
-                        type = ContentType.ZIP;
-                    } else if (body.getOriginalFilename().endsWith("yaml")) {
-                        type = ContentType.YAML;
-                    } else {
-                        // TODO: to be implemented later on
-                        return new ResponseEntity<String>("Unable to parse file type that is not .zip or .yaml",
-                                HttpStatus.NOT_IMPLEMENTED);
-                    }
-                    nsdManagementService.uploadNsd(nsdInfoId, body, type);
-                    log.debug("Upload processing done");
-                    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-                    // TODO: check if we need to introduce the asynchronous mode
-                } catch (NotPermittedOperationException | AlreadyExistingEntityException e) {
-                    log.error("Impossible to upload NSD: " + e.getMessage());
-                    return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
-                            "Impossible to upload NSD: " + e.getMessage()), HttpStatus.CONFLICT);
-                } catch (MalformattedElementException e) {
-                    log.error("Impossible to upload NSD: " + e.getMessage());
-                    return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
-                            "Impossible to upload NSD: " + e.getMessage()), HttpStatus.BAD_REQUEST);
-                } catch (NotExistingEntityException e) {
-                    log.error("Impossible to upload NSD: " + e.getMessage());
-                    return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
-                            "Impossible to upload NSD: " + e.getMessage()), HttpStatus.NOT_FOUND);
-                } catch (Exception e) {
-                    log.error("General exception while uploading NSD content: " + e.getMessage());
-                    log.error("Details: ", e);
-                    return new ResponseEntity<ProblemDetails>(
-                            Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                                    "General exception while uploading NSD content: " + e.getMessage()),
-                            HttpStatus.INTERNAL_SERVER_ERROR);
+        if (!contentType.startsWith("multipart/form-data")) {
+            // TODO: to be implemented later on
+            return new ResponseEntity<String>("Unable to parse content " + contentType, HttpStatus.NOT_IMPLEMENTED);
+        } else {
+            try {
+                ContentType type = null;
+                log.debug("NSD content file name is: " + body.getOriginalFilename());
+                if (body.getOriginalFilename().endsWith("zip")) {
+                    type = ContentType.ZIP;
+                } else if (body.getOriginalFilename().endsWith("yaml")) {
+                    type = ContentType.YAML;
+                } else {
+                    // TODO: to be implemented later on
+                    return new ResponseEntity<String>("Unable to parse file type that is not .zip or .yaml",
+                            HttpStatus.NOT_IMPLEMENTED);
                 }
+                nsdManagementService.uploadNsd(nsdInfoId, body, type);
+                log.debug("Upload processing done");
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+                // TODO: check if we need to introduce the asynchronous mode
+            } catch (NotPermittedOperationException | AlreadyExistingEntityException e) {
+                log.error("Impossible to upload NSD: " + e.getMessage());
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
+                        "Impossible to upload NSD: " + e.getMessage()), HttpStatus.CONFLICT);
+            } catch (MalformattedElementException e) {
+                log.error("Impossible to upload NSD: " + e.getMessage());
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
+                        "Impossible to upload NSD: " + e.getMessage()), HttpStatus.BAD_REQUEST);
+            } catch (NotExistingEntityException e) {
+                log.error("Impossible to upload NSD: " + e.getMessage());
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
+                        "Impossible to upload NSD: " + e.getMessage()), HttpStatus.NOT_FOUND);
+            } catch (Exception e) {
+                log.error("General exception while uploading NSD content: " + e.getMessage());
+                log.error("Details: ", e);
+                return new ResponseEntity<ProblemDetails>(
+                        Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                                "General exception while uploading NSD content: " + e.getMessage()),
+                        HttpStatus.INTERNAL_SERVER_ERROR);
             }
+        }
         /*} else {
             return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.PRECONDITION_FAILED.value(),
                     "Accept header null or different from application/json"), HttpStatus.PRECONDITION_FAILED);

@@ -18,7 +18,6 @@ package it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboardingStateType;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.Valid;

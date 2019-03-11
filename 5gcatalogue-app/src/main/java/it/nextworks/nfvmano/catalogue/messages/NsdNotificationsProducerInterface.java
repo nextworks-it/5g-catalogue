@@ -15,8 +15,6 @@
  */
 package it.nextworks.nfvmano.catalogue.messages;
 
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdDeletionNotification;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnboardingNotification;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
@@ -60,7 +58,7 @@ public interface NsdNotificationsProducerInterface {
      * @param notification notification about the on-boarding of a new PNF
      * @throws MethodNotImplementedException
      */
-    void sendPnfdOnBoardingNotification(PnfdOnboardingNotification notification) throws MethodNotImplementedException;
+    void sendPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification) throws MethodNotImplementedException;
 
     /**
      * This method is called when a new PNF is deleted, after all the steps are done.
@@ -69,5 +67,5 @@ public interface NsdNotificationsProducerInterface {
      * @param notification notification about the deletion of a PNF
      * @throws MethodNotImplementedException
      */
-    void sendPnfdDeletionNotification(PnfdDeletionNotification notification) throws MethodNotImplementedException;
+    void sendPnfdDeletionNotification(PnfdDeletionNotificationMessage notification) throws MethodNotImplementedException;
 }

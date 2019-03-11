@@ -37,9 +37,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest
@@ -50,16 +48,16 @@ public class NsdBuilderTest {
 
     private File DEF_IMG;
 
-    @Before
-    public void setUp() {
-        DEF_IMG = new File(
-                OpenSourceMANOR3Plugin.class.getClassLoader().getResource(logoPath).getFile());
-    }
-
     static DescriptorTemplate readFile(String path, Charset encoding) throws IOException {
         byte[] encoded = Files.readAllBytes(Paths.get(path));
         String result = new String(encoded, encoding);
         return DescriptorsParser.stringToDescriptorTemplate(result);
+    }
+
+    @Before
+    public void setUp() {
+        DEF_IMG = new File(
+                OpenSourceMANOR3Plugin.class.getClassLoader().getResource(logoPath).getFile());
     }
 
     @Test

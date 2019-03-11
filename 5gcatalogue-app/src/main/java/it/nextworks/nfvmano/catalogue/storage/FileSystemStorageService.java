@@ -50,30 +50,6 @@ public class FileSystemStorageService {
     public FileSystemStorageService() {
     }
 
-    @PostConstruct
-    public void initStorageService() {
-        log.debug("Initializing file system storage service...");
-        nsdsLocation = Paths.get(rootDir + ConfigurationParameters.storageNsdsSubfolder);
-        vnfPkgsLocation = Paths.get(rootDir + ConfigurationParameters.storageVnfpkgsSubfolder);
-
-        try {
-            init();
-        } catch (Exception e) {
-            log.error("Could not initialize storage: " + e.getMessage());
-        }
-    }
-
-    public void init() throws FailedOperationException {
-        log.debug("Initializing storage directories...");
-        try {
-            //create rootLocation + nsds and vnfpckgs folders
-            Files.createDirectories(nsdsLocation);
-            Files.createDirectories(vnfPkgsLocation);
-        } catch (IOException e) {
-            throw new FailedOperationException("Unable to create local storage directories: " + e.getMessage());
-        }
-    }
-
     public static String storeNsd(String nsdId, String version, MultipartFile file) throws MalformattedElementException, FailedOperationException {
         String filename = StringUtils.cleanPath(file.getOriginalFilename());
         try {
@@ -154,16 +130,16 @@ public class FileSystemStorageService {
 
         if (filename.endsWith("/")) {
             log.debug("Zip entry is a directory: " + filename);
-                Path newDir = Paths.get(vnfPkgsLocation + "/" + vnfdId + "/" + version + "/" + filename);
-                if (!Files.isDirectory(newDir, LinkOption.NOFOLLOW_LINKS)) {
-                    try {
-                        Files.createDirectories(newDir);
-                    } catch (IOException e) {
-                        log.error("Not able to create folder: " + filename);
-                        throw new FailedOperationException("Not able to create folder: " + filename);
-                    }
+            Path newDir = Paths.get(vnfPkgsLocation + "/" + vnfdId + "/" + version + "/" + filename);
+            if (!Files.isDirectory(newDir, LinkOption.NOFOLLOW_LINKS)) {
+                try {
+                    Files.createDirectories(newDir);
+                } catch (IOException e) {
+                    log.error("Not able to create folder: " + filename);
+                    throw new FailedOperationException("Not able to create folder: " + filename);
                 }
-                log.debug("Directory created: " + filename);
+            }
+            log.debug("Directory created: " + filename);
         } else {
             File newFile;
             String dirPath;
@@ -385,6 +361,30 @@ public class FileSystemStorageService {
         }*/
 
         return destFile;
+    }
+
+    @PostConstruct
+    public void initStorageService() {
+        log.debug("Initializing file system storage service...");
+        nsdsLocation = Paths.get(rootDir + ConfigurationParameters.storageNsdsSubfolder);
+        vnfPkgsLocation = Paths.get(rootDir + ConfigurationParameters.storageVnfpkgsSubfolder);
+
+        try {
+            init();
+        } catch (Exception e) {
+            log.error("Could not initialize storage: " + e.getMessage());
+        }
+    }
+
+    public void init() throws FailedOperationException {
+        log.debug("Initializing storage directories...");
+        try {
+            //create rootLocation + nsds and vnfpckgs folders
+            Files.createDirectories(nsdsLocation);
+            Files.createDirectories(vnfPkgsLocation);
+        } catch (IOException e) {
+            throw new FailedOperationException("Unable to create local storage directories: " + e.getMessage());
+        }
     }
 
 }

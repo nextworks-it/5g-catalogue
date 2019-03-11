@@ -29,7 +29,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
 import java.io.*;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -51,17 +54,6 @@ public class ArchiveParser {
     FileSystemStorageService storageService;
 
     public ArchiveParser() {
-    }
-
-    @PostConstruct
-    void init() {
-        admittedFolders.add("TOSCA-Metadata/");
-        admittedFolders.add("Definitions/");
-        admittedFolders.add("Files/");
-        admittedFolders.add("Files/Tests/");
-        admittedFolders.add("Files/Licenses/");
-        admittedFolders.add("Files/Scripts/");
-        admittedFolders.add("Files/Monitoring/");
     }
 
     private static void parseArchive(InputStream archive) throws IOException, MalformattedElementException {
@@ -105,7 +97,8 @@ public class ArchiveParser {
         if (metadata == null) {
             log.error("CSAR without TOSCA.meta");
             throw new MalformattedElementException("CSAR without TOSCA.meta");
-        } if (manifest == null) {
+        }
+        if (manifest == null) {
             log.error("CSAR without manifest");
             throw new MalformattedElementException("CSAR without manifest");
         } else {
@@ -225,5 +218,16 @@ public class ArchiveParser {
         }
         zis.closeEntry();
         zis.close();
+    }
+
+    @PostConstruct
+    void init() {
+        admittedFolders.add("TOSCA-Metadata/");
+        admittedFolders.add("Definitions/");
+        admittedFolders.add("Files/");
+        admittedFolders.add("Files/Tests/");
+        admittedFolders.add("Files/Licenses/");
+        admittedFolders.add("Files/Scripts/");
+        admittedFolders.add("Files/Monitoring/");
     }
 }
