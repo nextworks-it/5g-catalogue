@@ -20,8 +20,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import it.nextworks.nfvmano.catalogue.messages.*;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdDeletionNotification;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnboardingNotification;
 import it.nextworks.nfvmano.catalogue.plugins.KafkaConnector;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
@@ -97,6 +95,22 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
         functor.put(CatalogueMessageType.NSD_DELETION_NOTIFICATION, msg -> {
             NsdDeletionNotificationMessage castMsg = (NsdDeletionNotificationMessage) msg;
             acceptNsdDeletionNotification(castMsg);
+        });
+        functor.put(CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION, msg -> {
+            PnfdOnBoardingNotificationMessage castMsg = (PnfdOnBoardingNotificationMessage) msg;
+            try {
+                acceptPnfdOnBoardingNotification(castMsg);
+            } catch (MethodNotImplementedException e) {
+                e.printStackTrace();
+            }
+        });
+        functor.put(CatalogueMessageType.PNFD_DELETION_NOTIFICATION, msg -> {
+            PnfdDeletionNotificationMessage castMsg = (PnfdDeletionNotificationMessage) msg;
+            try {
+                acceptPnfdDeletionNotification(castMsg);
+            } catch (MethodNotImplementedException e) {
+                e.printStackTrace();
+            }
         });
         functor.put(CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION, msg -> {
             VnfPkgOnBoardingNotificationMessage castMsg = (VnfPkgOnBoardingNotificationMessage) msg;
@@ -183,14 +197,56 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 
     @Override
     public void sendPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification)
-            throws MethodNotImplementedException {
-        throw new MethodNotImplementedException("sendPnfdOnBoardingNotification method not implemented");
+            throws MethodNotImplementedException, FailedOperationException {
+        try {
+            log.info("Sending pnfdOnBoardingNotification for PNFD " + notification.getPnfdId());
+
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+            mapper.setSerializationInclusion(Include.NON_EMPTY);
+
+            String json = mapper.writeValueAsString(notification);
+
+            log.debug("Sending json message over kafka bus on topic " + localNotificationTopic + "\n" + json);
+
+            if (skipKafka) {
+                log.debug(" ---- TEST MODE: skipping post to kafka bus ----");
+            } else {
+                kafkaTemplate.send(localNotificationTopic, json);
+
+                log.debug("Message sent.");
+            }
+        } catch (Exception e) {
+            log.error("Error while posting NsdOnBoardingNotificationMessage to Kafka bus");
+            throw new FailedOperationException(e.getMessage());
+        }
     }
 
     @Override
     public void sendPnfdDeletionNotification(PnfdDeletionNotificationMessage notification)
-            throws MethodNotImplementedException {
-        throw new MethodNotImplementedException("sendPnfdDeletionNotification method not implemented");
+            throws MethodNotImplementedException, FailedOperationException {
+        try {
+            log.info("Sending nsdDeletionNotification for PNFD with pnfdId: " + notification.getPnfdId());
+
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+            mapper.setSerializationInclusion(Include.NON_EMPTY);
+
+            String json = mapper.writeValueAsString(notification);
+
+            log.debug("Sending json message over kafka bus on topic " + localNotificationTopic + "\n" + json);
+
+            if (skipKafka) {
+                log.debug(" ---- TEST MODE: skipping post to kafka bus ----");
+            } else {
+                kafkaTemplate.send(localNotificationTopic, json);
+
+                log.debug("Message sent.");
+            }
+        } catch (Exception e) {
+            log.error("Error while posting NsdDeletionNotificationMessage to Kafka bus");
+            throw new FailedOperationException(e.getMessage());
+        }
     }
 
     @Override
@@ -282,16 +338,15 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
     }
 
     @Override
-    public void acceptPnfdOnBoardingNotification(PnfdOnboardingNotification notification)
-            throws MethodNotImplementedException {
-        throw new MethodNotImplementedException("acceptPnfdOnBoardingNotification method not implemented");
+    public void acceptPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
+
     }
 
     @Override
-    public void acceptPnfdDeletionNotification(PnfdDeletionNotification notification)
-            throws MethodNotImplementedException {
-        throw new MethodNotImplementedException("acceptPnfdDeletionNotification method not implemented");
+    public void acceptPnfdDeletionNotification(PnfdDeletionNotificationMessage notification) throws MethodNotImplementedException {
+
     }
+
 
     @Override
     public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) throws MethodNotImplementedException {

@@ -191,13 +191,13 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
     }
 
     @Override
-    public void acceptPnfdOnBoardingNotification(PnfdOnboardingNotification notification) {
+    public void acceptPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification) {
         log.info("Received PNFD onboarding notification.");
         log.debug("Body: {}", notification);
     }
 
     @Override
-    public void acceptPnfdDeletionNotification(PnfdDeletionNotification notification) {
+    public void acceptPnfdDeletionNotification(PnfdDeletionNotificationMessage notification) {
         log.info("Received PNFD deletion notification.");
         log.debug("Body: {}", notification);
     }

@@ -58,7 +58,7 @@ public interface NsdNotificationsProducerInterface {
      * @param notification notification about the on-boarding of a new PNF
      * @throws MethodNotImplementedException
      */
-    void sendPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification) throws MethodNotImplementedException;
+    void sendPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification) throws MethodNotImplementedException, FailedOperationException;
 
     /**
      * This method is called when a new PNF is deleted, after all the steps are done.
@@ -67,5 +67,5 @@ public interface NsdNotificationsProducerInterface {
      * @param notification notification about the deletion of a PNF
      * @throws MethodNotImplementedException
      */
-    void sendPnfdDeletionNotification(PnfdDeletionNotificationMessage notification) throws MethodNotImplementedException;
+    void sendPnfdDeletionNotification(PnfdDeletionNotificationMessage notification) throws MethodNotImplementedException, FailedOperationException;
 }

@@ -21,6 +21,7 @@ import it.nextworks.nfvmano.catalogue.messages.*;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdDeletionNotification;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnboardingNotification;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
+import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -88,15 +89,33 @@ public class DummyMANOPlugin extends MANOPlugin {
     }
 
     @Override
-    public void acceptPnfdOnBoardingNotification(PnfdOnboardingNotification notification) {
+    public void acceptPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
         log.info("Received PNFD onboarding notification.");
         log.debug("Body: {}", notification);
+        PnfdOnBoardingNotificationMessage response = new PnfdOnBoardingNotificationMessage(
+                notification.getPnfdInfoId(),
+                notification.getPnfdId(),
+                notification.getOperationId(),
+                ScopeType.REMOTE,
+                OperationStatus.SUCCESSFULLY_DONE,
+                mano.getManoId()
+        );
+        sendNotification(response);
     }
 
     @Override
-    public void acceptPnfdDeletionNotification(PnfdDeletionNotification notification) {
+    public void acceptPnfdDeletionNotification(PnfdDeletionNotificationMessage notification) throws MethodNotImplementedException {
         log.info("Received PNFD deletion notification.");
         log.debug("Body: {}", notification);
+        NsdDeletionNotificationMessage response = new NsdDeletionNotificationMessage(
+                notification.getPnfdInfoId(),
+                notification.getPnfdId(),
+                notification.getOperationId(),
+                ScopeType.REMOTE,
+                OperationStatus.SUCCESSFULLY_DONE,
+                mano.getManoId()
+        );
+        sendNotification(response);
     }
 
     @Override

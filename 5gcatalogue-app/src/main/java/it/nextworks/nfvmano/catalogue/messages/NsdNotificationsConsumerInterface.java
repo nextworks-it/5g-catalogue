@@ -55,7 +55,7 @@ public interface NsdNotificationsConsumerInterface {
      * @param notification notification about the on-boarding of a PNFD
      * @throws MethodNotImplementedException
      */
-    void acceptPnfdOnBoardingNotification(PnfdOnboardingNotification notification) throws MethodNotImplementedException; // TODO use catalogueMsg
+    void acceptPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification) throws MethodNotImplementedException; // TODO use catalogueMsg
 
     /**
      * This method is called when an on-boarded PNFD is deleted.
@@ -64,6 +64,6 @@ public interface NsdNotificationsConsumerInterface {
      * @param notification notification about the deletion of an existing PNFD
      * @throws MethodNotImplementedException
      */
-    void acceptPnfdDeletionNotification(PnfdDeletionNotification notification) throws MethodNotImplementedException; // TODO use catalogueMsg
+    void acceptPnfdDeletionNotification(PnfdDeletionNotificationMessage notification) throws MethodNotImplementedException; // TODO use catalogueMsg
 
 }

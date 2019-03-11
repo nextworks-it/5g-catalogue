@@ -295,9 +295,27 @@ public class NsdApiController implements NsdApi {
         }*/
     }
 
-    public ResponseEntity<PnfdInfo> createPNFDInfo(
-            @ApiParam(value = "", required = true) @Valid @RequestBody PnfdInfo body) {
+    public ResponseEntity<?> createPNFDInfo(
+            @ApiParam(value = "", required = true) @Valid @RequestBody CreatePnfdInfoRequest body) {
         String accept = request.getHeader("Accept");
+        if (accept != null && accept.contains("application/json")) {
+            log.debug("Processing REST request to create a PNFD info");
+            try {
+                PnfdInfo pnfdInfo = nsdManagementService.createPnfdInfo(body);
+                return new ResponseEntity<PnfdInfo>(pnfdInfo, HttpStatus.CREATED);
+            } catch (MalformattedElementException e) {
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
+                        "PNFD info cannot be created"), HttpStatus.BAD_REQUEST);
+            } catch (Exception e) {
+                log.error("Exception while creating PNFD info: " + e.getMessage());
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                        "PNFD info cannot be created"), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } else
+            return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.PRECONDITION_FAILED.value(),
+                    "Accept header null or different from application/json"), HttpStatus.PRECONDITION_FAILED);
+
+        /*String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
                 return new ResponseEntity<PnfdInfo>(objectMapper.readValue(
@@ -309,13 +327,33 @@ public class NsdApiController implements NsdApi {
             }
         }
 
-        return new ResponseEntity<PnfdInfo>(HttpStatus.NOT_IMPLEMENTED);
+        return new ResponseEntity<PnfdInfo>(HttpStatus.NOT_IMPLEMENTED);*/
     }
 
-    public ResponseEntity<List<PnfdInfo>> getPNFDsInfo(
+    public ResponseEntity<?> getPNFDsInfo(
             @ApiParam(value = "Indicates to exclude the following complex attributes from the response. See clause 4.3.3 for details. The NFVO shall support this parameter. The following attributes shall be excluded from the PnfdInfo structure in the response body if this parameter is provided, or none of the parameters \"all_fields,\" \"fields\", \"exclude_fields\", \"exclude_default\" are provided: userDefinedData.") @Valid @RequestParam(value = "exclude_default", required = false) String excludeDefault,
             @ApiParam(value = "Include all complex attributes in the response. See clause 4.3.3 for details. The NFVO shall support this parameter.") @Valid @RequestParam(value = "all_fields", required = false) String allFields) {
+        log.debug("Processing REST request to retrieve all PNFD infos");
         String accept = request.getHeader("Accept");
+
+        // TODO: process URI parameters for filters and attributes. At the moment it returns all the PNFDs info
+        if (accept != null && accept.contains("application/json")) {
+            try {
+                List<PnfdInfo> pnfdInfos = nsdManagementService.getAllPnfdInfos();
+                log.debug("PNFD infos retrieved");
+                return new ResponseEntity<List<PnfdInfo>>(pnfdInfos, HttpStatus.OK);
+            } catch (Exception e) {
+                log.error("General exception while retrieving set of PNFD infos: " + e.getMessage());
+                return new ResponseEntity<ProblemDetails>(
+                        Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                                "General exception while retrieving set of PNFD infos: " + e.getMessage()),
+                        HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } else
+            return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.PRECONDITION_FAILED.value(),
+                    "Accept header null or different from application/json"), HttpStatus.PRECONDITION_FAILED);
+
+        /*String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
                 return new ResponseEntity<List<PnfdInfo>>(objectMapper.readValue(
@@ -327,12 +365,41 @@ public class NsdApiController implements NsdApi {
             }
         }
 
-        return new ResponseEntity<List<PnfdInfo>>(HttpStatus.NOT_IMPLEMENTED);
+        return new ResponseEntity<List<PnfdInfo>>(HttpStatus.NOT_IMPLEMENTED);*/
     }
 
-    public ResponseEntity<PnfdInfo> getPNFDInfo(
+    public ResponseEntity<?> getPNFDInfo(
             @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId) {
         String accept = request.getHeader("Accept");
+
+        log.debug("Processing REST request to retrieve PNFD info " + pnfdInfoId);
+        if (accept != null && accept.contains("application/json")) {
+            try {
+                PnfdInfo pnfdInfo = nsdManagementService.getPnfdInfo(pnfdInfoId);
+                log.debug("PNFD info retrieved");
+                return new ResponseEntity<PnfdInfo>(pnfdInfo, HttpStatus.OK);
+            } catch (NotExistingEntityException e) {
+                log.error("PNFD info " + pnfdInfoId + " not found");
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
+                        "PNFD info " + pnfdInfoId + " not found"), HttpStatus.NOT_FOUND);
+            } catch (MalformattedElementException e) {
+                log.error("PNFD info " + pnfdInfoId + " cannot be found: not acceptable PNFD Info ID format");
+                return new ResponseEntity<ProblemDetails>(
+                        Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
+                                "PNFD info " + pnfdInfoId + " cannot be found: not acceptable PNFD Info ID format"),
+                        HttpStatus.BAD_REQUEST);
+            } catch (Exception e) {
+                log.error("PNFD info " + pnfdInfoId + " cannot be retrieved: general internal error");
+                return new ResponseEntity<ProblemDetails>(
+                        Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                                "PNFD info " + pnfdInfoId + " cannot be retrieved: general internal error"),
+                        HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } else
+            return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.PRECONDITION_FAILED.value(),
+                    "Accept header null or different from application/json"), HttpStatus.PRECONDITION_FAILED);
+
+        /*String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
                 return new ResponseEntity<PnfdInfo>(objectMapper.readValue(
@@ -344,7 +411,7 @@ public class NsdApiController implements NsdApi {
             }
         }
 
-        return new ResponseEntity<PnfdInfo>(HttpStatus.NOT_IMPLEMENTED);
+        return new ResponseEntity<PnfdInfo>(HttpStatus.NOT_IMPLEMENTED);*/
     }
 
     public ResponseEntity<PnfdInfoModifications> updatePNFDInfo(
@@ -365,15 +432,73 @@ public class NsdApiController implements NsdApi {
         return new ResponseEntity<PnfdInfoModifications>(HttpStatus.NOT_IMPLEMENTED);
     }
 
-    public ResponseEntity<Void> deletePNFDInfo(
+    public ResponseEntity<?> deletePNFDInfo(
             @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId) {
         String accept = request.getHeader("Accept");
-        return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
+        log.debug("Processing REST request to delete PNFD info " + pnfdInfoId);
+        try {
+            nsdManagementService.deletePnfdInfo(pnfdInfoId);
+            log.debug("PNFD info removed");
+            return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
+        } catch (NotExistingEntityException e) {
+            log.error("PNFD info " + pnfdInfoId + " not found");
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(), "PNFD info " + pnfdInfoId + " not found"),
+                    HttpStatus.NOT_FOUND);
+        } catch (NotPermittedOperationException e) {
+            log.error("PNFD info " + pnfdInfoId + " cannot be removed: " + e.getMessage());
+            return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
+                    "PNFD info " + pnfdInfoId + " cannot be removed: " + e.getMessage()), HttpStatus.CONFLICT);
+        } catch (MalformattedElementException e) {
+            log.error("PNFD info " + pnfdInfoId + " cannot be removed: not acceptable PNFD Info ID format");
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
+                            "PNFD info " + pnfdInfoId + " cannot be removed: not acceptable PNFD Info ID format"),
+                    HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            log.error("PNFD info " + pnfdInfoId + " cannot be removed: general internal error");
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                            "PNFD info " + pnfdInfoId + " cannot be removed: general internal error"),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        /*String accept = request.getHeader("Accept");
+        return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);*/
     }
 
-    public ResponseEntity<Object> getPNFD(
+    public ResponseEntity<?> getPNFD(
             @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId) {
         String accept = request.getHeader("Accept");
+
+        // TODO: consistency between accept values and input format when onboarding
+        // should be better checked.
+        // TODO: probably we should select the format based on the accept values. At the
+        // at the moment the format is selected based on the original input type,
+        // that is maintained in the DB.
+        log.debug("Processing REST request to retrieve PNFD for PNFD info ID " + pnfdInfoId);
+
+        try {
+            Object pnfd = nsdManagementService.getPnfd(pnfdInfoId, false);
+            // TODO: here it needs to check the type of entity that is returned
+            return new ResponseEntity<Resource>((Resource) pnfd, HttpStatus.OK);
+        } catch (NotExistingEntityException e) {
+            log.error("PNFD for PNFD info ID " + pnfdInfoId + " not found");
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
+                            "PNFD for PNFD info ID " + pnfdInfoId + " not found: " + e.getMessage()),
+                    HttpStatus.NOT_FOUND);
+        } catch (NotPermittedOperationException e) {
+            return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
+                    "PNFD for PNFD info ID " + pnfdInfoId + " not found: " + e.getMessage()), HttpStatus.CONFLICT);
+        } catch (Exception e) {
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                            "PNFD for PNFD info ID " + pnfdInfoId + " not found: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        /*String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
                 return new ResponseEntity<Object>(objectMapper.readValue("\"{}\"", Object.class),
@@ -384,17 +509,69 @@ public class NsdApiController implements NsdApi {
             }
         }
 
-        return new ResponseEntity<Object>(HttpStatus.NOT_IMPLEMENTED);
+        return new ResponseEntity<Object>(HttpStatus.NOT_IMPLEMENTED);*/
     }
 
-    public ResponseEntity<Void> uploadPNFD(
+    public ResponseEntity<?> uploadPNFD(
             @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId,
-            @ApiParam(value = "", required = true) @Valid @RequestBody Object body,
+            @ApiParam(value = "", required = true) @Valid @RequestBody MultipartFile body,
             @ApiParam(value = "The request shall set the \"Content-Type\" HTTP header to \"text/plain\".") @RequestHeader(value = "Content-Type", required = false) String contentType) {
+        log.debug("Processing REST request for Uploading PNFD content in PNFD info " + pnfdInfoId);
+
         String accept = request.getHeader("Accept");
+        //if (accept != null && accept.contains("application/json")) {
+        if (body.isEmpty()) {
+            return new ResponseEntity<String>("Error message: File is empty!", HttpStatus.BAD_REQUEST);
+        }
+
+        // TODO: the content-type as per SOL005 v2.4.1 should be text/plain or application/zip
+
+        if (!contentType.startsWith("multipart/form-data")) {
+            // TODO: to be implemented later on
+            return new ResponseEntity<String>("Unable to parse content " + contentType, HttpStatus.NOT_IMPLEMENTED);
+        } else {
+            try {
+                ContentType type = null;
+                log.debug("PNFD content file name is: " + body.getOriginalFilename());
+                if (body.getOriginalFilename().endsWith("zip")) {
+                    type = ContentType.ZIP;
+                } else if (body.getOriginalFilename().endsWith("yaml")) {
+                    type = ContentType.YAML;
+                } else {
+                    // TODO: to be implemented later on
+                    return new ResponseEntity<String>("Unable to parse file type that is not .zip or .yaml",
+                            HttpStatus.NOT_IMPLEMENTED);
+                }
+                nsdManagementService.uploadPnfd(pnfdInfoId, body, type);
+                log.debug("Upload processing done");
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+                // TODO: check if we need to introduce the asynchronous mode
+            } catch (NotPermittedOperationException | AlreadyExistingEntityException e) {
+                log.error("Impossible to upload PNFD: " + e.getMessage());
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
+                        "Impossible to upload PNFD: " + e.getMessage()), HttpStatus.CONFLICT);
+            } catch (MalformattedElementException e) {
+                log.error("Impossible to upload PNFD: " + e.getMessage());
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
+                        "Impossible to upload PNFD: " + e.getMessage()), HttpStatus.BAD_REQUEST);
+            } catch (NotExistingEntityException e) {
+                log.error("Impossible to upload PNFD: " + e.getMessage());
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
+                        "Impossible to upload PNFD: " + e.getMessage()), HttpStatus.NOT_FOUND);
+            } catch (Exception e) {
+                log.error("General exception while uploading PNFD content: " + e.getMessage());
+                log.error("Details: ", e);
+                return new ResponseEntity<ProblemDetails>(
+                        Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                                "General exception while uploading PNFD content: " + e.getMessage()),
+                        HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
+
+        /*String accept = request.getHeader("Accept");
 
         // TODO: the content-type as per SOL005 v2.4.1 should be text/plain
-        return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
+        return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);*/
     }
 
 
