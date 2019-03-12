@@ -514,7 +514,7 @@ public class NsdApiController implements NsdApi {
 
     public ResponseEntity<?> uploadPNFD(
             @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId,
-            @ApiParam(value = "", required = true) @Valid @RequestBody MultipartFile body,
+            @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
             @ApiParam(value = "The request shall set the \"Content-Type\" HTTP header to \"text/plain\".") @RequestHeader(value = "Content-Type", required = false) String contentType) {
         log.debug("Processing REST request for Uploading PNFD content in PNFD info " + pnfdInfoId);
 

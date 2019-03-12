@@ -182,7 +182,7 @@ public interface NsdApi {
     @RequestMapping(value = "/nsd/v1/pnf_descriptors/{pnfdInfoId}/pnfd_content", produces = {"application/json"}, consumes = {"application/json", "application/yaml", "application/zip", "multipart/form-data"}, method = RequestMethod.PUT)
     ResponseEntity<?> uploadPNFD(
             @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId,
-            @ApiParam(value = "", required = true) @Valid @RequestBody MultipartFile body,
+            @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
             @ApiParam(value = "The request shall set the \"Content-Type\" HTTP header to \"text/plain\".") @RequestHeader(value = "Content-Type", required = false) String contentType);
 
 

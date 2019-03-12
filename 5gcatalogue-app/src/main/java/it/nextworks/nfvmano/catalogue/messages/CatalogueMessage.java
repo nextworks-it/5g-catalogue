@@ -36,6 +36,14 @@ import java.util.UUID;
                 name = "NSD_DELETION_NOTIFICATION"
         ),
         @Type(
+                value = PnfdOnBoardingNotificationMessage.class,
+                name = "PNFD_ONBOARDING_NOTIFICATION"
+        ),
+        @Type(
+                value = PnfdDeletionNotificationMessage.class,
+                name = "PNFD_DELETION_NOTIFICATION"
+        ),
+        @Type(
                 value = VnfPkgOnBoardingNotificationMessage.class,
                 name = "VNFPKG_ONBOARDING_NOTIFICATION"
         ),

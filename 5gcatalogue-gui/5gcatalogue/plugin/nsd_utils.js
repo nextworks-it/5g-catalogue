@@ -257,7 +257,7 @@ function creteNSDViewModal(nsdInfoId, modalsContainerId) {
 function fillNSDViewModal(data, params) {
 
     var yamlObj = jsyaml.load(data);
-    //console.log(yamlObj);
+    console.log(yamlObj);
 
     var yaml = jsyaml.dump(data, {
         indent: 4,
@@ -267,7 +267,7 @@ function fillNSDViewModal(data, params) {
         }
     });
 
-    //console.log(yaml);
+    console.log(yaml);
     var nsdInfoId = params[0];
     var textArea = document.getElementById(params[1]);
     textArea.value = yaml;

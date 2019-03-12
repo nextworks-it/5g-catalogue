@@ -339,12 +339,84 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 
     @Override
     public void acceptPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
+        log.info("Received PNFD onboarding notification for PNFD {} with info id {}, from plugin {}.",
+                notification.getPnfdId(), notification.getPnfdInfoId(), notification.getPluginId());
 
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(Include.NON_EMPTY);
+
+        try {
+            String json = mapper.writeValueAsString(notification);
+            log.debug("RECEIVED MESSAGE: " + json);
+        } catch (JsonProcessingException e) {
+            log.error("Unable to parse received pnfdOnboardingNotificationMessage: " + e.getMessage());
+        }
+
+        switch (notification.getScope()) {
+            case REMOTE:
+                try {
+                    log.debug("Updating PnfdInfoResource with plugin {} operation status {} for operation {}.",
+                            notification.getPluginId(), notification.getOpStatus(),
+                            notification.getOperationId().toString());
+                    nsdMgmtService.updatePnfdInfoOperationStatus(notification.getPnfdInfoId(), notification.getPluginId(),
+                            notification.getOpStatus(), notification.getType());
+                    log.debug("PnfdInfoResource successfully updated with plugin {} operation status {} for operation {}.",
+                            notification.getPluginId(), notification.getOpStatus(),
+                            notification.getOperationId().toString());
+                } catch (NotExistingEntityException e) {
+                    log.error(e.getMessage());
+                }
+                log.debug("Updating consumers internal mapping for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                nsdMgmtService.updateOperationInfoInConsumersMap(notification.getOperationId(), notification.getOpStatus(),
+                        notification.getPluginId(), notification.getPnfdInfoId(), notification.getType());
+                log.debug("Consumers internal mapping successfully updated for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                break;
+            case LOCAL:
+                log.error("Pnfd LOCAL onboarding notification not handled here, REMOTE onboarding message expected.");
+                break;
+            case GLOBAL:
+                log.error("Pnfd GLOBAL onboarding notification not handled here, REMOTE onboarding message expected.");
+                break;
+        }
     }
 
     @Override
     public void acceptPnfdDeletionNotification(PnfdDeletionNotificationMessage notification) throws MethodNotImplementedException {
+        log.info("Received PNFD deletion notification for PNFD {} with info id {}, from plugin {}.",
+                notification.getPnfdId(), notification.getPnfdInfoId(), notification.getPluginId());
 
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(Include.NON_EMPTY);
+
+        try {
+            String json = mapper.writeValueAsString(notification);
+            log.debug("RECEIVED MESSAGE: " + json);
+        } catch (JsonProcessingException e) {
+            log.error("Unable to parse received nsdDeletionNotificationMessage: " + e.getMessage());
+        }
+
+        switch (notification.getScope()) {
+            case REMOTE:
+                log.info("PNFD {} with info id {} successfully removed by plugin {}.",
+                        notification.getPnfdId(), notification.getPnfdInfoId(), notification.getPluginId());
+                log.debug("Updating consumers internal mapping for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                nsdMgmtService.updateOperationInfoInConsumersMap(notification.getOperationId(), notification.getOpStatus(),
+                        notification.getPluginId(), notification.getPnfdInfoId(), notification.getType());
+                log.debug("Consumers internal mapping successfully updated for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                break;
+            case LOCAL:
+                log.error("Pnfd LOCAL deletion notification not handled here, REMOTE onboarding message expected.");
+                break;
+            case GLOBAL:
+                log.error("Pnfd GLOBAL deletion notification not handled here, REMOTE onboarding message expected.");
+                break;
+        }
     }
 
 

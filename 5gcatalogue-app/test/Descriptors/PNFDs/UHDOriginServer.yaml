@@ -15,7 +15,7 @@ topologyTemplate:
   
   nodeTemplates:
     
-    vCACHE_VNF:
+    ORIGIN_SERVER:
       type: tosca.nodes.nfv.PNF
       properties:
         descriptorId: e31e7e53-5239-4dfe-8235-180c62794f5e

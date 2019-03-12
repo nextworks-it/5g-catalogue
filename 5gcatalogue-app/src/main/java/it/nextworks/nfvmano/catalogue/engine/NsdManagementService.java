@@ -1045,6 +1045,63 @@ public class NsdManagementService implements NsdManagementInterface {
         return nsdInfo;
     }
 
+    public synchronized void updatePnfdInfoOperationStatus(String pnfdInfoId, String manoId, OperationStatus opStatus,
+                                                          CatalogueMessageType messageType) throws NotExistingEntityException {
+
+        log.debug("Retrieving pnfdInfoResource {} from DB for updating with onboarding status info for plugin {}",
+                pnfdInfoId, manoId);
+        Optional<PnfdInfoResource> optionalPnfdInfoResource = pnfdInfoRepo.findById(UUID.fromString(pnfdInfoId));
+
+        if (optionalPnfdInfoResource.isPresent()) {
+            try {
+                PnfdInfoResource pnfdInfoResource = optionalPnfdInfoResource.get();
+
+                Map<String, NotificationResource> ackMap = new HashMap<>();
+                if (pnfdInfoResource.getAcknowledgedOnboardOpConsumers() != null) {
+                    ackMap = pnfdInfoResource.getAcknowledgedOnboardOpConsumers();
+                }
+                ackMap.put(manoId, new NotificationResource(pnfdInfoId, messageType, opStatus));
+                pnfdInfoResource.setAcknowledgedOnboardOpConsumers(ackMap);
+
+                if (messageType == CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION) {
+                    log.debug("Checking PNFD with pnfdInfoId {} onboarding state", pnfdInfoId);
+                    pnfdInfoResource.setPnfdOnboardingState(checkPnfdOnboardingState(pnfdInfoId, ackMap));
+                }
+
+                log.debug("Updating PnfdInfoResource {} with onboardingState {}", pnfdInfoId,
+                        pnfdInfoResource.getPnfdOnboardingState());
+                pnfdInfoRepo.saveAndFlush(pnfdInfoResource);
+            } catch (Exception e) {
+                log.error("Error while updating PnfdInfoResource with pnfdInfoId: " + pnfdInfoId);
+                log.error("Details: ", e);
+            }
+        } else {
+            throw new NotExistingEntityException("PnfdInfoResource " + pnfdInfoId + " not present in DB");
+        }
+    }
+
+    private PnfdOnboardingStateType checkPnfdOnboardingState(String pnfdInfoId, Map<String, NotificationResource> ackMap) {
+
+        for (Entry<String, NotificationResource> entry : ackMap.entrySet()) {
+            if (entry.getValue().getOperation() == CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION) {
+                if (entry.getValue().getOpStatus() == OperationStatus.FAILED) {
+                    log.error("PNFD with pnfdInfoId {} onboarding failed for mano with manoId {}", pnfdInfoId,
+                            entry.getKey());
+
+                    // TODO: Decide how to handle MANO onboarding failures.
+                    return PnfdOnboardingStateType.LOCAL_ONBOARDED;
+                } else if (entry.getValue().getOpStatus() == OperationStatus.SENT
+                        || entry.getValue().getOpStatus() == OperationStatus.RECEIVED
+                        || entry.getValue().getOpStatus() == OperationStatus.PROCESSING) {
+                    log.debug("PNFD with pnfdInfoId {} onboarding still in progress for mano with manoId {}");
+                    return PnfdOnboardingStateType.LOCAL_ONBOARDED;
+                }
+            }
+        }
+        log.debug("PNFD with pnfdInfoId " + pnfdInfoId + " successfully onboarded by all expected consumers");
+        return PnfdOnboardingStateType.ONBOARDED;
+    }
+
     private PnfdInfo buildPnfdInfo(PnfdInfoResource pnfdInfoResource) {
         log.debug("Building PNFD info from internal repo");
         PnfdInfo pnfdInfo = new PnfdInfo();

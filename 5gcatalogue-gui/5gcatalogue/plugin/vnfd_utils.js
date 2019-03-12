@@ -254,7 +254,7 @@ function creteVNFViewModal(vnfInfoId, modalsContainerId) {
 function fillVNFViewModal(data, params) {
 
     var yamlObj = jsyaml.load(data);
-    //console.log(yamlObj);
+    console.log(yamlObj);
 
     var yaml = jsyaml.dump(data, {
         indent: 4,
@@ -264,7 +264,7 @@ function fillVNFViewModal(data, params) {
         }
     });
 
-    //console.log(yaml);
+    console.log(yaml);
     var vnfInfoId = params[0];
     var textArea = document.getElementById(params[1]);
     textArea.value = yaml;

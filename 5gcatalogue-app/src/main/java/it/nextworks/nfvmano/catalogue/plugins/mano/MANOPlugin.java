@@ -106,8 +106,9 @@ public abstract class MANOPlugin
         functor.put(
                 CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION,
                 msg -> {
+                    PnfdOnBoardingNotificationMessage castMsg = (PnfdOnBoardingNotificationMessage) msg;
                     try {
-                        acceptPnfdOnBoardingNotification(null);
+                        acceptPnfdOnBoardingNotification(castMsg);
                     } catch (MethodNotImplementedException e) {
                         log.error("Method not yet implemented: " + e.getMessage());
                     }
@@ -116,8 +117,9 @@ public abstract class MANOPlugin
         functor.put(
                 CatalogueMessageType.PNFD_DELETION_NOTIFICATION,
                 msg -> {
+                    PnfdDeletionNotificationMessage castMsg = (PnfdDeletionNotificationMessage) msg;
                     try {
-                        acceptPnfdDeletionNotification(null);
+                        acceptPnfdDeletionNotification(castMsg);
                     } catch (MethodNotImplementedException e) {
                         log.error("Method not yet implemented: " + e.getMessage());
                     }

@@ -107,7 +107,7 @@ public class DummyMANOPlugin extends MANOPlugin {
     public void acceptPnfdDeletionNotification(PnfdDeletionNotificationMessage notification) throws MethodNotImplementedException {
         log.info("Received PNFD deletion notification.");
         log.debug("Body: {}", notification);
-        NsdDeletionNotificationMessage response = new NsdDeletionNotificationMessage(
+        PnfdDeletionNotificationMessage response = new PnfdDeletionNotificationMessage(
                 notification.getPnfdInfoId(),
                 notification.getPnfdId(),
                 notification.getOperationId(),
