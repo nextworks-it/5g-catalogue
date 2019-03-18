@@ -97,8 +97,8 @@ public class VnfdBuilder {
 
         List<ScalingGroupDescriptor> descriptors = new ArrayList<>();
         ScalingGroupDescriptor scalingByOne = new ScalingGroupDescriptor();
-        scalingByOne.setMinInstanceCount(vdu.getProperties().getVduProfile().getMinNumberOfInstances() - 1);
-        scalingByOne.setMaxInstanceCount(vdu.getProperties().getVduProfile().getMaxNumberOfInstances() - 1);
+        scalingByOne.setMinInstanceCount(0);
+        scalingByOne.setMaxInstanceCount(vdu.getProperties().getVduProfile().getMaxNumberOfInstances() - vdu.getProperties().getVduProfile().getMinNumberOfInstances());
         scalingByOne.setName("scale_by_one");
         List<ScalingPolicy> scalingPolicies = new ArrayList<>();
         ScalingPolicy scalingPolicy = new ScalingPolicy("manual_scale", "manual");
