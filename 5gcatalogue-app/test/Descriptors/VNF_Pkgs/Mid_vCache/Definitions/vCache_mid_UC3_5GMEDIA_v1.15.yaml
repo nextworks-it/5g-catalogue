@@ -2,41 +2,44 @@ toscaDefinitionsVersion: tosca_simple_yaml_1_2
 description: vCache mid descriptor
 
 metadata:
-  descriptorId: e8d2567d-05f8-4a3a-9cee-4c4be7712504
+  descriptorId: 9e5c2612-b4d9-41ff-91a9-9cea72702731
   vendor: Nextworks
-  version: "1.13"
+  version: "1.15"
 
 topologyTemplate:
-  
   substitutionMappings:
     nodeType: tosca.nodes.nfv.VNF
     requirements:
-      virtualLink: [{cp: cp-ens3, vl: vm_mgmt}, {cp: cp-ens7, vl: cache_net}, {cp: cp-ens6, vl: user_net}]
+      virtualLink: [{cp: cp-ens3, vl: vm_mgmt}, {cp: cp-ens7, vl: origin_net}, {cp: cp-ens6, vl: cache_net}]
   
   nodeTemplates:
     
     vCACHE_VNF:
       type: tosca.nodes.nfv.VNF
       properties:
-        descriptorId: e8d2567d-05f8-4a3a-9cee-4c4be7712504
-        descriptorVersion: "1.13"
+        descriptorId: 9e5c2612-b4d9-41ff-91a9-9cea72702731
+        descriptorVersion: "1.15"
         provider: Nextworks
-        productName: vCache_edge_UC3_5GMEDIA
-        softwareVersion: "1.13"
-        productInfoName: vCache_edge_UC3_5GMEDIA
-        productInfoDescription: vCache descriptor for EdgeCache
+        productName: vCache_mid_UC3_5GMEDIA
+        softwareVersion: "1.15"
+        productInfoName: vCache_mid_UC3_5GMEDIA
+        productInfoDescription: vCache descriptor for MidCache
         vnfmInfo:
           - JuJu
         flavourId: simple
         flavourDescription: Simple deployment flavour
+      interfaces:
+        vnflcm:
+          instantiate:
+            implementation: cloud-init.txt
     
     vCache_vdu:
       type: tosca.nodes.nfv.Vdu.Compute
       properties:
-        name: vCache_edge_vdu
+        name: vCache_mid_vdu
         vduProfile:
           minNumberOfInstances: 1
-          maxNumberOfInstances: 2
+          maxNumberOfInstances: 1
       capabilities:
         virtualCompute:
           properties:
@@ -53,9 +56,9 @@ topologyTemplate:
         virtualBlockStorageData:
           sizeOfStorage: 20
         swImageData:
-          imageName: vCache-ubuntu-50-shrink
+          imageName: vCache-ubuntu-51-shrink
           version: "0.5.0"
-          checksum: cjfgbjtabvufi4368nbtiab
+          checksum: 9c2faca5501dc925c7b3155f8f1f16dc
           containerFormat: BARE
           diskFormat: QCOW2
           size: 2
@@ -76,9 +79,9 @@ topologyTemplate:
         protocol: [associatedLayerProtocol: IPV4]
         layerProtocols: [IPV4]
         role: LEAF
-        description: mid cache interface
+        description: origin interface
       requirements:
-        externalVirtualLink: [cache_net]
+        externalVirtualLink: [origin_net]
     
     cp-ens6:
       type: tosca.nodes.nfv.VnfExtCp
@@ -86,6 +89,6 @@ topologyTemplate:
         protocol: [associatedLayerProtocol: IPV4]
         layerProtocols: [IPV4]
         role: LEAF
-        description: user interface
+        description: cache interface
       requirements:
-        externalVirtualLink: [user_net]
+        externalVirtualLink: [cache_net]
