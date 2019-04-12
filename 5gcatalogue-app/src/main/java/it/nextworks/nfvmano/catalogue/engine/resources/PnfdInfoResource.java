@@ -42,6 +42,11 @@ public class PnfdInfoResource {
     @Cascade(org.hibernate.annotations.CascadeType.ALL)
     private Map<String, NotificationResource> acknowledgedOnboardOpConsumers = new HashMap<>();
 
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
+    private List<String> parentNsds = new ArrayList<>();
+
     public PnfdInfoResource() {
     }
 
@@ -100,6 +105,10 @@ public class PnfdInfoResource {
         return acknowledgedOnboardOpConsumers;
     }
 
+    public List<String> getParentNsds() {
+        return parentNsds;
+    }
+
     public void setPnfdId(UUID pnfdId) {
         this.pnfdId = pnfdId;
     }
@@ -148,8 +157,14 @@ public class PnfdInfoResource {
         this.acknowledgedOnboardOpConsumers = acknowledgedOnboardOpConsumers;
     }
 
+    public void setParentNsds(List<String> parentNsds) {
+        this.parentNsds = parentNsds;
+    }
+
     public void isDeletable() throws NotPermittedOperationException {
         if (pnfdUsageState != PnfdUsageStateType.NOT_IN_USE)
+            throw new NotPermittedOperationException("PNFD info " + this.id + " cannot be deleted because IN USE");
+        if (!parentNsds.isEmpty())
             throw new NotPermittedOperationException("PNFD info " + this.id + " cannot be deleted because IN USE");
     }
 }

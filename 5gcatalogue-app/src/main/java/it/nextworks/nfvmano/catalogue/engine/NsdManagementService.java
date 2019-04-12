@@ -164,6 +164,26 @@ public class NsdManagementService implements NsdManagementInterface {
                     }
                 }
 
+                List<UUID> pnfdInfoIds = nsdInfo.getPnfdInfoIds();
+
+                for (UUID pnfdInfoId : pnfdInfoIds) {
+                    Optional<PnfdInfoResource> pnfdOptional = pnfdInfoRepo.findById(pnfdInfoId);
+
+                    if (pnfdOptional.isPresent()) {
+                        log.debug("Found pnfd with info Id {} while deleting nsd with info Id {}", pnfdInfoId, nsdInfoId);
+                        PnfdInfoResource pnfdInfoResource = pnfdOptional.get();
+                        List<String> parentNsds = pnfdInfoResource.getParentNsds();
+                        for (Iterator<String> iter = parentNsds.listIterator(); iter.hasNext(); ) {
+                            String nsdId = iter.next();
+                            if (nsdId.equalsIgnoreCase(nsdInfo.getNsdId().toString())) {
+                                iter.remove();
+                            }
+                        }
+                        pnfdInfoResource.setParentNsds(parentNsds);
+                        pnfdInfoRepo.saveAndFlush(pnfdInfoResource);
+                    }
+                }
+
                 log.debug("The NSD info can be removed.");
                 if (nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.ONBOARDED
                         || nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.LOCAL_ONBOARDED
@@ -368,6 +388,7 @@ public class NsdManagementService implements NsdManagementInterface {
         // UUID nsdId = UUID.randomUUID();
 
         List<String> includedVnfds;
+        List<String> includedPnfds;
         NsdOnboardingStateType onboardingStateType = NsdOnboardingStateType.UPLOADING;
 
         switch (contentType) {
@@ -383,6 +404,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     dt = DescriptorsParser.fileToDescriptorTemplate(nsdFile);
 
                     includedVnfds = checkVNFPkgs(dt);
+                    includedPnfds = checkPNFDs(dt);
 
                     nsdId = UUID.fromString(dt.getMetadata().getDescriptorId());
                     nsdInfo.setNsdId(nsdId);
@@ -435,6 +457,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     dt = DescriptorsParser.fileToDescriptorTemplate(inputFile);
 
                     includedVnfds = checkVNFPkgs(dt);
+                    includedPnfds = checkPNFDs(dt);
 
                     nsdId = UUID.fromString(dt.getMetadata().getDescriptorId());
                     nsdInfo.setNsdId(nsdId);
@@ -521,6 +544,14 @@ public class NsdManagementService implements NsdManagementInterface {
         }
         nsdInfo.setVnfPkgIds(vnfPkgIds);
 
+        List<UUID> pnfdIds = new ArrayList<>();
+        for (String pnfdInfoId: includedPnfds) {
+            log.debug("Adding pnfdInfo Id {} to pnfs list in nsdInfo", pnfdInfoId);
+            log.debug("Adding pnfdInfo Id {} to pnfs list in nsdInfo", pnfdInfoId);
+            pnfdIds.add(UUID.fromString(pnfdInfoId));
+        }
+        nsdInfo.setPnfdInfoIds(pnfdIds);
+
         // clean tmp files
         if (!inputFile.delete()) {
             log.warn("Could not delete temporary NSD content file");
@@ -539,6 +570,7 @@ public class NsdManagementService implements NsdManagementInterface {
         NsdOnBoardingNotificationMessage msg = new NsdOnBoardingNotificationMessage(nsdInfo.getId().toString(), nsdId.toString(),
                 operationId, ScopeType.LOCAL, OperationStatus.SENT);
         msg.setIncludedVnfds(includedVnfds);
+        msg.setIncludedPnfds(includedPnfds);
 
         // send notification over kafka bus
         notificationManager.sendNsdOnBoardingNotification(msg);
@@ -932,6 +964,56 @@ public class NsdManagementService implements NsdManagementInterface {
         }
 
         return includedVnfds;
+    }
+
+    public List<String> checkPNFDs(DescriptorTemplate nsd) throws NotExistingEntityException, MalformattedElementException, IOException, NotPermittedOperationException {
+
+        log.debug("Checking PNFDs availability for NSD " + nsd.getMetadata().getDescriptorId() + " with version " + nsd.getMetadata().getVersion());
+
+        Map<String, PNFNode> pnfNodes = nsd.getTopologyTemplate().getPNFNodes();
+        List<String> includedPnfds = new ArrayList<>();
+
+        List<PnfdInfoResource> pnfdInfoResources = new ArrayList<>();
+
+        for (Map.Entry<String, PNFNode> pnfNodeEntry : pnfNodes.entrySet()) {
+
+            String pnfdId = pnfNodeEntry.getValue().getProperties().getDescriptorId();
+            String version = pnfNodeEntry.getValue().getProperties().getVersion();
+
+            Optional<PnfdInfoResource> optional = pnfdInfoRepo.findByPnfdId(UUID.fromString(pnfdId));
+            PnfdInfoResource pnfdInfoResource;
+            if (optional.isPresent()) {
+                pnfdInfoResource = optional.get();
+            } else {
+                throw new NotExistingEntityException("PNFD filename for pnfdId " + pnfdId + " not find in DB");
+            }
+            String fileName = pnfdInfoResource.getPnfdFilename().get(0);
+
+            log.debug("Searching PNFD {} with pnfdId {} and version {}", fileName, pnfdId, version);
+            File pnfd_file = storageService.loadNsdAsResource(pnfdId, version, fileName).getFile();
+            DescriptorTemplate pnfd = DescriptorsParser.fileToDescriptorTemplate(pnfd_file);
+
+            log.debug("PNFD successfully parsed - its content is: \n"
+                    + DescriptorsParser.descriptorTemplateToString(pnfd));
+
+            if (!includedPnfds.contains(pnfdInfoResource.getId().toString())) {
+                includedPnfds.add(pnfdInfoResource.getId().toString());
+                pnfdInfoResources.add(pnfdInfoResource);
+            }
+
+            if (includedPnfds.isEmpty()) {
+                throw new NotPermittedOperationException("PNFDs listed in NSD are not available in Catalogue's storage");
+            }
+        }
+
+        for (PnfdInfoResource resource : pnfdInfoResources) {
+            List<String> parentNsds = resource.getParentNsds();
+            parentNsds.add(nsd.getMetadata().getDescriptorId());
+            resource.setParentNsds(parentNsds);
+            pnfdInfoRepo.saveAndFlush(resource);
+        }
+
+        return includedPnfds;
     }
 
     public synchronized void updateNsdInfoOperationStatus(String nsdInfoId, String manoId, OperationStatus opStatus,
