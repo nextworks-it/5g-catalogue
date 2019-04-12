@@ -4,11 +4,11 @@ NFV-SDN Catalogue capable of storing and  versioning:
 
 - Network Service Descriptors (NSDs)
 - Virtual Network Function Packages (VNF Packages)
+- Physical Network Function Descriptors (PNFs)
 
 #### In roadmap
 - Software Defined Network App Packages (SDN App Packages)
 - Multi-access Edge Computing App Packages (MEC App Packages)
-- Physical Network Function Descriptors (PNFs)
 
 ## Getting Started
 
@@ -74,7 +74,7 @@ For the versions available, see tags on this repository.
 
 ## Authors
 
-**Francesca Moscatelli**, **Giacomo Bernini**, **Giada Landi**, **Marco Capitani**, **Gino Carrozzo**   [Nextworks S.r.l.](http://www.nextworks.it)
+**Francesca Moscatelli**, **Giacomo Bernini**, **Giada Landi**, **Leonardo Agueci**, **Marco Capitani**, **Gino Carrozzo**   [Nextworks S.r.l.](http://www.nextworks.it)
 
 ## License
 

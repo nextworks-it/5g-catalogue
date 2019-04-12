@@ -52,6 +52,9 @@ log "BUILDING OSM R4 CLIENT..."
     cd ../../5g-catalogue/OSMr4Client
     mvn clean install
     cd ..
+
+log "CLONING SUBMODULES..."
+    git submodule update --init
 }
 
 function compileApp()
