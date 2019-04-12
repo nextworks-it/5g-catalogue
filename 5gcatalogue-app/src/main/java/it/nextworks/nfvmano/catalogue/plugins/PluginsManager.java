@@ -23,6 +23,9 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.*;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.OpenSourceMANOR3Plugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r4.OpenSourceMANOR4Plugin;
+import it.nextworks.nfvmano.catalogue.plugins.vim.VIM;
+import it.nextworks.nfvmano.catalogue.repos.MANORepository;
+import it.nextworks.nfvmano.catalogue.repos.VIMRepository;
 import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
@@ -97,6 +100,9 @@ public class PluginsManager {
 
     @Autowired
     private it.nextworks.nfvmano.catalogue.repos.MANORepository MANORepository;
+
+    @Autowired
+    private VIMRepository vimRepository;
 
     public PluginsManager() {
 
@@ -262,6 +268,38 @@ public class PluginsManager {
         List<MANO> manos = new ArrayList<>();
         manos = MANORepository.findAll();
         return manos;
+    }
+
+    public String createVIMPlugin(VIM vim)
+            throws AlreadyExistingEntityException, MethodNotImplementedException, MalformattedElementException {
+
+        return null;
+    }
+
+    public VIM getVIMPlugin(String vimId) throws NotExistingEntityException {
+
+        log.debug("Processing request for retrieving VIM Plugin with vimId {}.", vimId);
+
+        Optional<VIM> optionalVIM =vimRepository.findByVimId(vimId);
+
+        VIM vim = null;
+
+        if (optionalVIM.isPresent()) {
+            vim = optionalVIM.get();
+        } else {
+            throw new NotExistingEntityException("VIM Plugin with vimId " + vimId + " not present in DB");
+        }
+
+        return vim;
+    }
+
+    public List<VIM> getAllVIMPlugins() {
+
+        log.debug("Processing request for retrieving all VIM Plugins.");
+
+        List<VIM> vims = new ArrayList<>();
+        vims = vimRepository.findAll();
+        return vims;
     }
 
     private Resource[] loadConfigurations() {
