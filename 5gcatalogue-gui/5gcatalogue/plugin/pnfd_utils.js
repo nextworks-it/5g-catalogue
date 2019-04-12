@@ -116,7 +116,7 @@ function showPnfdGraphCanvas(data,params) {
 }
 
 function createPnfdInfosTable(data, params) {
-    //console.log(JSON.stringify(data, null, 4));
+    console.log(JSON.stringify(data, null, 4));
     //console.log(params);
 
     var tableId = params[0];
@@ -134,7 +134,7 @@ function createPnfdInfosTable(data, params) {
     var header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Onboarding State', 'MANOs Onboarding State', 'Actions'], btnFlag, false);
     var cbacks = ['openPNFD_', 'showPnfdGraphCanvas', 'deletePnfdInfo'];
     var names = ['View PNFD', 'View PNFD Graph', 'Delete PNFD'];
-    var columns = [['pnfdName'], ['pnfdVersion'], ['pnfdVendor'], ['pnfdOnboardingState'], ['manosOnboardingStatus']];
+    var columns = [['pnfdName'], ['pnfdVersion'], ['pnfdProvider'], ['pnfdOnboardingState'], ['manosOnboardingStatus']];
 
     table.innerHTML = header + '<tbody>';
 

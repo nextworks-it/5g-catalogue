@@ -326,7 +326,7 @@ function createNSDGraph(data, params) {
     var nodes = [];
     var edges = [];
 
-    $.each( nodeTempl, function(key, value){
+    $.each(nodeTempl, function(key, value){
         //console.log(key + " " + value['type']);
         if (value['type'] === 'tosca.nodes.nfv.NsVirtualLink'){
             nodes.push({ group: 'nodes', data: { id: key, name: 'Link - ' + key, label: 'Link - ' + key, weight: 50, faveColor: '#fff', faveShape: 'ellipse' }, classes: 'bottom-center net'});
@@ -334,10 +334,10 @@ function createNSDGraph(data, params) {
         //console.log(nodes);
     });
 
-    $.each( nodeTempl, function(key, value){
+    $.each(nodeTempl, function(key, value){
         //console.log(key + " " + value['type']);
         if (value['type'] === 'tosca.nodes.nfv.VNF'){
-            nodes.push({ group: 'nodes', data: { id: key, name: 'NODE - ' + key, label: 'NODE - ' + key, weight: 70, faveColor: '#fff', faveShape: 'ellipse' }, classes: 'bottom-center pnf'});
+            nodes.push({ group: 'nodes', data: { id: key, name: 'NODE - ' + key, label: 'NODE - ' + key, weight: 70, faveColor: '#fff', faveShape: 'ellipse' }, classes: 'bottom-center vnf'});
             $.each( value['requirements']['virtualLink'], function(key1, value1){
                 //console.log(key1 + " " + value1.split('/')[0]);
                 //console.log(key);
@@ -348,6 +348,19 @@ function createNSDGraph(data, params) {
         //console.log(nodes);
     });
 
+    $.each(nodeTempl, function(key, value){
+        //console.log(key + " " + value['type']);
+        if (value['type'] === 'tosca.nodes.nfv.PNF'){
+            nodes.push({ group: 'nodes', data: { id: key, name: 'NODE - ' + key, label: 'NODE - ' + key, weight: 70, faveColor: '#fff', faveShape: 'ellipse' }, classes: 'bottom-center pnf'});
+            $.each( value['requirements']['virtualLink'], function(key1, value1){
+                //console.log(key1 + " " + value1.split('/')[0]);
+                //console.log(key);
+                edges.push({ group: 'edges', data: { source: key, target: value1.split('/')[0], faveColor: '#706f6f', strength: 70 }});
+                //console.log(nodes);
+            });
+        }
+        //console.log(nodes);
+    });
 
     var cy = cytoscape({
         container: document.getElementById(params[1]),
