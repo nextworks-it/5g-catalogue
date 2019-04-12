@@ -15,9 +15,14 @@ NFV-SDN Catalogue capable of storing and  versioning:
 ### Prerequisites
 
 * [Oracle-Java8] - Oracle version 8 is preferred, otherwise [OpenJDK-8] + [OpenJFX]
-* [Maven] - version >= 3.3.9 is required
+* [Maven] - version 3.3.9 is required
 * [PostgresSQL] - as internal DB 
-* [Apache Kafka] - as internal message bus, configured with the following topics: catalogue-onboarding-local, catalogue-onboarding-remote
+* [Apache Kafka] - as internal message bus, configured with the following topics: catalogue-onboarding-local, catalogue-onboarding-remote. For properly connecting the 5gcatalogue-app to the Kafka bus you have modify the [application.properties](https://github.com/nextworks-it/5g-catalogue/blob/master/5gcatalogue-app/src/main/resources/application.properties) file as follows:
+
+```
+kafka.bootstrap-servers=<kafka-ip-address>:9092
+kafka.skip.send=false
+```
 
 ### Used Libraries
 
@@ -69,7 +74,7 @@ For the versions available, see tags on this repository.
 
 ## Authors
 
-* **Francesca Moscatelli**, **Giacomo Bernini**, **Giada Landi**, **Marco Capitani**, **Leonardo Agueci** - [Nextworks S.r.l.](http://www.nextworks.it)
+**Francesca Moscatelli**, **Giacomo Bernini**, **Giada Landi**, **Marco Capitani**, **Gino Carrozzo**   [Nextworks S.r.l.](http://www.nextworks.it)
 
 ## License
 
