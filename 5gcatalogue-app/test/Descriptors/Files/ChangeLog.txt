@@ -1,1 +1,0 @@
-24/01/2019 - Cirros new VNF Package according to ETSI GS NFV-SOL004 v 2.5.1

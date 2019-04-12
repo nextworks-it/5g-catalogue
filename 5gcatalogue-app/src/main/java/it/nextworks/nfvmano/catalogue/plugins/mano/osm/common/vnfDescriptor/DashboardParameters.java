@@ -18,7 +18,9 @@ public class DashboardParameters {
         return path;
     }
 
-    public void setPath(String path) { this.path = path; }
+    public void setPath(String path) {
+        this.path = path;
+    }
 
     public boolean isHttps() {
         return https;

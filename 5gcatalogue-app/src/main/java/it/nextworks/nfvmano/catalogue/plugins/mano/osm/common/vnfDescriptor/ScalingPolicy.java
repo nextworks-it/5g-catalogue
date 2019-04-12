@@ -36,7 +36,7 @@ public class ScalingPolicy {
 
     private Map<String, Object> otherProperties = new HashMap<String, Object>();
 
-    public ScalingPolicy(String name, String scalingType){
+    public ScalingPolicy(String name, String scalingType) {
         this.name = name;
         this.scalingType = scalingType;
         this.enabled = true;

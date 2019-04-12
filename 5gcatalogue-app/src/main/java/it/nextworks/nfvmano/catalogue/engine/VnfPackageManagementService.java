@@ -13,8 +13,8 @@ import it.nextworks.nfvmano.catalogue.messages.VnfPkgOnBoardingNotificationMessa
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.*;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
-import it.nextworks.nfvmano.catalogue.repos.MANORepository;
 import it.nextworks.nfvmano.catalogue.repos.ContentType;
+import it.nextworks.nfvmano.catalogue.repos.MANORepository;
 import it.nextworks.nfvmano.catalogue.repos.VnfPkgInfoRepository;
 import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
 import it.nextworks.nfvmano.catalogue.translators.tosca.ArchiveParser;
@@ -162,7 +162,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
 
         if (vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.ONBOARDED
-            || vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.LOCAL_ONBOARDED) {
+                || vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.LOCAL_ONBOARDED) {
             if (vnfPkgInfoModifications.getOperationalState() != null) {
                 if (vnfPkgInfoResource.getOperationalState() == vnfPkgInfoModifications.getOperationalState()) {
                     log.error("VNF Pkg operational state already "
@@ -402,7 +402,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         for (Map.Entry<String, NotificationResource> entry : acksMap.entrySet()) {
             if (entry.getValue().getOperation() == CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION) {
                 PackageOnboardingStateType pkgOnboardingStateType = PackageOnboardingStateType.UPLOADING;
-                switch (entry.getValue().getOpStatus()){
+                switch (entry.getValue().getOpStatus()) {
                     case SENT:
                         pkgOnboardingStateType = PackageOnboardingStateType.UPLOADING;
                         break;

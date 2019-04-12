@@ -18,7 +18,7 @@ public class ServicePrimitiveParameter {
     @JsonProperty("parameter-pool")
     private String parameterPool;
     @JsonProperty("read-only")
-    private boolean readOnly ;
+    private boolean readOnly;
     private boolean hidden;
 
     private Map<String, Object> otherProperties = new HashMap<String, Object>();

@@ -79,6 +79,7 @@ public class CatalogueApplicationTests {
                 mano,
                 kafkaBootstrapServers,
                 null,
+                null,
                 localNotificationTopic,
                 remoteNotificationTopic,
                 kafkaTemplate
@@ -188,6 +189,7 @@ public class CatalogueApplicationTests {
                 MANOType.DUMMY,
                 mano,
                 kafkaBootstrapServers,
+                null,
                 null,
                 localNotificationTopic,
                 remoteNotificationTopic,

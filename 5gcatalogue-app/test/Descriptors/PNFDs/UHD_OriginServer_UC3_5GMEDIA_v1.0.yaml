@@ -1,0 +1,46 @@
+toscaDefinitionsVersion: tosca_simple_yaml_1_2
+description: UHD Origin Server descriptor
+
+metadata:
+  descriptorId: e31e7e53-5239-4dfe-8235-180c62794f5e
+  vendor: Nextworks
+  version: "1.0"
+
+topologyTemplate:
+  
+  substitutionMappings:
+    nodeType: tosca.nodes.nfv.PNF
+    requirements:
+      virtualLink: [{cp: cp-ens3, vl: vm_mgmt}, {cp: cp-ens7, vl: origin_net}]
+  
+  nodeTemplates:
+    
+    ORIGIN_SERVER:
+      type: tosca.nodes.nfv.PNF
+      properties:
+        descriptorId: e31e7e53-5239-4dfe-8235-180c62794f5e
+        functionDescription: UHD capable streaming server
+        version: "1.0"
+        provider: Nextworks
+        name: UHDOriginServer_UC3_5GMEDIA
+        descriptorInvariantId: e31e7e53-5239-4dfe-8235-180c62794f5e
+    
+    cp-ens3:
+      type: tosca.nodes.nfv.PnfExtCp
+      properties:
+        protocol: [associatedLayerProtocol: IPV4]
+        layerProtocols: [IPV4]
+        role: LEAF
+        description: mgmt interface
+      requirements:
+        externalVirtualLink: [vm_mgmt]
+    
+    cp-ens7:
+      type: tosca.nodes.nfv.PnfExtCp
+      properties:
+        protocol: [associatedLayerProtocol: IPV4]
+        layerProtocols: [IPV4]
+        role: LEAF
+        description: origin server interface
+      requirements:
+        externalVirtualLink: [origin_net]

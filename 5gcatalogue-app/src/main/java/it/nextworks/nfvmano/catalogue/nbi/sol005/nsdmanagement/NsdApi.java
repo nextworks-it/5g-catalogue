@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
-import java.util.List;
 
 @javax.annotation.Generated(value = "io.swagger.codegen.languages.SpringCodegen", date = "2018-07-23T16:31:35.952+02:00")
 
@@ -116,7 +115,7 @@ public interface NsdApi {
             @ApiResponse(code = 400, message = "Status 400", response = ProblemDetails.class),
             @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
     @RequestMapping(value = "/nsd/v1/pnf_descriptors", produces = {"application/json"}, consumes = {"application/json"}, method = RequestMethod.POST)
-    ResponseEntity<?> createPNFDInfo(@ApiParam(value = "", required = true) @Valid @RequestBody PnfdInfo body);
+    ResponseEntity<?> createPNFDInfo(@ApiParam(value = "", required = true) @Valid @RequestBody CreatePnfdInfoRequest body);
 
     @ApiOperation(value = "Query PFNDs Info", nickname = "getPNFDsInfo", notes = "The GET method queries information about multiple PNF descriptor resources.", response = PnfdInfo.class, responseContainer = "List", tags = {})
     @ApiResponses(value = {
@@ -170,7 +169,7 @@ public interface NsdApi {
             @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
     @RequestMapping(value = "/nsd/v1/pnf_descriptors/{pnfdInfoId}/pnfd_content", produces = {"application/json",
             "application/yaml", "application/zip"}, method = RequestMethod.GET)
-    ResponseEntity<Object> getPNFD(
+    ResponseEntity<?> getPNFD(
             @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId);
 
     @ApiOperation(value = "Upload PNFD", nickname = "uploadPNFD", notes = "The PUT method is used to upload the content of a PNFD. This method shall follow the provisions specified in the Tables 5.4.7.3.3-1 and 5.4.7.3.3-2 of GS NFV-SOL 005for URI query parameters, request and response data structures, and response codes.", tags = {})
@@ -180,10 +179,10 @@ public interface NsdApi {
             @ApiResponse(code = 404, message = "Status 404", response = ProblemDetails.class),
             @ApiResponse(code = 409, message = "Status 409", response = ProblemDetails.class),
             @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
-    @RequestMapping(value = "/nsd/v1/pnf_descriptors/{pnfdInfoId}/pnfd_content", produces = {"application/json"}, consumes = {"application/json"}, method = RequestMethod.PUT)
-    ResponseEntity<Void> uploadPNFD(
+    @RequestMapping(value = "/nsd/v1/pnf_descriptors/{pnfdInfoId}/pnfd_content", produces = {"application/json"}, consumes = {"application/json", "application/yaml", "application/zip", "multipart/form-data"}, method = RequestMethod.PUT)
+    ResponseEntity<?> uploadPNFD(
             @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId,
-            @ApiParam(value = "", required = true) @Valid @RequestBody Object body,
+            @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
             @ApiParam(value = "The request shall set the \"Content-Type\" HTTP header to \"text/plain\".") @RequestHeader(value = "Content-Type", required = false) String contentType);
 
 
@@ -220,6 +219,6 @@ public interface NsdApi {
             @ApiResponse(code = 404, message = "Status 404", response = ProblemDetails.class),
             @ApiResponse(code = 500, message = "500", response = ProblemDetails.class)})
     @RequestMapping(value = "/nsd/v1/subscriptions/{subscriptionId}", produces = {"application/json"}, method = RequestMethod.DELETE)
-    ResponseEntity<Void> deleteSubscription(
+    ResponseEntity<?> deleteSubscription(
             @ApiParam(value = "", required = true) @PathVariable("subscriptionId") String subscriptionId);
 }

@@ -1,0 +1,94 @@
+toscaDefinitionsVersion: tosca_simple_yaml_1_2
+description: vCache mid descriptor
+
+metadata:
+  descriptorId: 9e5c2612-b4d9-41ff-91a9-9cea72702731
+  vendor: Nextworks
+  version: "1.15"
+
+topologyTemplate:
+  substitutionMappings:
+    nodeType: tosca.nodes.nfv.VNF
+    requirements:
+      virtualLink: [{cp: cp-ens3, vl: vm_mgmt}, {cp: cp-ens7, vl: origin_net}, {cp: cp-ens6, vl: cache_net}]
+  
+  nodeTemplates:
+    
+    vCACHE_VNF:
+      type: tosca.nodes.nfv.VNF
+      properties:
+        descriptorId: 9e5c2612-b4d9-41ff-91a9-9cea72702731
+        descriptorVersion: "1.15"
+        provider: Nextworks
+        productName: vCache_mid_UC3_5GMEDIA
+        softwareVersion: "1.15"
+        productInfoName: vCache_mid_UC3_5GMEDIA
+        productInfoDescription: vCache descriptor for MidCache
+        vnfmInfo:
+          - JuJu
+        flavourId: simple
+        flavourDescription: Simple deployment flavour
+      interfaces:
+        vnflcm:
+          instantiate:
+            implementation: cloud-init.txt
+    
+    vCache_vdu:
+      type: tosca.nodes.nfv.Vdu.Compute
+      properties:
+        name: vCache_mid_vdu
+        vduProfile:
+          minNumberOfInstances: 1
+          maxNumberOfInstances: 1
+      capabilities:
+        virtualCompute:
+          properties:
+            virtualMemory:
+              virtualMemSize: 8192
+            virtualCpu:
+              numVirtualCpu: 4
+      requirements:
+        virtualStorage: [vCache_storage]
+    
+    vCache_storage:
+      type: tosca.nodes.nfv.Vdu.VirtualBlockStorage
+      properties:
+        virtualBlockStorageData:
+          sizeOfStorage: 20
+        swImageData:
+          imageName: vCache-ubuntu-51-shrink
+          version: "0.5.0"
+          checksum: 9c2faca5501dc925c7b3155f8f1f16dc
+          containerFormat: BARE
+          diskFormat: QCOW2
+          size: 2
+    
+    cp-ens3:
+      type: tosca.nodes.nfv.VnfExtCp
+      properties:
+        protocol: [associatedLayerProtocol: IPV4]
+        layerProtocols: [IPV4]
+        role: LEAF
+        description: mgmt interface
+      requirements:
+        externalVirtualLink: [vm_mgmt]
+    
+    cp-ens7:
+      type: tosca.nodes.nfv.VnfExtCp
+      properties:
+        protocol: [associatedLayerProtocol: IPV4]
+        layerProtocols: [IPV4]
+        role: LEAF
+        description: origin interface
+      requirements:
+        externalVirtualLink: [origin_net]
+    
+    cp-ens6:
+      type: tosca.nodes.nfv.VnfExtCp
+      properties:
+        protocol: [associatedLayerProtocol: IPV4]
+        layerProtocols: [IPV4]
+        role: LEAF
+        description: cache interface
+      requirements:
+        externalVirtualLink: [cache_net]

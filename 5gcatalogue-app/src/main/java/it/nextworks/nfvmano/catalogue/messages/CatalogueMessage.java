@@ -33,7 +33,15 @@ import java.util.UUID;
         ),
         @Type(
                 value = NsdDeletionNotificationMessage.class,
-                name = "NSD_DELETE_NOTIFICATION"
+                name = "NSD_DELETION_NOTIFICATION"
+        ),
+        @Type(
+                value = PnfdOnBoardingNotificationMessage.class,
+                name = "PNFD_ONBOARDING_NOTIFICATION"
+        ),
+        @Type(
+                value = PnfdDeletionNotificationMessage.class,
+                name = "PNFD_DELETION_NOTIFICATION"
         ),
         @Type(
                 value = VnfPkgOnBoardingNotificationMessage.class,
@@ -45,7 +53,19 @@ import java.util.UUID;
         ),
         @Type(
                 value = VnfPkgDeletionNotificationMessage.class,
-                name = "VNFPKG_DELETE_NOTIFICATION"
+                name = "VNFPKG_DELETION_NOTIFICATION"
+        ),
+        @Type(
+                value = VnfImgUploadingNotificationMessage.class,
+                name = "VNFIMG_UPLOADING_NOTIFICATION"
+        ),
+        @Type(
+                value = VnfImgChangeNotificationMessage.class,
+                name = "VNFIMG_CHANGE_NOTIFICATION"
+        ),
+        @Type(
+                value = VnfImgDeletionNotificationMessage.class,
+                name = "VNFIMG_DELETION_NOTIFICATION"
         )
 })
 

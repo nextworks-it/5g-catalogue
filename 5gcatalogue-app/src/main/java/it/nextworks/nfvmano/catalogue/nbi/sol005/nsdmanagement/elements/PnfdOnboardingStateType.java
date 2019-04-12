@@ -34,7 +34,11 @@ public enum PnfdOnboardingStateType {
 
     PROCESSING("PROCESSING"),
 
-    ONBOARDING("ONBOARDING");
+    ONBOARDED("ONBOARDED"),
+
+    LOCAL_ONBOARDED("LOCAL_ONBOARDED"),
+
+    FAILED("FAILED");
 
     private String value;
 

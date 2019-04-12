@@ -37,4 +37,5 @@ runcmd:
   - ip route add default via 10.20.8.1
   - rm -f /home/ubuntu/config/resolv.conf.5gmedia
   - ln -s /home/ubuntu/config/resolv.conf.5gmedia.portable /home/ubuntu/config/resolv.conf.5gmedia
+  - sed -i "/dest_domain/d" /opt/ats/etc/trafficserver/parent.config
   - /bin/bash /home/ubuntu/config/origin_configure.sh 192.168.130.4 32400

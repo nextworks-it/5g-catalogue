@@ -15,9 +15,7 @@
  */
 package it.nextworks.nfvmano.catalogue.engine;
 
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.CreateNsdInfoRequest;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdInfo;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdInfoModifications;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.*;
 import it.nextworks.nfvmano.catalogue.repos.ContentType;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,4 +36,19 @@ public interface NsdManagementInterface {
     List<NsdInfo> getAllNsdInfos() throws FailedOperationException, MethodNotImplementedException;
 
     void uploadNsd(String nsdInfoId, MultipartFile nsd, ContentType contentType) throws Exception, FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException;
+
+    PnfdInfo createPnfdInfo(CreatePnfdInfoRequest request) throws FailedOperationException, MalformattedElementException, MethodNotImplementedException;
+
+    void deletePnfdInfo(String pnfdInfoId) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException;
+
+    PnfdInfoModifications updatePnfdInfo(PnfdInfoModifications pnfdInfoModifications, String pnfdInfoId) throws NotExistingEntityException, MalformattedElementException, NotPermittedOperationException;
+
+    Object getPnfd(String pnfdInfoId, boolean isInternalRequest) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException;
+
+    PnfdInfo getPnfdInfo(String pnfdInfoId) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, MethodNotImplementedException;
+
+    List<PnfdInfo> getAllPnfdInfos() throws FailedOperationException, MethodNotImplementedException;
+
+    void uploadPnfd(String pnfdInfoId, MultipartFile pnfd, ContentType contentType) throws Exception, FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException;
+
 }

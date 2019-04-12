@@ -26,7 +26,10 @@ import org.hibernate.annotations.FetchMode;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Marco Capitani on 20/08/18.
@@ -90,10 +93,12 @@ public class OSMMano extends MANO {
         return vimAccounts;
     }
 
-    public Map<String, String> getOsmIdTranslation() { return osmIdTranslation; }
-
     public void setVimAccounts(List<String> vimAccounts) {
         this.vimAccounts = vimAccounts;
+    }
+
+    public Map<String, String> getOsmIdTranslation() {
+        return osmIdTranslation;
     }
 
     public void setOsmIdTranslation(Map<String, String> osmIdTranslation) {

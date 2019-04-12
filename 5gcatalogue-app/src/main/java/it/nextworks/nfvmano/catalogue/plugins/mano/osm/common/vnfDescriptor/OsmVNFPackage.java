@@ -7,12 +7,13 @@ public class OsmVNFPackage {
     @JsonProperty("vnfd:vnfd-catalog")
     private VNFDCatalog vnfdCatalog;
 
-    public OsmVNFPackage() { }
+    public OsmVNFPackage() {
+    }
 
 
     public VNFDCatalog getVnfdCatalog() {
-            return vnfdCatalog;
-        }
+        return vnfdCatalog;
+    }
 
     public OsmVNFPackage setVnfdCatalog(VNFDCatalog vnfdCatalog) {
         this.vnfdCatalog = vnfdCatalog;

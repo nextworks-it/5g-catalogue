@@ -18,7 +18,7 @@ public class VduReference {
 
     private Map<String, Object> otherProperties = new HashMap<String, Object>();
 
-    public VduReference(String vduIdRef){
+    public VduReference(String vduIdRef) {
         this.vduIdRef = vduIdRef;
     }
 

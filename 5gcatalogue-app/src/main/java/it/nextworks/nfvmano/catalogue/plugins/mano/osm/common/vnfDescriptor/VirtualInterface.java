@@ -18,7 +18,7 @@ public class VirtualInterface {
 
     private Map<String, Object> otherProperties = new HashMap<String, Object>();
 
-    public VirtualInterface (String type){
+    public VirtualInterface(String type) {
         this.type = type;
     }
 

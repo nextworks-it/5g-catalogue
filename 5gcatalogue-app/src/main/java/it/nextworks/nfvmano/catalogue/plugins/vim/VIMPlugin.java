@@ -25,8 +25,6 @@ import it.nextworks.nfvmano.catalogue.messages.*;
 import it.nextworks.nfvmano.catalogue.plugins.KafkaConnector;
 import it.nextworks.nfvmano.catalogue.plugins.Plugin;
 import it.nextworks.nfvmano.catalogue.plugins.PluginType;
-import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
-import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +37,7 @@ import java.util.function.Consumer;
 
 public abstract class VIMPlugin
         extends Plugin
-        implements NsdNotificationsConsumerInterface, VnfPkgNotificationsConsumerInterface {
+        implements VnfPkgNotificationsConsumerInterface {
 
     private static final Logger log = LoggerFactory.getLogger(VIMPlugin.class);
 
@@ -70,61 +68,8 @@ public abstract class VIMPlugin
         if (this.vim.getVimType() != this.vimType) {
             throw new IllegalArgumentException("VIM type and VIM do not agree.");
         }
-        String connectorID = "VIM_" + vim.getVimId(); // assuming it's unique among MANOs
+        String connectorID = "VIM_" + vim.getVimId(); // assuming it's unique amongVIMs
         Map<CatalogueMessageType, Consumer<CatalogueMessage>> functor = new HashMap<>();
-        functor.put(
-                CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION,
-                msg -> {
-                    NsdOnBoardingNotificationMessage castMsg = (NsdOnBoardingNotificationMessage) msg;
-                    try {
-                        acceptNsdOnBoardingNotification(castMsg);
-                    } catch (MethodNotImplementedException e) {
-                        log.error("Method not yet implemented: " + e.getMessage());
-                    }
-                }
-        );
-        functor.put(
-                CatalogueMessageType.NSD_CHANGE_NOTIFICATION,
-                msg -> {
-                    NsdChangeNotificationMessage castMsg = (NsdChangeNotificationMessage) msg;
-                    try {
-                        acceptNsdChangeNotification(castMsg);
-                    } catch (MethodNotImplementedException e) {
-                        log.error("Method not yet implemented: " + e.getMessage());
-                    }
-                }
-        );
-        functor.put(
-                CatalogueMessageType.NSD_DELETION_NOTIFICATION,
-                msg -> {
-                    NsdDeletionNotificationMessage castMsg = (NsdDeletionNotificationMessage) msg;
-                    try {
-                        acceptNsdDeletionNotification(castMsg);
-                    } catch (MethodNotImplementedException e) {
-                        log.error("Method not yet implemented: " + e.getMessage());
-                    }
-                }
-        );
-        functor.put(
-                CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION,
-                msg -> {
-                    try {
-                        acceptPnfdOnBoardingNotification(null);
-                    } catch (MethodNotImplementedException e) {
-                        log.error("Method not yet implemented: " + e.getMessage());
-                    }
-                }
-        );
-        functor.put(
-                CatalogueMessageType.PNFD_DELETION_NOTIFICATION,
-                msg -> {
-                    try {
-                        acceptPnfdDeletionNotification(null);
-                    } catch (MethodNotImplementedException e) {
-                        log.error("Method not yet implemented: " + e.getMessage());
-                    }
-                }
-        );
         functor.put(
                 CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION,
                 msg -> {

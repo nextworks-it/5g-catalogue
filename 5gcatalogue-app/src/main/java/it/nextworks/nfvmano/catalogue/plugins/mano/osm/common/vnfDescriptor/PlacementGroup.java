@@ -22,9 +22,13 @@ public class PlacementGroup {
         return name;
     }
 
-    public void setName(String name) { this.name = name; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public String getRequirement() { return requirement; }
+    public String getRequirement() {
+        return requirement;
+    }
 
     public void setRequirement(String requirement) {
         this.requirement = requirement;

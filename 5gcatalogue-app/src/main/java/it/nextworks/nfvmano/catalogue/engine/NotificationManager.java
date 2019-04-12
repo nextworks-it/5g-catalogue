@@ -20,8 +20,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import it.nextworks.nfvmano.catalogue.messages.*;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdDeletionNotification;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnboardingNotification;
 import it.nextworks.nfvmano.catalogue.plugins.KafkaConnector;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
@@ -97,6 +95,22 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
         functor.put(CatalogueMessageType.NSD_DELETION_NOTIFICATION, msg -> {
             NsdDeletionNotificationMessage castMsg = (NsdDeletionNotificationMessage) msg;
             acceptNsdDeletionNotification(castMsg);
+        });
+        functor.put(CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION, msg -> {
+            PnfdOnBoardingNotificationMessage castMsg = (PnfdOnBoardingNotificationMessage) msg;
+            try {
+                acceptPnfdOnBoardingNotification(castMsg);
+            } catch (MethodNotImplementedException e) {
+                e.printStackTrace();
+            }
+        });
+        functor.put(CatalogueMessageType.PNFD_DELETION_NOTIFICATION, msg -> {
+            PnfdDeletionNotificationMessage castMsg = (PnfdDeletionNotificationMessage) msg;
+            try {
+                acceptPnfdDeletionNotification(castMsg);
+            } catch (MethodNotImplementedException e) {
+                e.printStackTrace();
+            }
         });
         functor.put(CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION, msg -> {
             VnfPkgOnBoardingNotificationMessage castMsg = (VnfPkgOnBoardingNotificationMessage) msg;
@@ -182,15 +196,57 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
     }
 
     @Override
-    public void sendPnfdOnBoardingNotification(PnfdOnboardingNotification notification)
-            throws MethodNotImplementedException {
-        throw new MethodNotImplementedException("sendPnfdOnBoardingNotification method not implemented");
+    public void sendPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification)
+            throws MethodNotImplementedException, FailedOperationException {
+        try {
+            log.info("Sending pnfdOnBoardingNotification for PNFD " + notification.getPnfdId());
+
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+            mapper.setSerializationInclusion(Include.NON_EMPTY);
+
+            String json = mapper.writeValueAsString(notification);
+
+            log.debug("Sending json message over kafka bus on topic " + localNotificationTopic + "\n" + json);
+
+            if (skipKafka) {
+                log.debug(" ---- TEST MODE: skipping post to kafka bus ----");
+            } else {
+                kafkaTemplate.send(localNotificationTopic, json);
+
+                log.debug("Message sent.");
+            }
+        } catch (Exception e) {
+            log.error("Error while posting NsdOnBoardingNotificationMessage to Kafka bus");
+            throw new FailedOperationException(e.getMessage());
+        }
     }
 
     @Override
-    public void sendPnfdDeletionNotification(PnfdDeletionNotification notification)
-            throws MethodNotImplementedException {
-        throw new MethodNotImplementedException("sendPnfdDeletionNotification method not implemented");
+    public void sendPnfdDeletionNotification(PnfdDeletionNotificationMessage notification)
+            throws MethodNotImplementedException, FailedOperationException {
+        try {
+            log.info("Sending nsdDeletionNotification for PNFD with pnfdId: " + notification.getPnfdId());
+
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+            mapper.setSerializationInclusion(Include.NON_EMPTY);
+
+            String json = mapper.writeValueAsString(notification);
+
+            log.debug("Sending json message over kafka bus on topic " + localNotificationTopic + "\n" + json);
+
+            if (skipKafka) {
+                log.debug(" ---- TEST MODE: skipping post to kafka bus ----");
+            } else {
+                kafkaTemplate.send(localNotificationTopic, json);
+
+                log.debug("Message sent.");
+            }
+        } catch (Exception e) {
+            log.error("Error while posting NsdDeletionNotificationMessage to Kafka bus");
+            throw new FailedOperationException(e.getMessage());
+        }
     }
 
     @Override
@@ -282,16 +338,87 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
     }
 
     @Override
-    public void acceptPnfdOnBoardingNotification(PnfdOnboardingNotification notification)
-            throws MethodNotImplementedException {
-        throw new MethodNotImplementedException("acceptPnfdOnBoardingNotification method not implemented");
+    public void acceptPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
+        log.info("Received PNFD onboarding notification for PNFD {} with info id {}, from plugin {}.",
+                notification.getPnfdId(), notification.getPnfdInfoId(), notification.getPluginId());
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(Include.NON_EMPTY);
+
+        try {
+            String json = mapper.writeValueAsString(notification);
+            log.debug("RECEIVED MESSAGE: " + json);
+        } catch (JsonProcessingException e) {
+            log.error("Unable to parse received pnfdOnboardingNotificationMessage: " + e.getMessage());
+        }
+
+        switch (notification.getScope()) {
+            case REMOTE:
+                try {
+                    log.debug("Updating PnfdInfoResource with plugin {} operation status {} for operation {}.",
+                            notification.getPluginId(), notification.getOpStatus(),
+                            notification.getOperationId().toString());
+                    nsdMgmtService.updatePnfdInfoOperationStatus(notification.getPnfdInfoId(), notification.getPluginId(),
+                            notification.getOpStatus(), notification.getType());
+                    log.debug("PnfdInfoResource successfully updated with plugin {} operation status {} for operation {}.",
+                            notification.getPluginId(), notification.getOpStatus(),
+                            notification.getOperationId().toString());
+                } catch (NotExistingEntityException e) {
+                    log.error(e.getMessage());
+                }
+                log.debug("Updating consumers internal mapping for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                nsdMgmtService.updateOperationInfoInConsumersMap(notification.getOperationId(), notification.getOpStatus(),
+                        notification.getPluginId(), notification.getPnfdInfoId(), notification.getType());
+                log.debug("Consumers internal mapping successfully updated for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                break;
+            case LOCAL:
+                log.error("Pnfd LOCAL onboarding notification not handled here, REMOTE onboarding message expected.");
+                break;
+            case GLOBAL:
+                log.error("Pnfd GLOBAL onboarding notification not handled here, REMOTE onboarding message expected.");
+                break;
+        }
     }
 
     @Override
-    public void acceptPnfdDeletionNotification(PnfdDeletionNotification notification)
-            throws MethodNotImplementedException {
-        throw new MethodNotImplementedException("acceptPnfdDeletionNotification method not implemented");
+    public void acceptPnfdDeletionNotification(PnfdDeletionNotificationMessage notification) throws MethodNotImplementedException {
+        log.info("Received PNFD deletion notification for PNFD {} with info id {}, from plugin {}.",
+                notification.getPnfdId(), notification.getPnfdInfoId(), notification.getPluginId());
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(Include.NON_EMPTY);
+
+        try {
+            String json = mapper.writeValueAsString(notification);
+            log.debug("RECEIVED MESSAGE: " + json);
+        } catch (JsonProcessingException e) {
+            log.error("Unable to parse received nsdDeletionNotificationMessage: " + e.getMessage());
+        }
+
+        switch (notification.getScope()) {
+            case REMOTE:
+                log.info("PNFD {} with info id {} successfully removed by plugin {}.",
+                        notification.getPnfdId(), notification.getPnfdInfoId(), notification.getPluginId());
+                log.debug("Updating consumers internal mapping for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                nsdMgmtService.updateOperationInfoInConsumersMap(notification.getOperationId(), notification.getOpStatus(),
+                        notification.getPluginId(), notification.getPnfdInfoId(), notification.getType());
+                log.debug("Consumers internal mapping successfully updated for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                break;
+            case LOCAL:
+                log.error("Pnfd LOCAL deletion notification not handled here, REMOTE onboarding message expected.");
+                break;
+            case GLOBAL:
+                log.error("Pnfd GLOBAL deletion notification not handled here, REMOTE onboarding message expected.");
+                break;
+        }
     }
+
 
     @Override
     public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
