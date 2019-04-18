@@ -19,11 +19,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.CharStreams;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementService;
 import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
+import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.Catalogue;
 import it.nextworks.nfvmano.catalogue.plugins.mano.*;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.OpenSourceMANOR3Plugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r4.OpenSourceMANOR4Plugin;
 import it.nextworks.nfvmano.catalogue.plugins.vim.VIM;
+import it.nextworks.nfvmano.catalogue.repos.CatalogueRepository;
 import it.nextworks.nfvmano.catalogue.repos.MANORepository;
 import it.nextworks.nfvmano.catalogue.repos.VIMRepository;
 import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
@@ -68,6 +70,9 @@ public class PluginsManager {
     @Value("${catalogue.manoPluginsConfigurations}")
     private String configurationsDir;
 
+    @Value("${catalogue.vimPluginsConfiguration}")
+    private String vimConfigurationsDir;
+
     @Value("${catalogue.skipMANOPluginsConfig}")
     private boolean skipMANOConfig;
 
@@ -89,6 +94,12 @@ public class PluginsManager {
     @Value("${catalogue.logo}")
     private Path logo;
 
+    @Value("${catalogue.scope}")
+    private String catalogueScope;
+
+    @Value("${catalogue.catalogueConfiguration}")
+    private String catalogueConfigurationsDir;
+
     @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
 
@@ -99,10 +110,13 @@ public class PluginsManager {
     private VnfPackageManagementInterface vnfdService;
 
     @Autowired
-    private it.nextworks.nfvmano.catalogue.repos.MANORepository MANORepository;
+    private MANORepository MANORepository;
 
     @Autowired
     private VIMRepository vimRepository;
+
+    @Autowired
+    private CatalogueRepository catalogueRepository;
 
     public PluginsManager() {
 
@@ -136,7 +150,7 @@ public class PluginsManager {
             }
 
             if (!skipMANOConfig) {
-                resources = loadConfigurations();
+                resources = loadMANOConfigurations();
 
                 ObjectMapper mapper = new ObjectMapper();
 
@@ -168,6 +182,42 @@ public class PluginsManager {
                             } catch (IOException e) {
                                 log.error("Unable to retrieve MANO configuration file: " + e.getMessage());
                             }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (catalogueScope.equalsIgnoreCase("private")) {
+            resources = load5GCatalogueConfigurations();
+
+            ObjectMapper mapper = new ObjectMapper();
+
+            if (resources != null) {
+                for (int i = 0; i < resources.length; i++) {
+                    if (resources[i].isFile() || resources[i] instanceof ClassPathResource) {
+                        try {
+                            InputStream resourcee = resources[i].getInputStream();
+                            String tmp;
+                            try (final Reader reader = new InputStreamReader(resourcee)) {
+                                tmp = CharStreams.toString(reader);
+                            }
+                            log.debug("Loading 5G Catalogue configuration from config file #" + i + ".");
+                            Catalogue newCatalogue = mapper.readValue(tmp, Catalogue.class);
+                            log.debug("Successfully loaded configuration for 5G Catalogue with catalogueId: "
+                                    + newCatalogue.getCatalogueId());
+                            try {
+                                log.debug("Creating 5G Catalogue Plugin with catalogueId " + newCatalogue.getCatalogueId()
+                                        + " from configuration file.");
+                                create5GCatalogue(newCatalogue);
+                            } catch (AlreadyExistingEntityException e) {
+                                log.error("5G Catalogue with catalogueId " + newCatalogue.getCatalogueId() + " already present in DB.");
+                            }  catch (MalformattedElementException e) {
+                                log.error("Malformatted 5G Catalogue with catalogueId " + newCatalogue.getCatalogueId() + ": "
+                                        + e.getMessage());
+                            }
+                        } catch (IOException e) {
+                            log.error("Unable to retrieve 5G Catalogue configuration file: " + e.getMessage());
                         }
                     }
                 }
@@ -219,28 +269,26 @@ public class PluginsManager {
         MANOType type = mano.getManoType();
         log.debug("RECEIVED MANO:\nMANO ID: " + manoId + "\nMANO TYPE: " + type);
 
-        switch (type) {
-            case OSMR3:
-            case OSMR4:
-                log.debug("Processing request for creating " + type + "Plugin.");
-                OSMMano osmMano = (OSMMano) mano;
-                OSMMano targetOsmMano = new OSMMano(osmMano.getManoId(), osmMano.getIpAddress(), osmMano.getUsername(),
-                        osmMano.getPassword(), osmMano.getProject(), type, osmMano.getVimAccounts());
-                targetOsmMano.isValid();
-                log.debug("Persisting OSM MANO with manoId: " + manoId);
-                OSMMano createdMano = MANORepository.saveAndFlush(targetOsmMano);
-                log.debug("OSM MANO with manoId " + manoId + " sucessfully persisted.");
-                log.debug("Instantiating OSM MANO with manoId: " + manoId);
-                try {
-                    addMANO(createdMano);
-                } catch (MalformattedElementException e) {
-                    log.error("Unsupported MANO type.");
-                }
-                log.debug("OSM MANO with manoId " + manoId + " successfully instantiated.");
-                return String.valueOf(createdMano.getId());
-            default:
+        if (type == MANOType.OSMR3 || type == MANOType.OSMR4 || type == MANOType.OSMR5) {
+            log.debug("Processing request for creating " + type + "Plugin.");
+            OSMMano osmMano = (OSMMano) mano;
+            OSMMano targetOsmMano = new OSMMano(osmMano.getManoId(), osmMano.getIpAddress(), osmMano.getUsername(),
+                    osmMano.getPassword(), osmMano.getProject(), type, osmMano.getVimAccounts());
+            targetOsmMano.isValid();
+            log.debug("Persisting OSM MANO with manoId: " + manoId);
+            OSMMano createdMano = MANORepository.saveAndFlush(targetOsmMano);
+            log.debug("OSM MANO with manoId " + manoId + " sucessfully persisted.");
+            log.debug("Instantiating OSM MANO with manoId: " + manoId);
+            try {
+                addMANO(createdMano);
+            } catch (MalformattedElementException e) {
                 log.error("Unsupported MANO type.");
-                throw new MethodNotImplementedException("Unsupported MANO type.");
+            }
+            log.debug("OSM MANO with manoId " + manoId + " successfully instantiated.");
+            return String.valueOf(createdMano.getId());
+        } else {
+            log.error("Unsupported MANO type.");
+            throw new MethodNotImplementedException("Unsupported MANO type.");
         }
     }
 
@@ -268,6 +316,21 @@ public class PluginsManager {
         List<MANO> manos = new ArrayList<>();
         manos = MANORepository.findAll();
         return manos;
+    }
+
+    private Resource[] loadMANOConfigurations() {
+        ResourceLoader resourceLoader = new DefaultResourceLoader();
+        Resource[] resources = null;
+        try {
+            log.debug("Loading MANO configuration files from: " + configurationsDir);
+            resources = ResourcePatternUtils.getResourcePatternResolver(resourceLoader)
+                    .getResources(configurationsDir + "/*.json");
+            log.debug("MANO configuration files successfully loaded.");
+        } catch (IOException e) {
+            log.error("Unable to load MANO configuration files: " + e.getMessage());
+        }
+
+        return resources;
     }
 
     public String createVIMPlugin(VIM vim)
@@ -302,16 +365,48 @@ public class PluginsManager {
         return vims;
     }
 
-    private Resource[] loadConfigurations() {
+    public String create5GCatalogue(Catalogue catalogue)
+            throws AlreadyExistingEntityException, MalformattedElementException {
+
+        return null;
+    }
+
+    public Catalogue get5GCataloguePlugin(String catalogueId) throws NotExistingEntityException {
+
+        log.debug("Processing request for retrieving 5G Catalogue Plugin with catalogueId {}.", catalogueId);
+
+        Optional<Catalogue> optionalCatalogue = catalogueRepository.findByCatalogueId(catalogueId);
+
+        Catalogue catalogue = null;
+
+        if (optionalCatalogue.isPresent()) {
+            catalogue = optionalCatalogue.get();
+        } else {
+            throw new NotExistingEntityException("Catalogue Plugin with catalogueId " + catalogueId + " not present in DB");
+        }
+
+        return catalogue;
+    }
+
+    public List<Catalogue> getAll5GCataloguePlugins() {
+
+        log.debug("Processing request for retrieving all 5G Catalogue Plugins.");
+
+        List<Catalogue> catalogues = new ArrayList<>();
+        catalogues = catalogueRepository.findAll();
+        return catalogues;
+    }
+
+    private Resource[] load5GCatalogueConfigurations() {
         ResourceLoader resourceLoader = new DefaultResourceLoader();
         Resource[] resources = null;
         try {
-            log.debug("Loading MANO configuration files from: " + configurationsDir);
+            log.debug("Loading 5G Catalogue configuration files from: " + catalogueConfigurationsDir);
             resources = ResourcePatternUtils.getResourcePatternResolver(resourceLoader)
-                    .getResources(configurationsDir + "/*.json");
-            log.debug("MANO configuration files successfully loaded.");
+                    .getResources(catalogueConfigurationsDir + "/*.json");
+            log.debug("5G Catalogue configuration files successfully loaded.");
         } catch (IOException e) {
-            log.error("Unable to load MANO configuration files: " + e.getMessage());
+            log.error("Unable to load 5G Catalogue configuration files: " + e.getMessage());
         }
 
         return resources;

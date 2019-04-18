@@ -68,10 +68,10 @@ public class VIMManagementController {
         return new ResponseEntity<List<VIM>>(vims, HttpStatus.OK);
     }
 
-    @RequestMapping(value = "/vims/{vimId}", method = RequestMethod.DELETE)
-    public ResponseEntity<?> deleteVIM(@ApiParam(value = "", required = true) @PathVariable("vimId") String vimId) throws MethodNotImplementedException {
+    @RequestMapping(value = "/vims/{vimId}", method = RequestMethod.GET)
+    public ResponseEntity<?> getVIM(@ApiParam(value = "", required = true) @PathVariable("vimId") String vimId) throws MethodNotImplementedException {
 
-        log.debug("Received request for removing VIM plugin with vimId {}", vimId);
+        log.debug("Received request for getting VIM plugin with vimId {}", vimId);
 
         VIM vim = null;
 
