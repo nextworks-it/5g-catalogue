@@ -25,6 +25,7 @@ import it.nextworks.nfvmano.catalogue.engine.resources.PnfdInfoResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
 import it.nextworks.nfvmano.catalogue.messages.*;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.*;
+import it.nextworks.nfvmano.catalogue.plugins.PluginType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.repos.*;
 import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
@@ -85,7 +86,7 @@ public class NsdManagementService implements NsdManagementInterface {
         if (operationIdToConsumersAck.containsKey(operationId.toString())) {
             manoIdToOpAck = operationIdToConsumersAck.get(operationId.toString());
         }
-        NotificationResource notificationResource = new NotificationResource(nsdInfoId, messageType, opStatus);
+        NotificationResource notificationResource = new NotificationResource(nsdInfoId, messageType, opStatus, PluginType.MANO);
         manoIdToOpAck.put(manoId, notificationResource);
 
         operationIdToConsumersAck.put(operationId.toString(), manoIdToOpAck);
@@ -98,7 +99,7 @@ public class NsdManagementService implements NsdManagementInterface {
         List<MANO> manos = MANORepository.findAll();
         Map<String, NotificationResource> pluginToOperationState = new HashMap<>();
         for (MANO mano : manos) {
-            pluginToOperationState.put(mano.getManoId(), new NotificationResource(nsdInfoId, messageType, opStatus));
+            pluginToOperationState.put(mano.getManoId(), new NotificationResource(nsdInfoId, messageType, opStatus, PluginType.MANO));
 
         }
         operationIdToConsumersAck.put(operationId.toString(), pluginToOperationState);
@@ -218,7 +219,6 @@ public class NsdManagementService implements NsdManagementInterface {
             log.error("Wrong ID format: " + nsdInfoId);
             throw new MalformattedElementException("Wrong ID format: " + nsdInfoId);
         }
-
     }
 
     @Override
@@ -545,7 +545,7 @@ public class NsdManagementService implements NsdManagementInterface {
         nsdInfo.setVnfPkgIds(vnfPkgIds);
 
         List<UUID> pnfdIds = new ArrayList<>();
-        for (String pnfdInfoId: includedPnfds) {
+        for (String pnfdInfoId : includedPnfds) {
             log.debug("Adding pnfdInfo Id {} to pnfs list in nsdInfo", pnfdInfoId);
             log.debug("Adding pnfdInfo Id {} to pnfs list in nsdInfo", pnfdInfoId);
             pnfdIds.add(UUID.fromString(pnfdInfoId));
@@ -1031,7 +1031,7 @@ public class NsdManagementService implements NsdManagementInterface {
                 if (nsdInfoResource.getAcknowledgedOnboardOpConsumers() != null) {
                     ackMap = nsdInfoResource.getAcknowledgedOnboardOpConsumers();
                 }
-                ackMap.put(manoId, new NotificationResource(nsdInfoId, messageType, opStatus));
+                ackMap.put(manoId, new NotificationResource(nsdInfoId, messageType, opStatus, PluginType.MANO));
                 nsdInfoResource.setAcknowledgedOnboardOpConsumers(ackMap);
 
                 if (messageType == CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION) {
@@ -1054,7 +1054,7 @@ public class NsdManagementService implements NsdManagementInterface {
     private NsdOnboardingStateType checkNsdOnboardingState(String nsdInfoId, Map<String, NotificationResource> ackMap) {
 
         for (Entry<String, NotificationResource> entry : ackMap.entrySet()) {
-            if (entry.getValue().getOperation() == CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION) {
+            if (entry.getValue().getOperation() == CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION && entry.getValue().getPluginType() == PluginType.MANO) {
                 if (entry.getValue().getOpStatus() == OperationStatus.FAILED) {
                     log.error("NSD with nsdInfoId {} onboarding failed for mano with manoId {}.", nsdInfoId,
                             entry.getKey());
@@ -1128,7 +1128,7 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     public synchronized void updatePnfdInfoOperationStatus(String pnfdInfoId, String manoId, OperationStatus opStatus,
-                                                          CatalogueMessageType messageType) throws NotExistingEntityException {
+                                                           CatalogueMessageType messageType) throws NotExistingEntityException {
 
         log.debug("Retrieving pnfdInfoResource {} from DB for updating with onboarding status info for plugin {}",
                 pnfdInfoId, manoId);
@@ -1142,7 +1142,7 @@ public class NsdManagementService implements NsdManagementInterface {
                 if (pnfdInfoResource.getAcknowledgedOnboardOpConsumers() != null) {
                     ackMap = pnfdInfoResource.getAcknowledgedOnboardOpConsumers();
                 }
-                ackMap.put(manoId, new NotificationResource(pnfdInfoId, messageType, opStatus));
+                ackMap.put(manoId, new NotificationResource(pnfdInfoId, messageType, opStatus, PluginType.MANO));
                 pnfdInfoResource.setAcknowledgedOnboardOpConsumers(ackMap);
 
                 if (messageType == CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION) {
@@ -1165,7 +1165,7 @@ public class NsdManagementService implements NsdManagementInterface {
     private PnfdOnboardingStateType checkPnfdOnboardingState(String pnfdInfoId, Map<String, NotificationResource> ackMap) {
 
         for (Entry<String, NotificationResource> entry : ackMap.entrySet()) {
-            if (entry.getValue().getOperation() == CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION) {
+            if (entry.getValue().getOperation() == CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION && entry.getValue().getPluginType() == PluginType.MANO) {
                 if (entry.getValue().getOpStatus() == OperationStatus.FAILED) {
                     log.error("PNFD with pnfdInfoId {} onboarding failed for mano with manoId {}", pnfdInfoId,
                             entry.getKey());

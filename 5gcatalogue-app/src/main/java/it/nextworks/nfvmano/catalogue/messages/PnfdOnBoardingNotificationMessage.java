@@ -21,8 +21,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 public class PnfdOnBoardingNotificationMessage extends CatalogueMessage {

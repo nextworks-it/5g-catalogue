@@ -2,7 +2,6 @@ package it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue;
 
 import io.swagger.annotations.ApiParam;
 import it.nextworks.nfvmano.catalogue.plugins.PluginsManager;
-
 import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
@@ -44,8 +43,6 @@ public class Cat2CatManagementController {
             createdCatalogueId = pluginsManager.create5GCatalogue(catalogue);
         } catch (AlreadyExistingEntityException e) {
             return new ResponseEntity<String>("5G Catalogue already present in DB", HttpStatus.CONFLICT);
-        } catch (MalformattedElementException e) {
-            return new ResponseEntity<String>("Malformatted 5G Catalogue: " + e.getMessage(), HttpStatus.BAD_REQUEST);
         }
 
         return new ResponseEntity<String>(createdCatalogueId, HttpStatus.CREATED);
@@ -61,10 +58,10 @@ public class Cat2CatManagementController {
         return new ResponseEntity<List<Catalogue>>(catalogues, HttpStatus.OK);
     }
 
-    @RequestMapping(value = "/5gcatalogues/{catalogueId}", method = RequestMethod.DELETE)
+    @RequestMapping(value = "/5gcatalogues/{catalogueId}", method = RequestMethod.GET)
     public ResponseEntity<?> get5Gcatalogue(@ApiParam(value = "", required = true) @PathVariable("catalogueId") String catalogueId) {
 
-        log.debug("Received request for removing 5G Catalogue plugin with catalogueId {}", catalogueId);
+        log.debug("Received request for getting 5G Catalogue plugin with catalogueId {}", catalogueId);
 
         Catalogue catalogue = null;
 

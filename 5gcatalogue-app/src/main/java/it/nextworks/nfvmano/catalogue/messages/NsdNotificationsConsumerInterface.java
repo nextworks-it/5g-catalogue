@@ -15,8 +15,6 @@
  */
 package it.nextworks.nfvmano.catalogue.messages;
 
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdDeletionNotification;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnboardingNotification;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
 
 public interface NsdNotificationsConsumerInterface {

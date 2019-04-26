@@ -16,6 +16,7 @@
 package it.nextworks.nfvmano.catalogue.engine.resources;
 
 import it.nextworks.nfvmano.catalogue.messages.CatalogueMessageType;
+import it.nextworks.nfvmano.catalogue.plugins.PluginType;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 
 import javax.persistence.Embeddable;
@@ -26,15 +27,17 @@ public class NotificationResource {
     private String nsdInfoId;
     private CatalogueMessageType operation;
     private OperationStatus opStatus;
+    private PluginType pluginType;
 
     public NotificationResource() {
 
     }
 
-    public NotificationResource(String nsdInfoId, CatalogueMessageType operation, OperationStatus opStatus) {
+    public NotificationResource(String nsdInfoId, CatalogueMessageType operation, OperationStatus opStatus, PluginType pluginType) {
         this.nsdInfoId = nsdInfoId;
         this.operation = operation;
         this.opStatus = opStatus;
+        this.pluginType = pluginType;
     }
 
     public String getNsdInfoId() {
@@ -59,5 +62,13 @@ public class NotificationResource {
 
     public void setOpStatus(OperationStatus opStatus) {
         this.opStatus = opStatus;
+    }
+
+    public PluginType getPluginType() {
+        return pluginType;
+    }
+
+    public void setPluginType(PluginType pluginType) {
+        this.pluginType = pluginType;
     }
 }

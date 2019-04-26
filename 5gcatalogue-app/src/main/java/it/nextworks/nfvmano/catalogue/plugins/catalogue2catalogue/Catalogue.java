@@ -15,18 +15,15 @@ public class Catalogue {
 
     private String catalogueId;
 
-    private String ipAddress;
-
-    private String port;
+    private String url;
 
     public Catalogue() {
     }
 
-    public Catalogue(String catalogueId, String ipAddress, String port) {
+    public Catalogue(String catalogueId, String url) {
 
         this.catalogueId = catalogueId;
-        this.ipAddress = ipAddress;
-        this.port = port;
+        this.url = url;
     }
 
     public Long getId() {
@@ -42,21 +39,12 @@ public class Catalogue {
         this.catalogueId = catalogueId;
     }
 
-    @JsonProperty("ipAddress")
-    public String getIpAddress() {
-        return ipAddress;
+    @JsonProperty("url")
+    public String getUrl() {
+        return url;
     }
 
-    public void setIpAddress(String ipAddress) {
-        this.ipAddress = ipAddress;
-    }
-
-    @JsonProperty("port")
-    public String getPort() {
-        return port;
-    }
-
-    public void setPort(String port) {
-        this.port = port;
+    public void setUrl(String url) {
+        this.url = url;
     }
 }

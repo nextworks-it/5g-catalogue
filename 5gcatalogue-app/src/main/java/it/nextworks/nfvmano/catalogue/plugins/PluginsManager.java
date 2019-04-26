@@ -15,19 +15,21 @@
  */
 package it.nextworks.nfvmano.catalogue.plugins;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.CharStreams;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementService;
 import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
 import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.Catalogue;
+import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.CataloguePlugin;
+import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.api.nsd.DefaultApi;
 import it.nextworks.nfvmano.catalogue.plugins.mano.*;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.OpenSourceMANOR3Plugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r4.OpenSourceMANOR4Plugin;
 import it.nextworks.nfvmano.catalogue.plugins.vim.VIM;
-import it.nextworks.nfvmano.catalogue.repos.CatalogueRepository;
-import it.nextworks.nfvmano.catalogue.repos.MANORepository;
-import it.nextworks.nfvmano.catalogue.repos.VIMRepository;
+import it.nextworks.nfvmano.catalogue.repos.*;
 import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
@@ -58,6 +60,8 @@ public class PluginsManager {
     private static final Logger log = LoggerFactory.getLogger(PluginsManager.class);
 
     public Map<String, MANOPlugin> manoDrivers = new HashMap<>();
+
+    public Map<String, CataloguePlugin> catalogueDrivers = new HashMap<>();
 
     private Resource[] resources;
 
@@ -117,6 +121,12 @@ public class PluginsManager {
 
     @Autowired
     private CatalogueRepository catalogueRepository;
+
+    @Autowired
+    private NsdInfoRepository nsdInfoRepo;
+
+    @Autowired
+    private VnfPkgInfoRepository vnfPkgInfoRepository;
 
     public PluginsManager() {
 
@@ -212,12 +222,9 @@ public class PluginsManager {
                                 create5GCatalogue(newCatalogue);
                             } catch (AlreadyExistingEntityException e) {
                                 log.error("5G Catalogue with catalogueId " + newCatalogue.getCatalogueId() + " already present in DB.");
-                            }  catch (MalformattedElementException e) {
-                                log.error("Malformatted 5G Catalogue with catalogueId " + newCatalogue.getCatalogueId() + ": "
-                                        + e.getMessage());
                             }
                         } catch (IOException e) {
-                            log.error("Unable to retrieve 5G Catalogue configuration file: " + e.getMessage());
+                            log.error("Unable to parse 5G Catalogue configuration file: " + e.getMessage());
                         }
                     }
                 }
@@ -343,7 +350,7 @@ public class PluginsManager {
 
         log.debug("Processing request for retrieving VIM Plugin with vimId {}.", vimId);
 
-        Optional<VIM> optionalVIM =vimRepository.findByVimId(vimId);
+        Optional<VIM> optionalVIM = vimRepository.findByVimId(vimId);
 
         VIM vim = null;
 
@@ -365,10 +372,56 @@ public class PluginsManager {
         return vims;
     }
 
-    public String create5GCatalogue(Catalogue catalogue)
-            throws AlreadyExistingEntityException, MalformattedElementException {
+    public void addCatalogue(Catalogue catalogue) {
+        try {
+            CataloguePlugin cataloguePlugin = buildCataloguePlugin(catalogue);
 
-        return null;
+            // Init kafka consumer
+            cataloguePlugin.init();
+
+            catalogueDrivers.put(catalogue.getCatalogueId(), cataloguePlugin);
+
+            log.debug("Loaded plugin for 5G Catalogue " + catalogue.getCatalogueId());
+
+            // TODO: notify 5G Catalogue plugin creation
+        } catch (Exception e) {
+            log.error("Failed to add 5G Catalogue plugin: " + e.getMessage());
+        }
+    }
+
+    private CataloguePlugin buildCataloguePlugin(Catalogue catalogue) {
+        return new CataloguePlugin(
+                catalogue.getCatalogueId(),
+                PluginType.C2C,
+                catalogue,
+                bootstrapServers,
+                nsdService,
+                vnfdService,
+                new DefaultApi(catalogue),
+                new it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.api.vnf.DefaultApi(catalogue),
+                nsdInfoRepo,
+                vnfPkgInfoRepository,
+                localNotificationTopic,
+                remoteNotificationTopic,
+                kafkaTemplate
+        );
+    }
+
+    public String create5GCatalogue(Catalogue catalogue)
+            throws AlreadyExistingEntityException {
+        String catalogueId = catalogue.getCatalogueId();
+        if (catalogueRepository.findByCatalogueId(catalogueId).isPresent()) {
+            log.error("A 5G Catalogue with the same ID is already available in DB - Not acceptable");
+            throw new AlreadyExistingEntityException(
+                    "A 5G Catalogue with the same ID is already available in DB - Not acceptable");
+        }
+        log.debug("Persisting 5G Catalogue with catalogueId: " + catalogueId);
+        Catalogue createdCatalogue = catalogueRepository.saveAndFlush(catalogue);
+        log.debug("5G Catalogue with catalogueId " + catalogueId + " sucessfully persisted.");
+        log.debug("Instantiating 5G Catalogue with catalogueId: " + catalogueId);
+        addCatalogue(catalogue);
+        log.debug("5G Catalogue with catalogueId " + catalogueId + " successfully instantiated.");
+        return String.valueOf(createdCatalogue.getId());
     }
 
     public Catalogue get5GCataloguePlugin(String catalogueId) throws NotExistingEntityException {
