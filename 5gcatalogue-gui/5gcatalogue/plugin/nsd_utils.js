@@ -74,7 +74,7 @@ function uploadNsdContent(data, params) {
 }
 
 function exportNsd(nsdInfoId, resId) {
-    postToURL("http://" + catalogueAddr + ":8083/catalogue/cat2catOperation/exportNsd/" + nsdInfoId, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully uploaded in public 5G Catalogue."])
+    postToURL("http://" + catalogueAddr + ":8083/catalogue/cat2catOperation/exportNsd/" + nsdInfoId, showResultMessage, ["Request for uploading NSD with nsdInfoId " + nsdInfoId + " successfully submitted to public 5G Catalogue."])
 }
 
 function getDescription(descrId) {
