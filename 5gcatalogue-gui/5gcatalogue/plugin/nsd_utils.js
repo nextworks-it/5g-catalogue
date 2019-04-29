@@ -73,6 +73,10 @@ function uploadNsdContent(data, params) {
     putFileToURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content", formData, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully updated."]);
 }
 
+function exportNsd(nsdInfoId, resId) {
+    postToURL("http://" + catalogueAddr + ":8083/catalogue/cat2catOperation/exportNsd/" + nsdInfoId, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully uploaded in public 5G Catalogue."])
+}
+
 function getDescription(descrId) {
     var nsdId = getURLParameter('nsdId');
     console.log(nsdId);
@@ -133,8 +137,17 @@ function createNsdInfosTable(data, params) {
     }
     var btnFlag = true;
     var header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Operational State', 'Onboarding State', 'MANOs Onboarding State', 'Actions'], btnFlag, false);
-    var cbacks = ['openNSD_', 'showNsdGraphCanvas', 'updateNsdInfo_', 'deleteNsdInfo'];
-    var names = ['View NSD', 'View NSD Graph', 'Change NSD OpState', 'Delete NSD'];
+    var cbacks = [];
+    var names = [];
+    if (isPublic) {
+        console.log("PUBLIC CATALOGUE");
+        cbacks = ['openNSD_', 'showNsdGraphCanvas', 'updateNsdInfo_', 'deleteNsdInfo'];
+        names = ['View NSD', 'View NSD Graph', 'Change NSD OpState', 'Delete NSD'];   
+    } else {
+        console.log("PRIVATE CATALOGUE");
+        cbacks = ['openNSD_', 'showNsdGraphCanvas', 'updateNsdInfo_', 'exportNsd', 'deleteNsdInfo'];
+        names = ['View NSD', 'View NSD Graph', 'Change NSD OpState', 'Upload NSD', 'Delete NSD'];
+    }
     var columns = [['nsdName'], ['nsdVersion'], ['nsdDesigner'], ['nsdOperationalState'], ['nsdOnboardingState'], ['manosOnboardingStatus']];
 
     table.innerHTML = header + '<tbody>';
@@ -194,8 +207,8 @@ function createNsdInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
 }
 
 function createCanvas(data){
-    console.log(data);
-    console.log('Canvas per grafico' +  data['id']);
+    //console.log(data);
+    //console.log('Canvas for graph ' +  data['id']);
     var dataId ='cy_'+data['id'];
     var nsdName=data['nsdName'];
     var graphName="graphOf_" + data['id'];
@@ -226,7 +239,7 @@ function createCanvas(data){
 
 function creteNSDViewModal(nsdInfoId, modalsContainerId) {
 
-    console.log('Creating view modal for nsdInfoId: ' + nsdInfoId);
+    //console.log('Creating view modal for nsdInfoId: ' + nsdInfoId);
     var container = document.getElementById(modalsContainerId);
 
     if (container) {
@@ -257,7 +270,7 @@ function creteNSDViewModal(nsdInfoId, modalsContainerId) {
 function fillNSDViewModal(data, params) {
 
     var yamlObj = jsyaml.load(data);
-    console.log(yamlObj);
+    //console.log(yamlObj);
 
     var yaml = jsyaml.dump(data, {
         indent: 4,
@@ -267,7 +280,7 @@ function fillNSDViewModal(data, params) {
         }
     });
 
-    console.log(yaml);
+    //console.log(yaml);
     var nsdInfoId = params[0];
     var textArea = document.getElementById(params[1]);
     textArea.value = yaml;

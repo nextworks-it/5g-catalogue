@@ -52,105 +52,125 @@ public class DummyMANOPlugin extends MANOPlugin {
 
     @Override
     public void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) {
-        log.info("Received NSD onboarding notification.");
-        log.debug("Body: {}", notification);
-        NsdOnBoardingNotificationMessage response = new NsdOnBoardingNotificationMessage(
-                notification.getNsdInfoId(),
-                notification.getNsdId(),
-                notification.getOperationId(),
-                ScopeType.REMOTE,
-                OperationStatus.SUCCESSFULLY_DONE,
-                mano.getManoId()
-        );
-        sendNotification(response);
+        if (notification.getScope() == ScopeType.LOCAL) {
+            log.info("Received NSD onboarding notification.");
+            log.debug("Body: {}", notification);
+            NsdOnBoardingNotificationMessage response = new NsdOnBoardingNotificationMessage(
+                    notification.getNsdInfoId(),
+                    notification.getNsdId(),
+                    notification.getOperationId(),
+                    ScopeType.REMOTE,
+                    OperationStatus.SUCCESSFULLY_DONE,
+                    mano.getManoId()
+            );
+            sendNotification(response);
+            log.debug("NsdOnBoardingNotification sent to NotificationManager");
+        }
     }
 
     @Override
     public void acceptNsdChangeNotification(NsdChangeNotificationMessage notification) {
-        log.info("Received NSD change notification.");
-        log.debug("Body: {}", notification);
+        if (notification.getScope() == ScopeType.LOCAL) {
+            log.info("Received NSD change notification.");
+            log.debug("Body: {}", notification);
+        }
     }
 
     @Override
     public void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification) {
-        log.info("Received NSD deletion notification.");
-        log.debug("Body: {}", notification);
-        NsdDeletionNotificationMessage response = new NsdDeletionNotificationMessage(
-                notification.getNsdInfoId(),
-                notification.getNsdId(),
-                notification.getOperationId(),
-                ScopeType.REMOTE,
-                OperationStatus.SUCCESSFULLY_DONE,
-                mano.getManoId()
-        );
-        sendNotification(response);
+        if (notification.getScope() == ScopeType.LOCAL) {
+            log.info("Received NSD deletion notification.");
+            log.debug("Body: {}", notification);
+            NsdDeletionNotificationMessage response = new NsdDeletionNotificationMessage(
+                    notification.getNsdInfoId(),
+                    notification.getNsdId(),
+                    notification.getOperationId(),
+                    ScopeType.REMOTE,
+                    OperationStatus.SUCCESSFULLY_DONE,
+                    mano.getManoId()
+            );
+            sendNotification(response);
+            log.debug("NsdDeletionNotification sent to NotificationManager");
+        }
     }
 
     @Override
     public void acceptPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
-        log.info("Received PNFD onboarding notification.");
-        log.debug("Body: {}", notification);
-        PnfdOnBoardingNotificationMessage response = new PnfdOnBoardingNotificationMessage(
-                notification.getPnfdInfoId(),
-                notification.getPnfdId(),
-                notification.getOperationId(),
-                ScopeType.REMOTE,
-                OperationStatus.SUCCESSFULLY_DONE,
-                mano.getManoId()
-        );
-        sendNotification(response);
+        if (notification.getScope() == ScopeType.LOCAL) {
+            log.info("Received PNFD onboarding notification.");
+            log.debug("Body: {}", notification);
+            PnfdOnBoardingNotificationMessage response = new PnfdOnBoardingNotificationMessage(
+                    notification.getPnfdInfoId(),
+                    notification.getPnfdId(),
+                    notification.getOperationId(),
+                    ScopeType.REMOTE,
+                    OperationStatus.SUCCESSFULLY_DONE,
+                    mano.getManoId()
+            );
+            sendNotification(response);
+            log.debug("PnfdOnBoardingNotification sent to NotificationManager");
+        }
     }
 
     @Override
     public void acceptPnfdDeletionNotification(PnfdDeletionNotificationMessage notification) throws MethodNotImplementedException {
-        log.info("Received PNFD deletion notification.");
-        log.debug("Body: {}", notification);
-        PnfdDeletionNotificationMessage response = new PnfdDeletionNotificationMessage(
-                notification.getPnfdInfoId(),
-                notification.getPnfdId(),
-                notification.getOperationId(),
-                ScopeType.REMOTE,
-                OperationStatus.SUCCESSFULLY_DONE,
-                mano.getManoId()
-        );
-        sendNotification(response);
+        if (notification.getScope() == ScopeType.LOCAL) {
+            log.info("Received PNFD deletion notification.");
+            log.debug("Body: {}", notification);
+            PnfdDeletionNotificationMessage response = new PnfdDeletionNotificationMessage(
+                    notification.getPnfdInfoId(),
+                    notification.getPnfdId(),
+                    notification.getOperationId(),
+                    ScopeType.REMOTE,
+                    OperationStatus.SUCCESSFULLY_DONE,
+                    mano.getManoId()
+            );
+            sendNotification(response);
+            log.debug("PnfdDeletionNotification sent to NotificationManager");
+        }
     }
 
     @Override
     public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) {
-        log.info("Received VNF Pkg onboarding notification.");
-        log.debug("Body: {}", notification);
-        VnfPkgOnBoardingNotificationMessage response = new VnfPkgOnBoardingNotificationMessage(
-                notification.getVnfPkgInfoId(),
-                notification.getVnfdId(),
-                notification.getOperationId(),
-                ScopeType.REMOTE,
-                OperationStatus.SUCCESSFULLY_DONE,
-                mano.getManoId()
-        );
-        sendNotification(response);
-        log.debug("VnfPkgOnBoardingNotification sent to NotificationManager");
+        if (notification.getScope() == ScopeType.LOCAL) {
+            log.info("Received VNF Pkg onboarding notification.");
+            log.debug("Body: {}", notification);
+            VnfPkgOnBoardingNotificationMessage response = new VnfPkgOnBoardingNotificationMessage(
+                    notification.getVnfPkgInfoId(),
+                    notification.getVnfdId(),
+                    notification.getOperationId(),
+                    ScopeType.REMOTE,
+                    OperationStatus.SUCCESSFULLY_DONE,
+                    mano.getManoId()
+            );
+            sendNotification(response);
+            log.debug("VnfPkgOnBoardingNotification sent to NotificationManager");
+        }
     }
 
     @Override
     public void acceptVnfPkgChangeNotification(VnfPkgChangeNotificationMessage notification) {
-        log.info("Received VNF Pkg change notification.");
-        log.debug("Body: {}", notification);
+        if (notification.getScope() == ScopeType.LOCAL) {
+            log.info("Received VNF Pkg change notification.");
+            log.debug("Body: {}", notification);
+        }
     }
 
     @Override
     public void acceptVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) {
-        log.info("Received VNF Pkg deletion notification.");
-        log.debug("Body: {}", notification);
-        VnfPkgDeletionNotificationMessage response = new VnfPkgDeletionNotificationMessage(
-                notification.getVnfPkgInfoId(),
-                notification.getVnfdId(),
-                notification.getOperationId(),
-                ScopeType.REMOTE,
-                OperationStatus.SUCCESSFULLY_DONE,
-                mano.getManoId()
-        );
-        sendNotification(response);
-        log.debug("VnfPkgDeletionNotification sent to NotificationManager");
+        if (notification.getScope() == ScopeType.LOCAL) {
+            log.info("Received VNF Pkg deletion notification.");
+            log.debug("Body: {}", notification);
+            VnfPkgDeletionNotificationMessage response = new VnfPkgDeletionNotificationMessage(
+                    notification.getVnfPkgInfoId(),
+                    notification.getVnfdId(),
+                    notification.getOperationId(),
+                    ScopeType.REMOTE,
+                    OperationStatus.SUCCESSFULLY_DONE,
+                    mano.getManoId()
+            );
+            sendNotification(response);
+            log.debug("VnfPkgDeletionNotification sent to NotificationManager");
+        }
     }
 }

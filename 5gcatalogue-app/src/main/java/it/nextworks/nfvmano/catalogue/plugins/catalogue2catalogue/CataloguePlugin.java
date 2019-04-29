@@ -40,6 +40,8 @@ public class CataloguePlugin extends Plugin
         implements NsdNotificationsConsumerInterface, VnfPkgNotificationsConsumerInterface {
 
     private static final Logger log = LoggerFactory.getLogger(CataloguePlugin.class);
+
+    private Catalogue catalogue;
     protected KafkaConnector connector;
     protected NsdManagementInterface nsdService;
     protected VnfPackageManagementInterface vnfdService;
@@ -48,7 +50,6 @@ public class CataloguePlugin extends Plugin
     protected NsdInfoRepository nsdInfoRepository;
     protected VnfPkgInfoRepository vnfPkgInfoRepository;
     protected KafkaTemplate<String, String> kafkaTemplate;
-    private Catalogue catalogue;
     private String remoteTopic;
 
     public CataloguePlugin(String pluginId, PluginType pluginType) {
@@ -315,7 +316,7 @@ public class CataloguePlugin extends Plugin
 
     @Override
     public void init() {
-
+        connector.init();
     }
 
     public Catalogue getCatalogue() {

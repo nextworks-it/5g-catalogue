@@ -116,7 +116,7 @@ function showPnfdGraphCanvas(data,params) {
 }
 
 function createPnfdInfosTable(data, params) {
-    console.log(JSON.stringify(data, null, 4));
+    //console.log(JSON.stringify(data, null, 4));
     //console.log(params);
 
     var tableId = params[0];
@@ -191,7 +191,7 @@ function createPnfdInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
 
 function cretePNFDViewModal(pnfdInfoId, modalsContainerId) {
 
-    console.log('Creating view modal for pnfdInfoId: ' + pnfdInfoId);
+    //console.log('Creating view modal for pnfdInfoId: ' + pnfdInfoId);
     var container = document.getElementById(modalsContainerId);
 
     if (container) {
@@ -221,7 +221,7 @@ function cretePNFDViewModal(pnfdInfoId, modalsContainerId) {
 function fillPNFDViewModal(data, params) {
 
     var yamlObj = jsyaml.load(data);
-    console.log(yamlObj);
+    //console.log(yamlObj);
 
     var yaml = jsyaml.dump(data, {
         indent: 4,
@@ -231,7 +231,7 @@ function fillPNFDViewModal(data, params) {
         }
     });
 
-    console.log(yaml);
+    //console.log(yaml);
     var pnfdInfoId = params[0];
     var textArea = document.getElementById(params[1]);
     textArea.value = yaml;

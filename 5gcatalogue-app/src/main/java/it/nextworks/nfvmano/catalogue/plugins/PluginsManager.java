@@ -15,8 +15,6 @@
  */
 package it.nextworks.nfvmano.catalogue.plugins;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.CharStreams;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementService;
@@ -168,9 +166,9 @@ public class PluginsManager {
                     for (int i = 0; i < resources.length; i++) {
                         if (resources[i].isFile() || resources[i] instanceof ClassPathResource) {
                             try {
-                                InputStream resourcee = resources[i].getInputStream();
+                                InputStream resource = resources[i].getInputStream();
                                 String tmp;
-                                try (final Reader reader = new InputStreamReader(resourcee)) {
+                                try (final Reader reader = new InputStreamReader(resource)) {
                                     tmp = CharStreams.toString(reader);
                                 }
                                 log.debug("Loading MANO configuration from config file #" + i + ".");
@@ -199,6 +197,7 @@ public class PluginsManager {
         }
 
         if (catalogueScope.equalsIgnoreCase("private")) {
+            log.debug("Instantiating 5G Catalogue driver...");
             resources = load5GCatalogueConfigurations();
 
             ObjectMapper mapper = new ObjectMapper();
@@ -207,9 +206,9 @@ public class PluginsManager {
                 for (int i = 0; i < resources.length; i++) {
                     if (resources[i].isFile() || resources[i] instanceof ClassPathResource) {
                         try {
-                            InputStream resourcee = resources[i].getInputStream();
+                            InputStream resource = resources[i].getInputStream();
                             String tmp;
-                            try (final Reader reader = new InputStreamReader(resourcee)) {
+                            try (final Reader reader = new InputStreamReader(resource)) {
                                 tmp = CharStreams.toString(reader);
                             }
                             log.debug("Loading 5G Catalogue configuration from config file #" + i + ".");
@@ -279,8 +278,15 @@ public class PluginsManager {
         if (type == MANOType.OSMR3 || type == MANOType.OSMR4 || type == MANOType.OSMR5) {
             log.debug("Processing request for creating " + type + "Plugin.");
             OSMMano osmMano = (OSMMano) mano;
-            OSMMano targetOsmMano = new OSMMano(osmMano.getManoId(), osmMano.getIpAddress(), osmMano.getUsername(),
-                    osmMano.getPassword(), osmMano.getProject(), type, osmMano.getVimAccounts());
+            OSMMano targetOsmMano = new OSMMano(
+                    osmMano.getManoId(),
+                    osmMano.getIpAddress(),
+                    osmMano.getUsername(),
+                    osmMano.getPassword(),
+                    osmMano.getProject(),
+                    type,
+                    osmMano.getVimAccounts()
+            );
             targetOsmMano.isValid();
             log.debug("Persisting OSM MANO with manoId: " + manoId);
             OSMMano createdMano = MANORepository.saveAndFlush(targetOsmMano);

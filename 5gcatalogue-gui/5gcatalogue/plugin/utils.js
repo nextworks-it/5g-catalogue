@@ -17,6 +17,7 @@
 //var catalogueAddr = '10.0.8.44';
 var catalogueAddr = window.location.hostname;
 var cataloguePort = '8083';
+var isPublic = false;
 
 var stopRefreshing = false;
 
@@ -299,26 +300,29 @@ function createLinkSet(id, resId, btnNames, btnCallbacks) {
 			for(var i=0; i<btnNames.length; i++) {
 				if (btnCallbacks[i].toLowerCase().indexOf("delete") >= 0 ||
 					btnCallbacks[i].toLowerCase().indexOf("get") >= 0) {
-					text += '<a title="Delete"class="btn btn-link">\
-							<i class="fa fa-close"  onclick=' + btnCallbacks[i] + '("' + id + '","' + resId + '")></i>\
+					text += '<a title="Delete" class="btn btn-link">\
+								<i class="fa fa-close"  onclick=' + btnCallbacks[i] + '("' + id + '","' + resId + '")></i>\
 							</a>';
-				} else if (btnCallbacks[i].toLowerCase().indexOf("update") >= 0) {
-							text += '<a title="Operational State"class="btn btn-link">\
-										<i class="fa fa-gear" "buttonModal_'+ btnCallbacks[i] + '"  data-toggle="modal" data-target="#' + btnCallbacks[i] + id + '" data-id="' + id + '"></i>\
-									</a>';
-				} else if (btnCallbacks[i].toLowerCase().indexOf("open") >= 0) {
+				} 	else if (btnCallbacks[i].toLowerCase().indexOf("update") >= 0) {
+						text += '<a title="Operational State" class="btn btn-link">\
+									<i class="fa fa-gear" "buttonModal_'+ btnCallbacks[i] + '"  data-toggle="modal" data-target="#' + btnCallbacks[i] + id + '" data-id="' + id + '"></i>\
+								</a>';
+				} 	else if (btnCallbacks[i].toLowerCase().indexOf("open") >= 0) {
 						text += '<a title="View" class="btn btn-link">\
-								<i class="fa fa-file-code-o" "buttonModal_'+ btnCallbacks[i] + '"  data-toggle="modal" data-target="#' + btnCallbacks[i] + id + '" data-id="' + id + '"></i>\
+									<i class="fa fa-file-code-o" "buttonModal_'+ btnCallbacks[i] + '"  data-toggle="modal" data-target="#' + btnCallbacks[i] + id + '" data-id="' + id + '"></i>\
 								</a>';
 				}  else if (btnNames[i].toLowerCase().indexOf("nsd graph") >= 0) {
-					text += '<a title="Graph"class="btn btn-link">\
-								<i class="fa fa-eye"  onclick=getAllNsdInfos("' + id + '",' + btnCallbacks[i] + ',"response")></i>\
-							</a>';
-				}
-				else if (btnNames[i].toLowerCase().indexOf("vnf graph") >= 0) {
-					text += '<a title="Graph"class="btn btn-link">\
-								<i class="fa fa-eye"  onclick=getAllVnfInfos("' + id + '",' + btnCallbacks[i] + ',"response")></i>\
-							</a>';
+						text += '<a title="Graph" class="btn btn-link">\
+									<i class="fa fa-eye"  onclick=getAllNsdInfos("' + id + '",' + btnCallbacks[i] + ',"response")></i>\
+								</a>';
+				} 	else if (btnNames[i].toLowerCase().indexOf("vnf graph") >= 0) {
+						text += '<a title="Graph" class="btn btn-link">\
+									<i class="fa fa-eye"  onclick=getAllVnfInfos("' + id + '",' + btnCallbacks[i] + ',"response")></i>\
+								</a>';
+				}   else if (btnCallbacks[i].toLowerCase().indexOf("export") >= 0) {
+						text += '<a title="Upload" class="btn btn-link">\
+									<i class="fa fa-cloud-upload"  onclick=' + btnCallbacks[i] + '("' + id + '","' + resId + '")></i>\
+								</a>';
 				}
 			}
 		}

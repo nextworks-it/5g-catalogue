@@ -481,7 +481,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     onboardingStateType = NsdOnboardingStateType.FAILED;
                     nsdInfo.setNsdOnboardingState(onboardingStateType);
                     nsdInfoRepo.saveAndFlush(nsdInfo);
-                    throw new NotPermittedOperationException("Unable to onboard NSD because one or more related VNF Pkgs are missing in local storage: " + e.getMessage());
+                    throw new NotPermittedOperationException("Unable to onboard NSD because one or more related PNFs or VNF Pkgs are missing in local storage: " + e.getMessage());
                 } catch (MalformattedElementException e) {
                     onboardingStateType = NsdOnboardingStateType.FAILED;
                     nsdInfo.setNsdOnboardingState(onboardingStateType);
@@ -1100,7 +1100,8 @@ public class NsdManagementService implements NsdManagementInterface {
         Map<String, NotificationResource> acksMap = nsdInfoResource.getAcknowledgedOnboardOpConsumers();
         Map<String, NsdOnboardingStateType> manoIdToOnboardingStatus = new HashMap<>();
         for (Entry<String, NotificationResource> entry : acksMap.entrySet()) {
-            if (entry.getValue().getOperation() == CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION) {
+            if (entry.getValue().getOperation() == CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION
+                    && entry.getValue().getPluginType() == PluginType.MANO) {
                 NsdOnboardingStateType nsdOnboardingStateType = NsdOnboardingStateType.UPLOADING;
                 switch (entry.getValue().getOpStatus()) {
                     case SENT:
@@ -1207,7 +1208,8 @@ public class NsdManagementService implements NsdManagementInterface {
         Map<String, NotificationResource> acksMap = pnfdInfoResource.getAcknowledgedOnboardOpConsumers();
         Map<String, PnfdOnboardingStateType> manoIdToOnboardingStatus = new HashMap<>();
         for (Entry<String, NotificationResource> entry : acksMap.entrySet()) {
-            if (entry.getValue().getOperation() == CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION) {
+            if (entry.getValue().getOperation() == CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION
+                    && entry.getValue().getPluginType() == PluginType.MANO) {
                 PnfdOnboardingStateType pnfdOnboardingStateType = PnfdOnboardingStateType.UPLOADING;
                 switch (entry.getValue().getOpStatus()) {
                     case SENT:

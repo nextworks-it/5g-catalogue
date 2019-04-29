@@ -401,7 +401,8 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         Map<String, NotificationResource> acksMap = vnfPkgInfoResource.getAcknowledgedOnboardOpConsumers();
         Map<String, PackageOnboardingStateType> manoIdToOnboardingStatus = new HashMap<>();
         for (Map.Entry<String, NotificationResource> entry : acksMap.entrySet()) {
-            if (entry.getValue().getOperation() == CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION) {
+            if (entry.getValue().getOperation() == CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION
+                    && entry.getValue().getPluginType() == PluginType.MANO) {
                 PackageOnboardingStateType pkgOnboardingStateType = PackageOnboardingStateType.UPLOADING;
                 switch (entry.getValue().getOpStatus()) {
                     case SENT:
