@@ -464,7 +464,7 @@ public class DefaultApi {
         }
     }
 
-    public void uploadPNFD(String pnfdInfoId, Object body, String contentType) throws RestClientException {
+    public Object uploadPNFD(String pnfdInfoId, Object body, String contentType) throws RestClientException {
         Object postBody = body;
 
         // verify the required parameter 'pnfdInfoId' is set
@@ -494,14 +494,19 @@ public class DefaultApi {
 
         final String[] accepts = {"application/json", "application/yaml"};
         final List<MediaType> accept = apiClient.selectHeaderAccept(accepts);
-        final String[] contentTypes = {"application/json", "application/yaml"};
+        final String[] contentTypes = {"application/json", "application/yaml", "application/zip"};
         final MediaType finalContentType = apiClient.selectHeaderContentType(contentTypes);
 
         String[] authNames = new String[]{};
 
-        ParameterizedTypeReference<Void> returnType = new ParameterizedTypeReference<Void>() {
+        ParameterizedTypeReference<Object> returnType = new ParameterizedTypeReference<Object>() {
         };
-        apiClient.invokeAPI(path, HttpMethod.PUT, queryParams, postBody, headerParams, formParams, accept,
-                finalContentType, authNames, returnType);
+        if (contentType.equalsIgnoreCase("multipart/form-data")) {
+            log.debug("executing modified invoker");
+            return apiClient.invokeApi(path, HttpMethod.PUT, body);
+        } else {
+            return apiClient.invokeAPI(path, HttpMethod.PUT, queryParams, postBody, headerParams, formParams, accept,
+                    finalContentType, authNames, returnType);
+        }
     }
 }

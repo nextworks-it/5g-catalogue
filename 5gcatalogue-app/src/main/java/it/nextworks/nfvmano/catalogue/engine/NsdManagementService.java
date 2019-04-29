@@ -1215,9 +1215,9 @@ public class NsdManagementService implements NsdManagementInterface {
 
         Map<String, NotificationResource> acksMap = pnfdInfoResource.getAcknowledgedOnboardOpConsumers();
         Map<String, PnfdOnboardingStateType> manoIdToOnboardingStatus = new HashMap<>();
+        Map<String, PnfdOnboardingStateType> c2cOnboardingStatus = new HashMap<>();
         for (Entry<String, NotificationResource> entry : acksMap.entrySet()) {
-            if (entry.getValue().getOperation() == CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION
-                    && entry.getValue().getPluginType() == PluginType.MANO) {
+            if (entry.getValue().getOperation() == CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION) {
                 PnfdOnboardingStateType pnfdOnboardingStateType = PnfdOnboardingStateType.UPLOADING;
                 switch (entry.getValue().getOpStatus()) {
                     case SENT:
@@ -1235,7 +1235,13 @@ public class NsdManagementService implements NsdManagementInterface {
                     case SUCCESSFULLY_DONE:
                         pnfdOnboardingStateType = PnfdOnboardingStateType.ONBOARDED;
                 }
-                manoIdToOnboardingStatus.putIfAbsent(entry.getKey(), pnfdOnboardingStateType);
+                switch (entry.getValue().getPluginType()) {
+                    case MANO:
+                        manoIdToOnboardingStatus.putIfAbsent(entry.getKey(), pnfdOnboardingStateType);
+                        break;
+                    case C2C:
+                        c2cOnboardingStatus.putIfAbsent(entry.getKey(), pnfdOnboardingStateType);
+                }
             }
         }
 

@@ -7,15 +7,15 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
 import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
 import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
+import it.nextworks.nfvmano.catalogue.engine.resources.PnfdInfoResource;
 import it.nextworks.nfvmano.catalogue.messages.*;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.CreateNsdInfoRequest;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdInfo;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.*;
 import it.nextworks.nfvmano.catalogue.plugins.KafkaConnector;
 import it.nextworks.nfvmano.catalogue.plugins.Plugin;
 import it.nextworks.nfvmano.catalogue.plugins.PluginType;
 import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.api.nsd.DefaultApi;
 import it.nextworks.nfvmano.catalogue.repos.NsdInfoRepository;
+import it.nextworks.nfvmano.catalogue.repos.PnfdInfoRepository;
 import it.nextworks.nfvmano.catalogue.repos.VnfPkgInfoRepository;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
@@ -48,6 +48,7 @@ public class CataloguePlugin extends Plugin
     protected DefaultApi nsdApi;
     protected it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.api.vnf.DefaultApi vnfdApi;
     protected NsdInfoRepository nsdInfoRepository;
+    protected PnfdInfoRepository pnfdInfoRepository;
     protected VnfPkgInfoRepository vnfPkgInfoRepository;
     protected KafkaTemplate<String, String> kafkaTemplate;
     private String remoteTopic;
@@ -62,6 +63,7 @@ public class CataloguePlugin extends Plugin
                            DefaultApi nsdApi,
                            it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.api.vnf.DefaultApi vnfdApi,
                            NsdInfoRepository nsdInfoRepository,
+                           PnfdInfoRepository pnfdInfoRepository,
                            VnfPkgInfoRepository vnfPkgInfoRepository,
                            String localTopic,
                            String remoteTopic,
@@ -73,6 +75,7 @@ public class CataloguePlugin extends Plugin
         this.nsdApi = nsdApi;
         this.vnfdApi = vnfdApi;
         this.nsdInfoRepository = nsdInfoRepository;
+        this.pnfdInfoRepository = pnfdInfoRepository;
         this.vnfPkgInfoRepository = vnfPkgInfoRepository;
         this.remoteTopic = remoteTopic;
         String connectorID = "5GCATALOGUE_" + catalogue.getCatalogueId(); // assuming it's unique among Catalogues
@@ -263,6 +266,71 @@ public class CataloguePlugin extends Plugin
     public void acceptPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
         log.info("Received PNFD onboarding notification.");
         log.debug("Body: {}", notification);
+        if (notification.getScope() == ScopeType.C2C) {
+            try {
+                Optional<PnfdInfoResource> nsdInfoResourceOptional = pnfdInfoRepository.findById(UUID.fromString(notification.getPnfdInfoId()));
+
+                if (nsdInfoResourceOptional.isPresent()) {
+                    PnfdInfoResource nsdInfoResource = nsdInfoResourceOptional.get();
+
+                    CreatePnfdInfoRequest request = new CreatePnfdInfoRequest();
+                    if (nsdInfoResource.getUserDefinedData() != null) {
+                        KeyValuePairs keyValuePairs = new KeyValuePairs();
+                        keyValuePairs.putAll(nsdInfoResource.getUserDefinedData());
+                        request.setUserDefinedData(keyValuePairs);
+                    }
+
+                    File pnfd = ((Resource) nsdService.getPnfd(notification.getPnfdInfoId(), true)).getFile();
+
+                    PnfdInfo pnfdInfo;
+                    try { pnfdInfo = nsdApi.createPNFDInfo(request);
+                        log.debug("Created pnfdInfo with id: " + pnfdInfo.getId());
+                    } catch (RestClientException e1) {
+                        log.error("Unable to create a new PnfdInfo resource on public 5G Catalogue with id {}: {}", catalogue.getCatalogueId(), e1.getMessage());
+                        throw new RestClientException("Unable to create a new PnfdInfo resource on public 5G Catalogue with id " + catalogue.getCatalogueId());
+                    }
+
+                    try {
+                        log.debug("Creating MultipartFile...");
+                        MultipartFile multipartFile = this.createMultiPartFromFile(pnfd, "multipart/form-data");
+                        log.debug("Trying to push PNFD to public 5G Catalogue with id {}", catalogue.getCatalogueId());
+                        nsdApi.uploadPNFD(pnfdInfo.getId().toString(), multipartFile, "multipart/form-data");
+                        log.debug("PNFD has been pushed successfully to 5G Catalogue with id " + catalogue.getCatalogueId());
+                    } catch (RestClientException e2) {
+                        log.error("Something went wrong while pushing the PNFD to the public 5G Catalogue with id {}: {}", catalogue.getCatalogueId(), e2.getMessage());
+                        nsdApi.deletePNFDInfo(pnfdInfo.getPnfdId().toString());
+                        throw new RestClientException("Something went wrong while pushing the PNFD to the public 5G Catalogue with id  " + catalogue.getCatalogueId() + ": " + e2.getMessage());
+                    }
+
+                    sendNotification(new PnfdOnBoardingNotificationMessage(notification.getPnfdInfoId(), notification.getPnfdId(),
+                            notification.getOperationId(), ScopeType.C2C, OperationStatus.SUCCESSFULLY_DONE,
+                            catalogue.getCatalogueId()));
+
+                    /*HttpHeaders headers = new HttpHeaders();
+                    headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+                    MultiValueMap<String, Object> body
+                            = new LinkedMultiValueMap<>();
+                    body.add("nsd", nsd);
+
+                    HttpEntity<MultiValueMap<String, Object>> requestEntity
+                            = new HttpEntity<>(body, headers);
+
+                    String serverUrl = "";
+
+                    RestTemplate restTemplate = new RestTemplate();
+                    ResponseEntity<String> response = restTemplate
+                            .postForEntity(serverUrl, requestEntity, String.class);*/
+                }
+
+            } catch (Exception e) {
+                log.error("Could not onboard Pnfd: {}", e.getMessage());
+                log.debug("Error details: ", e);
+                sendNotification(new PnfdOnBoardingNotificationMessage(notification.getPnfdInfoId(), notification.getPnfdId(),
+                        notification.getOperationId(), ScopeType.C2C, OperationStatus.FAILED,
+                        catalogue.getCatalogueId()));
+            }
+        }
     }
 
     @Override

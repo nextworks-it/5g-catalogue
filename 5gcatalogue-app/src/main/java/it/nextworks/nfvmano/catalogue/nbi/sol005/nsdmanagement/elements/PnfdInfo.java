@@ -71,6 +71,9 @@ public class PnfdInfo {
     @JsonProperty("manosOnboardingStatus")
     private Map<String, PnfdOnboardingStateType> manoIdToOnboardingStatus = new HashMap<>();
 
+    @JsonProperty("c2cOnboardingStatus")
+    private Map<String, PnfdOnboardingStateType> c2cOnboardingStatus = new HashMap<>();
+
     public PnfdInfo id(UUID id) {
         this.id = id;
         return this;
@@ -319,6 +322,14 @@ public class PnfdInfo {
 
     public void setManoIdToOnboardingStatus(Map<String, PnfdOnboardingStateType> manoIdToOnboardingStatus) {
         this.manoIdToOnboardingStatus = manoIdToOnboardingStatus;
+    }
+
+    public Map<String, PnfdOnboardingStateType> getC2cOnboardingStatus() {
+        return c2cOnboardingStatus;
+    }
+
+    public void setC2cOnboardingStatus(Map<String, PnfdOnboardingStateType> c2cOnboardingStatus) {
+        this.c2cOnboardingStatus = c2cOnboardingStatus;
     }
 
     @Override

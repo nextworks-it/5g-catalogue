@@ -95,6 +95,10 @@ function getPNFD(pnfdInfoId, elemId, callback) {
     getFileFromURL("http://" + catalogueAddr + ":8083/nsd/v1/pnf_descriptors/" + pnfdInfoId + "/pnfd_content", callback, [pnfdInfoId, elemId]);
 }
 
+function exportPnfd(pnfdInfoId, resId) {
+    postToURL("http://" + catalogueAddr + ":8083/catalogue/cat2catOperation/exportPnfd/" + pnfdInfoId, showResultMessage, ["Request for uploading PNFD with pnfdInfoId " + pnfdInfoId + " successfully submitted to public 5G Catalogue."])
+}
+
 function showPnfdGraphCanvas(data,params) {
     console.log(params[0]);
     console.log(params[1]);
@@ -131,10 +135,20 @@ function createPnfdInfosTable(data, params) {
         return;
     }
     var btnFlag = true;
-    var header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Onboarding State', 'MANOs Onboarding State', 'Actions'], btnFlag, false);
-    var cbacks = ['openPNFD_', 'showPnfdGraphCanvas', 'deletePnfdInfo'];
-    var names = ['View PNFD', 'View PNFD Graph', 'Delete PNFD'];
-    var columns = [['pnfdName'], ['pnfdVersion'], ['pnfdProvider'], ['pnfdOnboardingState'], ['manosOnboardingStatus']];
+
+    if (isPublic) {
+        console.log("PUBLIC CATALOGUE");
+        header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Onboarding State', 'MANOs', 'Actions'], btnFlag, false);
+        cbacks = ['openPNFD_', 'showPnfdGraphCanvas', 'deletePnfdInfo'];
+        names = ['View PNFD', 'View PNFD Graph', 'Delete PNFD'];
+        columns = [['pnfdName'], ['pnfdVersion'], ['pnfdProvider'], ['pnfdOnboardingState'], ['manosOnboardingStatus']];   
+    } else {
+        console.log("PRIVATE CATALOGUE");
+        header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Onboarding State', 'MANOs', '5G Catalogues', 'Actions'], btnFlag, false);
+        cbacks = ['openPNFD_', 'showPnfdGraphCanvas', 'exportPnfd', 'deletePnfdInfo'];
+        names = ['View PNFD', 'View PNFD Graph', 'Upload PNFD', 'Delete PNFD'];
+        columns = [['pnfdName'], ['pnfdVersion'], ['pnfdProvider'], ['pnfdOnboardingState'], ['manosOnboardingStatus'], ['c2cOnboardingStatus']]; 
+    }
 
     table.innerHTML = header + '<tbody>';
 
@@ -172,8 +186,8 @@ function createPnfdInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
                 }
                 subText += subTable + '</table>';
             } else if (values[0] instanceof Object) {
-                var manoAcks = values[0];
-                $.each(manoAcks, function(key, value) {
+                var acks = values[0];
+                $.each(acks, function(key, value) {
                     subTable += '<tr><td>'+ key + '</td><td>' + value + '</td><tr>';
                 });
                 subText += subTable + '</table>';

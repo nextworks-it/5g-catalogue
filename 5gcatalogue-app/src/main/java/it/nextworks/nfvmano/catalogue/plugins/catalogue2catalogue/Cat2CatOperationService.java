@@ -227,7 +227,7 @@ public class Cat2CatOperationService {
             if (entry.getValue().getOperation() == CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION
                     && entry.getValue().getPluginType() == PluginType.C2C) {
                 if (entry.getValue().getOpStatus() == OperationStatus.FAILED) {
-                    log.error("PNFD with pnfdInfoId {} onboarding failed for mano with manoId {}", pnfdInfoId,
+                    log.error("PNFD with pnfdInfoId {} onboarding failed for 5G Catalogue with catalogueId {}", pnfdInfoId,
                             entry.getKey());
 
                     // TODO: Decide how to handle 5G Catalogue onboarding failures.
@@ -235,7 +235,7 @@ public class Cat2CatOperationService {
                 } else if (entry.getValue().getOpStatus() == OperationStatus.SENT
                         || entry.getValue().getOpStatus() == OperationStatus.RECEIVED
                         || entry.getValue().getOpStatus() == OperationStatus.PROCESSING) {
-                    log.debug("PNFD with pnfdInfoId {} onboarding still in progress for mano with manoId {}");
+                    log.debug("PNFD with pnfdInfoId {} onboarding still in progress for5G Catalogue with catalogueId {}");
                     return PnfdOnboardingStateType.LOCAL_ONBOARDED;
                 }
             }
@@ -283,7 +283,7 @@ public class Cat2CatOperationService {
             if (entry.getValue().getOperation() == CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION
                     && entry.getValue().getPluginType() == PluginType.C2C) {
                 if (entry.getValue().getOpStatus() == OperationStatus.FAILED) {
-                    log.error("VNF Pkg with vnfPkgInfoId {} onboarding failed for mano with manoId {}.", vnfPkgInfoId,
+                    log.error("VNF Pkg with vnfPkgInfoId {} onboarding failed for 5G Catalogue with catalogueId {}.", vnfPkgInfoId,
                             entry.getKey());
 
                     // TODO: Decide how to handle 5G Catalogue onboarding failures.
@@ -291,7 +291,7 @@ public class Cat2CatOperationService {
                 } else if (entry.getValue().getOpStatus() == OperationStatus.SENT
                         || entry.getValue().getOpStatus() == OperationStatus.RECEIVED
                         || entry.getValue().getOpStatus() == OperationStatus.PROCESSING) {
-                    log.debug("VNF Pkg with vnfPkgInfoId {} onboarding still in progress for mano with manoId {}.");
+                    log.debug("VNF Pkg with vnfPkgInfoId {} onboarding still in progress for 5G Catalogue with catalogueId {}.");
                     return PackageOnboardingStateType.LOCAL_ONBOARDED;
                 }
             }

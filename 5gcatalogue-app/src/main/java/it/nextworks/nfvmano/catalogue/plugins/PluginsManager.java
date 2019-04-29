@@ -124,6 +124,9 @@ public class PluginsManager {
     private NsdInfoRepository nsdInfoRepo;
 
     @Autowired
+    private PnfdInfoRepository pnfdInfoRepo;
+
+    @Autowired
     private VnfPkgInfoRepository vnfPkgInfoRepository;
 
     public PluginsManager() {
@@ -406,6 +409,7 @@ public class PluginsManager {
                 new DefaultApi(catalogue),
                 new it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.api.vnf.DefaultApi(catalogue),
                 nsdInfoRepo,
+                pnfdInfoRepo,
                 vnfPkgInfoRepository,
                 localNotificationTopic,
                 remoteNotificationTopic,
