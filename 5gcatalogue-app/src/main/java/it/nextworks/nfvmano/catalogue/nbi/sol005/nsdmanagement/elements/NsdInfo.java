@@ -83,6 +83,9 @@ public class NsdInfo {
     @JsonProperty("manosOnboardingStatus")
     private Map<String, NsdOnboardingStateType> manoIdToOnboardingStatus = new HashMap<>();
 
+    @JsonProperty("c2cOnboardingStatus")
+    private Map<String, NsdOnboardingStateType> c2cOnboardingStatus = new HashMap<>();
+
     public NsdInfo id(UUID id) {
         this.id = id;
         return this;
@@ -444,6 +447,14 @@ public class NsdInfo {
 
     public void setManoIdToOnboardingStatus(Map<String, NsdOnboardingStateType> manoIdToOnboardingStatus) {
         this.manoIdToOnboardingStatus = manoIdToOnboardingStatus;
+    }
+
+    public Map<String, NsdOnboardingStateType> getC2cOnboardingStatus() {
+        return c2cOnboardingStatus;
+    }
+
+    public void setC2cOnboardingStatus(Map<String, NsdOnboardingStateType> c2cOnboardingStatus) {
+        this.c2cOnboardingStatus = c2cOnboardingStatus;
     }
 
     @Override
