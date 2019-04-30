@@ -196,7 +196,7 @@ function createVnfInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
 
 	    if (data.hasOwnProperty(columns[i][0])) {
             if(values instanceof Array && values.length > 1) {
-                if (columns[i][0].indexOf('pnfdOnboardingState') >= 0 && isPublic) {
+                if (columns[i][0].indexOf('onboardingState') >= 0 && isPublic) {
                     subTable += createTableHeaderByValues(['Local', 'MANOs'], false, false);
                 } else {
                     subTable += createTableHeaderByValues(['Local', 'Public 5G Catalogue', 'MANOs'], false, false);
