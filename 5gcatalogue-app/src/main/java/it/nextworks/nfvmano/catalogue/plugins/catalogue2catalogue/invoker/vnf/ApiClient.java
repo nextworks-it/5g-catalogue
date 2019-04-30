@@ -7,7 +7,10 @@ import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.invoker.vnf.au
 import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.invoker.vnf.auth.OAuth;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.http.RequestEntity.BodyBuilder;
 import org.springframework.http.client.BufferingClientHttpRequestFactory;
@@ -19,8 +22,10 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.swing.text.Document;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
@@ -30,6 +35,7 @@ import java.util.Map.Entry;
 
 @javax.annotation.Generated(value = "io.swagger.codegen.languages.JavaClientCodegen", date = "2018-11-21T15:10:42.557+01:00")
 public class ApiClient {
+    private static final Logger log = LoggerFactory.getLogger(ApiClient.class);
     private boolean debugging = false;
     private HttpHeaders defaultHeaders = new HttpHeaders();
     private String basePath = "https://localhost";
@@ -502,6 +508,38 @@ public class ApiClient {
             // The error handler built into the RestTemplate should handle 400 and 500 series errors.
             throw new RestClientException("API returned " + statusCode + " and it wasn't handled by the RestTemplate error handler");
         }
+    }
+
+    public Object invokeApi(String path, HttpMethod method, Object body) throws RestClientException {
+        File tempFile = null;
+        MultipartFile multipartFile = (MultipartFile) body;
+        try {
+            String extension = "." + multipartFile.getOriginalFilename();
+            tempFile = File.createTempFile("temp", extension);
+            multipartFile.transferTo(tempFile);
+        } catch (IOException e) {
+            log.error("Something went wrong with conversion from multipartfile to File");
+            e.printStackTrace();
+        }
+        LinkedMultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
+        log.debug("Adding filesystemresource to multivaluemap");
+        map.add("file", new FileSystemResource(tempFile));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        final UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(basePath).path(path);
+        HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = new HttpEntity<>(map, headers);
+        Document document = null;
+        try {
+            ResponseEntity<Document> responseEntity =
+                    restTemplate.exchange(builder.build().toUri(), method, requestEntity, Document.class);
+            document = responseEntity.getBody();
+        } catch (Exception e) {
+            log.debug("Got exception when sending request. " + e.getMessage());
+            throw new RestClientException("Got exception when sending request. " + e.getMessage());
+        }
+
+        return document;
     }
 
     /**

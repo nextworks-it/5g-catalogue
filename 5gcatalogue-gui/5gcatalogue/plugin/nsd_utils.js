@@ -148,10 +148,10 @@ function createNsdInfosTable(data, params) {
         columns = [['nsdName'], ['nsdVersion'], ['nsdDesigner'], ['nsdOperationalState'], ['nsdOnboardingState'], ['manosOnboardingStatus']];   
     } else {
         console.log("PRIVATE CATALOGUE");
-        header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Operational State', 'Onboarding State', 'MANOs', 'Public 5G Catalogues', 'Actions'], btnFlag, false);
+        header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Operational State', 'Onboarding State', 'MANOs', 'Public 5G Catalogue', 'Actions'], btnFlag, false);
         cbacks = ['openNSD_', 'showNsdGraphCanvas', 'updateNsdInfo_', 'exportNsd', 'deleteNsdInfo'];
         names = ['View NSD', 'View NSD Graph', 'Change NSD OpState', 'Upload NSD', 'Delete NSD'];
-        columns = [['nsdName'], ['nsdVersion'], ['nsdDesigner'], ['nsdOperationalState'], ['nsdOnboardingState'], ['manosOnboardingStatus'], ['c2cOnboardingStatus']];
+        columns = [['nsdName'], ['nsdVersion'], ['nsdDesigner'], ['nsdOperationalState'], ['nsdOnboardingState'], ['manosOnboardingStatus'], ['c2cOnboardingState']];
     }
 
     table.innerHTML = header + '<tbody>';
@@ -184,7 +184,7 @@ function createNsdInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
   	    //console.log(values);
 
   	    var subText = '<td>';
-  	    var subTable = '<table class="table table-bordered">';
+  	    var subTable = '<table class="table table-borderless">';
 
   	    if (data.hasOwnProperty(columns[i][0])) {
             if(values instanceof Array && values.length > 1) {
@@ -195,7 +195,7 @@ function createNsdInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
             } else if (values[0] instanceof Object) {
                 var acks = values[0];
                 $.each(acks, function(key, value) {
-                    subTable += '<tr><td>'+ key + '</td><td>' + value + '</td><tr>';
+                    subTable += '<tr><td>'+ key + '</td><td> > </td><td>' + value + '</td><tr>';
                 });
                 subText += subTable + '</table>';
             } else {

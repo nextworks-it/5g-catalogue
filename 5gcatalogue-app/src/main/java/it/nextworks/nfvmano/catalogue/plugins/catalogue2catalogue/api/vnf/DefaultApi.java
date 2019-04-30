@@ -6,6 +6,8 @@ import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.V
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.VnfPkgInfoModifications;
 import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.Catalogue;
 import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.invoker.vnf.ApiClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -23,6 +25,8 @@ import java.util.Map;
 
 @javax.annotation.Generated(value = "io.swagger.codegen.languages.JavaClientCodegen", date = "2018-11-21T15:10:42.557+01:00")
 public class DefaultApi {
+    private static final Logger log = LoggerFactory.getLogger(DefaultApi.class);
+
     private ApiClient apiClient;
 
     public DefaultApi(Catalogue catalogue) {
@@ -299,7 +303,7 @@ public class DefaultApi {
         return apiClient.invokeAPI(path, HttpMethod.PATCH, queryParams, postBody, headerParams, formParams, accept, contentType, authNames, returnType);
     }
 
-    public void uploadVNFPkg(String vnfPkgId, Object body, String contentType) throws RestClientException {
+    public Object uploadVNFPkg(String vnfPkgId, Object body, String contentType) throws RestClientException {
         Object postBody = body;
 
         // verify the required parameter 'vnfPkgId' is set
@@ -335,9 +339,15 @@ public class DefaultApi {
 
         String[] authNames = new String[]{};
 
-        ParameterizedTypeReference<Void> returnType = new ParameterizedTypeReference<Void>() {
+        ParameterizedTypeReference<Object> returnType = new ParameterizedTypeReference<Object>() {
         };
-        apiClient.invokeAPI(path, HttpMethod.PUT, queryParams, postBody, headerParams, formParams, accept, finalContentType, authNames, returnType);
+        if (contentType.equalsIgnoreCase("multipart/form-data")) {
+            log.debug("executing modified invoker");
+            return apiClient.invokeApi(path, HttpMethod.PUT, body);
+        } else {
+            return apiClient.invokeAPI(path, HttpMethod.PUT, queryParams, postBody, headerParams, formParams, accept,
+                    finalContentType, authNames, returnType);
+        }
     }
 
     public void uploadVNFPkgFromURI(String vnfPkgId, UploadVnfPackageFromUriRequest body) throws RestClientException {

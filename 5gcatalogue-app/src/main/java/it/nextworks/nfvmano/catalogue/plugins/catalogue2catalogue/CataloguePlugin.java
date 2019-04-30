@@ -8,8 +8,11 @@ import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
 import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
 import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.PnfdInfoResource;
+import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
 import it.nextworks.nfvmano.catalogue.messages.*;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.*;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.CreateVnfPkgInfoRequest;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.VnfPkgInfo;
 import it.nextworks.nfvmano.catalogue.plugins.KafkaConnector;
 import it.nextworks.nfvmano.catalogue.plugins.Plugin;
 import it.nextworks.nfvmano.catalogue.plugins.PluginType;
@@ -215,7 +218,7 @@ public class CataloguePlugin extends Plugin
                         log.debug("NSD has been pushed successfully to 5G Catalogue with id " + catalogue.getCatalogueId());
                     } catch (RestClientException e2) {
                         log.error("Something went wrong while pushing the NSD to the public 5G Catalogue with id {}: {}", catalogue.getCatalogueId(), e2.getMessage());
-                        nsdApi.deleteNSDInfo(nsdInfo.getNsdId().toString());
+                        nsdApi.deleteNSDInfo(nsdInfo.getId().toString());
                         throw new RestClientException("Something went wrong while pushing the NSD to the public 5G Catalogue with id  " + catalogue.getCatalogueId() + ": " + e2.getMessage());
                     }
 
@@ -298,29 +301,13 @@ public class CataloguePlugin extends Plugin
                         log.debug("PNFD has been pushed successfully to 5G Catalogue with id " + catalogue.getCatalogueId());
                     } catch (RestClientException e2) {
                         log.error("Something went wrong while pushing the PNFD to the public 5G Catalogue with id {}: {}", catalogue.getCatalogueId(), e2.getMessage());
-                        nsdApi.deletePNFDInfo(pnfdInfo.getPnfdId().toString());
+                        nsdApi.deletePNFDInfo(pnfdInfo.getId().toString());
                         throw new RestClientException("Something went wrong while pushing the PNFD to the public 5G Catalogue with id  " + catalogue.getCatalogueId() + ": " + e2.getMessage());
                     }
 
                     sendNotification(new PnfdOnBoardingNotificationMessage(notification.getPnfdInfoId(), notification.getPnfdId(),
                             notification.getOperationId(), ScopeType.C2C, OperationStatus.SUCCESSFULLY_DONE,
                             catalogue.getCatalogueId()));
-
-                    /*HttpHeaders headers = new HttpHeaders();
-                    headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
-                    MultiValueMap<String, Object> body
-                            = new LinkedMultiValueMap<>();
-                    body.add("nsd", nsd);
-
-                    HttpEntity<MultiValueMap<String, Object>> requestEntity
-                            = new HttpEntity<>(body, headers);
-
-                    String serverUrl = "";
-
-                    RestTemplate restTemplate = new RestTemplate();
-                    ResponseEntity<String> response = restTemplate
-                            .postForEntity(serverUrl, requestEntity, String.class);*/
                 }
 
             } catch (Exception e) {
@@ -343,6 +330,55 @@ public class CataloguePlugin extends Plugin
     public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
         log.info("Received VNF Pkg onboarding notification.");
         log.debug("Body: {}", notification);
+        if (notification.getScope() == ScopeType.C2C) {
+            try {
+                Optional<VnfPkgInfoResource> vnfPkgInfoResourceOptional = vnfPkgInfoRepository.findById(UUID.fromString(notification.getVnfPkgInfoId()));
+
+                if (vnfPkgInfoResourceOptional.isPresent()) {
+                    VnfPkgInfoResource vnfPkgInfoResource = vnfPkgInfoResourceOptional.get();
+
+                    CreateVnfPkgInfoRequest request = new CreateVnfPkgInfoRequest();
+                    if (vnfPkgInfoResource.getUserDefinedData() != null) {
+                        KeyValuePairs keyValuePairs = new KeyValuePairs();
+                        keyValuePairs.putAll(vnfPkgInfoResource.getUserDefinedData());
+                        request.setUserDefinedData(keyValuePairs);
+                    }
+
+                    File vnfPkg = ((Resource) vnfdService.getVnfPkg(notification.getVnfPkgInfoId(), true)).getFile();
+
+                    VnfPkgInfo vnfPkgInfo;
+                    try { vnfPkgInfo = vnfdApi.createVNFPkgInfo(request);
+                        log.debug("Created vnfdInfo with id: " + vnfPkgInfo.getId());
+                    } catch (RestClientException e1) {
+                        log.error("Unable to create a new PnfdInfo resource on public 5G Catalogue with id {}: {}", catalogue.getCatalogueId(), e1.getMessage());
+                        throw new RestClientException("Unable to create a new PnfdInfo resource on public 5G Catalogue with id " + catalogue.getCatalogueId());
+                    }
+
+                    try {
+                        log.debug("Creating MultipartFile...");
+                        MultipartFile multipartFile = this.createMultiPartFromFile(vnfPkg, "multipart/form-data");
+                        log.debug("Trying to push VNF Pkg to public 5G Catalogue with id {}", catalogue.getCatalogueId());
+                        vnfdApi.uploadVNFPkg(vnfPkgInfo.getId().toString(), multipartFile, "multipart/form-data");
+                        log.debug("VNF Pkg has been pushed successfully to 5G Catalogue with id " + catalogue.getCatalogueId());
+                    } catch (RestClientException e2) {
+                        log.error("Something went wrong while pushing the VNF Pkg to the public 5G Catalogue with id {}: {}", catalogue.getCatalogueId(), e2.getMessage());
+                        vnfdApi.deleteVNFPkgInfo(vnfPkgInfo.getId().toString());
+                        throw new RestClientException("Something went wrong while pushing the VNF Pkg to the public 5G Catalogue with id  " + catalogue.getCatalogueId() + ": " + e2.getMessage());
+                    }
+
+                    sendNotification(new VnfPkgOnBoardingNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(),
+                            notification.getOperationId(), ScopeType.C2C, OperationStatus.SUCCESSFULLY_DONE,
+                            catalogue.getCatalogueId()));
+                }
+
+            } catch (Exception e) {
+                log.error("Could not onboard Vnf Pkg: {}", e.getMessage());
+                log.debug("Error details: ", e);
+                sendNotification(new VnfPkgOnBoardingNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(),
+                        notification.getOperationId(), ScopeType.C2C, OperationStatus.FAILED,
+                        catalogue.getCatalogueId()));
+            }
+        }
     }
 
     @Override

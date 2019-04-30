@@ -26,6 +26,7 @@ import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
 import it.nextworks.nfvmano.catalogue.messages.*;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.*;
 import it.nextworks.nfvmano.catalogue.plugins.PluginType;
+import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.C2COnboardingStateType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.repos.*;
 import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
@@ -1096,10 +1097,10 @@ public class NsdManagementService implements NsdManagementInterface {
         kvp.putAll(nsdInfoResource.getUserDefinedData());
         nsdInfo.setUserDefinedData(kvp);
         nsdInfo.setVnfPkgIds(nsdInfoResource.getVnfPkgIds());
+        nsdInfo.setC2cOnboardingState(C2COnboardingStateType.UNPUBLISHED);
 
         Map<String, NotificationResource> acksMap = nsdInfoResource.getAcknowledgedOnboardOpConsumers();
         Map<String, NsdOnboardingStateType> manoIdToOnboardingStatus = new HashMap<>();
-        Map<String, NsdOnboardingStateType> c2cOnboardingStatus = new HashMap<>();
         for (Entry<String, NotificationResource> entry : acksMap.entrySet()) {
             if (entry.getValue().getOperation() == CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION) {
                 NsdOnboardingStateType nsdOnboardingStateType = NsdOnboardingStateType.UPLOADING;
@@ -1118,20 +1119,24 @@ public class NsdManagementService implements NsdManagementInterface {
                         break;
                     case SUCCESSFULLY_DONE:
                         nsdOnboardingStateType = NsdOnboardingStateType.ONBOARDED;
+                        break;
                 }
                 switch (entry.getValue().getPluginType()) {
                     case MANO:
                         manoIdToOnboardingStatus.putIfAbsent(entry.getKey(), nsdOnboardingStateType);
                         break;
                     case C2C:
-                        c2cOnboardingStatus.putIfAbsent(entry.getKey(), nsdOnboardingStateType);
+                        if (nsdOnboardingStateType == NsdOnboardingStateType.ONBOARDED) {
+                            nsdInfo.setC2cOnboardingState(C2COnboardingStateType.PUBLISHED);
+                        } else {
+                            nsdInfo.setC2cOnboardingState(C2COnboardingStateType.UNPUBLISHED);
+                        }
+                        break;
                 }
-
             }
         }
 
         nsdInfo.setManoIdToOnboardingStatus(manoIdToOnboardingStatus);
-        nsdInfo.setC2cOnboardingStatus(c2cOnboardingStatus);
 
         return nsdInfo;
     }
@@ -1174,7 +1179,8 @@ public class NsdManagementService implements NsdManagementInterface {
     private PnfdOnboardingStateType checkPnfdOnboardingState(String pnfdInfoId, Map<String, NotificationResource> ackMap) {
 
         for (Entry<String, NotificationResource> entry : ackMap.entrySet()) {
-            if (entry.getValue().getOperation() == CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION && entry.getValue().getPluginType() == PluginType.MANO) {
+            if (entry.getValue().getOperation() == CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION
+                    && entry.getValue().getPluginType() == PluginType.MANO) {
                 if (entry.getValue().getOpStatus() == OperationStatus.FAILED) {
                     log.error("PNFD with pnfdInfoId {} onboarding failed for mano with manoId {}", pnfdInfoId,
                             entry.getKey());
@@ -1212,6 +1218,7 @@ public class NsdManagementService implements NsdManagementInterface {
         KeyValuePairs kvp = new KeyValuePairs();
         kvp.putAll(pnfdInfoResource.getUserDefinedData());
         pnfdInfo.setUserDefinedData(kvp);
+        pnfdInfo.setC2cOnboardingState(C2COnboardingStateType.UNPUBLISHED);
 
         Map<String, NotificationResource> acksMap = pnfdInfoResource.getAcknowledgedOnboardOpConsumers();
         Map<String, PnfdOnboardingStateType> manoIdToOnboardingStatus = new HashMap<>();
@@ -1240,7 +1247,12 @@ public class NsdManagementService implements NsdManagementInterface {
                         manoIdToOnboardingStatus.putIfAbsent(entry.getKey(), pnfdOnboardingStateType);
                         break;
                     case C2C:
-                        c2cOnboardingStatus.putIfAbsent(entry.getKey(), pnfdOnboardingStateType);
+                        if (pnfdOnboardingStateType == PnfdOnboardingStateType.ONBOARDED) {
+                            pnfdInfo.setC2cOnboardingState(C2COnboardingStateType.PUBLISHED);
+                        } else {
+                            pnfdInfo.setC2cOnboardingState(C2COnboardingStateType.UNPUBLISHED);
+                        }
+                        break;
                 }
             }
         }

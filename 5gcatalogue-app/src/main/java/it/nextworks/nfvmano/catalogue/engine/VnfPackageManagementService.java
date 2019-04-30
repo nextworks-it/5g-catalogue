@@ -11,8 +11,10 @@ import it.nextworks.nfvmano.catalogue.messages.ScopeType;
 import it.nextworks.nfvmano.catalogue.messages.VnfPkgDeletionNotificationMessage;
 import it.nextworks.nfvmano.catalogue.messages.VnfPkgOnBoardingNotificationMessage;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboardingStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.*;
 import it.nextworks.nfvmano.catalogue.plugins.PluginType;
+import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.C2COnboardingStateType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.repos.ContentType;
 import it.nextworks.nfvmano.catalogue.repos.MANORepository;
@@ -397,12 +399,12 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         vnfPkgInfo.setVnfProductName(vnfPkgInfoResource.getVnfProductName());
         vnfPkgInfo.setVnfProvider(vnfPkgInfoResource.getVnfProvider());
         vnfPkgInfo.setVnfSoftwareVersion(vnfPkgInfoResource.getVnfSoftwareVersion());
+        vnfPkgInfo.setC2cOnboardingState(C2COnboardingStateType.UNPUBLISHED);
 
         Map<String, NotificationResource> acksMap = vnfPkgInfoResource.getAcknowledgedOnboardOpConsumers();
         Map<String, PackageOnboardingStateType> manoIdToOnboardingStatus = new HashMap<>();
         for (Map.Entry<String, NotificationResource> entry : acksMap.entrySet()) {
-            if (entry.getValue().getOperation() == CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION
-                    && entry.getValue().getPluginType() == PluginType.MANO) {
+            if (entry.getValue().getOperation() == CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION) {
                 PackageOnboardingStateType pkgOnboardingStateType = PackageOnboardingStateType.UPLOADING;
                 switch (entry.getValue().getOpStatus()) {
                     case SENT:
@@ -420,7 +422,18 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                     case SUCCESSFULLY_DONE:
                         pkgOnboardingStateType = PackageOnboardingStateType.ONBOARDED;
                 }
-                manoIdToOnboardingStatus.putIfAbsent(entry.getKey(), pkgOnboardingStateType);
+                switch (entry.getValue().getPluginType()) {
+                    case MANO:
+                        manoIdToOnboardingStatus.putIfAbsent(entry.getKey(), pkgOnboardingStateType);
+                        break;
+                    case C2C:
+                        if (pkgOnboardingStateType == PackageOnboardingStateType.ONBOARDED) {
+                            vnfPkgInfo.setC2cOnboardingState(C2COnboardingStateType.PUBLISHED);
+                        } else {
+                            vnfPkgInfo.setC2cOnboardingState(C2COnboardingStateType.UNPUBLISHED);
+                        }
+                        break;
+                }
             }
         }
 

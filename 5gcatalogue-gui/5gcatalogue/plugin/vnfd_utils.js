@@ -96,6 +96,10 @@ function getVNF(vnfInfoId, elemId, callback) {
     getFileFromURL("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "/vnfd", callback, [vnfInfoId, elemId]);
 }
 
+function exportVnfPkg(vnfPkgInfoId, resId) {
+    postToURL("http://" + catalogueAddr + ":8083/catalogue/cat2catOperation/exportVnfPkg/" + vnfPkgInfoId, showResultMessage, ["Request for uploading VNF Pkg with vnfPkgInfoId " + vnfPkgInfoId + " successfully submitted to public 5G Catalogue."])
+}
+
 function showVnfGraphCanvas(data,params) {
     //console.log(params[0]);
     //console.log(params[1]);
@@ -132,10 +136,25 @@ function createVnfInfosTable(data, params) {
         return;
     }
     var btnFlag = true;
-    var header = createTableHeaderByValues(['Name', 'Version', 'Provider', 'Operational State', 'Onboarding State', 'MANOs Onboarding State', 'Actions'], btnFlag, false);
-    var cbacks = ['openVNF_', 'showVnfGraphCanvas','updateVnfInfo_', 'deleteVnfInfo'];
-    var names = ['View VNF', 'View VNF Graph', 'Change VNF OpState', 'Delete VNF'];
-    var columns = [['vnfProductName'], ['vnfdVersion'], ['vnfProvider'], ['operationalState'], ['onboardingState'], ['manosOnboardingStatus']];
+    var header = "";
+    var cbacks = [];
+    var names = [];
+    var columns = [];
+
+    if (isPublic) {
+        console.log("PUBLIC CATALOGUE");
+        header = createTableHeaderByValues(['Name', 'Version', 'Provider', 'Operational State', 'Onboarding State', 'MANOs', 'Actions'], btnFlag, false);
+        cbacks = ['openVNF_', 'showVnfGraphCanvas','updateVnfInfo_', 'deleteVnfInfo'];
+        names = ['View VNF', 'View VNF Graph', 'Change VNF OpState', 'Delete VNF'];
+        columns = [['vnfProductName'], ['vnfdVersion'], ['vnfProvider'], ['operationalState'], ['onboardingState'], ['manosOnboardingStatus']];
+    } else {
+        console.log("PRIVATE CATALOGUE");
+        header = createTableHeaderByValues(['Name', 'Version', 'Provider', 'Operational State', 'Onboarding State', 'MANOs', 'Public 5G Catalogue', 'Actions'], btnFlag, false);
+        cbacks = ['openVNF_', 'showVnfGraphCanvas','updateVnfInfo_', 'exportVnfPkg', 'deleteVnfInfo'];
+        names = ['View VNF', 'View VNF Graph', 'Change VNF OpState', 'Upload VNF Pkg', 'Delete VNF'];
+        columns = [['vnfProductName'], ['vnfdVersion'], ['vnfProvider'], ['operationalState'], ['onboardingState'], ['manosOnboardingStatus'], ['c2cOnboardingState']]; 
+    }
+    
 
     table.innerHTML = header + '<tbody>';
 
@@ -167,7 +186,7 @@ function createVnfInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
 	    //console.log(values);
 
 	    var subText = '<td>';
-	    var subTable = '<table class="table table-bordered">';
+	    var subTable = '<table class="table table-borderless">';
 
 	    if (data.hasOwnProperty(columns[i][0])) {
             if(values instanceof Array && values.length > 1) {
@@ -177,7 +196,7 @@ function createVnfInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
                 subText += subTable + '</table>';
             } else if (values[0] instanceof Object) {
                 $.each(values[0], function(key, value) {
-                    subTable += '<tr><td>'+ key + '</td><td>' + value + '</td><tr>';
+                    subTable += '<tr><td>'+ key + '</td><td> > </td><td>' + value + '</td><tr>';
                 });
                 subText += subTable + '</table>';
             } else {
