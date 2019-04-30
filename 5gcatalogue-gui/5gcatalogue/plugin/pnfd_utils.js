@@ -156,12 +156,16 @@ function createPnfdInfosTable(data, params) {
 
     table.innerHTML = header + '<tbody>';
 
-    var rows = '';
+    //var rows = '';
     for (var i in data) {
-        rows +=  createPnfdInfosTableRow(data[i], btnFlag, cbacks, names, columns, resId);
+        table.innerHTML +=  createPnfdInfosTableRow(data[i], btnFlag, cbacks, names, columns, resId);
+
+        if(isPublic == false && data[i]['c2cOnboardingState'].indexOf("UNPUBLISHED") < 0) {
+            disableExpBtn("expBtn_" + data[i]['id']);
+        }
     }
 
-    table.innerHTML += rows + '</tbody>';
+    table.innerHTML += '</tbody>';
 }
 
 function createPnfdInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {

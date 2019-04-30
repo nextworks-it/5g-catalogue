@@ -158,12 +158,16 @@ function createVnfInfosTable(data, params) {
 
     table.innerHTML = header + '<tbody>';
 
-    var rows = '';
+    //var rows = '';
     for (var i in data) {
-        rows +=  createVnfInfosTableRow(data[i], btnFlag, cbacks, names, columns, resId);
+        table.innerHTML +=  createVnfInfosTableRow(data[i], btnFlag, cbacks, names, columns, resId);
+
+        if(isPublic == false && data[i]['c2cOnboardingState'].indexOf("UNPUBLISHED") < 0) {
+            disableExpBtn("expBtn_" + data[i]['id']);
+        }
     }
 
-    table.innerHTML += rows + '</tbody>';
+    table.innerHTML += '</tbody>';
 }
 
 function createVnfInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
@@ -176,7 +180,7 @@ function createVnfInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
         btnText += createLinkSet(data['id'], resId, names, cbacks);
         createUpdateVnfInfoModal(data['id'], data['operationalState'], "updateVnfInfosModals");
         creteVNFViewModal(data['id'], "vnfViewModals");
-        createVnfCanvas(data);
+        createVnfCanvas(data); 
     }
 
 	text += '<tr>';

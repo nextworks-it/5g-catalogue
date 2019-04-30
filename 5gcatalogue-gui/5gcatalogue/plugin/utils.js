@@ -293,6 +293,11 @@ function createActionButton(id, resId, btnNames, btnCallbacks) {
 	return text;
 }
 
+function disableExpBtn(btnId) {
+    var btnElem = document.getElementById(btnId);
+    btnElem.classList = "isDisabled";
+}
+
 function createLinkSet(id, resId, btnNames, btnCallbacks) {
 	var text = '<td>';
 	if(btnNames instanceof Array) {
@@ -320,7 +325,7 @@ function createLinkSet(id, resId, btnNames, btnCallbacks) {
 									<i class="fa fa-eye"  onclick=getAllVnfInfos("' + id + '",' + btnCallbacks[i] + ',"response")></i>\
 								</a>';
 				}   else if (btnCallbacks[i].toLowerCase().indexOf("export") >= 0) {
-						text += '<a title="Upload" class="btn btn-link">\
+						text += '<a id="expBtn_' + id + '" title="Upload" class="btn btn-link">\
 									<i class="fa fa-cloud-upload"  onclick=' + btnCallbacks[i] + '("' + id + '","' + resId + '")></i>\
 								</a>';
 				}
