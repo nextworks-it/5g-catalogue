@@ -142,16 +142,16 @@ function createPnfdInfosTable(data, params) {
 
     if (isPublic) {
         console.log("PUBLIC CATALOGUE");
-        header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Onboarding State', 'MANOs', 'Actions'], btnFlag, false);
+        header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Onboarding State', 'Actions'], btnFlag, false);
         cbacks = ['openPNFD_', 'showPnfdGraphCanvas', 'deletePnfdInfo'];
         names = ['View PNFD', 'View PNFD Graph', 'Delete PNFD'];
-        columns = [['pnfdName'], ['pnfdVersion'], ['pnfdProvider'], ['pnfdOnboardingState'], ['manosOnboardingStatus']];   
+        columns = [['pnfdName'], ['pnfdVersion'], ['pnfdProvider'], ['pnfdOnboardingState', 'manosOnboardingStatus']];   
     } else {
         console.log("PRIVATE CATALOGUE");
-        header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Onboarding State', 'MANOs', 'Public 5G Catalogue', 'Actions'], btnFlag, false);
+        header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Onboarding State', 'Actions'], btnFlag, false);
         cbacks = ['openPNFD_', 'showPnfdGraphCanvas', 'exportPnfd', 'deletePnfdInfo'];
         names = ['View PNFD', 'View PNFD Graph', 'Upload PNFD', 'Delete PNFD'];
-        columns = [['pnfdName'], ['pnfdVersion'], ['pnfdProvider'], ['pnfdOnboardingState'], ['manosOnboardingStatus'], ['c2cOnboardingState']]; 
+        columns = [['pnfdName'], ['pnfdVersion'], ['pnfdProvider'], ['pnfdOnboardingState', 'c2cOnboardingState', 'manosOnboardingStatus']]; 
     }
 
     table.innerHTML = header + '<tbody>';
@@ -176,19 +176,40 @@ function createPnfdInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
 
   	text += '<tr>';
   	for (var i in columns) {
-  	    var values = [];
-  	    getValuesFromKeyPath(data, columns[i], values);
+        var values = [];
+        if (columns[i][0].indexOf('pnfdOnboardingState') >= 0) {
+            for (var j in columns[i]) {
+                values.push(data[columns[i][j]]);
+            }
+        } else {
+            getValuesFromKeyPath(data, columns[i], values);
+        }
   	    //console.log(values);
 
   	    var subText = '<td>';
-  	    var subTable = '<table class="table table-borderless">';
+  	    var subTable = '<table class="table">';
 
   	    if (data.hasOwnProperty(columns[i][0])) {
             if(values instanceof Array && values.length > 1) {
-                for (var v in values) {
-                    subTable += '<tr><td>' + values[v] + '</td><tr>';
+                if (columns[i][0].indexOf('pnfdOnboardingState') >= 0 && isPublic) {
+                    subTable += createTableHeaderByValues(['Local', 'MANOs'], false, false);
+                } else {
+                    subTable += createTableHeaderByValues(['Local', 'Public 5G Catalogue', 'MANOs'], false, false);
                 }
-                subText += subTable + '</table>';
+                subTable += '<tr>';
+                for (var v in values) {
+                    if (values[v] instanceof Object) {
+                        var subSubTable = '<td><table class="borderless">'; 
+                        $.each(values[v], function(key, value) {
+                            subSubTable += '<tr><td>'+ key + ' > ' + value + '</td><tr>';
+                        });
+                        subSubTable += '</table></td>';
+                        subTable += subSubTable;
+                    } else {
+                        subTable += '<td>' + values[v] + '</td>';
+                    }
+                }
+                subText += subTable + '</tr></table>';
             } else if (values[0] instanceof Object) {
                 var acks = values[0];
                 $.each(acks, function(key, value) {

@@ -142,16 +142,16 @@ function createNsdInfosTable(data, params) {
     var columns = [];
     if (isPublic) {
         console.log("PUBLIC CATALOGUE");
-        header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Operational State', 'Onboarding State', 'MANOs Onboarding State', 'Actions'], btnFlag, false);
+        header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Operational State', 'Onboarding State', 'Actions'], btnFlag, false);
         cbacks = ['openNSD_', 'showNsdGraphCanvas', 'updateNsdInfo_', 'deleteNsdInfo'];
         names = ['View NSD', 'View NSD Graph', 'Change NSD OpState', 'Delete NSD'];
-        columns = [['nsdName'], ['nsdVersion'], ['nsdDesigner'], ['nsdOperationalState'], ['nsdOnboardingState'], ['manosOnboardingStatus']];   
+        columns = [['nsdName'], ['nsdVersion'], ['nsdDesigner'], ['nsdOperationalState'], ['nsdOnboardingState', 'manosOnboardingStatus']];   
     } else {
         console.log("PRIVATE CATALOGUE");
-        header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Operational State', 'Onboarding State', 'MANOs', 'Public 5G Catalogue', 'Actions'], btnFlag, false);
+        header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Operational State', 'Onboarding State', 'Actions'], btnFlag, false);
         cbacks = ['openNSD_', 'showNsdGraphCanvas', 'updateNsdInfo_', 'exportNsd', 'deleteNsdInfo'];
         names = ['View NSD', 'View NSD Graph', 'Change NSD OpState', 'Upload NSD', 'Delete NSD'];
-        columns = [['nsdName'], ['nsdVersion'], ['nsdDesigner'], ['nsdOperationalState'], ['nsdOnboardingState'], ['manosOnboardingStatus'], ['c2cOnboardingState']];
+        columns = [['nsdName'], ['nsdVersion'], ['nsdDesigner'], ['nsdOperationalState'], ['nsdOnboardingState', 'c2cOnboardingState', 'manosOnboardingStatus']];
     }
 
     table.innerHTML = header + '<tbody>';
@@ -179,22 +179,44 @@ function createNsdInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
 
   	text += '<tr>';
   	for (var i in columns) {
-  	    var values = [];
-  	    getValuesFromKeyPath(data, columns[i], values);
+        //console.log(columns[i][0]);
+        var values = [];
+        if (columns[i][0].indexOf('nsdOnboardingState') >= 0) {
+            for (var j in columns[i]) {
+                values.push(data[columns[i][j]]);
+            }
+        } else {
+            getValuesFromKeyPath(data, columns[i], values);
+        }
+  	    
   	    //console.log(values);
 
   	    var subText = '<td>';
-  	    var subTable = '<table class="table table-borderless">';
+  	    var subTable = '<table class="table">';
 
   	    if (data.hasOwnProperty(columns[i][0])) {
             if(values instanceof Array && values.length > 1) {
-                for (var v in values) {
-                    subTable += '<tr><td>' + values[v] + '</td><tr>';
+                if (columns[i][0].indexOf('nsdOnboardingState') >= 0 && isPublic) {
+                    subTable += createTableHeaderByValues(['Local', 'MANOs'], false, false);
+                } else {
+                    subTable += createTableHeaderByValues(['Local', 'Public 5G Catalogue', 'MANOs'], false, false);
                 }
-                subText += subTable + '</table>';
+                subTable += '<tr>';
+                for (var v in values) {
+                    if (values[v] instanceof Object) {
+                        var subSubTable = '<td><table class="borderless">'; 
+                        $.each(values[v], function(key, value) {
+                            subSubTable += '<tr><td>'+ key + ' > ' + value + '</td><tr>';
+                        });
+                        subSubTable += '</table></td>';
+                        subTable += subSubTable;
+                    } else {
+                        subTable += '<td>' + values[v] + '</td>';
+                    }
+                }
+                subText += subTable + '</tr></table>';
             } else if (values[0] instanceof Object) {
-                var acks = values[0];
-                $.each(acks, function(key, value) {
+                $.each(values[0], function(key, value) {
                     subTable += '<tr><td>'+ key + '</td><td> > </td><td>' + value + '</td><tr>';
                 });
                 subText += subTable + '</table>';
