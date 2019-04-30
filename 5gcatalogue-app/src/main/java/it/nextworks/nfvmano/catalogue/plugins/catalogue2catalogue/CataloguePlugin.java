@@ -17,6 +17,7 @@ import it.nextworks.nfvmano.catalogue.plugins.KafkaConnector;
 import it.nextworks.nfvmano.catalogue.plugins.Plugin;
 import it.nextworks.nfvmano.catalogue.plugins.PluginType;
 import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.api.nsd.DefaultApi;
+import it.nextworks.nfvmano.catalogue.repos.ContentType;
 import it.nextworks.nfvmano.catalogue.repos.NsdInfoRepository;
 import it.nextworks.nfvmano.catalogue.repos.PnfdInfoRepository;
 import it.nextworks.nfvmano.catalogue.repos.VnfPkgInfoRepository;
@@ -31,12 +32,10 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class CataloguePlugin extends Plugin
@@ -418,9 +417,93 @@ public class CataloguePlugin extends Plugin
         return multipartFile;
     }
 
+    private void loadPublicCatalogueContent(){
+        log.debug("Loading all VNF Pkg, PNFDs and NSDs from public 5G Catalogue...");
+        List<VnfPkgInfo> vnfPkgInfos = vnfdApi.getVNFPkgsInfo();
+        List<PnfdInfo> pnfdInfos = nsdApi.getPNFDsInfo();
+        List<NsdInfo> nsdInfos = nsdApi.getNSDsInfo();
+
+        for (VnfPkgInfo vnfPkgInfo : vnfPkgInfos) {
+            Optional<VnfPkgInfoResource> vnfPkgInfoResource = vnfPkgInfoRepository.findByVnfdIdAndVnfdVersion(vnfPkgInfo.getVnfdId(), vnfPkgInfo.getVnfdVersion());
+            if (vnfPkgInfoResource.isPresent()) {
+                continue;
+            } else {
+                VnfPkgInfoResource vnfPkgTargetResource = buildVnfPkgInfoResource(vnfPkgInfo);
+                vnfPkgInfoRepository.saveAndFlush(vnfPkgTargetResource);
+
+                Object obj;
+
+                try {
+                    obj = vnfdApi.getVNFPkg(vnfPkgInfo.getId().toString(), null);
+                } catch(RestClientException e1) {
+                    log.error("RestClientException when trying to get VNF Pkg with vnfPkgInfo  " + vnfPkgInfo.getId().toString() + ". Error: " + e1.getMessage());
+                    throw new RestClientException("RestClientException when trying to get VNF Pkg with vnfPkgInfo  " + vnfPkgInfo.getId().toString() + ". Error: " + e1.getMessage());
+                }
+
+                if (obj instanceof MultipartFile) {
+                    try {
+                        MultipartFile file = (MultipartFile) obj;
+                        vnfdService.uploadVnfPkg(vnfPkgTargetResource.getId().toString(), file, ContentType.ZIP);
+                    } catch(Exception e2) {
+                        log.error("The file returned from the catalogue is not an File object");
+                        throw new ClassCastException("The file returned from the catalogue is not an File object");
+                    }
+
+                } else {
+                    log.error("The file returned from the catalogue is not an File object");
+                    throw new ClassCastException("The file returned from the catalogue is not an File object");
+                }
+            }
+        }
+
+        for (PnfdInfo pnfdInfo : pnfdInfos) {
+            Optional<PnfdInfoResource> pnfdInfoResource = pnfdInfoRepository.findByPnfdIdAndPnfdVersion(pnfdInfo.getPnfdId(), pnfdInfo.getPnfdVersion());
+            if (pnfdInfoResource.isPresent()) {
+                continue;
+            } else {
+
+            }
+        }
+
+        for (NsdInfo nsdInfo : nsdInfos) {
+            Optional<NsdInfoResource> nsdInfoResource = nsdInfoRepository.findByNsdIdAndNsdVersion(nsdInfo.getNsdId(), nsdInfo.getNsdVersion());
+            if (nsdInfoResource.isPresent()) {
+                continue;
+            } else {
+
+            }
+        }
+    }
+
+    private VnfPkgInfoResource buildVnfPkgInfoResource(VnfPkgInfo vnfPkgInfo) {
+
+        return new VnfPkgInfoResource(
+                vnfPkgInfo.getVnfdId(),
+                vnfPkgInfo.getVnfProvider(),
+                vnfPkgInfo.getVnfProductName(),
+                vnfPkgInfo.getVnfSoftwareVersion(),
+                vnfPkgInfo.getVnfdVersion(),
+                vnfPkgInfo.getOnboardingState(),
+                vnfPkgInfo.getOperationalState(),
+                vnfPkgInfo.getUsageState(),
+                vnfPkgInfo.getUserDefinedData()
+        );
+    }
+
+    private File convertToFile(MultipartFile multipart) throws Exception {
+        File convFile = new File(multipart.getOriginalFilename());
+        convFile.createNewFile();
+        FileOutputStream fos = new FileOutputStream(convFile);
+        fos.write(multipart.getBytes());
+        fos.close();
+        return convFile;
+    }
+
     @Override
     public void init() {
         connector.init();
+
+        loadPublicCatalogueContent();
     }
 
     public Catalogue getCatalogue() {

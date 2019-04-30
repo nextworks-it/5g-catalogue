@@ -316,7 +316,7 @@ public class DefaultApi {
                 contentType, authNames, returnType);
     }
 
-    public List<PnfdInfo> getPNFDsInfo(String excludeDefault, String allFields) throws RestClientException {
+    public List<PnfdInfo> getPNFDsInfo() throws RestClientException {
         Object postBody = null;
 
         String path = UriComponentsBuilder.fromPath("/nsd/v1/pnf_descriptors").build().toUriString();
@@ -324,9 +324,6 @@ public class DefaultApi {
         final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<String, String>();
         final HttpHeaders headerParams = new HttpHeaders();
         final MultiValueMap<String, Object> formParams = new LinkedMultiValueMap<String, Object>();
-
-        queryParams.putAll(apiClient.parameterToMultiValueMap(null, "exclude_default", excludeDefault));
-        queryParams.putAll(apiClient.parameterToMultiValueMap(null, "all_fields", allFields));
 
         final String[] accepts = {"application/json", "application/yaml"};
         final List<MediaType> accept = apiClient.selectHeaderAccept(accepts);
