@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
 import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
+import it.nextworks.nfvmano.catalogue.engine.resources.NotificationResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.PnfdInfoResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
@@ -42,8 +43,6 @@ public class CataloguePlugin extends Plugin
         implements NsdNotificationsConsumerInterface, VnfPkgNotificationsConsumerInterface {
 
     private static final Logger log = LoggerFactory.getLogger(CataloguePlugin.class);
-
-    private Catalogue catalogue;
     protected KafkaConnector connector;
     protected NsdManagementInterface nsdService;
     protected VnfPackageManagementInterface vnfdService;
@@ -53,6 +52,7 @@ public class CataloguePlugin extends Plugin
     protected PnfdInfoRepository pnfdInfoRepository;
     protected VnfPkgInfoRepository vnfPkgInfoRepository;
     protected KafkaTemplate<String, String> kafkaTemplate;
+    private Catalogue catalogue;
     private String remoteTopic;
 
     public CataloguePlugin(String pluginId, PluginType pluginType) {
@@ -285,7 +285,8 @@ public class CataloguePlugin extends Plugin
                     File pnfd = ((Resource) nsdService.getPnfd(notification.getPnfdInfoId(), true)).getFile();
 
                     PnfdInfo pnfdInfo;
-                    try { pnfdInfo = nsdApi.createPNFDInfo(request);
+                    try {
+                        pnfdInfo = nsdApi.createPNFDInfo(request);
                         log.debug("Created pnfdInfo with id: " + pnfdInfo.getId());
                     } catch (RestClientException e1) {
                         log.error("Unable to create a new PnfdInfo resource on public 5G Catalogue with id {}: {}", catalogue.getCatalogueId(), e1.getMessage());
@@ -346,7 +347,8 @@ public class CataloguePlugin extends Plugin
                     File vnfPkg = ((Resource) vnfdService.getVnfPkg(notification.getVnfPkgInfoId(), true)).getFile();
 
                     VnfPkgInfo vnfPkgInfo;
-                    try { vnfPkgInfo = vnfdApi.createVNFPkgInfo(request);
+                    try {
+                        vnfPkgInfo = vnfdApi.createVNFPkgInfo(request);
                         log.debug("Created vnfdInfo with id: " + vnfPkgInfo.getId());
                     } catch (RestClientException e1) {
                         log.error("Unable to create a new PnfdInfo resource on public 5G Catalogue with id {}: {}", catalogue.getCatalogueId(), e1.getMessage());
@@ -417,7 +419,7 @@ public class CataloguePlugin extends Plugin
         return multipartFile;
     }
 
-    private void loadPublicCatalogueContent(){
+    private void loadPublicCatalogueContent() {
         log.debug("Loading all VNF Pkg, PNFDs and NSDs from public 5G Catalogue...");
         List<VnfPkgInfo> vnfPkgInfos = vnfdApi.getVNFPkgsInfo();
         List<PnfdInfo> pnfdInfos = nsdApi.getPNFDsInfo();
@@ -429,13 +431,13 @@ public class CataloguePlugin extends Plugin
                 continue;
             } else {
                 VnfPkgInfoResource vnfPkgTargetResource = buildVnfPkgInfoResource(vnfPkgInfo);
-                vnfPkgInfoRepository.saveAndFlush(vnfPkgTargetResource);
+                VnfPkgInfoResource createdVnfPkgInfo = vnfPkgInfoRepository.saveAndFlush(vnfPkgTargetResource);
 
                 Object obj;
 
                 try {
                     obj = vnfdApi.getVNFPkg(vnfPkgInfo.getId().toString(), null);
-                } catch(RestClientException e1) {
+                } catch (RestClientException e1) {
                     log.error("RestClientException when trying to get VNF Pkg with vnfPkgInfo  " + vnfPkgInfo.getId().toString() + ". Error: " + e1.getMessage());
                     throw new RestClientException("RestClientException when trying to get VNF Pkg with vnfPkgInfo  " + vnfPkgInfo.getId().toString() + ". Error: " + e1.getMessage());
                 }
@@ -444,11 +446,19 @@ public class CataloguePlugin extends Plugin
                     try {
                         MultipartFile file = (MultipartFile) obj;
                         vnfdService.uploadVnfPkg(vnfPkgTargetResource.getId().toString(), file, ContentType.ZIP);
-                    } catch(Exception e2) {
+                        Map<String, NotificationResource> acks = new HashMap<>();
+                        acks.put(catalogue.getCatalogueId(), new NotificationResource(createdVnfPkgInfo.getId().toString(),
+                                CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION,
+                                OperationStatus.SUCCESSFULLY_DONE,
+                                PluginType.C2C));
+                        vnfPkgInfoResource = vnfPkgInfoRepository.findByVnfdIdAndVnfdVersion(vnfPkgInfo.getVnfdId(), vnfPkgInfo.getVnfdVersion());
+                        vnfPkgTargetResource = vnfPkgInfoResource.get();
+                        vnfPkgTargetResource.setAcknowledgedOnboardOpConsumers(acks);
+                        vnfPkgInfoRepository.saveAndFlush(vnfPkgTargetResource);
+                    } catch (Exception e2) {
                         log.error("The file returned from the catalogue is not an File object");
                         throw new ClassCastException("The file returned from the catalogue is not an File object");
                     }
-
                 } else {
                     log.error("The file returned from the catalogue is not an File object");
                     throw new ClassCastException("The file returned from the catalogue is not an File object");

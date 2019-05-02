@@ -237,7 +237,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         // TODO: consistency between accept values and input format when onboarding
         // should be better checked.
         // TODO: probably we should select the format based on the accept values. At the
-        // at the moment the format is selected based on the original input type,
+        // moment the format is selected based on the original input type,
         // that is maintained in the DB.
         log.debug("Processing REST request to retrieve VNF Pkg for VNF Pkg info ID " + vnfPkgId);
 

@@ -11,7 +11,6 @@ import it.nextworks.nfvmano.catalogue.messages.ScopeType;
 import it.nextworks.nfvmano.catalogue.messages.VnfPkgDeletionNotificationMessage;
 import it.nextworks.nfvmano.catalogue.messages.VnfPkgOnBoardingNotificationMessage;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboardingStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.*;
 import it.nextworks.nfvmano.catalogue.plugins.PluginType;
 import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.C2COnboardingStateType;

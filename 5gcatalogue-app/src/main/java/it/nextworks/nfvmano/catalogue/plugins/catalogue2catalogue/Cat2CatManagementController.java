@@ -3,7 +3,6 @@ package it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue;
 import io.swagger.annotations.ApiParam;
 import it.nextworks.nfvmano.catalogue.plugins.PluginsManager;
 import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
-import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -157,9 +157,7 @@ public class DefaultApi {
         if (range != null)
             headerParams.add("Range", apiClient.parameterToString(range));
 
-        final String[] accepts = {
-                "application/zip", "application/json"
-        };
+        final String[] accepts = {"multipart/form-data"};
         final List<MediaType> accept = apiClient.selectHeaderAccept(accepts);
         final String[] contentTypes = {};
         final MediaType contentType = apiClient.selectHeaderContentType(contentTypes);
