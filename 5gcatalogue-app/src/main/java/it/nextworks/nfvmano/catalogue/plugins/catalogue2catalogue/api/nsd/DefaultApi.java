@@ -273,7 +273,7 @@ public class DefaultApi {
         final HttpHeaders headerParams = new HttpHeaders();
         final MultiValueMap<String, Object> formParams = new LinkedMultiValueMap<String, Object>();
 
-        final String[] accepts = {"text/plain"}; //{"application/json", "application/yaml", "application/zip"};
+        final String[] accepts = {"text/plain", "application/json"}; //{"application/json", "application/yaml", "application/zip"};
         final List<MediaType> accept = apiClient.selectHeaderAccept(accepts);
         final String[] contentTypes = {};
         final MediaType contentType = apiClient.selectHeaderContentType(contentTypes);
