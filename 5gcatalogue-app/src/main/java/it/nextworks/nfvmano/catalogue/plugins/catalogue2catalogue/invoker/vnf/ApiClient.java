@@ -577,6 +577,16 @@ public class ApiClient {
      */
     protected RestTemplate buildRestTemplate() {
         RestTemplate restTemplate = new RestTemplate();
+
+        /*List<HttpMessageConverter<?>> messageConverters = new ArrayList<HttpMessageConverter<?>>();
+        //Add the Jackson Message converter
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
+        // Note: here we are making this converter to process any kind of response,
+        // not only application/*json, which is the default behaviour
+        converter.setSupportedMediaTypes(Arrays.asList(new MediaType[]{MediaType.MULTIPART_FORM_DATA}));
+        messageConverters.add(converter);
+        restTemplate.setMessageConverters(messageConverters);*/
+
         // This allows us to read the response more than once - Necessary for debugging.
         restTemplate.setRequestFactory(new BufferingClientHttpRequestFactory(restTemplate.getRequestFactory()));
         return restTemplate;

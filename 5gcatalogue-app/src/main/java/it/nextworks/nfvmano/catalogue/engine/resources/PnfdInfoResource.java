@@ -51,6 +51,17 @@ public class PnfdInfoResource {
     public PnfdInfoResource() {
     }
 
+    public PnfdInfoResource(UUID pnfdId, String pnfdName, String pnfdVersion, String pnfdProvider, UUID pnfdInvariantId, PnfdOnboardingStateType pnfdOnboardingState, PnfdUsageStateType pnfdUsageState, Map<String, String> userDefinedData) {
+        this.pnfdId = pnfdId;
+        this.pnfdName = pnfdName;
+        this.pnfdVersion = pnfdVersion;
+        this.pnfdProvider = pnfdProvider;
+        this.pnfdInvariantId = pnfdInvariantId;
+        this.pnfdOnboardingState = pnfdOnboardingState;
+        this.pnfdUsageState = pnfdUsageState;
+        this.userDefinedData = userDefinedData;
+    }
+
     public PnfdInfoResource(Map<String, String> userDefinedData) {
         if (userDefinedData != null) this.userDefinedData = userDefinedData;
         pnfdOnboardingState = PnfdOnboardingStateType.CREATED;

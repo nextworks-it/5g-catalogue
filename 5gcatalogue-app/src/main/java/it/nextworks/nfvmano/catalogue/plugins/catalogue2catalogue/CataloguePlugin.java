@@ -471,7 +471,39 @@ public class CataloguePlugin extends Plugin
             if (pnfdInfoResource.isPresent()) {
                 continue;
             } else {
+                PnfdInfoResource pnfdTargetResource = buildPnfdInfoResource(pnfdInfo);
+                PnfdInfoResource createdPnfdInfo = pnfdInfoRepository.saveAndFlush(pnfdTargetResource);
 
+                Object obj;
+
+                try {
+                    obj = nsdApi.getPNFD(pnfdInfo.getId().toString());
+                } catch (RestClientException e1) {
+                    log.error("RestClientException when trying to get PNFD with pnfdInfo  " + pnfdInfo.getId().toString() + ". Error: " + e1.getMessage());
+                    throw new RestClientException("RestClientException when trying to get PNFD with pnfdInfo  " + pnfdInfo.getId().toString() + ". Error: " + e1.getMessage());
+                }
+
+                if (obj instanceof MultipartFile) {
+                    try {
+                        MultipartFile file = (MultipartFile) obj;
+                        nsdService.uploadPnfd(pnfdTargetResource.getId().toString(), file, ContentType.YAML);
+                        Map<String, NotificationResource> acks = new HashMap<>();
+                        acks.put(catalogue.getCatalogueId(), new NotificationResource(createdPnfdInfo.getId().toString(),
+                                CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION,
+                                OperationStatus.SUCCESSFULLY_DONE,
+                                PluginType.C2C));
+                        pnfdInfoResource = pnfdInfoRepository.findByPnfdIdAndPnfdVersion(pnfdInfo.getPnfdId(), pnfdInfo.getPnfdVersion());
+                        pnfdTargetResource = pnfdInfoResource.get();
+                        pnfdTargetResource.setAcknowledgedOnboardOpConsumers(acks);
+                        pnfdInfoRepository.saveAndFlush(pnfdTargetResource);
+                    } catch (Exception e2) {
+                        log.error("The file returned from the catalogue is not an File object");
+                        throw new ClassCastException("The file returned from the catalogue is not an File object");
+                    }
+                } else {
+                    log.error("The file returned from the catalogue is not an File object");
+                    throw new ClassCastException("The file returned from the catalogue is not an File object");
+                }
             }
         }
 
@@ -483,6 +515,20 @@ public class CataloguePlugin extends Plugin
 
             }
         }
+    }
+
+    private PnfdInfoResource buildPnfdInfoResource(PnfdInfo pnfdInfo) {
+
+        return new PnfdInfoResource(
+                pnfdInfo.getPnfdId(),
+                pnfdInfo.getPnfdName(),
+                pnfdInfo.getPnfdVersion(),
+                pnfdInfo.getPnfdProvider(),
+                pnfdInfo.getPnfdInvariantId(),
+                pnfdInfo.getPnfdOnboardingState(),
+                pnfdInfo.getPnfdUsageState(),
+                pnfdInfo.getUserDefinedData()
+        );
     }
 
     private VnfPkgInfoResource buildVnfPkgInfoResource(VnfPkgInfo vnfPkgInfo) {
