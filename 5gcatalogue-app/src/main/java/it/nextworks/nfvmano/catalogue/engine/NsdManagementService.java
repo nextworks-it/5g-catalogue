@@ -677,7 +677,14 @@ public class NsdManagementService implements NsdManagementInterface {
                     throw new FailedOperationException("Found more than one file for PNFD in YAML format. Error");
                 }
                 String pnfdFilename = pnfdFilenames.get(0);
-                return storageService.loadNsdAsResource(pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfdFilename);
+                File pnfd = null;
+                try {
+                    pnfd = storageService.loadNsdAsResource(pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfdFilename).getFile();
+                } catch (IOException e) {
+                    log.error("Unable to get PNFD in File format. Error");
+                    throw new FailedOperationException("Unable to get PNFD in File format. Error");
+                }
+                return pnfd;
             }
 
             default: {

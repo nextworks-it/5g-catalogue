@@ -6,6 +6,7 @@ import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.invoker.nsd.Ap
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -278,7 +280,7 @@ public class DefaultApi {
 
         String[] authNames = new String[]{};
 
-        ParameterizedTypeReference<Object> returnType = new ParameterizedTypeReference<Object>() {
+        ParameterizedTypeReference<File> returnType = new ParameterizedTypeReference<File>() {
         };
         return apiClient.invokeAPI(path, HttpMethod.GET, queryParams, postBody, headerParams, formParams, accept,
                 contentType, authNames, returnType);

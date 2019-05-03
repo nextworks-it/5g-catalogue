@@ -37,6 +37,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -481,7 +482,7 @@ public class NsdApiController implements NsdApi {
         try {
             Object pnfd = nsdManagementService.getPnfd(pnfdInfoId, false);
             // TODO: here it needs to check the type of entity that is returned
-            return new ResponseEntity<Resource>((Resource) pnfd, HttpStatus.OK);
+            return new ResponseEntity<File>((File) pnfd, HttpStatus.OK);
         } catch (NotExistingEntityException e) {
             log.error("PNFD for PNFD info ID " + pnfdInfoId + " not found");
             return new ResponseEntity<ProblemDetails>(
