@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import it.nextworks.nfvmano.catalogue.engine.resources.NotificationResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.PnfdInfoResource;
@@ -680,6 +681,10 @@ public class NsdManagementService implements NsdManagementInterface {
                 File pnfd = null;
                 try {
                     pnfd = storageService.loadNsdAsResource(pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfdFilename).getFile();
+
+                    DescriptorTemplate dt = DescriptorsParser.fileToDescriptorTemplate(pnfd);
+                    log.debug("RETRIEVED PNFD: " + DescriptorsParser.descriptorTemplateToString(dt));
+
                 } catch (IOException e) {
                     log.error("Unable to get PNFD in File format. Error");
                     throw new FailedOperationException("Unable to get PNFD in File format. Error");

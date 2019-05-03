@@ -24,6 +24,7 @@ import it.nextworks.nfvmano.catalogue.repos.PnfdInfoRepository;
 import it.nextworks.nfvmano.catalogue.repos.VnfPkgInfoRepository;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
+import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
