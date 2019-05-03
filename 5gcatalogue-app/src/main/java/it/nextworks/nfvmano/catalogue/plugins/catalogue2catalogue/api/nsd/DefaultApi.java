@@ -280,7 +280,7 @@ public class DefaultApi {
 
         String[] authNames = new String[]{};
 
-        ParameterizedTypeReference<File> returnType = new ParameterizedTypeReference<File>() {
+        ParameterizedTypeReference<Resource> returnType = new ParameterizedTypeReference<Resource>() {
         };
         return apiClient.invokeAPI(path, HttpMethod.GET, queryParams, postBody, headerParams, formParams, accept,
                 contentType, authNames, returnType);

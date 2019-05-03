@@ -463,10 +463,10 @@ public class CataloguePlugin extends Plugin
                 PnfdInfoResource pnfdTargetResource = buildPnfdInfoResource(pnfdInfo);
                 PnfdInfoResource createdPnfdInfo = pnfdInfoRepository.saveAndFlush(pnfdTargetResource);
 
-                Object obj;
+                Resource obj;
 
                 try {
-                    obj = nsdApi.getPNFD(pnfdInfo.getId().toString());
+                    obj = (Resource) nsdApi.getPNFD(pnfdInfo.getId().toString());
                 } catch (RestClientException e1) {
                     log.error("Error when trying to get PNFD with pnfdInfo  " + pnfdInfo.getId().toString() + ". Error: " + e1.getMessage());
                     try {
@@ -477,7 +477,12 @@ public class CataloguePlugin extends Plugin
                     throw new RestClientException("Error when trying to get PNFD with pnfdInfo  " + pnfdInfo.getId().toString() + ". Error: " + e1.getMessage());
                 }
 
-                File file = (File) obj;
+                File file = null;
+                try {
+                    file = obj.getFile();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 MultipartFile multipartFile = createMultiPartFromFile(file, "application/yaml");
                 try {
                     nsdService.uploadPnfd(pnfdTargetResource.getId().toString(), multipartFile, ContentType.YAML);

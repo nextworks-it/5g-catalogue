@@ -41,6 +41,7 @@ import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -678,11 +679,11 @@ public class NsdManagementService implements NsdManagementInterface {
                     throw new FailedOperationException("Found more than one file for PNFD in YAML format. Error");
                 }
                 String pnfdFilename = pnfdFilenames.get(0);
-                File pnfd = null;
+                Resource pnfd = null;
                 try {
-                    pnfd = storageService.loadNsdAsResource(pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfdFilename).getFile();
+                    pnfd = storageService.loadNsdAsResource(pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfdFilename);
 
-                    DescriptorTemplate dt = DescriptorsParser.fileToDescriptorTemplate(pnfd);
+                    DescriptorTemplate dt = DescriptorsParser.fileToDescriptorTemplate(pnfd.getFile());
                     log.debug("RETRIEVED PNFD: " + DescriptorsParser.descriptorTemplateToString(dt));
 
                 } catch (IOException e) {
