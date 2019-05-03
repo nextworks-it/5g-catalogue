@@ -82,7 +82,24 @@ public class NsdInfoResource {
     @Cascade(org.hibernate.annotations.CascadeType.ALL)
     private Map<String, NotificationResource> acknowledgedOnboardOpConsumers = new HashMap<>();
 
+    private boolean isPublished;
+
     public NsdInfoResource() {
+    }
+
+    public NsdInfoResource(UUID nsdId, List<UUID> vnfPkgIds, List<UUID> pnfdInfoIds, List<UUID> nestedNsdInfoIds, NsdOnboardingStateType nsdOnboardingState, NsdOperationalStateType nsdOperationalState, NsdUsageStateType nsdUsageState, String nsdName, String nsdVersion, String nsdDesigner, UUID nsdInvariantId, Map<String, String> userDefinedData) {
+        this.nsdId = nsdId;
+        this.vnfPkgIds = vnfPkgIds;
+        this.pnfdInfoIds = pnfdInfoIds;
+        this.nestedNsdInfoIds = nestedNsdInfoIds;
+        this.nsdOnboardingState = nsdOnboardingState;
+        this.nsdOperationalState = nsdOperationalState;
+        this.nsdUsageState = nsdUsageState;
+        this.nsdName = nsdName;
+        this.nsdVersion = nsdVersion;
+        this.nsdDesigner = nsdDesigner;
+        this.nsdInvariantId = nsdInvariantId;
+        this.userDefinedData = userDefinedData;
     }
 
     public NsdInfoResource(Map<String, String> userDefinedData) {
@@ -302,6 +319,18 @@ public class NsdInfoResource {
 
     public void setAcknowledgedOnboardOpConsumers(Map<String, NotificationResource> acknowledgedOnboardOpConsumers) {
         this.acknowledgedOnboardOpConsumers = acknowledgedOnboardOpConsumers;
+    }
+
+    public void setNsdFilename(List<String> nsdFilename) {
+        this.nsdFilename = nsdFilename;
+    }
+
+    public boolean isPublished() {
+        return isPublished;
+    }
+
+    public void setPublished(boolean published) {
+        isPublished = published;
     }
 
     public void isDeletable() throws NotPermittedOperationException {

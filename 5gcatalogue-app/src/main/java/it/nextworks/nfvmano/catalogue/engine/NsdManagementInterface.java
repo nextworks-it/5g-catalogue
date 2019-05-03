@@ -35,7 +35,7 @@ public interface NsdManagementInterface {
 
     List<NsdInfo> getAllNsdInfos() throws FailedOperationException, MethodNotImplementedException;
 
-    void uploadNsd(String nsdInfoId, MultipartFile nsd, ContentType contentType) throws Exception, FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException;
+    void uploadNsd(String nsdInfoId, MultipartFile nsd, ContentType contentType, boolean isInternalRequest) throws Exception, FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException;
 
     PnfdInfo createPnfdInfo(CreatePnfdInfoRequest request) throws FailedOperationException, MalformattedElementException, MethodNotImplementedException;
 
@@ -49,6 +49,6 @@ public interface NsdManagementInterface {
 
     List<PnfdInfo> getAllPnfdInfos() throws FailedOperationException, MethodNotImplementedException;
 
-    void uploadPnfd(String pnfdInfoId, MultipartFile pnfd, ContentType contentType) throws Exception, FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException;
+    void uploadPnfd(String pnfdInfoId, MultipartFile pnfd, ContentType contentType, boolean isInternalRequest) throws Exception, FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException;
 
 }

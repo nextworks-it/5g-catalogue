@@ -265,7 +265,7 @@ public class NsdApiController implements NsdApi {
                     return new ResponseEntity<String>("Unable to parse file type that is not .zip or .yaml",
                             HttpStatus.NOT_IMPLEMENTED);
                 }
-                nsdManagementService.uploadNsd(nsdInfoId, body, type);
+                nsdManagementService.uploadNsd(nsdInfoId, body, type, false);
                 log.debug("Upload processing done");
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
                 // TODO: check if we need to introduce the asynchronous mode
@@ -543,7 +543,7 @@ public class NsdApiController implements NsdApi {
                     return new ResponseEntity<String>("Unable to parse file type that is not .zip or .yaml",
                             HttpStatus.NOT_IMPLEMENTED);
                 }
-                nsdManagementService.uploadPnfd(pnfdInfoId, body, type);
+                nsdManagementService.uploadPnfd(pnfdInfoId, body, type, false);
                 log.debug("Upload processing done");
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
                 // TODO: check if we need to introduce the asynchronous mode

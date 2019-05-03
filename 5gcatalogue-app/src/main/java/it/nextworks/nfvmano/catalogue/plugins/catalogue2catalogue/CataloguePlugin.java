@@ -13,6 +13,7 @@ import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
 import it.nextworks.nfvmano.catalogue.messages.*;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.*;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.CreateVnfPkgInfoRequest;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.PackageOnboardingStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.VnfPkgInfo;
 import it.nextworks.nfvmano.catalogue.plugins.KafkaConnector;
 import it.nextworks.nfvmano.catalogue.plugins.Plugin;
@@ -24,7 +25,8 @@ import it.nextworks.nfvmano.catalogue.repos.PnfdInfoRepository;
 import it.nextworks.nfvmano.catalogue.repos.VnfPkgInfoRepository;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
-import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -36,7 +38,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -222,25 +226,18 @@ public class CataloguePlugin extends Plugin
                         throw new RestClientException("Something went wrong while pushing the NSD to the public 5G Catalogue with id  " + catalogue.getCatalogueId() + ": " + e2.getMessage());
                     }
 
+                    Optional<NsdInfoResource> nsdInfoResourceOptional1 = nsdInfoRepository.findById(UUID.fromString(notification.getNsdInfoId()));
+
+                    if (nsdInfoResourceOptional1.isPresent()) {
+                        NsdInfoResource nsdInfoResource1 = nsdInfoResourceOptional1.get();
+
+                        nsdInfoResource1.setPublished(true);
+                        nsdInfoRepository.saveAndFlush(nsdInfoResource1);
+                    }
+
                     sendNotification(new NsdOnBoardingNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(),
                             notification.getOperationId(), ScopeType.C2C, OperationStatus.SUCCESSFULLY_DONE,
                             catalogue.getCatalogueId()));
-
-                    /*HttpHeaders headers = new HttpHeaders();
-                    headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
-                    MultiValueMap<String, Object> body
-                            = new LinkedMultiValueMap<>();
-                    body.add("nsd", nsd);
-
-                    HttpEntity<MultiValueMap<String, Object>> requestEntity
-                            = new HttpEntity<>(body, headers);
-
-                    String serverUrl = "";
-
-                    RestTemplate restTemplate = new RestTemplate();
-                    ResponseEntity<String> response = restTemplate
-                            .postForEntity(serverUrl, requestEntity, String.class);*/
                 }
 
             } catch (Exception e) {
@@ -271,15 +268,15 @@ public class CataloguePlugin extends Plugin
         log.debug("Body: {}", notification);
         if (notification.getScope() == ScopeType.C2C) {
             try {
-                Optional<PnfdInfoResource> nsdInfoResourceOptional = pnfdInfoRepository.findById(UUID.fromString(notification.getPnfdInfoId()));
+                Optional<PnfdInfoResource> pnfdInfoResourceOptional = pnfdInfoRepository.findById(UUID.fromString(notification.getPnfdInfoId()));
 
-                if (nsdInfoResourceOptional.isPresent()) {
-                    PnfdInfoResource nsdInfoResource = nsdInfoResourceOptional.get();
+                if (pnfdInfoResourceOptional.isPresent()) {
+                    PnfdInfoResource pnfdInfoResource = pnfdInfoResourceOptional.get();
 
                     CreatePnfdInfoRequest request = new CreatePnfdInfoRequest();
-                    if (nsdInfoResource.getUserDefinedData() != null) {
+                    if (pnfdInfoResource.getUserDefinedData() != null) {
                         KeyValuePairs keyValuePairs = new KeyValuePairs();
-                        keyValuePairs.putAll(nsdInfoResource.getUserDefinedData());
+                        keyValuePairs.putAll(pnfdInfoResource.getUserDefinedData());
                         request.setUserDefinedData(keyValuePairs);
                     }
 
@@ -304,6 +301,15 @@ public class CataloguePlugin extends Plugin
                         log.error("Something went wrong while pushing the PNFD to the public 5G Catalogue with id {}: {}", catalogue.getCatalogueId(), e2.getMessage());
                         nsdApi.deletePNFDInfo(pnfdInfo.getId().toString());
                         throw new RestClientException("Something went wrong while pushing the PNFD to the public 5G Catalogue with id  " + catalogue.getCatalogueId() + ": " + e2.getMessage());
+                    }
+
+                    Optional<PnfdInfoResource> pnfdInfoResourceOptional1 = pnfdInfoRepository.findById(UUID.fromString(notification.getPnfdInfoId()));
+
+                    if (pnfdInfoResourceOptional1.isPresent()) {
+                        PnfdInfoResource pnfdInfoResource1 = pnfdInfoResourceOptional1.get();
+
+                        pnfdInfoResource1.setPublished(true);
+                        pnfdInfoRepository.saveAndFlush(pnfdInfoResource1);
                     }
 
                     sendNotification(new PnfdOnBoardingNotificationMessage(notification.getPnfdInfoId(), notification.getPnfdId(),
@@ -368,6 +374,15 @@ public class CataloguePlugin extends Plugin
                         throw new RestClientException("Something went wrong while pushing the VNF Pkg to the public 5G Catalogue with id  " + catalogue.getCatalogueId() + ": " + e2.getMessage());
                     }
 
+                    Optional<VnfPkgInfoResource> vnfPkgInfoResourceOptional1 = vnfPkgInfoRepository.findById(UUID.fromString(notification.getVnfPkgInfoId()));
+
+                    if (vnfPkgInfoResourceOptional1.isPresent()) {
+                        VnfPkgInfoResource vnfPkgInfoResource1 = vnfPkgInfoResourceOptional1.get();
+
+                        vnfPkgInfoResource1.setPublished(true);
+                        vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource1);
+                    }
+
                     sendNotification(new VnfPkgOnBoardingNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(),
                             notification.getOperationId(), ScopeType.C2C, OperationStatus.SUCCESSFULLY_DONE,
                             catalogue.getCatalogueId()));
@@ -422,36 +437,51 @@ public class CataloguePlugin extends Plugin
                 VnfPkgInfoResource vnfPkgTargetResource = buildVnfPkgInfoResource(vnfPkgInfo);
                 VnfPkgInfoResource createdVnfPkgInfo = vnfPkgInfoRepository.saveAndFlush(vnfPkgTargetResource);
 
-                Object obj;
-
+                Resource obj;
+                File targetFile;
                 try {
-                    obj = vnfdApi.getVNFPkg(vnfPkgInfo.getId().toString(), null);
+                    obj = (Resource) vnfdApi.getVNFPkg(vnfPkgInfo.getId().toString(), null);
+                    InputStream inputStream = obj.getInputStream();
+                    String fileName = obj.getFilename();
+                    log.debug("Extracted file with filename: " + fileName);
+                    targetFile = new File("src/main/resources/package.zip");
+
+                    java.nio.file.Files.copy(
+                            inputStream,
+                            targetFile.toPath(),
+                            StandardCopyOption.REPLACE_EXISTING);
+
+                    IOUtils.closeQuietly(inputStream);
+
                 } catch (RestClientException e1) {
                     log.error("Error when trying to get VNF Pkg with vnfPkgInfo  " + vnfPkgInfo.getId().toString() + ". Error: " + e1.getMessage());
+                    try {
+                        vnfdService.deleteVnfPkgInfo(createdVnfPkgInfo.getId().toString());
+                    } catch (Exception e) {
+                        log.error("Unable to delete vnfPkgInfo "+ createdVnfPkgInfo.getId().toString() + " after failure while loading VNF Pkg: " + e.getMessage());
+                    }
                     throw new RestClientException("Error when trying to get VNF Pkg with vnfPkgInfo  " + vnfPkgInfo.getId().toString() + ". Error: " + e1.getMessage());
+                } catch (IOException e) {
+                    log.error("Error while getting VNF Pkg file: " + e.getMessage());
+                    throw new FailedOperationException("Error while getting VNF Pkg file: " + e.getMessage());
                 }
 
-                if (obj instanceof MultipartFile) {
-                    try {
-                        MultipartFile file = (MultipartFile) obj;
-                        vnfdService.uploadVnfPkg(vnfPkgTargetResource.getId().toString(), file, ContentType.ZIP);
-                        Map<String, NotificationResource> acks = new HashMap<>();
-                        acks.put(catalogue.getCatalogueId(), new NotificationResource(createdVnfPkgInfo.getId().toString(),
-                                CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION,
-                                OperationStatus.SUCCESSFULLY_DONE,
-                                PluginType.C2C));
-                        vnfPkgInfoResource = vnfPkgInfoRepository.findByVnfdIdAndVnfdVersion(vnfPkgInfo.getVnfdId(), vnfPkgInfo.getVnfdVersion());
-                        vnfPkgTargetResource = vnfPkgInfoResource.get();
-                        vnfPkgTargetResource.setAcknowledgedOnboardOpConsumers(acks);
-                        vnfPkgInfoRepository.saveAndFlush(vnfPkgTargetResource);
-                    } catch (Exception e2) {
-                        log.error("The file returned from the catalogue is not an File object");
-                        throw new ClassCastException("The file returned from the catalogue is not an File object");
-                    }
-                } else {
-                    log.error("The file returned from the catalogue is not an File object");
-                    throw new ClassCastException("The file returned from the catalogue is not an File object");
+                MultipartFile multipartFile = createMultiPartFromFile(targetFile, "multipart/form-data");
+                try {
+                    vnfdService.uploadVnfPkg(vnfPkgTargetResource.getId().toString(), multipartFile, ContentType.ZIP, true);
+                } catch (Exception e) {
+                    log.error("Error while uploading VNF Pkg with vnfPkgInfoId " + vnfPkgTargetResource.getId().toString() + ": " + e.getMessage());
+                    throw new FailedOperationException("Error while uploading VNF Pkg with vnfPkgInfoId " + vnfPkgTargetResource.getId().toString() + ": " + e.getMessage());
                 }
+
+                boolean success = FileUtils.deleteQuietly(targetFile);
+
+                /*Optional<VnfPkgInfoResource> optionalVnfPkgInfoResource = vnfPkgInfoRepository.findByVnfdIdAndVnfdVersion(vnfPkgInfo.getVnfdId(), vnfPkgInfo.getVnfdVersion());
+                if (optionalVnfPkgInfoResource.isPresent()) {
+                    VnfPkgInfoResource vnfPkgInfoResource1 = optionalVnfPkgInfoResource.get();
+                    vnfPkgInfoResource1.setPublished(true);
+                    vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource1);
+                }*/
             }
         }
 
@@ -464,9 +494,21 @@ public class CataloguePlugin extends Plugin
                 PnfdInfoResource createdPnfdInfo = pnfdInfoRepository.saveAndFlush(pnfdTargetResource);
 
                 Resource obj;
-
+                File targetFile;
                 try {
                     obj = (Resource) nsdApi.getPNFD(pnfdInfo.getId().toString());
+                    InputStream inputStream = obj.getInputStream();
+                    String fileName = obj.getFilename();
+                    log.debug("Extracted file with filename: " + fileName);
+                    targetFile = new File("src/main/resources/descriptor.yaml");
+
+                    java.nio.file.Files.copy(
+                            inputStream,
+                            targetFile.toPath(),
+                            StandardCopyOption.REPLACE_EXISTING);
+
+                    IOUtils.closeQuietly(inputStream);
+
                 } catch (RestClientException e1) {
                     log.error("Error when trying to get PNFD with pnfdInfo  " + pnfdInfo.getId().toString() + ". Error: " + e1.getMessage());
                     try {
@@ -475,30 +517,27 @@ public class CataloguePlugin extends Plugin
                         log.error("Unable to delete pnfdInfo "+ createdPnfdInfo.getId().toString() + " after failure while loading PNFD: " + e.getMessage());
                     }
                     throw new RestClientException("Error when trying to get PNFD with pnfdInfo  " + pnfdInfo.getId().toString() + ". Error: " + e1.getMessage());
+                } catch (IOException e) {
+                    log.error("Error while getting PNFD file: " + e.getMessage());
+                    throw new FailedOperationException("Error while getting PNFD file: " + e.getMessage());
                 }
 
-                File file = null;
+                MultipartFile multipartFile = createMultiPartFromFile(targetFile, "application/yaml");
                 try {
-                    file = obj.getFile();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                MultipartFile multipartFile = createMultiPartFromFile(file, "application/yaml");
-                try {
-                    nsdService.uploadPnfd(pnfdTargetResource.getId().toString(), multipartFile, ContentType.YAML);
+                    nsdService.uploadPnfd(pnfdTargetResource.getId().toString(), multipartFile, ContentType.YAML, true);
                 } catch (Exception e) {
                     log.error("Error while uploading PNFD with pnfdInfoId " + pnfdTargetResource.getId().toString() + ": " + e.getMessage());
                     throw new FailedOperationException("Error while uploading PNFD with pnfdInfoId " + pnfdTargetResource.getId().toString() + ": " + e.getMessage());
                 }
-                Map<String, NotificationResource> acks = new HashMap<>();
-                acks.put(catalogue.getCatalogueId(), new NotificationResource(createdPnfdInfo.getId().toString(),
-                        CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION,
-                        OperationStatus.SUCCESSFULLY_DONE,
-                        PluginType.C2C));
-                pnfdInfoResource = pnfdInfoRepository.findByPnfdIdAndPnfdVersion(pnfdInfo.getPnfdId(), pnfdInfo.getPnfdVersion());
-                pnfdTargetResource = pnfdInfoResource.get();
-                pnfdTargetResource.setAcknowledgedOnboardOpConsumers(acks);
-                pnfdInfoRepository.saveAndFlush(pnfdTargetResource);
+
+                boolean success = FileUtils.deleteQuietly(targetFile);
+
+                /*Optional<PnfdInfoResource> optionalPnfdInfoResource = pnfdInfoRepository.findByPnfdIdAndPnfdVersion(pnfdInfo.getPnfdId(), pnfdInfo.getPnfdVersion());
+                if (optionalPnfdInfoResource.isPresent()) {
+                    PnfdInfoResource pnfdInfoResource1 = optionalPnfdInfoResource.get();
+                    pnfdInfoResource1.setPublished(true);
+                    pnfdInfoRepository.saveAndFlush(pnfdInfoResource1);
+                }*/
             }
         }
 
@@ -507,7 +546,54 @@ public class CataloguePlugin extends Plugin
             if (nsdInfoResource.isPresent()) {
                 continue;
             } else {
+                NsdInfoResource nsdTargetResource = buildNsdInfoResource(nsdInfo);
+                NsdInfoResource createdNsdInfo = nsdInfoRepository.saveAndFlush(nsdTargetResource);
 
+                Resource obj;
+                File targetFile;
+                try {
+                    obj = (Resource) nsdApi.getNSD(nsdInfo.getId().toString(), null);
+                    InputStream inputStream = obj.getInputStream();
+                    String fileName = obj.getFilename();
+                    log.debug("Extracted file with filename: " + fileName);
+                    targetFile = new File("src/main/resources/descriptor.yaml");
+
+                    java.nio.file.Files.copy(
+                            inputStream,
+                            targetFile.toPath(),
+                            StandardCopyOption.REPLACE_EXISTING);
+
+                    IOUtils.closeQuietly(inputStream);
+
+                } catch (RestClientException e1) {
+                    log.error("Error when trying to get NSD with nsdInfo  " + nsdInfo.getId().toString() + ". Error: " + e1.getMessage());
+                    try {
+                        nsdService.deleteNsdInfo(createdNsdInfo.getId().toString());
+                    } catch (Exception e) {
+                        log.error("Unable to delete nsdInfo "+ createdNsdInfo.getId().toString() + " after failure while loading NSD: " + e.getMessage());
+                    }
+                    throw new RestClientException("Error when trying to get NSD with nsdInfo  " + nsdInfo.getId().toString() + ". Error: " + e1.getMessage());
+                } catch (IOException e) {
+                    log.error("Error while getting NSD file: " + e.getMessage());
+                    throw new FailedOperationException("Error while getting NSD file: " + e.getMessage());
+                }
+
+                MultipartFile multipartFile = createMultiPartFromFile(targetFile, "application/yaml");
+                try {
+                    nsdService.uploadNsd(nsdTargetResource.getId().toString(), multipartFile, ContentType.YAML, true);
+                } catch (Exception e) {
+                    log.error("Error while uploading NSD with nsdInfoId " + nsdTargetResource.getId().toString() + ": " + e.getMessage());
+                    throw new FailedOperationException("Error while uploading NSD with nsdInfoId " + nsdTargetResource.getId().toString() + ": " + e.getMessage());
+                }
+
+                boolean success = FileUtils.deleteQuietly(targetFile);
+
+                /*Optional<NsdInfoResource> optionalNsdInfoResource1 = nsdInfoRepository.findByNsdIdAndNsdVersion(nsdInfo.getNsdId(), nsdInfo.getNsdVersion());
+                if (optionalNsdInfoResource1.isPresent()) {
+                    NsdInfoResource nsdInfoResource1 = optionalNsdInfoResource1.get();
+                    nsdInfoResource1.setPublished(true);
+                    nsdInfoRepository.saveAndFlush(nsdInfoResource1);
+                }*/
             }
         }
     }
@@ -534,10 +620,28 @@ public class CataloguePlugin extends Plugin
                 vnfPkgInfo.getVnfProductName(),
                 vnfPkgInfo.getVnfSoftwareVersion(),
                 vnfPkgInfo.getVnfdVersion(),
-                vnfPkgInfo.getOnboardingState(),
+                PackageOnboardingStateType.CREATED,
                 vnfPkgInfo.getOperationalState(),
                 vnfPkgInfo.getUsageState(),
                 vnfPkgInfo.getUserDefinedData()
+        );
+    }
+
+    private NsdInfoResource buildNsdInfoResource(NsdInfo nsdInfo) {
+
+        return new NsdInfoResource(
+                nsdInfo.getNsdId(),
+                nsdInfo.getVnfPkgIds(),
+                nsdInfo.getPnfdInfoIds(),
+                nsdInfo.getNestedNsdInfoIds(),
+                NsdOnboardingStateType.CREATED,
+                nsdInfo.getNsdOperationalState(),
+                nsdInfo.getNsdUsageState(),
+                nsdInfo.getNsdName(),
+                nsdInfo.getNsdVersion(),
+                nsdInfo.getNsdDesigner(),
+                nsdInfo.getNsdInvariantId(),
+                nsdInfo.getUserDefinedData()
         );
     }
 

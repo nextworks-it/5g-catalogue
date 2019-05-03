@@ -363,7 +363,7 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
-    public synchronized void uploadNsd(String nsdInfoId, MultipartFile nsd, ContentType contentType) throws MalformattedElementException, FailedOperationException, NotExistingEntityException, NotPermittedOperationException, MethodNotImplementedException {
+    public synchronized void uploadNsd(String nsdInfoId, MultipartFile nsd, ContentType contentType, boolean isInternalRequest) throws MalformattedElementException, FailedOperationException, NotExistingEntityException, NotPermittedOperationException, MethodNotImplementedException {
 
         log.debug("Processing request to upload NSD content for NSD info " + nsdInfoId);
 
@@ -567,6 +567,11 @@ public class NsdManagementService implements NsdManagementInterface {
                 CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION, OperationStatus.SENT);
         nsdInfo.setAcknowledgedOnboardOpConsumers(operationIdToConsumersAck.get(operationId.toString()));
 
+        if(isInternalRequest)
+            nsdInfo.setPublished(true);
+        else
+            nsdInfo.setPublished(false);
+
         nsdInfoRepo.saveAndFlush(nsdInfo);
         log.debug("NSD info updated");
 
@@ -679,17 +684,8 @@ public class NsdManagementService implements NsdManagementInterface {
                     throw new FailedOperationException("Found more than one file for PNFD in YAML format. Error");
                 }
                 String pnfdFilename = pnfdFilenames.get(0);
-                Resource pnfd = null;
-                try {
-                    pnfd = storageService.loadNsdAsResource(pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfdFilename);
+                Resource pnfd = storageService.loadNsdAsResource(pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfdFilename);
 
-                    DescriptorTemplate dt = DescriptorsParser.fileToDescriptorTemplate(pnfd.getFile());
-                    log.debug("RETRIEVED PNFD: " + DescriptorsParser.descriptorTemplateToString(dt));
-
-                } catch (IOException e) {
-                    log.error("Unable to get PNFD in File format. Error");
-                    throw new FailedOperationException("Unable to get PNFD in File format. Error");
-                }
                 return pnfd;
             }
 
@@ -726,7 +722,7 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
-    public void uploadPnfd(String pnfdInfoId, MultipartFile pnfd, ContentType contentType) throws MalformattedElementException, NotExistingEntityException, NotPermittedOperationException, FailedOperationException, MethodNotImplementedException {
+    public void uploadPnfd(String pnfdInfoId, MultipartFile pnfd, ContentType contentType, boolean isInternalRequest) throws MalformattedElementException, NotExistingEntityException, NotPermittedOperationException, FailedOperationException, MethodNotImplementedException {
         log.debug("Processing request to upload PNFD content for PNFD info " + pnfdInfoId);
 
         PnfdInfoResource pnfdInfo = getPnfdInfoResource(pnfdInfoId);
@@ -894,6 +890,11 @@ public class NsdManagementService implements NsdManagementInterface {
         UUID operationId = insertOperationInfoInConsumersMap(pnfdInfoId,
                 CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION, OperationStatus.SENT);
         pnfdInfo.setAcknowledgedOnboardOpConsumers(operationIdToConsumersAck.get(operationId.toString()));
+
+        if(isInternalRequest)
+            pnfdInfo.setPublished(true);
+        else
+            pnfdInfo.setPublished(false);
 
         pnfdInfoRepo.saveAndFlush(pnfdInfo);
         log.debug("PNFD info updated");
@@ -1110,7 +1111,6 @@ public class NsdManagementService implements NsdManagementInterface {
         kvp.putAll(nsdInfoResource.getUserDefinedData());
         nsdInfo.setUserDefinedData(kvp);
         nsdInfo.setVnfPkgIds(nsdInfoResource.getVnfPkgIds());
-        nsdInfo.setC2cOnboardingState(C2COnboardingStateType.UNPUBLISHED);
 
         Map<String, NotificationResource> acksMap = nsdInfoResource.getAcknowledgedOnboardOpConsumers();
         Map<String, NsdOnboardingStateType> manoIdToOnboardingStatus = new HashMap<>();
@@ -1134,22 +1134,19 @@ public class NsdManagementService implements NsdManagementInterface {
                         nsdOnboardingStateType = NsdOnboardingStateType.ONBOARDED;
                         break;
                 }
-                switch (entry.getValue().getPluginType()) {
-                    case MANO:
-                        manoIdToOnboardingStatus.putIfAbsent(entry.getKey(), nsdOnboardingStateType);
-                        break;
-                    case C2C:
-                        if (nsdOnboardingStateType == NsdOnboardingStateType.ONBOARDED) {
-                            nsdInfo.setC2cOnboardingState(C2COnboardingStateType.PUBLISHED);
-                        } else {
-                            nsdInfo.setC2cOnboardingState(C2COnboardingStateType.UNPUBLISHED);
-                        }
-                        break;
+                if (entry.getValue().getPluginType() == PluginType.MANO) {
+                    manoIdToOnboardingStatus.putIfAbsent(entry.getKey(), nsdOnboardingStateType);
                 }
             }
         }
 
         nsdInfo.setManoIdToOnboardingStatus(manoIdToOnboardingStatus);
+
+        if (nsdInfoResource.isPublished()) {
+            nsdInfo.setC2cOnboardingState(C2COnboardingStateType.PUBLISHED);
+        } else {
+            nsdInfo.setC2cOnboardingState(C2COnboardingStateType.UNPUBLISHED);
+        }
 
         return nsdInfo;
     }
@@ -1231,11 +1228,10 @@ public class NsdManagementService implements NsdManagementInterface {
         KeyValuePairs kvp = new KeyValuePairs();
         kvp.putAll(pnfdInfoResource.getUserDefinedData());
         pnfdInfo.setUserDefinedData(kvp);
-        pnfdInfo.setC2cOnboardingState(C2COnboardingStateType.UNPUBLISHED);
 
         Map<String, NotificationResource> acksMap = pnfdInfoResource.getAcknowledgedOnboardOpConsumers();
         Map<String, PnfdOnboardingStateType> manoIdToOnboardingStatus = new HashMap<>();
-        Map<String, PnfdOnboardingStateType> c2cOnboardingStatus = new HashMap<>();
+
         for (Entry<String, NotificationResource> entry : acksMap.entrySet()) {
             if (entry.getValue().getOperation() == CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION) {
                 PnfdOnboardingStateType pnfdOnboardingStateType = PnfdOnboardingStateType.UPLOADING;
@@ -1255,22 +1251,19 @@ public class NsdManagementService implements NsdManagementInterface {
                     case SUCCESSFULLY_DONE:
                         pnfdOnboardingStateType = PnfdOnboardingStateType.ONBOARDED;
                 }
-                switch (entry.getValue().getPluginType()) {
-                    case MANO:
-                        manoIdToOnboardingStatus.putIfAbsent(entry.getKey(), pnfdOnboardingStateType);
-                        break;
-                    case C2C:
-                        if (pnfdOnboardingStateType == PnfdOnboardingStateType.ONBOARDED) {
-                            pnfdInfo.setC2cOnboardingState(C2COnboardingStateType.PUBLISHED);
-                        } else {
-                            pnfdInfo.setC2cOnboardingState(C2COnboardingStateType.UNPUBLISHED);
-                        }
-                        break;
+                if (entry.getValue().getPluginType() == PluginType.MANO) {
+                    manoIdToOnboardingStatus.putIfAbsent(entry.getKey(), pnfdOnboardingStateType);
                 }
             }
         }
 
         pnfdInfo.setManoIdToOnboardingStatus(manoIdToOnboardingStatus);
+
+        if (pnfdInfoResource.isPublished()) {
+            pnfdInfo.setC2cOnboardingState(C2COnboardingStateType.PUBLISHED);
+        } else {
+            pnfdInfo.setC2cOnboardingState(C2COnboardingStateType.UNPUBLISHED);
+        }
 
         return pnfdInfo;
     }

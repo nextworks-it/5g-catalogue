@@ -48,6 +48,8 @@ public class PnfdInfoResource {
     @Fetch(FetchMode.SELECT)
     private List<String> parentNsds = new ArrayList<>();
 
+    private boolean isPublished;
+
     public PnfdInfoResource() {
     }
 
@@ -171,6 +173,14 @@ public class PnfdInfoResource {
 
     public void addPnfdFilename(String filename) {
         this.pnfdFilename.add(filename);
+    }
+
+    public boolean isPublished() {
+        return isPublished;
+    }
+
+    public void setPublished(boolean published) {
+        isPublished = published;
     }
 
     public void isDeletable() throws NotPermittedOperationException {

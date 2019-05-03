@@ -9,6 +9,7 @@ import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.invoker.vnf.Ap
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -164,7 +165,7 @@ public class DefaultApi {
 
         String[] authNames = new String[]{};
 
-        ParameterizedTypeReference<Object> returnType = new ParameterizedTypeReference<Object>() {
+        ParameterizedTypeReference<Resource> returnType = new ParameterizedTypeReference<Resource>() {
         };
         return apiClient.invokeAPI(path, HttpMethod.GET, queryParams, postBody, headerParams, formParams, accept, contentType, authNames, returnType);
     }

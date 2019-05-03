@@ -505,9 +505,13 @@ public class ApiClient {
             return null;
         } else if (responseEntity.getStatusCode().is2xxSuccessful()) {
             if (returnType == null) {
+                log.debug("Return type is null, path: " + path);
                 return null;
             }
-            return responseEntity.getBody();
+            if (responseEntity.hasBody()) {
+                log.debug("Body is not null, path: " + path);
+                return responseEntity.getBody();
+            } else return null;
         } else {
             // The error handler built into the RestTemplate should handle 400 and 500 series errors.
             throw new RestClientException("API returned " + statusCode + " and it wasn't handled by the RestTemplate error handler");

@@ -280,7 +280,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
     }
 
     @Override
-    public void uploadVnfPkg(String vnfPkgInfoId, MultipartFile vnfPkg, ContentType contentType) throws FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
+    public void uploadVnfPkg(String vnfPkgInfoId, MultipartFile vnfPkg, ContentType contentType, boolean isInternalRequest) throws FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
         log.debug("Processing request to upload VNF Pkg content for VNFD info " + vnfPkgInfoId);
         VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
 
@@ -365,6 +365,11 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                 CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION, OperationStatus.SENT);
         vnfPkgInfoResource.setAcknowledgedOnboardOpConsumers(operationIdToConsumersAck.get(operationId.toString()));
 
+        if (isInternalRequest)
+            vnfPkgInfoResource.setPublished(true);
+        else
+            vnfPkgInfoResource.setPublished(false);
+
         vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
         log.debug("VNF PKG info updated");
 
@@ -398,7 +403,6 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         vnfPkgInfo.setVnfProductName(vnfPkgInfoResource.getVnfProductName());
         vnfPkgInfo.setVnfProvider(vnfPkgInfoResource.getVnfProvider());
         vnfPkgInfo.setVnfSoftwareVersion(vnfPkgInfoResource.getVnfSoftwareVersion());
-        vnfPkgInfo.setC2cOnboardingState(C2COnboardingStateType.UNPUBLISHED);
 
         Map<String, NotificationResource> acksMap = vnfPkgInfoResource.getAcknowledgedOnboardOpConsumers();
         Map<String, PackageOnboardingStateType> manoIdToOnboardingStatus = new HashMap<>();
@@ -421,22 +425,20 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                     case SUCCESSFULLY_DONE:
                         pkgOnboardingStateType = PackageOnboardingStateType.ONBOARDED;
                 }
-                switch (entry.getValue().getPluginType()) {
-                    case MANO:
-                        manoIdToOnboardingStatus.putIfAbsent(entry.getKey(), pkgOnboardingStateType);
-                        break;
-                    case C2C:
-                        if (pkgOnboardingStateType == PackageOnboardingStateType.ONBOARDED) {
-                            vnfPkgInfo.setC2cOnboardingState(C2COnboardingStateType.PUBLISHED);
-                        } else {
-                            vnfPkgInfo.setC2cOnboardingState(C2COnboardingStateType.UNPUBLISHED);
-                        }
-                        break;
+                if (entry.getValue().getPluginType() == PluginType.MANO) {
+                    manoIdToOnboardingStatus.putIfAbsent(entry.getKey(), pkgOnboardingStateType);
                 }
             }
         }
 
         vnfPkgInfo.setManoIdToOnboardingStatus(manoIdToOnboardingStatus);
+
+        if (vnfPkgInfoResource.isPublished()) {
+            vnfPkgInfo.setC2cOnboardingState(C2COnboardingStateType.PUBLISHED);
+        } else {
+            vnfPkgInfo.setC2cOnboardingState(C2COnboardingStateType.UNPUBLISHED);
+        }
+
         return vnfPkgInfo;
     }
 
