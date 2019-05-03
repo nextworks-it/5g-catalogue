@@ -168,7 +168,7 @@ public interface NsdApi {
             @ApiResponse(code = 404, message = "Status 404", response = ProblemDetails.class),
             @ApiResponse(code = 409, message = "Status 409", response = ProblemDetails.class),
             @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
-    @RequestMapping(value = "/nsd/v1/pnf_descriptors/{pnfdInfoId}/pnfd_content", produces = {"text/plain", "application/json"}, method = RequestMethod.GET)
+    @RequestMapping(value = "/nsd/v1/pnf_descriptors/{pnfdInfoId}/pnfd_content", produces = {"text/plain", "application/yaml", "application/json"}, method = RequestMethod.GET)
     ResponseEntity<?> getPNFD(
             @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId);
 
