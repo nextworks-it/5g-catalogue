@@ -554,8 +554,7 @@ public class CataloguePlugin extends Plugin
                 try {
                     obj = (Resource) nsdApi.getNSD(nsdInfo.getId().toString(), null);
                     InputStream inputStream = obj.getInputStream();
-                    String fileName = obj.getFilename();
-                    log.debug("Extracted file with filename: " + fileName);
+
                     targetFile = new File("src/main/resources/descriptor.yaml");
 
                     java.nio.file.Files.copy(
@@ -564,7 +563,6 @@ public class CataloguePlugin extends Plugin
                             StandardCopyOption.REPLACE_EXISTING);
 
                     IOUtils.closeQuietly(inputStream);
-
                 } catch (RestClientException e1) {
                     log.error("Error when trying to get NSD with nsdInfo  " + nsdInfo.getId().toString() + ". Error: " + e1.getMessage());
                     try {
@@ -631,9 +629,9 @@ public class CataloguePlugin extends Plugin
 
         return new NsdInfoResource(
                 nsdInfo.getNsdId(),
-                nsdInfo.getVnfPkgIds(),
-                nsdInfo.getPnfdInfoIds(),
-                nsdInfo.getNestedNsdInfoIds(),
+                null,
+                null,
+                null,
                 NsdOnboardingStateType.CREATED,
                 nsdInfo.getNsdOperationalState(),
                 nsdInfo.getNsdUsageState(),
