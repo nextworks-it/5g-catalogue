@@ -18,6 +18,7 @@ package it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
+import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.C2COnboardingStateType;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.Valid;
@@ -76,6 +77,9 @@ public class VnfPkgInfo {
 
     @JsonProperty("manosOnboardingStatus")
     private Map<String, PackageOnboardingStateType> manoIdToOnboardingStatus = new HashMap<>();
+
+    @JsonProperty("c2cOnboardingState")
+    private C2COnboardingStateType c2cOnboardingState;
 
     public VnfPkgInfo id(UUID id) {
         this.id = id;
@@ -402,6 +406,14 @@ public class VnfPkgInfo {
 
     public void setManoIdToOnboardingStatus(Map<String, PackageOnboardingStateType> manoIdToOnboardingStatus) {
         this.manoIdToOnboardingStatus = manoIdToOnboardingStatus;
+    }
+
+    public C2COnboardingStateType getC2cOnboardingState() {
+        return c2cOnboardingState;
+    }
+
+    public void setC2cOnboardingState(C2COnboardingStateType c2cOnboardingState) {
+        this.c2cOnboardingState = c2cOnboardingState;
     }
 
     @Override

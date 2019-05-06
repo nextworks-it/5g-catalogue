@@ -12,6 +12,8 @@ import it.nextworks.nfvmano.catalogue.messages.VnfPkgDeletionNotificationMessage
 import it.nextworks.nfvmano.catalogue.messages.VnfPkgOnBoardingNotificationMessage;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.*;
+import it.nextworks.nfvmano.catalogue.plugins.PluginType;
+import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.C2COnboardingStateType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.repos.ContentType;
 import it.nextworks.nfvmano.catalogue.repos.MANORepository;
@@ -62,7 +64,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         if (operationIdToConsumersAck.containsKey(operationId.toString())) {
             manoIdToOpAck = operationIdToConsumersAck.get(operationId.toString());
         }
-        NotificationResource notificationResource = new NotificationResource(nsdInfoId, messageType, opStatus);
+        NotificationResource notificationResource = new NotificationResource(nsdInfoId, messageType, opStatus, PluginType.MANO);
         manoIdToOpAck.put(manoId, notificationResource);
 
         operationIdToConsumersAck.put(operationId.toString(), manoIdToOpAck);
@@ -75,7 +77,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         List<MANO> manos = MANORepository.findAll();
         Map<String, NotificationResource> pluginToOperationState = new HashMap<>();
         for (MANO mano : manos) {
-            pluginToOperationState.put(mano.getManoId(), new NotificationResource(vnfPkgInfoId, messageType, opStatus));
+            pluginToOperationState.put(mano.getManoId(), new NotificationResource(vnfPkgInfoId, messageType, opStatus, PluginType.MANO));
 
         }
         operationIdToConsumersAck.put(operationId.toString(), pluginToOperationState);
@@ -278,7 +280,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
     }
 
     @Override
-    public void uploadVnfPkg(String vnfPkgInfoId, MultipartFile vnfPkg, ContentType contentType) throws FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
+    public void uploadVnfPkg(String vnfPkgInfoId, MultipartFile vnfPkg, ContentType contentType, boolean isInternalRequest) throws FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
         log.debug("Processing request to upload VNF Pkg content for VNFD info " + vnfPkgInfoId);
         VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
 
@@ -363,6 +365,11 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                 CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION, OperationStatus.SENT);
         vnfPkgInfoResource.setAcknowledgedOnboardOpConsumers(operationIdToConsumersAck.get(operationId.toString()));
 
+        if (isInternalRequest)
+            vnfPkgInfoResource.setPublished(true);
+        else
+            vnfPkgInfoResource.setPublished(false);
+
         vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
         log.debug("VNF PKG info updated");
 
@@ -418,11 +425,20 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                     case SUCCESSFULLY_DONE:
                         pkgOnboardingStateType = PackageOnboardingStateType.ONBOARDED;
                 }
-                manoIdToOnboardingStatus.putIfAbsent(entry.getKey(), pkgOnboardingStateType);
+                if (entry.getValue().getPluginType() == PluginType.MANO) {
+                    manoIdToOnboardingStatus.putIfAbsent(entry.getKey(), pkgOnboardingStateType);
+                }
             }
         }
 
         vnfPkgInfo.setManoIdToOnboardingStatus(manoIdToOnboardingStatus);
+
+        if (vnfPkgInfoResource.isPublished()) {
+            vnfPkgInfo.setC2cOnboardingState(C2COnboardingStateType.PUBLISHED);
+        } else {
+            vnfPkgInfo.setC2cOnboardingState(C2COnboardingStateType.UNPUBLISHED);
+        }
+
         return vnfPkgInfo;
     }
 
@@ -469,7 +485,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                 if (vnfPkgInfoResource.getAcknowledgedOnboardOpConsumers() != null) {
                     ackMap = vnfPkgInfoResource.getAcknowledgedOnboardOpConsumers();
                 }
-                ackMap.put(pluginId, new NotificationResource(vnfPkgInfoId, type, opStatus));
+                ackMap.put(pluginId, new NotificationResource(vnfPkgInfoId, type, opStatus, PluginType.MANO));
                 vnfPkgInfoResource.setAcknowledgedOnboardOpConsumers(ackMap);
 
                 if (type == CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION) {
@@ -492,7 +508,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
     private PackageOnboardingStateType checkVnfPkgOnboardingState(String vnfPkgInfoId, Map<String, NotificationResource> ackMap) {
 
         for (Map.Entry<String, NotificationResource> entry : ackMap.entrySet()) {
-            if (entry.getValue().getOperation() == CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION) {
+            if (entry.getValue().getOperation() == CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION && entry.getValue().getPluginType() == PluginType.MANO) {
                 if (entry.getValue().getOpStatus() == OperationStatus.FAILED) {
                     log.error("VNF Pkg with vnfPkgInfoId {} onboarding failed for mano with manoId {}.", vnfPkgInfoId,
                             entry.getKey());

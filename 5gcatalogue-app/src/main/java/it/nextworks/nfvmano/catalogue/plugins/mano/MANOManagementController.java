@@ -83,10 +83,10 @@ public class MANOManagementController {
         return new ResponseEntity<List<MANO>>(manos, HttpStatus.OK);
     }
 
-    @RequestMapping(value = "/manos/{manoId}", method = RequestMethod.DELETE)
-    public ResponseEntity<?> deleteMANO(@ApiParam(value = "", required = true) @PathVariable("manoId") String manoId) throws MethodNotImplementedException {
+    @RequestMapping(value = "/manos/{manoId}", method = RequestMethod.GET)
+    public ResponseEntity<?> getMANO(@ApiParam(value = "", required = true) @PathVariable("manoId") String manoId) throws MethodNotImplementedException {
 
-        log.debug("Received request for removing MANO plugin with manoId {}", manoId);
+        log.debug("Received request for getting MANO plugin with manoId {}", manoId);
 
         MANO mano = null;
 

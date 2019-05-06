@@ -16,5 +16,5 @@
 package it.nextworks.nfvmano.catalogue.plugins;
 
 public enum PluginType {
-    MANO, VIM, SDN
+    MANO, VIM, SDN, C2C
 }

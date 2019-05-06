@@ -95,6 +95,10 @@ function getPNFD(pnfdInfoId, elemId, callback) {
     getFileFromURL("http://" + catalogueAddr + ":8083/nsd/v1/pnf_descriptors/" + pnfdInfoId + "/pnfd_content", callback, [pnfdInfoId, elemId]);
 }
 
+function exportPnfd(pnfdInfoId, resId) {
+    postToURL("http://" + catalogueAddr + ":8083/catalogue/cat2catOperation/exportPnfd/" + pnfdInfoId, showResultMessage, ["Request for uploading PNFD with pnfdInfoId " + pnfdInfoId + " successfully submitted to public 5G Catalogue."])
+}
+
 function showPnfdGraphCanvas(data,params) {
     console.log(params[0]);
     console.log(params[1]);
@@ -116,7 +120,7 @@ function showPnfdGraphCanvas(data,params) {
 }
 
 function createPnfdInfosTable(data, params) {
-    console.log(JSON.stringify(data, null, 4));
+    //console.log(JSON.stringify(data, null, 4));
     //console.log(params);
 
     var tableId = params[0];
@@ -131,19 +135,37 @@ function createPnfdInfosTable(data, params) {
         return;
     }
     var btnFlag = true;
-    var header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Onboarding State', 'MANOs Onboarding State', 'Actions'], btnFlag, false);
-    var cbacks = ['openPNFD_', 'showPnfdGraphCanvas', 'deletePnfdInfo'];
-    var names = ['View PNFD', 'View PNFD Graph', 'Delete PNFD'];
-    var columns = [['pnfdName'], ['pnfdVersion'], ['pnfdProvider'], ['pnfdOnboardingState'], ['manosOnboardingStatus']];
+    var header = "";
+    var cbacks = [];
+    var names = [];
+    var columns = [];
+
+    if (isPublic) {
+        console.log("PUBLIC CATALOGUE");
+        header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Onboarding State', 'Actions'], btnFlag, false);
+        cbacks = ['openPNFD_', 'showPnfdGraphCanvas', 'deletePnfdInfo'];
+        names = ['View PNFD', 'View PNFD Graph', 'Delete PNFD'];
+        columns = [['pnfdName'], ['pnfdVersion'], ['pnfdProvider'], ['pnfdOnboardingState', 'manosOnboardingStatus']];   
+    } else {
+        console.log("PRIVATE CATALOGUE");
+        header = createTableHeaderByValues(['Name', 'Version', 'Designer', 'Onboarding State', 'Actions'], btnFlag, false);
+        cbacks = ['openPNFD_', 'showPnfdGraphCanvas', 'exportPnfd', 'deletePnfdInfo'];
+        names = ['View PNFD', 'View PNFD Graph', 'Upload PNFD', 'Delete PNFD'];
+        columns = [['pnfdName'], ['pnfdVersion'], ['pnfdProvider'], ['pnfdOnboardingState', 'c2cOnboardingState', 'manosOnboardingStatus']]; 
+    }
 
     table.innerHTML = header + '<tbody>';
 
-    var rows = '';
+    //var rows = '';
     for (var i in data) {
-        rows +=  createPnfdInfosTableRow(data[i], btnFlag, cbacks, names, columns, resId);
+        table.innerHTML +=  createPnfdInfosTableRow(data[i], btnFlag, cbacks, names, columns, resId);
+
+        if(isPublic == false && data[i]['c2cOnboardingState'].indexOf("UNPUBLISHED") < 0) {
+            disableExpBtn("expBtn_" + data[i]['id']);
+        }
     }
 
-    table.innerHTML += rows + '</tbody>';
+    table.innerHTML += '</tbody>';
 }
 
 function createPnfdInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
@@ -158,23 +180,44 @@ function createPnfdInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
 
   	text += '<tr>';
   	for (var i in columns) {
-  	    var values = [];
-  	    getValuesFromKeyPath(data, columns[i], values);
+        var values = [];
+        if (columns[i][0].indexOf('pnfdOnboardingState') >= 0) {
+            for (var j in columns[i]) {
+                values.push(data[columns[i][j]]);
+            }
+        } else {
+            getValuesFromKeyPath(data, columns[i], values);
+        }
   	    //console.log(values);
 
   	    var subText = '<td>';
-  	    var subTable = '<table class="table table-bordered">';
+  	    var subTable = '<table class="table">';
 
   	    if (data.hasOwnProperty(columns[i][0])) {
             if(values instanceof Array && values.length > 1) {
-                for (var v in values) {
-                    subTable += '<tr><td>' + values[v] + '</td><tr>';
+                if (columns[i][0].indexOf('pnfdOnboardingState') >= 0 && isPublic) {
+                    subTable += createTableHeaderByValues(['Local', 'MANOs'], false, false);
+                } else {
+                    subTable += createTableHeaderByValues(['Local', 'Public 5G Catalogue', 'MANOs'], false, false);
                 }
-                subText += subTable + '</table>';
+                subTable += '<tr>';
+                for (var v in values) {
+                    if (values[v] instanceof Object) {
+                        var subSubTable = '<td><table class="borderless">'; 
+                        $.each(values[v], function(key, value) {
+                            subSubTable += '<tr><td>'+ key + ' > ' + value + '</td><tr>';
+                        });
+                        subSubTable += '</table></td>';
+                        subTable += subSubTable;
+                    } else {
+                        subTable += '<td>' + values[v] + '</td>';
+                    }
+                }
+                subText += subTable + '</tr></table>';
             } else if (values[0] instanceof Object) {
-                var manoAcks = values[0];
-                $.each(manoAcks, function(key, value) {
-                    subTable += '<tr><td>'+ key + '</td><td>' + value + '</td><tr>';
+                var acks = values[0];
+                $.each(acks, function(key, value) {
+                    subTable += '<tr><td>'+ key + '</td><td> > </td><td>' + value + '</td><tr>';
                 });
                 subText += subTable + '</table>';
             } else {
@@ -191,7 +234,7 @@ function createPnfdInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
 
 function cretePNFDViewModal(pnfdInfoId, modalsContainerId) {
 
-    console.log('Creating view modal for pnfdInfoId: ' + pnfdInfoId);
+    //console.log('Creating view modal for pnfdInfoId: ' + pnfdInfoId);
     var container = document.getElementById(modalsContainerId);
 
     if (container) {
@@ -221,7 +264,7 @@ function cretePNFDViewModal(pnfdInfoId, modalsContainerId) {
 function fillPNFDViewModal(data, params) {
 
     var yamlObj = jsyaml.load(data);
-    console.log(yamlObj);
+    //console.log(yamlObj);
 
     var yaml = jsyaml.dump(data, {
         indent: 4,
@@ -231,7 +274,7 @@ function fillPNFDViewModal(data, params) {
         }
     });
 
-    console.log(yaml);
+    //console.log(yaml);
     var pnfdInfoId = params[0];
     var textArea = document.getElementById(params[1]);
     textArea.value = yaml;

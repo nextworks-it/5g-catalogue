@@ -115,7 +115,7 @@ public interface VnfpkgmApi {
             @ApiResponse(code = 416, message = "Status 416", response = ProblemDetails.class),
             @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
     @RequestMapping(value = "/vnfpkgm/v1/vnf_packages/{vnfPkgId}/package_content",
-            produces = {"application/zip", "application/json"},
+            produces = {"multipart/form-data", "application/zip", "application/json"},
             method = RequestMethod.GET)
     ResponseEntity<?> getVNFPkg(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId, @ApiParam(value = "") @RequestHeader(value = "Range", required = false) String range);
 

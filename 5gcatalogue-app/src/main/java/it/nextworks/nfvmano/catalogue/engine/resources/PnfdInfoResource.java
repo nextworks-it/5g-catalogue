@@ -1,7 +1,8 @@
 package it.nextworks.nfvmano.catalogue.engine.resources;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.*;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnboardingStateType;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdUsageStateType;
 import it.nextworks.nfvmano.catalogue.repos.ContentType;
 import it.nextworks.nfvmano.libs.common.exceptions.NotPermittedOperationException;
 import org.hibernate.annotations.Cascade;
@@ -47,7 +48,20 @@ public class PnfdInfoResource {
     @Fetch(FetchMode.SELECT)
     private List<String> parentNsds = new ArrayList<>();
 
+    private boolean isPublished;
+
     public PnfdInfoResource() {
+    }
+
+    public PnfdInfoResource(UUID pnfdId, String pnfdName, String pnfdVersion, String pnfdProvider, UUID pnfdInvariantId, PnfdOnboardingStateType pnfdOnboardingState, PnfdUsageStateType pnfdUsageState, Map<String, String> userDefinedData) {
+        this.pnfdId = pnfdId;
+        this.pnfdName = pnfdName;
+        this.pnfdVersion = pnfdVersion;
+        this.pnfdProvider = pnfdProvider;
+        this.pnfdInvariantId = pnfdInvariantId;
+        this.pnfdOnboardingState = pnfdOnboardingState;
+        this.pnfdUsageState = pnfdUsageState;
+        this.userDefinedData = userDefinedData;
     }
 
     public PnfdInfoResource(Map<String, String> userDefinedData) {
@@ -65,100 +79,108 @@ public class PnfdInfoResource {
         return pnfdId;
     }
 
-    public String getPnfdName() {
-        return pnfdName;
-    }
-
-    public String getPnfdVersion() {
-        return pnfdVersion;
-    }
-
-    public String getPnfdProvider() {
-        return pnfdProvider;
-    }
-
-    public UUID getPnfdInvariantId() {
-        return pnfdInvariantId;
-    }
-
-    public PnfdOnboardingStateType getPnfdOnboardingState() {
-        return pnfdOnboardingState;
-    }
-
-    public PnfdUsageStateType getPnfdUsageState() {
-        return pnfdUsageState;
-    }
-
-    public ContentType getContentType() {
-        return contentType;
-    }
-
-    public List<String> getPnfdFilename() {
-        return pnfdFilename;
-    }
-
-    public Map<String, String> getUserDefinedData() {
-        return userDefinedData;
-    }
-
-    public Map<String, NotificationResource> getAcknowledgedOnboardOpConsumers() {
-        return acknowledgedOnboardOpConsumers;
-    }
-
-    public List<String> getParentNsds() {
-        return parentNsds;
-    }
-
     public void setPnfdId(UUID pnfdId) {
         this.pnfdId = pnfdId;
+    }
+
+    public String getPnfdName() {
+        return pnfdName;
     }
 
     public void setPnfdName(String pnfdName) {
         this.pnfdName = pnfdName;
     }
 
+    public String getPnfdVersion() {
+        return pnfdVersion;
+    }
+
     public void setPnfdVersion(String pnfdVersion) {
         this.pnfdVersion = pnfdVersion;
+    }
+
+    public String getPnfdProvider() {
+        return pnfdProvider;
     }
 
     public void setPnfdProvider(String pnfdProvider) {
         this.pnfdProvider = pnfdProvider;
     }
 
+    public UUID getPnfdInvariantId() {
+        return pnfdInvariantId;
+    }
+
     public void setPnfdInvariantId(UUID pnfdInvariantId) {
         this.pnfdInvariantId = pnfdInvariantId;
+    }
+
+    public PnfdOnboardingStateType getPnfdOnboardingState() {
+        return pnfdOnboardingState;
     }
 
     public void setPnfdOnboardingState(PnfdOnboardingStateType pnfdOnboardingState) {
         this.pnfdOnboardingState = pnfdOnboardingState;
     }
 
+    public PnfdUsageStateType getPnfdUsageState() {
+        return pnfdUsageState;
+    }
+
     public void setPnfdUsageState(PnfdUsageStateType pnfdUsageState) {
         this.pnfdUsageState = pnfdUsageState;
+    }
+
+    public ContentType getContentType() {
+        return contentType;
     }
 
     public void setContentType(ContentType contentType) {
         this.contentType = contentType;
     }
 
+    public List<String> getPnfdFilename() {
+        return pnfdFilename;
+    }
+
     public void setPnfdFilename(List<String> pnfdFilename) {
         this.pnfdFilename = pnfdFilename;
     }
 
-    public void addPnfdFilename(String filename) {
-        this.pnfdFilename.add(filename);
+    public Map<String, String> getUserDefinedData() {
+        return userDefinedData;
     }
 
     public void setUserDefinedData(Map<String, String> userDefinedData) {
         this.userDefinedData = userDefinedData;
     }
 
+    public Map<String, NotificationResource> getAcknowledgedOnboardOpConsumers() {
+        return acknowledgedOnboardOpConsumers;
+    }
+
     public void setAcknowledgedOnboardOpConsumers(Map<String, NotificationResource> acknowledgedOnboardOpConsumers) {
         this.acknowledgedOnboardOpConsumers = acknowledgedOnboardOpConsumers;
     }
 
+    public List<String> getParentNsds() {
+        return parentNsds;
+    }
+
     public void setParentNsds(List<String> parentNsds) {
         this.parentNsds = parentNsds;
+    }
+
+    public void addPnfdFilename(String filename) {
+        this.pnfdFilename.add(filename);
+    }
+
+    public boolean isPublished() {
+        return isPublished;
+    }
+
+    public void setPublished(boolean published) {
+        isPublished = published;
     }
 
     public void isDeletable() throws NotPermittedOperationException {

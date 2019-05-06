@@ -25,5 +25,5 @@ public interface VnfPackageManagementInterface {
 
     List<VnfPkgInfo> getAllVnfPkgInfos() throws FailedOperationException, MethodNotImplementedException;
 
-    void uploadVnfPkg(String vnfPkgInfoId, MultipartFile vnfPkg, ContentType contentType) throws FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException;
+    void uploadVnfPkg(String vnfPkgInfoId, MultipartFile vnfPkg, ContentType contentType, boolean isInternalRequest) throws FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException;
 }

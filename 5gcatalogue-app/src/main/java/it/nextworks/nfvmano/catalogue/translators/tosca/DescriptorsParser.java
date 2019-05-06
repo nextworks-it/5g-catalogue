@@ -16,6 +16,7 @@
 package it.nextworks.nfvmano.catalogue.translators.tosca;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,6 +48,7 @@ public class DescriptorsParser {
             throws JsonParseException, JsonMappingException, IOException {
 
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true);
 
         DescriptorTemplate descriptorTemplate = mapper.readValue(file, DescriptorTemplate.class);
 
