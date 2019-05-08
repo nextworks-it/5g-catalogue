@@ -160,6 +160,7 @@ public interface NsdApi {
     ResponseEntity<?> deletePNFDInfo(
             @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId);
 
+    //produces = {"application/json","application/yaml", "application/zip"}
     @ApiOperation(value = "Get PNFD Content", nickname = "getPNFD", notes = "The GET method fetches the content of the PNFD.", response = Object.class, tags = {})
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "On success, the content of the PNFD is returned. The payload body shall contain a copy of the file representing the PNFD. The \"Content-Type\" HTTP header shall be set to \"text/plain\".", response = Object.class),
@@ -167,8 +168,7 @@ public interface NsdApi {
             @ApiResponse(code = 404, message = "Status 404", response = ProblemDetails.class),
             @ApiResponse(code = 409, message = "Status 409", response = ProblemDetails.class),
             @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
-    @RequestMapping(value = "/nsd/v1/pnf_descriptors/{pnfdInfoId}/pnfd_content", produces = {"application/json",
-            "application/yaml", "application/zip"}, method = RequestMethod.GET)
+    @RequestMapping(value = "/nsd/v1/pnf_descriptors/{pnfdInfoId}/pnfd_content", produces = {"text/plain", "application/yaml", "application/json"}, method = RequestMethod.GET)
     ResponseEntity<?> getPNFD(
             @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId);
 

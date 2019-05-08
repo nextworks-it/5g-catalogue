@@ -26,7 +26,7 @@ function getJsonFromURL(resourceUrl, callback, params) {
     };
 
     $.ajax(settings).done(function (response) {
-        console.log(response);
+        //console.log(response);
         callback(response, params);
     }).fail(function (response) {
         console.log(response);
@@ -46,7 +46,7 @@ function getFileFromURL(resourceUrl, callback, params) {
     };
 
     $.ajax(settings).done(function (response) {
-        console.log(response);
+        //console.log(response);
         callback(response, params);
     }).fail(function (response) {
         console.log(response);
@@ -94,6 +94,32 @@ function postJsonToURL(resourceUrl, jsonData, callback, params) {
             "Content-Type": "application/json"
         },
         "data": jsonData
+    };
+
+    $.ajax(settings).done(function (response) {
+        console.log(response);
+        if (callback == showResultMessage) {
+            callback(true, params[0]);
+        } else {
+            callback(response, params);
+        }
+    }).fail(function (response) {
+        console.log(response);
+        if (callback == showResultMessage) {
+            var errorMsg = "Status code: " + response.responseJSON.status;
+            errorMsg +=  " Reason: " + response.responseJSON.detail;
+            callback(false, errorMsg);
+        }
+    });
+}
+
+function postToURL(resourceUrl, callback, params) {
+
+    var settings = {
+        "async": true,
+        "crossDomain": true,
+        "url": resourceUrl,
+        "method": "POST",
     };
 
     $.ajax(settings).done(function (response) {

@@ -27,4 +27,6 @@ public interface NsdInfoRepository extends JpaRepository<NsdInfoResource, UUID> 
 
     Optional<NsdInfoResource> findByNsdId(UUID nsdId);
 
+    Optional<NsdInfoResource> findByNsdIdAndNsdVersion(UUID nsdId, String nsdVersion);
+
 }

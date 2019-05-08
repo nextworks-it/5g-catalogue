@@ -21,8 +21,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import it.nextworks.nfvmano.catalogue.messages.*;
 import it.nextworks.nfvmano.catalogue.plugins.KafkaConnector;
+import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.Cat2CatOperationService;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
-import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
 import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
 import org.slf4j.Logger;
@@ -65,6 +65,9 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 
     @Autowired
     private VnfPackageManagementService vnfPackageManagementService;
+
+    @Autowired
+    private Cat2CatOperationService cat2CatOperationService;
 
     public NotificationManager() {
         log.debug("Building notification manager.");
@@ -137,7 +140,7 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 
     @Override
     public void sendNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification)
-            throws FailedOperationException, MalformattedElementException, MethodNotImplementedException {
+            throws FailedOperationException {
         try {
             log.info("Sending nsdOnBoardingNotification for NSD " + notification.getNsdId());
 
@@ -197,7 +200,7 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 
     @Override
     public void sendPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification)
-            throws MethodNotImplementedException, FailedOperationException {
+            throws FailedOperationException {
         try {
             log.info("Sending pnfdOnBoardingNotification for PNFD " + notification.getPnfdId());
 
@@ -286,6 +289,26 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
                 log.debug("Consumers internal mapping successfully updated for operationId {} and plugin {}.",
                         notification.getOperationId(), notification.getPluginId());
                 break;
+            case C2C:
+                try {
+                    log.debug("Updating NsdInfoResource with plugin {} operation status {} for operation {}.",
+                            notification.getPluginId(), notification.getOpStatus(),
+                            notification.getOperationId().toString());
+                    cat2CatOperationService.updateNsdInfoOperationStatus(notification.getNsdInfoId(), notification.getPluginId(),
+                            notification.getOpStatus(), notification.getType());
+                    log.debug("NsdInfoResource successfully updated with plugin {} operation status {} for operation {}.",
+                            notification.getPluginId(), notification.getOpStatus(),
+                            notification.getOperationId().toString());
+                } catch (NotExistingEntityException e) {
+                    log.error(e.getMessage());
+                }
+                log.debug("Updating consumers internal mapping for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                cat2CatOperationService.updateOperationInfoInConsumersMap(notification.getOperationId(), notification.getOpStatus(),
+                        notification.getPluginId(), notification.getNsdInfoId(), notification.getType());
+                log.debug("Consumers internal mapping successfully updated for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                break;
             case LOCAL:
                 log.error("Nsd LOCAL onboarding notification not handled here, REMOTE onboarding message expected.");
                 break;
@@ -324,6 +347,16 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
                 log.debug("Updating consumers internal mapping for operationId {} and plugin {}.",
                         notification.getOperationId(), notification.getPluginId());
                 nsdMgmtService.updateOperationInfoInConsumersMap(notification.getOperationId(), notification.getOpStatus(),
+                        notification.getPluginId(), notification.getNsdInfoId(), notification.getType());
+                log.debug("Consumers internal mapping successfully updated for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                break;
+            case C2C:
+                log.info("NSD {} with info id {} successfully removed by plugin {}.",
+                        notification.getNsdId(), notification.getNsdInfoId(), notification.getPluginId());
+                log.debug("Updating consumers internal mapping for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                cat2CatOperationService.updateOperationInfoInConsumersMap(notification.getOperationId(), notification.getOpStatus(),
                         notification.getPluginId(), notification.getNsdInfoId(), notification.getType());
                 log.debug("Consumers internal mapping successfully updated for operationId {} and plugin {}.",
                         notification.getOperationId(), notification.getPluginId());
@@ -374,6 +407,26 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
                 log.debug("Consumers internal mapping successfully updated for operationId {} and plugin {}.",
                         notification.getOperationId(), notification.getPluginId());
                 break;
+            case C2C:
+                try {
+                    log.debug("Updating PnfdInfoResource with plugin {} operation status {} for operation {}.",
+                            notification.getPluginId(), notification.getOpStatus(),
+                            notification.getOperationId().toString());
+                    cat2CatOperationService.updatePnfdInfoOperationStatus(notification.getPnfdInfoId(), notification.getPluginId(),
+                            notification.getOpStatus(), notification.getType());
+                    log.debug("PnfdInfoResource successfully updated with plugin {} operation status {} for operation {}.",
+                            notification.getPluginId(), notification.getOpStatus(),
+                            notification.getOperationId().toString());
+                } catch (NotExistingEntityException e) {
+                    log.error(e.getMessage());
+                }
+                log.debug("Updating consumers internal mapping for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                cat2CatOperationService.updateOperationInfoInConsumersMap(notification.getOperationId(), notification.getOpStatus(),
+                        notification.getPluginId(), notification.getPnfdInfoId(), notification.getType());
+                log.debug("Consumers internal mapping successfully updated for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                break;
             case LOCAL:
                 log.error("Pnfd LOCAL onboarding notification not handled here, REMOTE onboarding message expected.");
                 break;
@@ -406,6 +459,16 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
                 log.debug("Updating consumers internal mapping for operationId {} and plugin {}.",
                         notification.getOperationId(), notification.getPluginId());
                 nsdMgmtService.updateOperationInfoInConsumersMap(notification.getOperationId(), notification.getOpStatus(),
+                        notification.getPluginId(), notification.getPnfdInfoId(), notification.getType());
+                log.debug("Consumers internal mapping successfully updated for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                break;
+            case C2C:
+                log.info("PNFD {} with info id {} successfully removed by plugin {}.",
+                        notification.getPnfdId(), notification.getPnfdInfoId(), notification.getPluginId());
+                log.debug("Updating consumers internal mapping for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                cat2CatOperationService.updateOperationInfoInConsumersMap(notification.getOperationId(), notification.getOpStatus(),
                         notification.getPluginId(), notification.getPnfdInfoId(), notification.getType());
                 log.debug("Consumers internal mapping successfully updated for operationId {} and plugin {}.",
                         notification.getOperationId(), notification.getPluginId());
@@ -457,6 +520,26 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
                 log.debug("Consumers internal mapping successfully updated for operationId {} and plugin {}.",
                         notification.getOperationId(), notification.getPluginId());
                 break;
+            case C2C:
+                try {
+                    log.debug("Updating VnfPkgInfoResource with plugin {} operation status {} for operation {}.",
+                            notification.getPluginId(), notification.getOpStatus(),
+                            notification.getOperationId().toString());
+                    cat2CatOperationService.updateVnfPkgInfoOperationStatus(notification.getVnfPkgInfoId(), notification.getPluginId(),
+                            notification.getOpStatus(), notification.getType());
+                    log.debug("VnfPkgInfoResource successfully updated with plugin {} operation status {} for operation {}.",
+                            notification.getPluginId(), notification.getOpStatus(),
+                            notification.getOperationId().toString());
+                } catch (NotExistingEntityException e) {
+                    log.error(e.getMessage());
+                }
+                log.debug("Updating consumers internal mapping for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                cat2CatOperationService.updateOperationInfoInConsumersMap(notification.getOperationId(), notification.getOpStatus(),
+                        notification.getPluginId(), notification.getVnfPkgInfoId(), notification.getType());
+                log.debug("Consumers internal mapping successfully updated for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                break;
             case LOCAL:
                 log.error("Nsd LOCAL onboarding notification not handled here, REMOTE onboarding message expected.");
                 break;
@@ -498,6 +581,16 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
                 log.debug("Consumers internal mapping successfully updated for operationId {} and plugin {}.",
                         notification.getOperationId(), notification.getPluginId());
                 break;
+            case C2C:
+                log.info("VNF Pkg {} with info id {} successfully removed by plugin {}.",
+                        notification.getVnfdId(), notification.getVnfPkgInfoId(), notification.getPluginId());
+                log.debug("Updating consumers internal mapping for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                cat2CatOperationService.updateOperationInfoInConsumersMap(notification.getOperationId(), notification.getOpStatus(),
+                        notification.getPluginId(), notification.getVnfPkgInfoId(), notification.getType());
+                log.debug("Consumers internal mapping successfully updated for operationId {} and plugin {}.",
+                        notification.getOperationId(), notification.getPluginId());
+                break;
             case LOCAL:
                 log.error("VNF Pkg LOCAL deletion notification not handled here, REMOTE onboarding message expected.");
                 break;
@@ -508,7 +601,7 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
     }
 
     @Override
-    public void sendVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) throws MethodNotImplementedException, FailedOperationException {
+    public void sendVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) throws FailedOperationException {
         try {
             log.info("Sending vnfPkgOnBoardingNotification for VNF Pkg with info Id: " + notification.getVnfPkgInfoId());
 

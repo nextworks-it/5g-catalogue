@@ -96,6 +96,10 @@ function getVNF(vnfInfoId, elemId, callback) {
     getFileFromURL("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "/vnfd", callback, [vnfInfoId, elemId]);
 }
 
+function exportVnfPkg(vnfPkgInfoId, resId) {
+    postToURL("http://" + catalogueAddr + ":8083/catalogue/cat2catOperation/exportVnfPkg/" + vnfPkgInfoId, showResultMessage, ["Request for uploading VNF Pkg with vnfPkgInfoId " + vnfPkgInfoId + " successfully submitted to public 5G Catalogue."])
+}
+
 function showVnfGraphCanvas(data,params) {
     //console.log(params[0]);
     //console.log(params[1]);
@@ -132,19 +136,38 @@ function createVnfInfosTable(data, params) {
         return;
     }
     var btnFlag = true;
-    var header = createTableHeaderByValues(['Name', 'Version', 'Provider', 'Operational State', 'Onboarding State', 'MANOs Onboarding State', 'Actions'], btnFlag, false);
-    var cbacks = ['openVNF_', 'showVnfGraphCanvas','updateVnfInfo_', 'deleteVnfInfo'];
-    var names = ['View VNF', 'View VNF Graph', 'Change VNF OpState', 'Delete VNF'];
-    var columns = [['vnfProductName'], ['vnfdVersion'], ['vnfProvider'], ['operationalState'], ['onboardingState'], ['manosOnboardingStatus']];
+    var header = "";
+    var cbacks = [];
+    var names = [];
+    var columns = [];
+
+    if (isPublic) {
+        console.log("PUBLIC CATALOGUE");
+        header = createTableHeaderByValues(['Name', 'Version', 'Provider', 'Operational State', 'Onboarding State', 'Actions'], btnFlag, false);
+        cbacks = ['openVNF_', 'showVnfGraphCanvas','updateVnfInfo_', 'deleteVnfInfo'];
+        names = ['View VNF', 'View VNF Graph', 'Change VNF OpState', 'Delete VNF'];
+        columns = [['vnfProductName'], ['vnfdVersion'], ['vnfProvider'], ['operationalState'], ['onboardingState', 'manosOnboardingStatus']];
+    } else {
+        console.log("PRIVATE CATALOGUE");
+        header = createTableHeaderByValues(['Name', 'Version', 'Provider', 'Operational State', 'Onboarding State', 'Actions'], btnFlag, false);
+        cbacks = ['openVNF_', 'showVnfGraphCanvas','updateVnfInfo_', 'exportVnfPkg', 'deleteVnfInfo'];
+        names = ['View VNF', 'View VNF Graph', 'Change VNF OpState', 'Upload VNF Pkg', 'Delete VNF'];
+        columns = [['vnfProductName'], ['vnfdVersion'], ['vnfProvider'], ['operationalState'], ['onboardingState', 'c2cOnboardingState', 'manosOnboardingStatus']]; 
+    }
+    
 
     table.innerHTML = header + '<tbody>';
 
-    var rows = '';
+    //var rows = '';
     for (var i in data) {
-        rows +=  createVnfInfosTableRow(data[i], btnFlag, cbacks, names, columns, resId);
+        table.innerHTML +=  createVnfInfosTableRow(data[i], btnFlag, cbacks, names, columns, resId);
+
+        if(isPublic == false && data[i]['c2cOnboardingState'].indexOf("UNPUBLISHED") < 0) {
+            disableExpBtn("expBtn_" + data[i]['id']);
+        }
     }
 
-    table.innerHTML += rows + '</tbody>';
+    table.innerHTML += '</tbody>';
 }
 
 function createVnfInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
@@ -157,27 +180,48 @@ function createVnfInfosTableRow(data, btnFlag, cbacks, names, columns, resId) {
         btnText += createLinkSet(data['id'], resId, names, cbacks);
         createUpdateVnfInfoModal(data['id'], data['operationalState'], "updateVnfInfosModals");
         creteVNFViewModal(data['id'], "vnfViewModals");
-        createVnfCanvas(data);
+        createVnfCanvas(data); 
     }
 
 	text += '<tr>';
 	for (var i in columns) {
 	    var values = [];
-	    getValuesFromKeyPath(data, columns[i], values);
+	    if (columns[i][0].indexOf('onboardingState') >= 0) {
+            for (var j in columns[i]) {
+                values.push(data[columns[i][j]]);
+            }
+        } else {
+            getValuesFromKeyPath(data, columns[i], values);
+        }
 	    //console.log(values);
 
 	    var subText = '<td>';
-	    var subTable = '<table class="table table-bordered">';
+	    var subTable = '<table class="table">';
 
 	    if (data.hasOwnProperty(columns[i][0])) {
             if(values instanceof Array && values.length > 1) {
-                for (var v in values) {
-                    subTable += '<tr><td>' + values[v] + '</td><tr>';
+                if (columns[i][0].indexOf('onboardingState') >= 0 && isPublic) {
+                    subTable += createTableHeaderByValues(['Local', 'MANOs'], false, false);
+                } else {
+                    subTable += createTableHeaderByValues(['Local', 'Public 5G Catalogue', 'MANOs'], false, false);
                 }
-                subText += subTable + '</table>';
+                subTable += '<tr>';
+                for (var v in values) {
+                    if (values[v] instanceof Object) {
+                        var subSubTable = '<td><table class="borderless">'; 
+                        $.each(values[v], function(key, value) {
+                            subSubTable += '<tr><td>'+ key + ' > ' + value + '</td><tr>';
+                        });
+                        subSubTable += '</table></td>';
+                        subTable += subSubTable;
+                    } else {
+                        subTable += '<td>' + values[v] + '</td>';
+                    }
+                }
+                subText += subTable + '</tr></table>';
             } else if (values[0] instanceof Object) {
                 $.each(values[0], function(key, value) {
-                    subTable += '<tr><td>'+ key + '</td><td>' + value + '</td><tr>';
+                    subTable += '<tr><td>'+ key + '</td><td> > </td><td>' + value + '</td><tr>';
                 });
                 subText += subTable + '</table>';
             } else {
@@ -254,7 +298,7 @@ function creteVNFViewModal(vnfInfoId, modalsContainerId) {
 function fillVNFViewModal(data, params) {
 
     var yamlObj = jsyaml.load(data);
-    console.log(yamlObj);
+    //console.log(yamlObj);
 
     var yaml = jsyaml.dump(data, {
         indent: 4,
@@ -264,7 +308,7 @@ function fillVNFViewModal(data, params) {
         }
     });
 
-    console.log(yaml);
+    //console.log(yaml);
     var vnfInfoId = params[0];
     var textArea = document.getElementById(params[1]);
     textArea.value = yaml;

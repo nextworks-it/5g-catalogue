@@ -27,4 +27,6 @@ public interface VnfPkgInfoRepository extends JpaRepository<VnfPkgInfoResource, 
 
     Optional<VnfPkgInfoResource> findByVnfdId(UUID vnfdId);
 
+    Optional<VnfPkgInfoResource> findByVnfdIdAndVnfdVersion(UUID vnfdId, String vnfdVersion);
+
 }
