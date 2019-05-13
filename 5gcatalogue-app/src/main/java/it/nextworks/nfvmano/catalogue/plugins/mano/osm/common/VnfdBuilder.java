@@ -48,7 +48,7 @@ public class VnfdBuilder {
         for (Map.Entry<String, VnfExtCpNode> cpNode : cpNodes.entrySet()) {
             List<String> exVirtualLinks = cpNode.getValue().getRequirements().getExternalVirtualLink();
             for (String exVirtualLink : exVirtualLinks)
-                if (exVirtualLink.endsWith("_mgmt") || exVirtualLink.startsWith("mgmt_"))
+                if (exVirtualLink.endsWith("_mgmt") || exVirtualLink.startsWith("mgmt_") || exVirtualLink.equalsIgnoreCase("default"))
                     mgmtInt.setCp(cpNode.getKey());
         }
 
@@ -69,7 +69,7 @@ public class VnfdBuilder {
         osmVduInterface.setPosition(++interfacesPosition);
         List<String> exVirtualLinks = cpNode.getRequirements().getExternalVirtualLink();
         for (String exVirtualLink : exVirtualLinks)
-            if (exVirtualLink.endsWith("_mgmt") || exVirtualLink.startsWith("mgmt_"))
+            if (exVirtualLink.endsWith("_mgmt") || exVirtualLink.startsWith("mgmt_") || exVirtualLink.equalsIgnoreCase("default"))
                 osmVduInterface.setMgmtInterface(true);
 
         return osmVduInterface;
