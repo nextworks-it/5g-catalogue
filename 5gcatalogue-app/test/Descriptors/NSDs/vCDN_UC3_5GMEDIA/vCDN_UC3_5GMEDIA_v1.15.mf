@@ -1,0 +1,18 @@
+metadata:
+	ns_name: vCDN_UC3_5GMEDIA_v1.15
+	ns_provider_id: NXW
+	ns_package_version: 1.15
+	ns_release_date_time: 2017-01-01T10:00+03:00
+
+monitoring:
+	main_monitoring_descriptor:
+		Source: Files/Monitoring/monitoringParameters.json
+
+actions:
+	main_actions_descriptor:
+		Source: Files/Monitoring/actions.json
+
+actionRules:
+	main_actionRules_descriptor:
+		Source: Files/Monitoring/actionRules.json
+

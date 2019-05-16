@@ -74,6 +74,10 @@ public class NsdInfoResource {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Fetch(FetchMode.SELECT)
+    private List<String> nsdPkgFilename = new ArrayList<>();
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     private Map<String, String> userDefinedData = new HashMap<>();
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -308,6 +312,14 @@ public class NsdInfoResource {
 
     public void addNsdFilename(String filename) {
         this.nsdFilename.add(filename);
+    }
+
+    public List<String> getNsdPkgFilename() {
+        return nsdPkgFilename;
+    }
+
+    public void addNsdPkgFilename(String nsdPkgFilename) {
+        this.nsdPkgFilename.add(nsdPkgFilename);
     }
 
     /**

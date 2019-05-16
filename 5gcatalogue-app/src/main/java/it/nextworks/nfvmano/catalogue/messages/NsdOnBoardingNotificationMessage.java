@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import it.nextworks.nfvmano.catalogue.translators.tosca.elements.CSARInfo;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 
 import java.util.ArrayList;
@@ -32,6 +33,9 @@ public class NsdOnBoardingNotificationMessage extends CatalogueMessage {
 
     @JsonInclude(Include.NON_NULL)
     private String pluginId;
+
+    @JsonInclude(Include.NON_NULL)
+    private CSARInfo csarInfo;
 
     @JsonInclude(Include.NON_EMPTY)
     private List<String> includedVnfds = new ArrayList<>();
@@ -80,6 +84,15 @@ public class NsdOnBoardingNotificationMessage extends CatalogueMessage {
     @JsonProperty("notifierId")
     public String getPluginId() {
         return pluginId;
+    }
+
+    @JsonProperty("csarInfo")
+    public CSARInfo getCsarInfo() {
+        return csarInfo;
+    }
+
+    public void setCsarInfo(CSARInfo csarInfo) {
+        this.csarInfo = csarInfo;
     }
 
     public List<String> getIncludedVnfds() {

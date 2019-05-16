@@ -181,7 +181,7 @@ public class ToscaTranslatorTests {
 
             DescriptorTemplate descriptorTemplate = null;
             try {
-                descriptorTemplate = archiveParser.archiveToMainDescriptor(mp_file).getMst();
+                descriptorTemplate = archiveParser.archiveToMainDescriptor(mp_file, true).getMst();
             } catch (MalformattedElementException e) {
                 System.out.println("Unable to parse CSAR: " + e.getMessage());
                 e.printStackTrace();

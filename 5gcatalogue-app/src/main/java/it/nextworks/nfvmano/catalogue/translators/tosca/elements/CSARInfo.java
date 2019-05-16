@@ -9,11 +9,11 @@ public class CSARInfo {
     @JsonIgnore
     private DescriptorTemplate mst;
 
-    @JsonProperty("vnfPkgFilename")
-    private String vnfPkgFilename;
+    @JsonProperty("packageFilename")
+    private String packageFilename;
 
-    @JsonProperty("vnfdFilename")
-    private String vnfdFilename;
+    @JsonProperty("descriptorFilename")
+    private String descriptorFilename;
 
     @JsonProperty("metaFilename")
     private String metaFilename;
@@ -32,20 +32,20 @@ public class CSARInfo {
         this.mst = mst;
     }
 
-    public String getVnfPkgFilename() {
-        return vnfPkgFilename;
+    public String getPackageFilename() {
+        return packageFilename;
     }
 
-    public void setVnfPkgFilename(String vnfPkgFilename) {
-        this.vnfPkgFilename = vnfPkgFilename;
+    public void setPackageFilename(String packageFilename) {
+        this.packageFilename = packageFilename;
     }
 
-    public String getVnfdFilename() {
-        return vnfdFilename;
+    public String getDescriptorFilename() {
+        return descriptorFilename;
     }
 
-    public void setVnfdFilename(String vnfdFilename) {
-        this.vnfdFilename = vnfdFilename;
+    public void setDescriptorFilename(String descriptorFilename) {
+        this.descriptorFilename = descriptorFilename;
     }
 
     public String getMetaFilename() {
