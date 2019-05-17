@@ -167,7 +167,16 @@ public class FileSystemStorageService {
                     dirPath = vnfPkgsLocation + "/" + descriptorId + "/" + version + "/" + filename.substring(0, filename.lastIndexOf("/"));
                 else
                     dirPath = nsdsLocation + "/" + descriptorId + "/" + version + "/" + filename.substring(0, filename.lastIndexOf("/"));
-                log.debug("Subdirectory: " + dirPath);
+                //create subdirectorie if doesn't exist
+                if (!Files.isDirectory(Paths.get(dirPath), LinkOption.NOFOLLOW_LINKS)) {
+                    try {
+                        Files.createDirectories(Paths.get(dirPath));
+                        log.debug("Subdirectory: " + dirPath + " created");
+                    } catch (IOException e) {
+                        log.error("Not able to create folder: " + dirPath);
+                        throw new FailedOperationException("Not able to create folder: " + dirPath);
+                    }
+                }
                 filename = filename.substring(filename.lastIndexOf("/") + 1);
                 log.debug("Going to create new file: " + filename);
                 newFile = newFile(dirPath, filename);
