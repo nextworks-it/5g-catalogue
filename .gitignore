@@ -34,3 +34,6 @@ nbdist/
 #### SWAGGER CODEGEN ###
 swagger-codegen
 apigen
+
+
+package.zip
