@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -63,7 +64,9 @@ public class NsdApiController implements NsdApi {
     }
 
     public ResponseEntity<?> createNsdInfo(
-            @ApiParam(value = "", required = true) @Valid @RequestBody CreateNsdInfoRequest body) {
+            @ApiParam(value = "", required = true)
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @Valid @RequestBody CreateNsdInfoRequest body) {
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             log.debug("Processing REST request to create an NSD info");
@@ -83,7 +86,7 @@ public class NsdApiController implements NsdApi {
                     "Accept header null or different from application/json"), HttpStatus.PRECONDITION_FAILED);
     }
 
-    public ResponseEntity<?> getNSDsInfo() {
+    public ResponseEntity<?> getNSDsInfo(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         log.debug("Processing REST request to retrieve all NSD infos");
         String accept = request.getHeader("Accept");
 
@@ -106,7 +109,7 @@ public class NsdApiController implements NsdApi {
     }
 
     public ResponseEntity<?> getNSDInfo(
-            @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId) {
+            @ApiParam(value = "", required = true) @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization, @PathVariable("nsdInfoId") String nsdInfoId) {
         String accept = request.getHeader("Accept");
 
         log.debug("Processing REST request to retrieve NSD info " + nsdInfoId);
@@ -139,7 +142,8 @@ public class NsdApiController implements NsdApi {
 
     public ResponseEntity<?> updateNSDInfo(
             @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
-            @ApiParam(value = "", required = true) @Valid @RequestBody NsdInfoModifications body) {
+            @ApiParam(value = "", required = true) @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @Valid @RequestBody NsdInfoModifications body) {
 
         log.debug("Processing REST request for Updating NSD info " + nsdInfoId);
         if (body == null) {
@@ -171,7 +175,7 @@ public class NsdApiController implements NsdApi {
     }
 
     public ResponseEntity<?> deleteNSDInfo(
-            @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId) {
+            @ApiParam(value = "", required = true) @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,  @PathVariable("nsdInfoId") String nsdInfoId) {
         String accept = request.getHeader("Accept");
         log.debug("Processing REST request to delete NSD info " + nsdInfoId);
         try {
@@ -202,7 +206,7 @@ public class NsdApiController implements NsdApi {
         }
     }
 
-    public ResponseEntity<?> getNSD(@ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
+    public ResponseEntity<?> getNSD(@ApiParam(value = "", required = true) @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization, @PathVariable("nsdInfoId") String nsdInfoId,
                                     @ApiParam(value = "The request may contain a \"Range\" HTTP header to obtain single range of bytes from the NSD file. This can be used to continue an aborted transmission.  If the NFVO does not support range requests, the NFVO shall ignore the 'Range\" header, process the GET request, and return the whole NSD file with a 200 OK response (rather than returning a 4xx error status code).") @RequestHeader(value = "Range", required = false) String range) {
         String accept = request.getHeader("Accept");
 
@@ -236,7 +240,8 @@ public class NsdApiController implements NsdApi {
 
     public ResponseEntity<?> uploadNSD(
             @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
-            @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
+            @ApiParam(value = "", required = true) @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @RequestParam("file") MultipartFile body,
             @ApiParam(value = "The payload body contains a copy of the file representing the NSD or a ZIP file that contains the file or multiple files representing the NSD, as specified above. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType) {
 
         log.debug("Processing REST request for Uploading NSD content in NSD info " + nsdInfoId);
@@ -297,7 +302,8 @@ public class NsdApiController implements NsdApi {
     }
 
     public ResponseEntity<?> createPNFDInfo(
-            @ApiParam(value = "", required = true) @Valid @RequestBody CreatePnfdInfoRequest body) {
+            @ApiParam(value = "", required = true) @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @Valid @RequestBody CreatePnfdInfoRequest body) {
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             log.debug("Processing REST request to create a PNFD info");
@@ -332,7 +338,9 @@ public class NsdApiController implements NsdApi {
     }
 
     public ResponseEntity<?> getPNFDsInfo(
-            @ApiParam(value = "Indicates to exclude the following complex attributes from the response. See clause 4.3.3 for details. The NFVO shall support this parameter. The following attributes shall be excluded from the PnfdInfo structure in the response body if this parameter is provided, or none of the parameters \"all_fields,\" \"fields\", \"exclude_fields\", \"exclude_default\" are provided: userDefinedData.") @Valid @RequestParam(value = "exclude_default", required = false) String excludeDefault,
+            @ApiParam(value = "Indicates to exclude the following complex attributes from the response. See clause 4.3.3 for details. The NFVO shall support this parameter. The following attributes shall be excluded from the PnfdInfo structure in the response body if this parameter is provided, or none of the parameters \"all_fields,\" \"fields\", \"exclude_fields\", \"exclude_default\" are provided: userDefinedData.")
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @Valid @RequestParam(value = "exclude_default", required = false) String excludeDefault,
             @ApiParam(value = "Include all complex attributes in the response. See clause 4.3.3 for details. The NFVO shall support this parameter.") @Valid @RequestParam(value = "all_fields", required = false) String allFields) {
         log.debug("Processing REST request to retrieve all PNFD infos");
         String accept = request.getHeader("Accept");
@@ -370,7 +378,8 @@ public class NsdApiController implements NsdApi {
     }
 
     public ResponseEntity<?> getPNFDInfo(
-            @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId) {
+            @ApiParam(value = "", required = true) @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @PathVariable("pnfdInfoId") String pnfdInfoId) {
         String accept = request.getHeader("Accept");
 
         log.debug("Processing REST request to retrieve PNFD info " + pnfdInfoId);
@@ -417,7 +426,8 @@ public class NsdApiController implements NsdApi {
 
     public ResponseEntity<PnfdInfoModifications> updatePNFDInfo(
             @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId,
-            @ApiParam(value = "", required = true) @Valid @RequestBody PnfdInfoModifications body) {
+            @ApiParam(value = "", required = true) @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @Valid @RequestBody PnfdInfoModifications body) {
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
@@ -434,7 +444,7 @@ public class NsdApiController implements NsdApi {
     }
 
     public ResponseEntity<?> deletePNFDInfo(
-            @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId) {
+            @ApiParam(value = "", required = true) @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization, @PathVariable("pnfdInfoId") String pnfdInfoId) {
         String accept = request.getHeader("Accept");
         log.debug("Processing REST request to delete PNFD info " + pnfdInfoId);
         try {
@@ -469,7 +479,7 @@ public class NsdApiController implements NsdApi {
     }
 
     public ResponseEntity<?> getPNFD(
-            @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId) {
+            @ApiParam(value = "", required = true) @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization, @PathVariable("pnfdInfoId") String pnfdInfoId) {
         String accept = request.getHeader("Accept");
 
         // TODO: consistency between accept values and input format when onboarding
@@ -516,7 +526,9 @@ public class NsdApiController implements NsdApi {
     public ResponseEntity<?> uploadPNFD(
             @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId,
             @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
-            @ApiParam(value = "The request shall set the \"Content-Type\" HTTP header to \"text/plain\".") @RequestHeader(value = "Content-Type", required = false) String contentType) {
+            @ApiParam(value = "The request shall set the \"Content-Type\" HTTP header to \"text/plain\".")
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @RequestHeader(value = "Content-Type", required = false) String contentType) {
         log.debug("Processing REST request for Uploading PNFD content in PNFD info " + pnfdInfoId);
 
         String accept = request.getHeader("Accept");
@@ -577,7 +589,8 @@ public class NsdApiController implements NsdApi {
 
 
     public ResponseEntity<NsdmSubscription> createSubscription(
-            @ApiParam(value = "", required = true) @Valid @RequestBody NsdmSubscriptionRequest body) {
+            @ApiParam(value = "", required = true) @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @Valid @RequestBody NsdmSubscriptionRequest body) {
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
@@ -593,7 +606,7 @@ public class NsdApiController implements NsdApi {
         return new ResponseEntity<NsdmSubscription>(HttpStatus.NOT_IMPLEMENTED);
     }
 
-    public ResponseEntity<List<NsdmSubscription>> getSubscriptions() {
+    public ResponseEntity<List<NsdmSubscription>> getSubscriptions(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
@@ -611,7 +624,8 @@ public class NsdApiController implements NsdApi {
 
 
     public ResponseEntity<NsdmSubscription> getSubscription(
-            @ApiParam(value = "", required = true) @PathVariable("subscriptionId") String subscriptionId) {
+            @ApiParam(value = "", required = true) @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @PathVariable("subscriptionId") String subscriptionId) {
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
@@ -628,7 +642,7 @@ public class NsdApiController implements NsdApi {
     }
 
     public ResponseEntity<Void> deleteSubscription(
-            @ApiParam(value = "", required = true) @PathVariable("subscriptionId") String subscriptionId) {
+            @ApiParam(value = "", required = true) @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization, @PathVariable("subscriptionId") String subscriptionId) {
         String accept = request.getHeader("Accept");
         return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
     }

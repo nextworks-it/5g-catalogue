@@ -25,9 +25,7 @@
     <div class="profile_pic">
       <img src="/5gcatalogue/images/5G-MEDIA_logo_short.png" alt="..." class="img-circle profile_img">
     </div>
-    <div class="profile_info">
-      <span>Welcome,</span>
-      <h2>Nextworks</h2>
+    <div class="profile_info" id="userName">
     </div>
   </div>
 
@@ -102,7 +100,7 @@
         </a>
         <ul class="dropdown-menu dropdown-usermenu pull-right">
           <li><a href="javascript:;"> Select Project</a></li>
-          <li><a href="login.html"><i class="fa fa-sign-out pull-right"></i> Log Out</a></li>
+          <li><a href="#" onclick="keycloak.logout()"><i class="fa fa-sign-out pull-right"></i> Log Out</a></li>
         </ul>
       </li>
     </ul>

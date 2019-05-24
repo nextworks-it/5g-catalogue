@@ -41,7 +41,20 @@
 <script src="/5gcatalogue/plugin/pnfd_utils.js"></script>
 <script src="/5gcatalogue/plugin/vnfd_utils.js"></script>
 <script src="/5gcatalogue/plugin/login_utils.js"></script>
+<script src="/5gcatalogue/plugin/kc_login_utils.js"></script>
 <!--script src="/5gcatalogue/plugin/require.js"></script-->
 
 <!-- Js-Yaml -->
 <script src="/5gcatalogue/plugin/js-yaml/dist/js-yaml.min.js"></script>
+
+<!-- keycloak-js -->
+<script src="/5gcatalogue/plugin/keycloak-js-bower/dist/keycloak.js"></script>
+<script>
+    var keycloak = Keycloak({
+        url: 'http://10.20.8.21:8080/auth/',
+        realm: '5gcity',
+        clientId: '5gcatalogue'
+    });
+    keycloak.init({onLoad: 'login-required', checkLoginIframe: false});
+</script>
+<script>storeUserInfo();</script>
