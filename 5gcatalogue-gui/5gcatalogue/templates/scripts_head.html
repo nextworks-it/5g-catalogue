@@ -55,6 +55,41 @@
         realm: '5gcity',
         clientId: '5gcatalogue'
     });
-    keycloak.init({onLoad: 'login-required', checkLoginIframe: false});
+    var loadData = function () {
+        //document.getElementById('userName').innerHTML = keycloak.subject;
+        if (keycloak.idToken) {
+            //document.getElementById('profileType').innerHTML = 'IDToken';
+            document.getElementById('userName').innerHTML = '<b>' + keycloak.idTokenParsed.preferred_username + '</b>';
+            document.getElementById('userNameBar').innerHTML = '<b>' + keycloak.idTokenParsed.preferred_username + '</b>';
+            console.log("idToken: " + keycloak.idToken);
+            console.log("Token: " +  keycloak.token);
+            setCookie("TOKEN", keycloak.token, 1);
+            //document.getElementById('email').innerHTML = keycloak.idTokenParsed.email;
+            //document.getElementById('name').innerHTML = keycloak.idTokenParsed.name;
+            //document.getElementById('givenName').innerHTML = keycloak.idTokenParsed.given_name;
+            //document.getElementById('familyName').innerHTML = keycloak.idTokenParsed.family_name;
+        } else {
+            //keycloak.loadUserProfile(function() {
+            //    document.getElementById('profileType').innerHTML = 'Account Service';
+            //    document.getElementById('username').innerHTML = keycloak.profile.username;
+            //    document.getElementById('email').innerHTML = keycloak.profile.email;
+            //    document.getElementById('name').innerHTML = keycloak.profile.firstName + ' ' + keycloak.profile.lastName;
+            //    document.getElementById('givenName').innerHTML = keycloak.profile.firstName;
+            //    document.getElementById('familyName').innerHTML = keycloak.profile.lastName;
+            //}, function() {
+            //    document.getElementById('profileType').innerHTML = 'Failed to retrieve user details. Please enable claims or account role';
+            //});
+        }
+    };
+    var loadFailure = function () {
+        showResultMessage(false, "Failed to load user data");
+    };
+    var reloadData = function () {
+        keycloak.updateToken(10)
+                .success(loadData)
+                .error(function() {
+                    showResultMessage(false, "Failed to load user data");
+                });
+    }
+    keycloak.init({onLoad: 'login-required', checkLoginIframe: false}).success(reloadData);
 </script>
-<script>storeUserInfo();</script>

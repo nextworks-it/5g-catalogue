@@ -62,6 +62,24 @@ function clearForms(parentId, flag) {
 	}
 }
 
+function redirectToError(errorType) {
+	//var path = location.pathname;
+	var hostname = '/5gcatalogue/';
+	var new_path = '';
+  
+	/*var steps_back = path.split('/');
+	  console.log(steps_back.length);
+		  
+	  for (var i = 0; i < steps_back.length - stepsToRoot; i++) {
+		  new_path += '../';
+	  }*/
+  
+	//new_path += errorType + '.html';
+	new_path += hostname + errorType + '.html';
+	//console.log(new_path);
+	location.href = new_path;
+}
+
 function getURLParameter(name) {
 	return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)')
 							.exec(location.search) || [ , "" ])[1]

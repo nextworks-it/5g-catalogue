@@ -15,7 +15,7 @@
 */
 
 function getAllVnfInfos(elemId, callback, resId) {
-    getJsonFromURL("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages", callback, [elemId, resId]);
+    getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages", callback, [elemId, resId]);
 }
 
 function getVnfInfo(vnfInfoId, callback, elemId) {

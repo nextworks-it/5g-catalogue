@@ -39,7 +39,7 @@ function failedLogin(response) {
 function logout() {
     deleteCookie('username');
     deleteCookie('role');
-    deleteCookie('JSESSIONID');
+    deleteCookie('TOKEN');
     
     redirectToError('index');
 }
