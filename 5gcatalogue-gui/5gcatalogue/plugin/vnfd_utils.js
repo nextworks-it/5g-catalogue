@@ -19,7 +19,7 @@ function getAllVnfInfos(elemId, callback, resId) {
 }
 
 function getVnfInfo(vnfInfoId, callback, elemId) {
-    getJsonFromURL("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId, callback, [elemId]);
+    getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId, callback, [elemId]);
 }
 
 function fillVNFsCounter(data, params) {
@@ -30,7 +30,7 @@ function fillVNFsCounter(data, params) {
 }
 
 function deleteVnfInfo(vnfInfoId, resId) {
-    deleteRequestToURL("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId, showResultMessage, ["VNF with vnfInfoID " + vnfInfoId + " successfully deleted."]);
+    deleteRequestToURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId, showResultMessage, ["VNF with vnfInfoID " + vnfInfoId + " successfully deleted."]);
 }
 
 function updateVnfInfo(vnfInfoId, elemId) {
@@ -41,7 +41,7 @@ function updateVnfInfo(vnfInfoId, elemId) {
     var json = JSON.stringify(jsonObj, null, 4);
 
     //console.log("VnfInfoModifications: " + json);
-    patchJsonRequestToURL("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId, json, showResultMessage, ["VNF with vnfInfoId " + vnfInfoId + " successfully updated."]);
+    patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId, json, showResultMessage, ["VNF with vnfInfoId " + vnfInfoId + " successfully updated."]);
 }
 
 function loadVNFFile(elemId, resId) {
@@ -59,7 +59,7 @@ function createVnfInfoId(file, resId) {
     var jsonObj = {"userDefinedData" : {} };
     var json = JSON.stringify(jsonObj, null, 4);
     //console.log(json)
-    postJsonToURL("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages", json, uploadVnfContent, [file, resId]);
+    postJsonToURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages", json, uploadVnfContent, [file, resId]);
 }
 
 function uploadVnfContent(data, params) {
@@ -70,7 +70,7 @@ function uploadVnfContent(data, params) {
     formData.append("pippo","pluto");
     var vnfInfoId = data['id'];
 
-    putFileToURL("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "/package_content", formData, showResultMessage, ["VNF with vnfInfoId " + vnfInfoId + " successfully updated."]);
+    putFileToURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "/package_content", formData, showResultMessage, ["VNF with vnfInfoId " + vnfInfoId + " successfully updated."]);
 }
 
 function getDescription(descrId) {
@@ -93,11 +93,11 @@ function readVNF(graphId) {
 }
 
 function getVNF(vnfInfoId, elemId, callback) {
-    getFileFromURL("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "/vnfd", callback, [vnfInfoId, elemId]);
+    getFileFromURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "/vnfd", callback, [vnfInfoId, elemId]);
 }
 
 function exportVnfPkg(vnfPkgInfoId, resId) {
-    postToURL("http://" + catalogueAddr + ":8083/catalogue/cat2catOperation/exportVnfPkg/" + vnfPkgInfoId, showResultMessage, ["Request for uploading VNF Pkg with vnfPkgInfoId " + vnfPkgInfoId + " successfully submitted to public 5G Catalogue."])
+    postToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/cat2catOperation/exportVnfPkg/" + vnfPkgInfoId, showResultMessage, ["Request for uploading VNF Pkg with vnfPkgInfoId " + vnfPkgInfoId + " successfully submitted to public 5G Catalogue."])
 }
 
 function showVnfGraphCanvas(data,params) {

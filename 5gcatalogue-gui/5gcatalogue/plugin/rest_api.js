@@ -113,61 +113,28 @@ function getFileFromURL(resourceUrl, callback, params) {
 }
 
 function getFileFromURLWithAuth(resourceUrl, callback, params) {
-    if (!checkUser('username')) {
-        redirectToError('401');
-    } else {
-        var settings = {
-            "async": true,
-            //"crossDomain": true,
-            "url": resourceUrl,
-            "method": "GET",
-            headers: {
-                Accept: "application/yaml; charset=utf-8"
-            },
-            xhrFields: {
-                withCredentials: true
-            }
-        };
+    var settings = {
+        "async": true,
+        //"crossDomain": true,
+        "url": resourceUrl,
+        "method": "GET",
+        headers: {
+            Accept: "application/yaml; charset=utf-8",
+            Authorization: "Bearer " + getCookie("TOKEN")
+        }
+    };
 
-        $.ajax(settings).done(function (response) {
-            //console.log(response);
-            callback(response, params);
-        }).fail(function (response) {
-            console.log(response);
-            if (response.status == 401) {
-                location.href = '/5gcatalogue/401.html';
-            } else if (response.status == 403) {
-                location.href = '/5gcatalogue/403.html';
-            }
-        });
-    }
-}
-
-function getFromURLWithAuth(resourceUrl, callback, params) {
-    if (!checkUser('username')) {
-        redirectToError('401');
-    } else {
-        var settings = {
-            "async": true,
-            "crossDomain": true,
-            "url": resourceUrl,
-            "method": "GET",
-            xhrFields: {
-                withCredentials: true
-            }
-        };
-
-        $.ajax(settings).done(function () {
-            callback(params);
-        }).fail(function (response) {
-            console.log(response);
-            if (response.status == 401) {
-                location.href = '/5gcatalogue/401.html';
-            } else if (response.status == 403) {
-                location.href = '/5gcatalogue/403.html';
-            }
-        });
-    }
+    $.ajax(settings).done(function (response) {
+        //console.log(response);
+        callback(response, params);
+    }).fail(function (response) {
+        console.log(response);
+        if (response.status == 401) {
+            location.href = '/5gcatalogue/401.html';
+        } else if (response.status == 403) {
+            location.href = '/5gcatalogue/403.html';
+        }
+    });
 }
 
 function postJsonToURL(resourceUrl, jsonData, callback, params) {
@@ -201,44 +168,38 @@ function postJsonToURL(resourceUrl, jsonData, callback, params) {
 }
 
 function postJsonToURLWithAuth(resourceUrl, jsonData, callback, params) {
-    if (!checkUser('username')) {
-        redirectToError('401');
-    } else {
-        var settings = {
-            "async": true,
-            //"crossDomain": true,
-            "url": resourceUrl,
-            "method": "POST",
-            "headers": {
-                Accept: "application/json, application/yaml",
-                "Content-Type": "application/json"
-            },
-            "data": jsonData,
-            xhrFields: {
-                withCredentials: true
-            }
-        };
+    var settings = {
+        "async": true,
+        //"crossDomain": true,
+        "url": resourceUrl,
+        "method": "POST",
+        "headers": {
+            Accept: "application/json, application/yaml",
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + getCookie("TOKEN")
+        },
+        "data": jsonData
+    };
 
-        $.ajax(settings).done(function (response) {
-            console.log(response);
-            if (callback == showResultMessage) {
-                callback(true, params[0]);
-            } else {
-                callback(response, params);
-            }
-        }).fail(function (response) {
-            console.log(response);
-            if (response.status == 401) {
-                location.href = '/5gcatalogue/401.html';
-            } else if (response.status == 403) {
-                location.href = '/5gcatalogue/403.html';
-            } else if (callback == showResultMessage) {
-                var errorMsg = "Status code: " + response.responseJSON.status;
-                errorMsg +=  " Reason: " + response.responseJSON.detail;
-                callback(false, errorMsg);
-            }
-        });
-    }
+    $.ajax(settings).done(function (response) {
+        console.log(response);
+        if (callback == showResultMessage) {
+            callback(true, params[0]);
+        } else {
+            callback(response, params);
+        }
+    }).fail(function (response) {
+        console.log(response);
+        if (response.status == 401) {
+            location.href = '/5gcatalogue/401.html';
+        } else if (response.status == 403) {
+            location.href = '/5gcatalogue/403.html';
+        } else if (callback == showResultMessage) {
+            var errorMsg = "Status code: " + response.responseJSON.status;
+            errorMsg +=  " Reason: " + response.responseJSON.detail;
+            callback(false, errorMsg);
+        }
+    });
 }
 
 function postToURL(resourceUrl, callback, params) {
@@ -267,71 +228,86 @@ function postToURL(resourceUrl, callback, params) {
 }
 
 function postToURLWithAuth(resourceUrl, callback, params) {
-    if (!checkUser('username')) {
-        redirectToError('401');
-    } else {
-        var settings = {
-            "async": true,
-            "crossDomain": true,
-            "url": resourceUrl,
-            "method": "POST",
-            xhrFields: {
-                withCredentials: true
-            }
-        };
+    var settings = {
+        "async": true,
+        "crossDomain": true,
+        "url": resourceUrl,
+        "method": "POST",
+        "headers" : {
+            Authorization: "Bearer " + getCookie("TOKEN")
+        }
+    };
 
-        $.ajax(settings).done(function (response) {
-            console.log(response);
-            if (callback == showResultMessage) {
-                callback(true, params[0]);
-            } else {
-                callback(response, params);
-            }
-        }).fail(function (response) {
-            console.log(response);
-            if (response.status == 401) {
-                location.href = '/5gcatalogue/401.html';
-            } else if (response.status == 403) {
-                location.href = '/5gcatalogue/403.html';
-            } else if (callback == showResultMessage) {
-                var errorMsg = "Status code: " + response.responseJSON.status;
-                errorMsg +=  " Reason: " + response.responseJSON.detail;
-                callback(false, errorMsg);
-            }
-        });
-    }
+    $.ajax(settings).done(function (response) {
+        console.log(response);
+        if (callback == showResultMessage) {
+            callback(true, params[0]);
+        } else {
+            callback(response, params);
+        }
+    }).fail(function (response) {
+        console.log(response);
+        if (response.status == 401) {
+            location.href = '/5gcatalogue/401.html';
+        } else if (response.status == 403) {
+            location.href = '/5gcatalogue/403.html';
+        } else if (callback == showResultMessage) {
+            var errorMsg = "Status code: " + response.responseJSON.status;
+            errorMsg +=  " Reason: " + response.responseJSON.detail;
+            callback(false, errorMsg);
+        }
+    });
+}
+
+function putJsonToURL(resourceUrl, jsonData, callback, params) {
+    var settings = {
+        "async": true,
+        "crossDomain": true,
+        "url": resourceUrl,
+        "method": "PUT",
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "data": jsonData
+    };
+
+    $.ajax(settings).done(function (response) {
+        console.log(response);
+        callback(response, params);
+    }).fail(function (response) {
+        console.log(response);
+        if (response.status == 401) {
+            location.href = '/5gcatalogue/401.html';
+        } else if (response.status == 403) {
+            location.href = '/5gcatalogue/403.html';
+        }
+    });
 }
 
 function putJsonToURLWithAuth(resourceUrl, jsonData, callback, params) {
-    if (!checkUser('username')) {
-        redirectToError('401');
-    } else {
-        var settings = {
-            "async": true,
-            "crossDomain": true,
-            "url": resourceUrl,
-            "method": "PUT",
-            "headers": {
-                "Content-Type": "application/json"
-            },
-            xhrFields: {
-                withCredentials: true
-            },
-            "data": jsonData
-        };
+    var settings = {
+        "async": true,
+        "crossDomain": true,
+        "url": resourceUrl,
+        "method": "PUT",
+        "headers": {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + getCookie("TOKEN")
+        },
+        "data": jsonData
+    };
 
-        $.ajax(settings).done(function (response) {
-            console.log(response);
-            callback(response, params);
-        }).fail(function (response) {
-            console.log(response);
-            if (response.status == 401) {
-                location.href = '/5gcatalogue/401.html';
-            } else if (response.status == 403) {
-                location.href = '/5gcatalogue/403.html';
-            }
-        });
-    }
+    $.ajax(settings).done(function (response) {
+        console.log(response);
+        callback(response, params);
+    }).fail(function (response) {
+        console.log(response);
+        if (response.status == 401) {
+            location.href = '/5gcatalogue/401.html';
+        } else if (response.status == 403) {
+            location.href = '/5gcatalogue/403.html';
+        }
+    });
 }
 
 function putFileToURL(resourceUrl, file, callback, params) {
@@ -364,71 +340,84 @@ function putFileToURL(resourceUrl, file, callback, params) {
 }
 
 function putFileToURLWithAuth(resourceUrl, file, callback, params) {
-    if (!checkUser('username')) {
-        redirectToError('401');
-    } else {
-        var settings = {
-            "async": true,
-            //"crossDomain": true,
-            "url": resourceUrl,
-            "method": "PUT",
-            data: file,
-            cache: false,
-            "contentType": false,
-            processData: false,
-            xhrFields: {
-                withCredentials: true
-            }
-        };
+    var settings = {
+        "async": true,
+        //"crossDomain": true,
+        "url": resourceUrl,
+        "method": "PUT",
+        data: file,
+        cache: false,
+        "contentType": false,
+        processData: false,
+        "headers" : {
+            Authorization: "Bearer " + getCookie("TOKEN")
+        }
+    };
 
-        $.ajax(settings).done(function (response) {
-            console.log(response);
-            if (callback == showResultMessage) {
-                callback(true, params[0]);
-            } else {
-                callback(response, params);
-            }
-        }).fail(function (response) {
-            console.log(response);
-            if (response.status == 401) {
-                location.href = '/5gcatalogue/401.html';
-            } else if (response.status == 403) {
-                location.href = '/5gcatalogue/403.html';
-            } else if (callback == showResultMessage) {
-                var errorMsg = "Status code: " + response.responseJSON.status;
-                errorMsg +=  " Reason: " + response.responseJSON.detail;
-                callback(false, errorMsg);
-            }
-        });
-    }
+    $.ajax(settings).done(function (response) {
+        console.log(response);
+        if (callback == showResultMessage) {
+            callback(true, params[0]);
+        } else {
+            callback(response, params);
+        }
+    }).fail(function (response) {
+        console.log(response);
+        if (response.status == 401) {
+            location.href = '/5gcatalogue/401.html';
+        } else if (response.status == 403) {
+            location.href = '/5gcatalogue/403.html';
+        } else if (callback == showResultMessage) {
+            var errorMsg = "Status code: " + response.responseJSON.status;
+            errorMsg +=  " Reason: " + response.responseJSON.detail;
+            callback(false, errorMsg);
+        }
+    });
+}
+
+function putToURL(resourceUrl, callback, params) {
+    var settings = {
+        "async": true,
+        "crossDomain": true,
+        "url": resourceUrl,
+        "method": "PUT"
+    };
+
+    $.ajax(settings).done(function (response) {
+        console.log(response);
+        callback(response);
+    }).fail(function (response) {
+        console.log(response);
+        if (response.status == 401) {
+            location.href = '/5gcatalogue/401.html';
+        } else if (response.status == 403) {
+            location.href = '/5gcatalogue/403.html';
+        }
+    });
 }
 
 function putToURLWithAuth(resourceUrl, callback, params) {
-    if (!checkUser('username')) {
-        redirectToError('401');
-    } else {
-        var settings = {
-            "async": true,
-            "crossDomain": true,
-            "url": resourceUrl,
-            "method": "PUT",
-            xhrFields: {
-                withCredentials: true
-            }
-        };
+    var settings = {
+        "async": true,
+        "crossDomain": true,
+        "url": resourceUrl,
+        "method": "PUT",
+        "headers": {
+            Authorization: "Bearer " + getCookie("TOKEN")
+        }
+    };
 
-        $.ajax(settings).done(function (response) {
-            console.log(response);
-            callback(response);
-        }).fail(function (response) {
-            console.log(response);
-            if (response.status == 401) {
-                location.href = '/5gcatalogue/401.html';
-            } else if (response.status == 403) {
-                location.href = '/5gcatalogue/403.html';
-            }
-        });
-    }
+    $.ajax(settings).done(function (response) {
+        console.log(response);
+        callback(response);
+    }).fail(function (response) {
+        console.log(response);
+        if (response.status == 401) {
+            location.href = '/5gcatalogue/401.html';
+        } else if (response.status == 403) {
+            location.href = '/5gcatalogue/403.html';
+        }
+    });
 }
 
 function deleteRequestToURL(resourceUrl, callback, params) {
@@ -457,39 +446,35 @@ function deleteRequestToURL(resourceUrl, callback, params) {
 }
 
 function deleteRequestToURLWithAuth(resourceUrl, callback, params) {
-    if (!checkUser('username')) {
-        redirectToError('401');
-    } else {
-        var settings = {
-            "async": true,
-            //"crossDomain": true,
-            "url": resourceUrl,
-            "method": "DELETE",
-            xhrFields: {
-                withCredentials: true
-            }
-        };
+    var settings = {
+        "async": true,
+        //"crossDomain": true,
+        "url": resourceUrl,
+        "method": "DELETE",
+        "headers": {
+            Authorization: "Bearer " + getCookie("TOKEN")
+        }
+    };
 
-        $.ajax(settings).done(function (response) {
-            console.log(response);
-            if (callback == showResultMessage) {
-                callback(true, params[0]);
-            } else {
-                callback(response, params);
-            }
-        }).fail(function (response) {
-            console.log(response);
-            if (response.status == 401) {
-                location.href = '/5gcatalogue/401.html';
-            } else if (response.status == 403) {
-                location.href = '/5gcatalogue/403.html';
-            } else if (callback == showResultMessage) {
-                var errorMsg = "Status code: " + response.responseJSON.status;
-                errorMsg +=  " Reason: " + response.responseJSON.detail;
-                callback(false, errorMsg);
-            }
-        });
-    }
+    $.ajax(settings).done(function (response) {
+        console.log(response);
+        if (callback == showResultMessage) {
+            callback(true, params[0]);
+        } else {
+            callback(response, params);
+        }
+    }).fail(function (response) {
+        console.log(response);
+        if (response.status == 401) {
+            location.href = '/5gcatalogue/401.html';
+        } else if (response.status == 403) {
+            location.href = '/5gcatalogue/403.html';
+        } else if (callback == showResultMessage) {
+            var errorMsg = "Status code: " + response.responseJSON.status;
+            errorMsg +=  " Reason: " + response.responseJSON.detail;
+            callback(false, errorMsg);
+        }
+    });
 }
 
 function patchJsonRequestToURL(resourceUrl, jsonData, callback, params) {
@@ -523,42 +508,36 @@ function patchJsonRequestToURL(resourceUrl, jsonData, callback, params) {
 }
 
 function patchJsonRequestToURLWithAuth(resourceUrl, jsonData, callback, params) {
-    if (!checkUser('username')) {
-        redirectToError('401');
-    } else {
-        var settings = {
-            "async": true,
-            //"crossDomain": true,
-            "url": resourceUrl,
-            "method": "PATCH",
-            "headers": {
-                Accept: "application/json; charset=utf-8",
-                "Content-Type": "application/json"
-            },
-            "data": jsonData,
-            xhrFields: {
-                withCredentials: true
-            }
-        };
+    var settings = {
+        "async": true,
+        //"crossDomain": true,
+        "url": resourceUrl,
+        "method": "PATCH",
+        "headers": {
+            Accept: "application/json; charset=utf-8",
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + getCookie("TOKEN")
+        },
+        "data": jsonData
+    };
 
-        $.ajax(settings).done(function (response) {
-            console.log(response);
-            if (callback == showResultMessage) {
-                callback(true, params[0]);
-            } else {
-                callback(response, params);
-            }
-        }).fail(function (response) {
-            console.log(response);
-            if (response.status == 401) {
-                location.href = '/5gcatalogue/401.html';
-            } else if (response.status == 403) {
-                location.href = '/5gcatalogue/403.html';
-            } else if (callback == showResultMessage) {
-                var errorMsg = "Status code: " + response.responseJSON.status;
-                errorMsg +=  " Reason: " + response.responseJSON.detail;
-                callback(false, errorMsg);
-            }
-        });
-    }
+    $.ajax(settings).done(function (response) {
+        console.log(response);
+        if (callback == showResultMessage) {
+            callback(true, params[0]);
+        } else {
+            callback(response, params);
+        }
+    }).fail(function (response) {
+        console.log(response);
+        if (response.status == 401) {
+            location.href = '/5gcatalogue/401.html';
+        } else if (response.status == 403) {
+            location.href = '/5gcatalogue/403.html';
+        } else if (callback == showResultMessage) {
+            var errorMsg = "Status code: " + response.responseJSON.status;
+            errorMsg +=  " Reason: " + response.responseJSON.detail;
+            callback(false, errorMsg);
+        }
+    });
 }

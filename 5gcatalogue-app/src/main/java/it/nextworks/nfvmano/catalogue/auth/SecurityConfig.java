@@ -6,6 +6,7 @@ import org.keycloak.adapters.springsecurity.KeycloakSecurityComponents;
 import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticationProvider;
 import org.keycloak.adapters.springsecurity.config.KeycloakWebSecurityConfigurerAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -17,9 +18,9 @@ import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 
-
 @Configuration
 @EnableWebSecurity
+@ConditionalOnProperty(value = "keycloak.enabled", matchIfMissing = true)
 @ComponentScan(basePackageClasses = KeycloakSecurityComponents.class)
 public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
 
@@ -46,12 +47,14 @@ public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
         super.configure(http);
         http
                 .csrf().disable()
+                .cors().and()
                 .authorizeRequests()
-                .antMatchers("/vnfpkgm/*").permitAll()
-                .antMatchers("/nsd/*").permitAll()
-                .antMatchers("/catalogue/cat2catOperation/*").permitAll()
+                .antMatchers("/vnfpkgm/*").hasAnyRole("ADMIN", "USER")
+                .antMatchers("/nsd/*").hasAnyRole("ADMIN", "USER")
+                .antMatchers("/catalogue/cat2catOperation/*").hasAnyRole("ADMIN", "USER")
                 .antMatchers("/catalogue/cat2catManagement/*").hasRole("ADMIN")
                 .antMatchers("/catalogue/vimManagement/*").hasRole("ADMIN")
-                .antMatchers("/catalogue/manoManagement/*").hasRole("ADMIN");
+                .antMatchers("/catalogue/manoManagement/*").hasRole("ADMIN")
+                .anyRequest().permitAll();
     }
 }

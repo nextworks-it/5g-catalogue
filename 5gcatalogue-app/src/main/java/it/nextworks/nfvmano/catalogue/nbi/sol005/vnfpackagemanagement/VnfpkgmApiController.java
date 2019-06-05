@@ -89,14 +89,14 @@ public class VnfpkgmApiController implements VnfpkgmApi {
     public ResponseEntity<?> getVNFPkgsInfo(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         String accept = request.getHeader("Accept");
 
-        if (authorization != null) {
+        /*if (authorization != null) {
             log.debug("Received getVNFPkgsInfo request with TOKEN :" + authorization);
 
             log.debug("Going to validate received TOKEN for getting user infos...");
 
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             log.debug("Authenticated user: " + authentication.getName() + " | Role: " + authentication.getAuthorities().toString());
-        }
+        }*/
 
         // TODO: process URI parameters for filters and attributes. At the moment it returns all the VNF Pkgs info
         if (accept != null && accept.contains("application/json")) {

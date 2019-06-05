@@ -15,7 +15,7 @@
 */
 
 function getAllMANOPlugins(tableId, resId) {
-	getJsonFromURL("http://" + catalogueAddr + ":8083/catalogue/manoManagement/manos", createPluginsTable, [tableId, resId]);
+	getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/manoManagement/manos", createPluginsTable, [tableId, resId]);
 }
 
 function createPluginsTable(data, params) {

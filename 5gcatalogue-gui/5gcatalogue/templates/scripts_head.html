@@ -50,46 +50,50 @@
 <!-- keycloak-js -->
 <script src="/5gcatalogue/plugin/keycloak-js-bower/dist/keycloak.js"></script>
 <script>
-    var keycloak = Keycloak({
-        url: 'http://10.20.8.21:8080/auth/',
-        realm: '5gcity',
-        clientId: '5gcatalogue'
-    });
-    var loadData = function () {
-        //document.getElementById('userName').innerHTML = keycloak.subject;
-        if (keycloak.idToken) {
-            //document.getElementById('profileType').innerHTML = 'IDToken';
-            document.getElementById('userName').innerHTML = '<b>' + keycloak.idTokenParsed.preferred_username + '</b>';
-            document.getElementById('userNameBar').innerHTML = '<b>' + keycloak.idTokenParsed.preferred_username + '</b>';
-            console.log("idToken: " + keycloak.idToken);
-            console.log("Token: " +  keycloak.token);
-            setCookie("TOKEN", keycloak.token, 1);
-            //document.getElementById('email').innerHTML = keycloak.idTokenParsed.email;
-            //document.getElementById('name').innerHTML = keycloak.idTokenParsed.name;
-            //document.getElementById('givenName').innerHTML = keycloak.idTokenParsed.given_name;
-            //document.getElementById('familyName').innerHTML = keycloak.idTokenParsed.family_name;
-        } else {
-            //keycloak.loadUserProfile(function() {
-            //    document.getElementById('profileType').innerHTML = 'Account Service';
-            //    document.getElementById('username').innerHTML = keycloak.profile.username;
-            //    document.getElementById('email').innerHTML = keycloak.profile.email;
-            //    document.getElementById('name').innerHTML = keycloak.profile.firstName + ' ' + keycloak.profile.lastName;
-            //    document.getElementById('givenName').innerHTML = keycloak.profile.firstName;
-            //    document.getElementById('familyName').innerHTML = keycloak.profile.lastName;
-            //}, function() {
-            //    document.getElementById('profileType').innerHTML = 'Failed to retrieve user details. Please enable claims or account role';
-            //});
+    if (kcEnabled) {
+        var keycloak = Keycloak({
+            url: 'http://localhost:8080/auth/', //10.20.8.21
+            realm: 'osm', //5gcity
+            clientId: 'catalog2' //5gcatalogue
+        });
+        var loadData = function () {
+            
+            if (keycloak.idToken) {
+                //var realm = keycloak.tokenParsed.realm;  
+                var service_role = keycloak.tokenParsed.service_role;  
+                var username = keycloak.tokenParsed.preferred_username;
+                var project_name = keycloak.tokenParsed.project_name;
+                
+                document.getElementById('userName').innerHTML = '<b>' + username + '</b>';
+                document.getElementById('userNameBar').innerHTML = '<b>' + username + '</b>';
+                document.getElementById('project').innerHTML = '<b>' + project_name + '</b>';
+                document.getElementById('projectBar').innerHTML = '<b>' + project_name + '</b>';
+
+                console.log("idToken: " + keycloak.idToken);
+                console.log("Token: " +  keycloak.token);
+                //console.log("Realm: " + realm);
+                console.log("Service Role: " + service_role);
+                setCookie("TOKEN", keycloak.token, 1);
+
+                //document.getElementById('profileType').innerHTML = 'IDToken';
+                //document.getElementById('email').innerHTML = keycloak.idTokenParsed.email;
+                //document.getElementById('name').innerHTML = keycloak.idTokenParsed.name;
+                //document.getElementById('givenName').innerHTML = keycloak.idTokenParsed.given_name;
+                //document.getElementById('familyName').innerHTML = keycloak.idTokenParsed.family_name;
+            } else {
+                window.location.replace("/5gcatalogue/401.html");
+            }
+        };
+        var loadFailure = function () {
+            showResultMessage(false, "Failed to load user data");
+        };
+        var reloadData = function () {
+            keycloak.updateToken(10)
+                    .success(loadData)
+                    .error(function() {
+                        showResultMessage(false, "Failed to load user data");
+                    });
         }
-    };
-    var loadFailure = function () {
-        showResultMessage(false, "Failed to load user data");
-    };
-    var reloadData = function () {
-        keycloak.updateToken(10)
-                .success(loadData)
-                .error(function() {
-                    showResultMessage(false, "Failed to load user data");
-                });
+        keycloak.init({onLoad: 'login-required', checkLoginIframe: false}).success(reloadData);
     }
-    keycloak.init({onLoad: 'login-required', checkLoginIframe: false}).success(reloadData);
 </script>

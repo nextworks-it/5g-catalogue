@@ -7,6 +7,7 @@ import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +26,7 @@ public class Cat2CatOperationController {
     }
 
     @RequestMapping(value = "/exportNsd/{nsdInfoId}", method = RequestMethod.POST)
-    public ResponseEntity<?> exportNsd(@ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId) {
+    public ResponseEntity<?> exportNsd(@ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId, @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
 
         log.debug("Received request for exporting NSD with nsdInfoId {} to public 5G Catalogues", nsdInfoId);
 
@@ -40,7 +41,7 @@ public class Cat2CatOperationController {
     }
 
     @RequestMapping(value = "/exportPnfd/{pnfdInfoId}", method = RequestMethod.POST)
-    public ResponseEntity<?> exportPnfd(@ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId) {
+    public ResponseEntity<?> exportPnfd(@ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId, @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
 
         log.debug("Received request for exporting PNFD with pnfdInfoId {} to public 5G Catalogues", pnfdInfoId);
 
@@ -55,7 +56,7 @@ public class Cat2CatOperationController {
     }
 
     @RequestMapping(value = "/exportVnfPkg/{vnfPkgInfoId}", method = RequestMethod.POST)
-    public ResponseEntity<?> exportVnfPkg(@ApiParam(value = "", required = true) @PathVariable("vnfPkgInfoId") String vnfPkgInfoId) {
+    public ResponseEntity<?> exportVnfPkg(@ApiParam(value = "", required = true) @PathVariable("vnfPkgInfoId") String vnfPkgInfoId, @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
 
         log.debug("Received request for exporting VNF Pkg with vnfPkgInfoId {} to public 5G Catalogues", vnfPkgInfoId);
 

@@ -81,15 +81,6 @@ public class MANOManagementController {
 
         log.debug("Received request for getting MANO plugins");
 
-        if (authorization != null) {
-            log.debug("Received getMANOs request with TOKEN :" + authorization);
-
-            log.debug("Going to validate received TOKEN for getting user infos...");
-
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            log.debug("Authenticated user: " + authentication.getName() + " | Role: " + authentication.getAuthorities().toString());
-        }
-
         List<MANO> manos = pluginsManager.getAllMANOPlugins();
 
         return new ResponseEntity<List<MANO>>(manos, HttpStatus.OK);

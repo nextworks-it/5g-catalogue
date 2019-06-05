@@ -15,11 +15,11 @@
 */
 
 function getAllNsdInfos(elemId, callback, resId) {
-    getJsonFromURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors", callback, [elemId, resId]);
+    getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors", callback, [elemId, resId]);
 }
 
 function getNsdInfo(nsdInfoId, callback, elemId) {
-    getJsonFromURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId, callback, [elemId]);
+    getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId, callback, [elemId]);
 }
 
 function fillNSDsCounter(data, params) {
@@ -30,7 +30,7 @@ function fillNSDsCounter(data, params) {
 }
 
 function deleteNsdInfo(nsdInfoId, resId) {
-    deleteRequestToURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId, showResultMessage, ["NSD with nsdInfoID " + nsdInfoId + " successfully deleted."]);
+    deleteRequestToURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId, showResultMessage, ["NSD with nsdInfoID " + nsdInfoId + " successfully deleted."]);
 }
 
 function updateNsdInfo(nsdInfoId, elemId) {
@@ -41,7 +41,7 @@ function updateNsdInfo(nsdInfoId, elemId) {
     var json = JSON.stringify(jsonObj, null, 4);
 
     console.log("NsdInfoModifications: " + json);
-    patchJsonRequestToURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId, json, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully updated."]);
+    patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId, json, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully updated."]);
 }
 
 function loadNSDFile(elemId, resId) {
@@ -59,7 +59,7 @@ function createNsdInfoId(file, resId) {
     var jsonObj = {"userDefinedData" : {} };
     var json = JSON.stringify(jsonObj, null, 4);
 
-    postJsonToURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors", json, uploadNsdContent, [file, resId]);
+    postJsonToURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors", json, uploadNsdContent, [file, resId]);
 }
 
 function uploadNsdContent(data, params) {
@@ -70,11 +70,11 @@ function uploadNsdContent(data, params) {
     formData.append("pippo","pluto");
     var nsdInfoId = data['id'];
 
-    putFileToURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content", formData, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully updated."]);
+    putFileToURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content", formData, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully updated."]);
 }
 
 function exportNsd(nsdInfoId, resId) {
-    postToURL("http://" + catalogueAddr + ":8083/catalogue/cat2catOperation/exportNsd/" + nsdInfoId, showResultMessage, ["Request for uploading NSD with nsdInfoId " + nsdInfoId + " successfully submitted to public 5G Catalogue."])
+    postToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/cat2catOperation/exportNsd/" + nsdInfoId, showResultMessage, ["Request for uploading NSD with nsdInfoId " + nsdInfoId + " successfully submitted to public 5G Catalogue."])
 }
 
 function getDescription(descrId) {
@@ -97,7 +97,7 @@ function readNSD(graphId) {
 }
 
 function getNSD(nsdInfoId, elemId, callback) {
-    getFileFromURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content", callback, [nsdInfoId, elemId]);
+    getFileFromURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content", callback, [nsdInfoId, elemId]);
 }
 
 function showNsdGraphCanvas(data,params) {

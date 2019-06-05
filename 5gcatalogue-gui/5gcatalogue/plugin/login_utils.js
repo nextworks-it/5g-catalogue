@@ -18,8 +18,7 @@ function login(userNameId, passwordId){
     var username = document.getElementById(userNameId).value;
     var password = document.getElementById(passwordId).value;
     
-    //loginToURL('http://' + vsAddr + ':' + vsPort + '/login', username, password, getUserInfo, failedLogin);
-    window.location.href = "/5gcatalogue/index.html"   
+    loginToURL('http://' + vsAddr + ':' + vsPort + '/login', username, password, getUserInfo, failedLogin);  
 }
 
 function failedLogin(response) {
