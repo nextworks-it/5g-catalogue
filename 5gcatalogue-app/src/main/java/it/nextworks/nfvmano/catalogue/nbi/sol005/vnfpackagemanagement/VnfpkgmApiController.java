@@ -33,6 +33,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -89,6 +91,11 @@ public class VnfpkgmApiController implements VnfpkgmApi {
 
         if (authorization != null) {
             log.debug("Received getVNFPkgsInfo request with TOKEN :" + authorization);
+
+            log.debug("Going to validate received TOKEN for getting user infos...");
+
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            log.debug("Authenticated user: " + authentication.getName() + " | Role: " + authentication.getAuthorities().toString());
         }
 
         // TODO: process URI parameters for filters and attributes. At the moment it returns all the VNF Pkgs info

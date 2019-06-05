@@ -174,7 +174,7 @@
             <version>3.1.0</version>
         </dependency>
 
-        <!-- Keycloak Spring Adapter -->
+        <!-- Spring Boot Security -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
@@ -184,10 +184,11 @@
             <artifactId>spring-security-config</artifactId>
         </dependency>
 
+        <!-- Keycloak Spring Adapter -->
         <dependency>
             <groupId>org.keycloak</groupId>
             <artifactId>keycloak-spring-boot-starter</artifactId>
-            <!--version>6.0.1</version-->
+            <version>6.0.1</version>
         </dependency>
     </dependencies>
 
@@ -196,7 +197,7 @@
             <dependency>
                 <groupId>org.keycloak.bom</groupId>
                 <artifactId>keycloak-adapter-bom</artifactId>
-                <version>4.6.0.Final</version>
+                <version>6.0.1</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
