@@ -258,7 +258,7 @@ public class PluginsManager {
         } else if (mano.getManoType().equals(MANOType.OSMR3)) {
             return new OpenSourceMANOR3Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService,
                     localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr3Dir, logo);
-        } else if (mano.getManoType().equals(MANOType.OSMR4)) {
+        } else if (mano.getManoType().equals(MANOType.OSMR4) || mano.getManoType().equals(MANOType.OSMR5)) {
             return new OpenSourceMANOR4Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, MANORepository,
                     localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr4Dir, logo);
         } else {
