@@ -23,6 +23,7 @@ package it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement;
 import io.swagger.annotations.*;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.ProblemDetails;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.*;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -53,7 +54,7 @@ public interface VnfpkgmApi {
     @RequestMapping(value = "/vnfpkgm/v1/vnf_packages",
             produces = {"application/json"},
             method = RequestMethod.GET)
-    ResponseEntity<?> getVNFPkgsInfo();
+    ResponseEntity<?> getVNFPkgsInfo(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization);
 
     @ApiOperation(value = "Query VNF Package Info", nickname = "queryVNFPkgInfo", notes = "", response = VnfPkgInfo.class, tags = {})
     @ApiResponses(value = {

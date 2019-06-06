@@ -31,7 +31,9 @@ import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.C2COnboardingS
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.repos.*;
 import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
+import it.nextworks.nfvmano.catalogue.translators.tosca.ArchiveParser;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
+import it.nextworks.nfvmano.catalogue.translators.tosca.elements.CSARInfo;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
@@ -46,14 +48,12 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 @Service
 public class NsdManagementService implements NsdManagementInterface {
@@ -77,6 +77,9 @@ public class NsdManagementService implements NsdManagementInterface {
 
     @Autowired
     private VnfPkgInfoRepository vnfPkgInfoRepository;
+
+    @Autowired
+    private ArchiveParser archiveParser;
 
     private Map<String, Map<String, NotificationResource>> operationIdToConsumersAck = new HashMap<>();
 
@@ -225,6 +228,29 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
+    public Object getNsdFile(String nsdInfoId, boolean isInternalRequest) throws FailedOperationException, NotExistingEntityException,
+            MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
+        log.debug("Processing request to retrieve an NSD content for NSD info " + nsdInfoId);
+        NsdInfoResource nsdInfo = getNsdInfoResource(nsdInfoId);
+        if ((!isInternalRequest) && (nsdInfo.getNsdOnboardingState() != NsdOnboardingStateType.ONBOARDED
+                && nsdInfo.getNsdOnboardingState() != NsdOnboardingStateType.LOCAL_ONBOARDED)) {
+            log.error("NSD info " + nsdInfoId + " does not have an onboarded NSD yet");
+            throw new NotPermittedOperationException("NSD info " + nsdInfoId + " does not have an onboarded NSD yet");
+        }
+        UUID nsdId = nsdInfo.getNsdId();
+        log.debug("Internal NSD ID: " + nsdId);
+
+        // try {
+        List<String> nsdFilenames = nsdInfo.getNsdFilename();
+        if (nsdFilenames.size() != 1) {
+            log.error("Found zero or more than one file for NSD in YAML format. Error.");
+            throw new FailedOperationException("Found more than one file for NSD in YAML format. Error.");
+        }
+        String nsdFilename = nsdFilenames.get(0);
+        return storageService.loadNsdAsResource(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdFilename);
+    }
+
+    @Override
     public Object getNsd(String nsdInfoId, boolean isInternalRequest) throws FailedOperationException, NotExistingEntityException,
             MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
         log.debug("Processing request to retrieve an NSD content for NSD info " + nsdInfoId);
@@ -263,7 +289,15 @@ public class NsdManagementService implements NsdManagementInterface {
                  * e.getMessage()); }
                  */
             }
-
+            case ZIP:{
+                List<String> nsdFilenames = nsdInfo.getNsdPkgFilename();
+                if (nsdFilenames.size() != 1) {
+                    log.error("Found zero or more than one file for NSD in YAML format. Error.");
+                    throw new FailedOperationException("Found more than one file for NSD in YAML format. Error.");
+                }
+                String nsdFilename = nsdFilenames.get(0);
+                return storageService.loadNsPkgAsResource(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdFilename);
+            }
             default: {
                 log.error("Content type not yet supported.");
                 throw new MethodNotImplementedException("Content type not yet supported.");
@@ -394,17 +428,24 @@ public class NsdManagementService implements NsdManagementInterface {
         List<String> includedPnfds;
         NsdOnboardingStateType onboardingStateType = NsdOnboardingStateType.UPLOADING;
 
+        CSARInfo csarInfo = null;
+
         switch (contentType) {
             case ZIP: {
                 try {
                     log.info("NSD file is in format: zip");
 
-                    // TODO: assuming for now one single file into the zip
-                    MultipartFile nsdMpFile = extractFile(inputFile);
-                    // convert to File
-                    File nsdFile = convertToFile(nsdMpFile);
+                    checkZipArchive(nsd);
 
-                    dt = DescriptorsParser.fileToDescriptorTemplate(nsdFile);
+                    // TODO: assuming for now one single file into the zip
+                    //MultipartFile nsdMpFile = extractFile(inputFile);
+                    // convert to File
+                    //File nsdFile = convertToFile(nsdMpFile);
+                    //dt = DescriptorsParser.fileToDescriptorTemplate(nsdFile);
+
+                    csarInfo = archiveParser.archiveToMainDescriptor(nsd, false);
+                    dt = csarInfo.getMst();
+                    nsdFilename = csarInfo.getPackageFilename();
 
                     includedVnfds = checkVNFPkgs(dt);
                     includedPnfds = checkPNFDs(dt);
@@ -418,16 +459,16 @@ public class NsdManagementService implements NsdManagementInterface {
                     // pre-set nsdinfo attributes to properly store NSDs
                     nsdInfo.setNsdVersion(dt.getMetadata().getVersion());
 
-                    nsdFilename = storageService.storeNsd(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdMpFile);
+                    //nsdFilename = storageService.storeNsd(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdMpFile);
 
                     // change contentType to YAML as nsd file is no more zip from now on
-                    contentType = ContentType.YAML;
+                    //contentType = ContentType.YAML;
 
                     log.debug("NSD file successfully stored");
                     // clean tmp files
-                    if (!nsdFile.delete()) {
-                        log.warn("Could not delete temporary NSD zip content file");
-                    }
+                    //if (!nsdFile.delete()) {
+                       // log.warn("Could not delete temporary NSD zip content file");
+                    //}
                 } catch (IOException e) {
                     log.error("Error while parsing NSD in zip format: " + e.getMessage());
                     onboardingStateType = NsdOnboardingStateType.FAILED;
@@ -470,7 +511,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     // pre-set nsdinfo attributes to properly store NSDs
                     nsdInfo.setNsdVersion(dt.getMetadata().getVersion());
 
-                    nsdFilename = storageService.storeNsd(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsd);
+                    nsdFilename = storageService.storePkg(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsd, false);
 
                     log.debug("NSD file successfully stored");
 
@@ -537,7 +578,12 @@ public class NsdManagementService implements NsdManagementInterface {
         nsdInfo.setNsdName(nsdName);
         // nsdInfo.setNsdVersion(dt.getMetadata().getVersion());
         nsdInfo.setContentType(contentType);
-        nsdInfo.addNsdFilename(nsdFilename);
+        if(csarInfo != null) {
+            nsdInfo.addNsdPkgFilename(nsdFilename);
+            nsdInfo.addNsdFilename(csarInfo.getDescriptorFilename());
+        }else{
+            nsdInfo.addNsdFilename(nsdFilename);
+        }
 
         List<UUID> vnfPkgIds = new ArrayList<>();
         for (String vnfdInfoId : includedVnfds) {
@@ -579,7 +625,7 @@ public class NsdManagementService implements NsdManagementInterface {
                 operationId, ScopeType.LOCAL, OperationStatus.SENT);
         msg.setIncludedVnfds(includedVnfds);
         msg.setIncludedPnfds(includedPnfds);
-
+        msg.setCsarInfo(csarInfo);
         // send notification over kafka bus
         notificationManager.sendNsdOnBoardingNotification(msg);
 
@@ -768,7 +814,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     // pre-set pnfdInfo attributes to properly store PNFDs
                     pnfdInfo.setPnfdVersion(dt.getMetadata().getVersion());
 
-                    pnfdFilename = storageService.storeNsd(pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfdMpFile);
+                    pnfdFilename = storageService.storePkg(pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfdMpFile, false);
 
                     // change contentType to YAML as nsd file is no more zip from now on
                     contentType = ContentType.YAML;
@@ -819,7 +865,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     // pre-set pnfdInfo attributes to properly store PNFDs
                     pnfdInfo.setPnfdVersion(dt.getMetadata().getVersion());
 
-                    pnfdFilename = storageService.storeNsd(pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfd);
+                    pnfdFilename = storageService.storePkg(pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfd, false);
 
                     log.debug("PNFD file successfully stored");
 
@@ -1312,5 +1358,32 @@ public class NsdManagementService implements NsdManagementInterface {
         }
         zipFile.close();
         return archived;
+    }
+
+    private void checkZipArchive(MultipartFile nsd) throws FailedOperationException {
+
+        byte[] bytes = new byte[0];
+        try {
+            bytes = nsd.getBytes();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        InputStream is = new ByteArrayInputStream(bytes);
+
+        ZipInputStream zis = new ZipInputStream(is);
+
+        try {
+            zis.getNextEntry();
+        } catch (IOException e) {
+            throw new FailedOperationException("CSAR Archive is corrupted: " + e.getMessage());
+        }
+
+        try {
+            zis.closeEntry();
+            zis.close();
+        } catch (IOException e) {
+            throw new FailedOperationException("CSAR Archive is corrupted: " + e.getMessage());
+        }
     }
 }

@@ -17,7 +17,8 @@
 //var catalogueAddr = '10.0.8.44';
 var catalogueAddr = window.location.hostname;
 var cataloguePort = '8083';
-var isPublic = false;
+var isPublic = true;
+var kcEnabled = true;
 
 var stopRefreshing = false;
 
@@ -60,6 +61,24 @@ function clearForms(parentId, flag) {
 		var modal = document.getElementById(parentId);
 		modal.style = 'display:none';
 	}
+}
+
+function redirectToError(errorType) {
+	//var path = location.pathname;
+	var hostname = '/5gcatalogue/';
+	var new_path = '';
+  
+	/*var steps_back = path.split('/');
+	  console.log(steps_back.length);
+		  
+	  for (var i = 0; i < steps_back.length - stepsToRoot; i++) {
+		  new_path += '../';
+	  }*/
+  
+	//new_path += errorType + '.html';
+	new_path += hostname + errorType + '.html';
+	//console.log(new_path);
+	location.href = new_path;
 }
 
 function getURLParameter(name) {

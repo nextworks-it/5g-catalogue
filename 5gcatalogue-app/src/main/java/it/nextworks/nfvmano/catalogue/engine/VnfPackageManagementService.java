@@ -302,9 +302,9 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         checkZipArchive(vnfPkg);
 
         try {
-            csarInfo = archiveParser.archiveToMainDescriptor(vnfPkg);
+            csarInfo = archiveParser.archiveToMainDescriptor(vnfPkg, true);
             dt = csarInfo.getMst();
-            vnfPkgFilename = csarInfo.getVnfPkgFilename();
+            vnfPkgFilename = csarInfo.getPackageFilename();
 
             vnfdId = UUID.fromString(dt.getMetadata().getDescriptorId());
             vnfPkgInfoResource.setVnfdId(vnfdId);
@@ -354,7 +354,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         vnfPkgInfoResource.setVnfProductName(vnfName);
         vnfPkgInfoResource.setContentType(contentType);
         vnfPkgInfoResource.setVnfPkgFilename(vnfPkgFilename);
-        vnfPkgInfoResource.setVnfdFilename(csarInfo.getVnfdFilename());
+        vnfPkgInfoResource.setVnfdFilename(csarInfo.getDescriptorFilename());
         vnfPkgInfoResource.setMetaFilename(csarInfo.getMetaFilename());
         vnfPkgInfoResource.setManifestFilename(csarInfo.getMfFilename());
 
