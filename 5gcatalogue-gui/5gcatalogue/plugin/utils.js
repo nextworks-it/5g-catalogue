@@ -17,7 +17,7 @@
 //var catalogueAddr = '10.0.8.44';
 var catalogueAddr = window.location.hostname;
 var cataloguePort = '8083';
-var isPublic = false;
+var isPublic = true;
 var kcEnabled = true;
 
 var stopRefreshing = false;

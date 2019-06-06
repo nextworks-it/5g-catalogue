@@ -36,11 +36,11 @@ function failedLogin(response) {
 }
 
 function logout() {
-    deleteCookie('username');
-    deleteCookie('role');
+    deleteCookie('USERNAME');
+    deleteCookie('ROLE');
     deleteCookie('TOKEN');
     
-    redirectToError('index');
+    keycloak.logout()
 }
 
 function getUserInfo() {
@@ -62,8 +62,8 @@ function storeUserInfo(data) {
         "role": "ADMIN"
     };*/
     
-    setCookie("username", data.username, 1);
-    setCookie("role", data.role, 1);
+    setCookie("USERNAME", data.username, 1);
+    setCookie("ROLE", data.role, 1);
     
     if (data.role == 'ADMIN') {
         location.href = './admin/index.html';
@@ -75,7 +75,7 @@ function storeUserInfo(data) {
 function displayUserInfo(userInfoId) {
     var elem = document.getElementById(userInfoId);
     
-    var value = getCookie("username");
+    var value = getCookie("USERNAME");
     
     elem.innerHTML = value;
 }

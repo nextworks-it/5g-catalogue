@@ -41,8 +41,6 @@
 <script src="/5gcatalogue/plugin/pnfd_utils.js"></script>
 <script src="/5gcatalogue/plugin/vnfd_utils.js"></script>
 <script src="/5gcatalogue/plugin/login_utils.js"></script>
-<script src="/5gcatalogue/plugin/kc_login_utils.js"></script>
-<!--script src="/5gcatalogue/plugin/require.js"></script-->
 
 <!-- Js-Yaml -->
 <script src="/5gcatalogue/plugin/js-yaml/dist/js-yaml.min.js"></script>
@@ -52,9 +50,9 @@
 <script>
     if (kcEnabled) {
         var keycloak = Keycloak({
-            url: 'http://localhost:8080/auth/', //10.20.8.21
-            realm: 'osm', //5gcity
-            clientId: 'catalog2' //5gcatalogue
+            url: 'http://10.20.8.21:8080/auth/', //10.20.8.21, localhost
+            realm: '5gcity', //5gcity, osm
+            clientId: '5gcatalogue' //5gcatalogue, catalog2
         });
         var loadData = function () {
             
@@ -69,11 +67,13 @@
                 document.getElementById('project').innerHTML = '<b>' + project_name + '</b>';
                 document.getElementById('projectBar').innerHTML = '<b>' + project_name + '</b>';
 
-                console.log("idToken: " + keycloak.idToken);
-                console.log("Token: " +  keycloak.token);
+                //console.log("idToken: " + keycloak.idToken);
+                //console.log("Token: " +  keycloak.token);
                 //console.log("Realm: " + realm);
+                console.log("Project: " + project_name);
                 console.log("Service Role: " + service_role);
                 setCookie("TOKEN", keycloak.token, 1);
+                setCookie("ROLE", service_role, 1);
 
                 //document.getElementById('profileType').innerHTML = 'IDToken';
                 //document.getElementById('email').innerHTML = keycloak.idTokenParsed.email;
@@ -88,7 +88,7 @@
             showResultMessage(false, "Failed to load user data");
         };
         var reloadData = function () {
-            keycloak.updateToken(10)
+            keycloak.updateToken(20)
                     .success(loadData)
                     .error(function() {
                         showResultMessage(false, "Failed to load user data");
