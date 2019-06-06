@@ -17,7 +17,7 @@ NFV-SDN Catalogue capable of storing and  versioning:
 * [Oracle-Java8] - Oracle version 8 is preferred, otherwise [OpenJDK-8] + [OpenJFX]
 * [Maven] - version 3.3.9 is required
 * [PostgresSQL] - as internal DB 
-* [Apache Kafka] - as internal message bus, configured with the following topics: catalogue-onboarding-local, catalogue-onboarding-remote. For properly connecting the 5gcatalogue-app to the Kafka bus you have modify the [application.properties](https://github.com/nextworks-it/5g-catalogue/blob/master/5gcatalogue-app/src/main/resources/application.properties) file as follows:
+* [Apache Kafka] - as internal message bus, configured with the following topics: PRIVATEcatalogue-onboarding-local, PRIVATEcatalogue-onboarding-remote, PUBLICcatalogue-onboarding-local, PUBLICcatalogue-onboarding-remote. For properly connecting the 5gcatalogue-app to the Kafka bus you have modify the [application.properties](https://github.com/nextworks-it/5g-catalogue/blob/master/5gcatalogue-app/src/main/resources/application.properties) file as follows:
 
 ```
 kafka.bootstrap-servers=<kafka-ip-address>:9092
@@ -32,6 +32,9 @@ kafka.skip.send=false
 | NfvManoLibsSol001Descriptors | [README](https://github.com/nextworks-it/nfv-sol-libs) |
 | J-OSMClient | [README](https://github.com/girtel/J-OSMClient) |
 | OpenStack4j | [README](https://github.com/ContainX/openstack4j) |
+
+### Configuration
+For properly configuring the 5G Apps & Services Catalogue, the [application.properties](https://github.com/nextworks-it/5g-catalogue/blob/master/5gcatalogue-app/src/main/resources/application.properties) file has to be modified according to the environmentwher the catalogue is deployed. See instructions at [HOWTOCONFIGURE](https://github.com/nextworks-it/5g-catalogue/blob/master/HOWTOCONFIGURE.md
 
 ### Installing
 
