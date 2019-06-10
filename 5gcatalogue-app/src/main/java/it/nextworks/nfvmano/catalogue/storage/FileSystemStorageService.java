@@ -49,6 +49,7 @@ public class FileSystemStorageService {
 
     public FileSystemStorageService() {
     }
+
     /*
     public static String storeNsd(String nsdId, String version, MultipartFile file) throws MalformattedElementException, FailedOperationException {
         String filename = StringUtils.cleanPath(file.getOriginalFilename());
@@ -100,10 +101,10 @@ public class FileSystemStorageService {
 
             Path locationRoot;
             Path locationVersion;
-            if(isVnfPkg) {
+            if (isVnfPkg) {
                 locationRoot = Paths.get(vnfPkgsLocation + "/" + descriptorId);
                 locationVersion = Paths.get(vnfPkgsLocation + "/" + descriptorId + "/" + version);
-            }else{
+            } else {
                 locationRoot = Paths.get(nsdsLocation + "/" + descriptorId);
                 locationVersion = Paths.get(nsdsLocation + "/" + descriptorId + "/" + version);
             }
@@ -135,7 +136,7 @@ public class FileSystemStorageService {
         byte[] buffer = new byte[1024];
 
         Path locationVersion;
-        if(isVnfPkg)
+        if (isVnfPkg)
             locationVersion = Paths.get(vnfPkgsLocation + "/" + descriptorId + "/" + version);
         else
             locationVersion = Paths.get(nsdsLocation + "/" + descriptorId + "/" + version);
@@ -143,9 +144,9 @@ public class FileSystemStorageService {
         if (filename.endsWith("/")) {
             log.debug("Zip entry is a directory: " + filename);
             Path newDir;
-            if(isVnfPkg)
+            if (isVnfPkg)
                 newDir = Paths.get(vnfPkgsLocation + "/" + descriptorId + "/" + version + "/" + filename);
-            else{
+            else {
                 newDir = Paths.get(nsdsLocation + "/" + descriptorId + "/" + version + "/" + filename);
             }
             if (!Files.isDirectory(newDir, LinkOption.NOFOLLOW_LINKS)) {
@@ -163,7 +164,7 @@ public class FileSystemStorageService {
 
             if (filename.contains("/")) {
                 log.debug("Zip entry is located in a subdirectory: " + filename);
-                if(isVnfPkg)
+                if (isVnfPkg)
                     dirPath = vnfPkgsLocation + "/" + descriptorId + "/" + version + "/" + filename.substring(0, filename.lastIndexOf("/"));
                 else
                     dirPath = nsdsLocation + "/" + descriptorId + "/" + version + "/" + filename.substring(0, filename.lastIndexOf("/"));

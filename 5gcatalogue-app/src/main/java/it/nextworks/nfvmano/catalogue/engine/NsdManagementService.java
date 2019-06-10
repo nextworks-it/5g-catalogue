@@ -19,7 +19,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import it.nextworks.nfvmano.catalogue.engine.resources.NotificationResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.PnfdInfoResource;
@@ -289,7 +288,7 @@ public class NsdManagementService implements NsdManagementInterface {
                  * e.getMessage()); }
                  */
             }
-            case ZIP:{
+            case ZIP: {
                 List<String> nsdFilenames = nsdInfo.getNsdPkgFilename();
                 if (nsdFilenames.size() != 1) {
                     log.error("Found zero or more than one file for NSD in YAML format. Error.");
@@ -467,7 +466,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     log.debug("NSD file successfully stored");
                     // clean tmp files
                     //if (!nsdFile.delete()) {
-                       // log.warn("Could not delete temporary NSD zip content file");
+                    // log.warn("Could not delete temporary NSD zip content file");
                     //}
                 } catch (IOException e) {
                     log.error("Error while parsing NSD in zip format: " + e.getMessage());
@@ -578,10 +577,10 @@ public class NsdManagementService implements NsdManagementInterface {
         nsdInfo.setNsdName(nsdName);
         // nsdInfo.setNsdVersion(dt.getMetadata().getVersion());
         nsdInfo.setContentType(contentType);
-        if(csarInfo != null) {
+        if (csarInfo != null) {
             nsdInfo.addNsdPkgFilename(nsdFilename);
             nsdInfo.addNsdFilename(csarInfo.getDescriptorFilename());
-        }else{
+        } else {
             nsdInfo.addNsdFilename(nsdFilename);
         }
 
@@ -613,7 +612,7 @@ public class NsdManagementService implements NsdManagementInterface {
                 CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION, OperationStatus.SENT);
         nsdInfo.setAcknowledgedOnboardOpConsumers(operationIdToConsumersAck.get(operationId.toString()));
 
-        if(isInternalRequest)
+        if (isInternalRequest)
             nsdInfo.setPublished(true);
         else
             nsdInfo.setPublished(false);
@@ -937,7 +936,7 @@ public class NsdManagementService implements NsdManagementInterface {
                 CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION, OperationStatus.SENT);
         pnfdInfo.setAcknowledgedOnboardOpConsumers(operationIdToConsumersAck.get(operationId.toString()));
 
-        if(isInternalRequest)
+        if (isInternalRequest)
             pnfdInfo.setPublished(true);
         else
             pnfdInfo.setPublished(false);

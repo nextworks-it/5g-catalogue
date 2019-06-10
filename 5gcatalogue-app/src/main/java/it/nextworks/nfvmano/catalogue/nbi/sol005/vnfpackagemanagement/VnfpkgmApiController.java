@@ -17,15 +17,16 @@ package it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.ApiParam;
+import it.nextworks.nfvmano.catalogue.auth.KeycloakService;
 import it.nextworks.nfvmano.catalogue.common.Utilities;
 import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.ProblemDetails;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.*;
 import it.nextworks.nfvmano.catalogue.repos.ContentType;
-import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
-import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
-import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
-import it.nextworks.nfvmano.libs.common.exceptions.NotPermittedOperationException;
+import it.nextworks.nfvmano.libs.common.exceptions.*;
+import org.keycloak.KeycloakPrincipal;
+import org.keycloak.KeycloakSecurityContext;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +61,9 @@ public class VnfpkgmApiController implements VnfpkgmApi {
     VnfPackageManagementInterface vnfPackageManagementInterface;
 
     @Autowired
+    KeycloakService keycloakService;
+
+    @Autowired
     public VnfpkgmApiController(ObjectMapper objectMapper, HttpServletRequest request) {
         this.objectMapper = objectMapper;
         this.request = request;
@@ -89,14 +93,46 @@ public class VnfpkgmApiController implements VnfpkgmApi {
     public ResponseEntity<?> getVNFPkgsInfo(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         String accept = request.getHeader("Accept");
 
-        /*if (authorization != null) {
+        if (authorization != null) {
             log.debug("Received getVNFPkgsInfo request with TOKEN :" + authorization);
 
             log.debug("Going to validate received TOKEN for getting user infos...");
 
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            log.debug("Authenticated user: " + authentication.getName() + " | Role: " + authentication.getAuthorities().toString());
-        }*/
+            log.debug("Authenticated user: " + authentication.getName()
+                    + " | Role: " + authentication.getAuthorities().toString()
+                    + " | Credentials: " + authentication.getCredentials().toString()
+                    + " | Details: " + authentication.getDetails().toString()
+                    + " | Principal: " + authentication.getPrincipal().toString());
+
+            if (authentication.getPrincipal() instanceof KeycloakPrincipal) {
+                KeycloakPrincipal<KeycloakSecurityContext> kp = (KeycloakPrincipal<KeycloakSecurityContext>) authentication.getPrincipal();
+                // retrieving username here
+                String username = kp.getKeycloakSecurityContext().getToken().getPreferredUsername();
+            }
+
+            try {
+                keycloakService.getUsers();
+            } catch (FailedOperationException e) {
+                e.printStackTrace();
+            }
+            UserRepresentation userRepresentation = keycloakService.buildUserRepresentation("test5gcatalogue", "5gcatalogue", "5gcatalogue");
+            try {
+                keycloakService.createUser(userRepresentation);
+            } catch (FailedOperationException e) {
+                e.printStackTrace();
+            } catch (AlreadyExistingEntityException e) {
+                e.printStackTrace();
+            } catch (MalformattedElementException e) {
+                e.printStackTrace();
+            }
+            List<UserRepresentation> userRepresentations = keycloakService.getUsers();
+            for (UserRepresentation userRepresentation1 : userRepresentations) {
+                if (userRepresentation1.getUsername().equalsIgnoreCase("test5gcatalogue")) {
+                    keycloakService.addUserToGroup(userRepresentation1.getId());
+                }
+            }
+        }
 
         // TODO: process URI parameters for filters and attributes. At the moment it returns all the VNF Pkgs info
         if (accept != null && accept.contains("application/json")) {

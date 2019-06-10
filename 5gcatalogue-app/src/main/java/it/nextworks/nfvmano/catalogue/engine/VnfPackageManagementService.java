@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import it.nextworks.nfvmano.catalogue.auth.KeycloakService;
 import it.nextworks.nfvmano.catalogue.engine.resources.NotificationResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
 import it.nextworks.nfvmano.catalogue.messages.CatalogueMessageType;
@@ -55,6 +56,9 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
 
     @Autowired
     private ArchiveParser archiveParser;
+
+    @Autowired
+    private KeycloakService keycloakService;
 
     private Map<String, Map<String, NotificationResource>> operationIdToConsumersAck = new HashMap<>();
 

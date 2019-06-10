@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
 import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
-import it.nextworks.nfvmano.catalogue.engine.resources.NotificationResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.PnfdInfoResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
@@ -24,7 +23,8 @@ import it.nextworks.nfvmano.catalogue.repos.NsdInfoRepository;
 import it.nextworks.nfvmano.catalogue.repos.PnfdInfoRepository;
 import it.nextworks.nfvmano.catalogue.repos.VnfPkgInfoRepository;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
-import it.nextworks.nfvmano.libs.common.exceptions.*;
+import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
+import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -458,7 +458,7 @@ public class CataloguePlugin extends Plugin
                     try {
                         vnfdService.deleteVnfPkgInfo(createdVnfPkgInfo.getId().toString());
                     } catch (Exception e) {
-                        log.error("Unable to delete vnfPkgInfo "+ createdVnfPkgInfo.getId().toString() + " after failure while loading VNF Pkg: " + e.getMessage());
+                        log.error("Unable to delete vnfPkgInfo " + createdVnfPkgInfo.getId().toString() + " after failure while loading VNF Pkg: " + e.getMessage());
                     }
                     throw new RestClientException("Error when trying to get VNF Pkg with vnfPkgInfo  " + vnfPkgInfo.getId().toString() + ". Error: " + e1.getMessage());
                 } catch (IOException e) {
@@ -514,7 +514,7 @@ public class CataloguePlugin extends Plugin
                     try {
                         nsdService.deletePnfdInfo(createdPnfdInfo.getId().toString());
                     } catch (Exception e) {
-                        log.error("Unable to delete pnfdInfo "+ createdPnfdInfo.getId().toString() + " after failure while loading PNFD: " + e.getMessage());
+                        log.error("Unable to delete pnfdInfo " + createdPnfdInfo.getId().toString() + " after failure while loading PNFD: " + e.getMessage());
                     }
                     throw new RestClientException("Error when trying to get PNFD with pnfdInfo  " + pnfdInfo.getId().toString() + ". Error: " + e1.getMessage());
                 } catch (IOException e) {
@@ -568,7 +568,7 @@ public class CataloguePlugin extends Plugin
                     try {
                         nsdService.deleteNsdInfo(createdNsdInfo.getId().toString());
                     } catch (Exception e) {
-                        log.error("Unable to delete nsdInfo "+ createdNsdInfo.getId().toString() + " after failure while loading NSD: " + e.getMessage());
+                        log.error("Unable to delete nsdInfo " + createdNsdInfo.getId().toString() + " after failure while loading NSD: " + e.getMessage());
                     }
                     throw new RestClientException("Error when trying to get NSD with nsdInfo  " + nsdInfo.getId().toString() + ". Error: " + e1.getMessage());
                 } catch (IOException e) {

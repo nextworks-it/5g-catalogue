@@ -38,7 +38,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -175,7 +174,7 @@ public class NsdApiController implements NsdApi {
     }
 
     public ResponseEntity<?> deleteNSDInfo(
-            @ApiParam(value = "", required = true) @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,  @PathVariable("nsdInfoId") String nsdInfoId) {
+            @ApiParam(value = "", required = true) @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization, @PathVariable("nsdInfoId") String nsdInfoId) {
         String accept = request.getHeader("Accept");
         log.debug("Processing REST request to delete NSD info " + nsdInfoId);
         try {
