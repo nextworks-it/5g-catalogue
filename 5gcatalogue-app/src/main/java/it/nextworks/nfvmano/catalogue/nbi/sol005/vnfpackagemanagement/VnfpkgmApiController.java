@@ -23,10 +23,10 @@ import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.ProblemDetails;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.*;
 import it.nextworks.nfvmano.catalogue.repos.ContentType;
-import it.nextworks.nfvmano.libs.common.exceptions.*;
-import org.keycloak.KeycloakPrincipal;
-import org.keycloak.KeycloakSecurityContext;
-import org.keycloak.representations.idm.UserRepresentation;
+import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
+import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
+import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
+import it.nextworks.nfvmano.libs.common.exceptions.NotPermittedOperationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,8 +34,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -93,7 +91,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
     public ResponseEntity<?> getVNFPkgsInfo(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         String accept = request.getHeader("Accept");
 
-        if (authorization != null) {
+        /*if (authorization != null) {
             log.debug("Received getVNFPkgsInfo request with TOKEN :" + authorization);
 
             log.debug("Going to validate received TOKEN for getting user infos...");
@@ -126,13 +124,18 @@ public class VnfpkgmApiController implements VnfpkgmApi {
             } catch (MalformattedElementException e) {
                 e.printStackTrace();
             }
-            List<UserRepresentation> userRepresentations = keycloakService.getUsers();
+            List<UserRepresentation> userRepresentations = null;
+            try {
+                userRepresentations = keycloakService.getUsers();
+            } catch (FailedOperationException e) {
+                e.printStackTrace();
+            }
             for (UserRepresentation userRepresentation1 : userRepresentations) {
                 if (userRepresentation1.getUsername().equalsIgnoreCase("test5gcatalogue")) {
                     keycloakService.addUserToGroup(userRepresentation1.getId());
                 }
             }
-        }
+        }*/
 
         // TODO: process URI parameters for filters and attributes. At the moment it returns all the VNF Pkgs info
         if (accept != null && accept.contains("application/json")) {

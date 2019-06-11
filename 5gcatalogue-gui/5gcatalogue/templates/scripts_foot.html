@@ -52,10 +52,10 @@
       var role = getCookie("ROLE");
       //console.log("Role: " + role);
       var adminElems = document.getElementsByClassName("admin");
-      if(role == '[ROLE_SERVICE_ADMIN]') {
+      if(role.indexOf('ROLE_SERVICE_ADMIN') >= 0) {
         //console.log(adminElems);
         for (var i = 0; i < adminElems.length; i++) {
-          adminElems[i].style.display = 'inline';
+          adminElems[i].style = '';
         }
       } else {
         for (var i = 0; i < adminElems.length; i++) {

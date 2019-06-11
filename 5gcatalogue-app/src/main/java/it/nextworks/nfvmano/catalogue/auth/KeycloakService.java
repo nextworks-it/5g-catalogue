@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
+import it.nextworks.nfvmano.libs.common.exceptions.NotPermittedOperationException;
 import okhttp3.Response;
 import org.keycloak.adapters.springsecurity.client.KeycloakRestTemplate;
 import org.keycloak.representations.idm.UserRepresentation;
@@ -16,11 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import javax.ws.rs.NotAuthorizedException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class KeycloakService {
@@ -45,14 +44,14 @@ public class KeycloakService {
     @Autowired
     private KeycloakRestTemplate keycloakRestTemplate;
 
-    public List<UserRepresentation> getUsers() throws FailedOperationException {
+    public List<UserRepresentation> getUsers() throws NotPermittedOperationException, FailedOperationException {
         log.debug("Going to retrieve users from realm " + realm + "...");
 
         ResponseEntity<UserRepresentation[]> response =
                 keycloakRestTemplate.getForEntity(basePath + "/admin/realms/" + realm + "/users", UserRepresentation[].class);
 
         if (response.getStatusCode() == HttpStatus.FORBIDDEN) {
-            throw new FailedOperationException("Full authentication is required to access this resource");
+            throw new NotPermittedOperationException("Full authentication is required to access this resource");
         } else if (response.getStatusCode() == HttpStatus.UNAUTHORIZED) {
             throw new FailedOperationException("Your credentials have been expired, please login");
         }
@@ -81,7 +80,7 @@ public class KeycloakService {
         return response.getBody();
     }
 
-    public UserRepresentation createUser(UserRepresentation userRepresentation) throws FailedOperationException,
+    public UserRepresentation createUser(UserRepresentation userRepresentation) throws NotPermittedOperationException, FailedOperationException,
             AlreadyExistingEntityException, MalformattedElementException {
         log.debug("Going to create new user in realm " + realm + "...");
 
@@ -89,18 +88,23 @@ public class KeycloakService {
                 keycloakRestTemplate.postForEntity(basePath + "/admin/realms/" + realm + "/users", userRepresentation, Response.class);
 
         if (response.getStatusCode() == HttpStatus.FORBIDDEN) {
-            throw new FailedOperationException("Full authentication is required to access this resource");
+            throw new NotPermittedOperationException("Full authentication is required to access this resource");
         } else if (response.getStatusCode() == HttpStatus.UNAUTHORIZED) {
             throw new FailedOperationException("Your credentials have been expired, please login");
         } else if (response.getStatusCode() == HttpStatus.CONFLICT) {
             throw new AlreadyExistingEntityException("User with userName " + userRepresentation.getUsername() + " already exists");
         } else if (response.getStatusCode() == HttpStatus.BAD_REQUEST) {
-            throw new MalformattedElementException("Unable to create user with userName "  + userRepresentation.getUsername() + ". Malformatted element");
+            throw new MalformattedElementException("Unable to create user with userName " + userRepresentation.getUsername() + ". Malformatted element");
         } else if (response.getStatusCode() == HttpStatus.INTERNAL_SERVER_ERROR) {
-            throw  new FailedOperationException("An internal server error occurs");
+            throw new FailedOperationException("An internal server error occurs");
         }
 
-
+        List<UserRepresentation> userRepresentations = getUsers();
+        for (UserRepresentation user : userRepresentations) {
+            if (user.getUsername().equalsIgnoreCase(userRepresentation.getUsername())) {
+                return user;
+            }
+        }
         return userRepresentation;
     }
 
@@ -113,7 +117,7 @@ public class KeycloakService {
     public void addUserToGroup(String userId) {
         log.debug("Going to add user " + userId + " in realm " + realm + " to group " + userGroupId + "...");
 
-        keycloakRestTemplate.put(basePath + "/admin/realms/" + realm + "/users/" + userId + "/groups/" + userGroupId,  null);
+        keycloakRestTemplate.put(basePath + "/admin/realms/" + realm + "/users/" + userId + "/groups/" + userGroupId, null);
     }
 
     public UserRepresentation buildUserRepresentation(String userName, String firstName, String lastName) {

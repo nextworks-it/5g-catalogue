@@ -1,6 +1,8 @@
 package it.nextworks.nfvmano.catalogue.auth.Resources;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import it.nextworks.nfvmano.libs.common.DescriptorInformationElement;
+import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
@@ -10,9 +12,9 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-public class ProjectResource {
+public class ProjectResource implements DescriptorInformationElement {
 
-    UUID projectId;
+    String projectId;
     String projectDescription;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @ElementCollection(fetch = FetchType.EAGER)
@@ -37,12 +39,16 @@ public class ProjectResource {
     public ProjectResource() {
     }
 
-    public ProjectResource(UUID projectId, String projectDescription) {
+    public ProjectResource(String projectId) {
+        this.projectId = projectId;
+    }
+
+    public ProjectResource(String projectId, String projectDescription) {
         this.projectId = projectId;
         this.projectDescription = projectDescription;
     }
 
-    public ProjectResource(UUID projectId, String projectDescription, List<String> users) {
+    public ProjectResource(String projectId, String projectDescription, List<String> users) {
         this.projectId = projectId;
         this.projectDescription = projectDescription;
         this.users = users;
@@ -52,11 +58,11 @@ public class ProjectResource {
         return id;
     }
 
-    public UUID getProjectId() {
+    public String getProjectId() {
         return projectId;
     }
 
-    public void setProjectId(UUID projectId) {
+    public void setProjectId(String projectId) {
         this.projectId = projectId;
     }
 
@@ -100,10 +106,20 @@ public class ProjectResource {
         this.vnfPackages = vnfPackages;
     }
 
+    public void addUser(String userName) {
+        this.users.add(userName);
+    }
+
     public boolean isDeletable() {
         if (!users.isEmpty() || !nsds.isEmpty() || !pnfds.isEmpty() || !vnfPackages.isEmpty()) {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public void isValid() throws MalformattedElementException {
+        if (this.projectId == null)
+            throw new MalformattedElementException("ProjectResource without projectId");
     }
 }

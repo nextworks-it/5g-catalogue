@@ -39,6 +39,7 @@ function logout() {
     deleteCookie('USERNAME');
     deleteCookie('ROLE');
     deleteCookie('TOKEN');
+    deleteCookie('PROJECT');
     
     keycloak.logout()
 }
@@ -78,6 +79,13 @@ function displayUserInfo(userInfoId) {
     var value = getCookie("USERNAME");
     
     elem.innerHTML = value;
+}
+
+function selectProject(projectName) {
+    setCookie("PROJECT", projectName, 1);
+
+    document.getElementById('project').innerHTML = '<b>' + projectName + '</b>';
+    document.getElementById('projectBar').innerHTML = '<b>' + projectName + '</b>';
 }
 
 function setCookie(cname, cvalue, exdays) {

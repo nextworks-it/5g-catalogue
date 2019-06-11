@@ -10,5 +10,5 @@ public interface ProjectRepository extends JpaRepository<ProjectResource, UUID> 
 
     Optional<ProjectResource> findById(UUID id);
 
-    Optional<ProjectResource> findByProjectId(UUID pnfdId);
+    Optional<ProjectResource> findByProjectId(String projectId);
 }

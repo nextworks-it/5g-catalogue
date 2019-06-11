@@ -61,12 +61,17 @@
                 var service_role = keycloak.tokenParsed.service_role;  
                 var username = keycloak.tokenParsed.preferred_username;
                 var project_name = keycloak.tokenParsed.project_name;
+                //var projects = keycloak.tokenParsed.groups;
+
+                /*var projectsDropDown = document.getElementById("userProjects");
+                for (var i = 0 ; i < projects.length; i++) {
+                    console.log("Project: "  + projects[i]);
+                    projectsDropDown.innerHTML += '<li><a onclick=selectProject("' + projects[i] + '"); href="#">' + projects[i] + '</a></li>';
+                }*/
                 
                 document.getElementById('userName').innerHTML = '<b>' + username + '</b>';
                 document.getElementById('userNameBar').innerHTML = '<b>' + username + '</b>';
-                document.getElementById('project').innerHTML = '<b>' + project_name + '</b>';
-                document.getElementById('projectBar').innerHTML = '<b>' + project_name + '</b>';
-
+                
                 //console.log("idToken: " + keycloak.idToken);
                 //console.log("Token: " +  keycloak.token);
                 //console.log("Realm: " + realm);
@@ -74,6 +79,20 @@
                 console.log("Service Role: " + service_role);
                 setCookie("TOKEN", keycloak.token, 1);
                 setCookie("ROLE", service_role, 1);
+                
+                /*var projCookie = getCookie("PROJECT");
+                console.log("Current project: " + projCookie);
+                if(service_role.indexOf("ADMIN") >= 0) {
+                    if (projCookie == "") {
+                        setCookie("PROJECT", "/Admins", 1);
+                    }
+                } else {
+                    if (projCookie == "") {
+                        setCookie("PROJECT", projects[0], 1);
+                    }
+                }
+                document.getElementById('project').innerHTML = '<b>' + getCookie("PROJECT") + '</b>';
+                document.getElementById('projectBar').innerHTML = '<b>' + getCookie("PROJECT") + '</b>';*/
 
                 //document.getElementById('profileType').innerHTML = 'IDToken';
                 //document.getElementById('email').innerHTML = keycloak.idTokenParsed.email;
@@ -96,4 +115,7 @@
         }
         keycloak.init({onLoad: 'login-required', checkLoginIframe: false}).success(reloadData);
     }
+</script>
+<script>
+    getAllProjects('project', 'projectBar', fillProjectsData);
 </script>
