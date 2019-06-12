@@ -125,3 +125,57 @@
 </div>
 </div>
 <!-- /top navigation -->
+<script>
+    if (kcEnabled) {
+        var keycloak = Keycloak({
+            url: 'http://10.20.8.21:8080/auth/', //10.20.8.21, localhost
+            realm: '5gcity', //5gcity, osm
+            clientId: '5gcatalogue' //5gcatalogue, catalog2
+        });
+        var loadData = function () {
+            
+            if (keycloak.idToken) {
+                //var realm = keycloak.tokenParsed.realm;  
+                var service_role = keycloak.tokenParsed.service_role;  
+                username = keycloak.tokenParsed.preferred_username;
+
+                getUser(username, 'response', fillProjectsData);
+                
+                document.getElementById('userName').innerHTML = '<b>' + username + '</b>';
+                document.getElementById('userNameBar').innerHTML = '<b>' + username + '</b>';
+                
+                //console.log("idToken: " + keycloak.idToken);
+                //console.log("Token: " +  keycloak.token);
+                //console.log("Realm: " + realm);
+                console.log("Service Role: " + service_role);
+                console.log("Username: " + username);
+                setCookie("USERNAME", username, 1);
+                setCookie("TOKEN", keycloak.token, 1);
+                setCookie("ROLE", service_role, 1);
+        
+                //document.getElementById('profileType').innerHTML = 'IDToken';
+                //document.getElementById('email').innerHTML = keycloak.idTokenParsed.email;
+                //document.getElementById('name').innerHTML = keycloak.idTokenParsed.name;
+                //document.getElementById('givenName').innerHTML = keycloak.idTokenParsed.given_name;
+                //document.getElementById('familyName').innerHTML = keycloak.idTokenParsed.family_name;
+            } else {
+                window.location.replace("/5gcatalogue/401.html");
+            }
+        };
+        var loadFailure = function () {
+            showResultMessage(false, "Failed to load user data");
+        };
+        var reloadData = function () {
+            keycloak.updateToken(20)
+                    .success(loadData)
+                    .error(function() {
+                        showResultMessage(false, "Failed to load user data");
+                    });
+        }
+        keycloak.init({onLoad: 'login-required', checkLoginIframe: false}).success(reloadData);
+    }
+</script>
+<script>
+    //var userName = getCookie("USERNAME");
+    //var userName = document.getElementById('userName').innerHTML;
+</script>

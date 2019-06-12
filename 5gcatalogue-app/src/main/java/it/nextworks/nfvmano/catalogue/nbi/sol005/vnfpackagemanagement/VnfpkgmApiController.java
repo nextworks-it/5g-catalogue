@@ -67,13 +67,13 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         this.request = request;
     }
 
-    public ResponseEntity<?> createVNFPkgInfo(@ApiParam(value = "", required = true) @Valid @RequestBody CreateVnfPkgInfoRequest body) {
+    public ResponseEntity<?> createVNFPkgInfo(@RequestParam(required = false) String project, @ApiParam(value = "", required = true) @Valid @RequestBody CreateVnfPkgInfoRequest body) {
 
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             log.debug("Processing REST request to create a VNF Pkg info");
             try {
-                VnfPkgInfo vnfPkgInfo = vnfPackageManagementInterface.createVnfPkgInfo(body);
+                VnfPkgInfo vnfPkgInfo = vnfPackageManagementInterface.createVnfPkgInfo(body, project);
                 return new ResponseEntity<VnfPkgInfo>(vnfPkgInfo, HttpStatus.CREATED);
             } catch (MalformattedElementException e) {
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
@@ -88,7 +88,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
                     "Accept header null or different from application/json"), HttpStatus.PRECONDITION_FAILED);
     }
 
-    public ResponseEntity<?> getVNFPkgsInfo(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+    public ResponseEntity<?> getVNFPkgsInfo(@RequestParam(required = false) String project, @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         String accept = request.getHeader("Accept");
 
         /*if (authorization != null) {
@@ -140,7 +140,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         // TODO: process URI parameters for filters and attributes. At the moment it returns all the VNF Pkgs info
         if (accept != null && accept.contains("application/json")) {
             try {
-                List<VnfPkgInfo> vnfPkgInfos = vnfPackageManagementInterface.getAllVnfPkgInfos();
+                List<VnfPkgInfo> vnfPkgInfos = vnfPackageManagementInterface.getAllVnfPkgInfos(project);
                 log.debug("VNF Pkg infos retrieved");
                 return new ResponseEntity<List<VnfPkgInfo>>(vnfPkgInfos, HttpStatus.OK);
             } catch (Exception e) {
@@ -155,13 +155,13 @@ public class VnfpkgmApiController implements VnfpkgmApi {
                     "Accept header null or different from application/json"), HttpStatus.PRECONDITION_FAILED);
     }
 
-    public ResponseEntity<?> queryVNFPkgInfo(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId) {
+    public ResponseEntity<?> queryVNFPkgInfo(@RequestParam(required = false) String project, @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId) {
         String accept = request.getHeader("Accept");
 
         log.debug("Processing REST request to retrieve VNF Pkg info " + vnfPkgId);
         if (accept != null && accept.contains("application/json")) {
             try {
-                VnfPkgInfo vnfPkgInfo = vnfPackageManagementInterface.getVnfPkgInfo(vnfPkgId);
+                VnfPkgInfo vnfPkgInfo = vnfPackageManagementInterface.getVnfPkgInfo(vnfPkgId, project);
                 log.debug("NSD info retrieved");
                 return new ResponseEntity<VnfPkgInfo>(vnfPkgInfo, HttpStatus.OK);
             } catch (NotExistingEntityException e) {
@@ -173,6 +173,11 @@ public class VnfpkgmApiController implements VnfpkgmApi {
                 return new ResponseEntity<ProblemDetails>(
                         Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
                                 "VNF Pkg info " + vnfPkgId + " cannot be found: not acceptable VNF Pkg Info ID format"),
+                        HttpStatus.BAD_REQUEST);
+            } catch (NotPermittedOperationException e) {
+                return new ResponseEntity<ProblemDetails>(
+                        Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
+                                e.getMessage()),
                         HttpStatus.BAD_REQUEST);
             } catch (Exception e) {
                 log.error("VNF Pkg info " + vnfPkgId + " cannot be retrieved: general internal error");
@@ -187,7 +192,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         }
     }
 
-    public ResponseEntity<?> updateVNFPkgInfo(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
+    public ResponseEntity<?> updateVNFPkgInfo(@RequestParam(required = false) String project, @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
                                               @ApiParam(value = "", required = true) @Valid @RequestBody VnfPkgInfoModifications body) {
         String accept = request.getHeader("Accept");
 
@@ -199,7 +204,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
 
         if (accept != null && accept.contains("application/json")) {
             try {
-                VnfPkgInfoModifications vnfPkgInfoModifications = vnfPackageManagementInterface.updateVnfPkgInfo(body, vnfPkgId);
+                VnfPkgInfoModifications vnfPkgInfoModifications = vnfPackageManagementInterface.updateVnfPkgInfo(body, vnfPkgId, project);
                 return new ResponseEntity<VnfPkgInfoModifications>(vnfPkgInfoModifications, HttpStatus.OK);
             } catch (NotExistingEntityException e) {
                 log.error("Impossible to update VNF Pkg info: " + e.getMessage());
@@ -220,11 +225,11 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         }
     }
 
-    public ResponseEntity<?> deleteVNFPkgInfo(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId) {
+    public ResponseEntity<?> deleteVNFPkgInfo(@RequestParam(required = false) String project, @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId) {
         String accept = request.getHeader("Accept");
         log.debug("Processing REST request to delete VNF Pkg info " + vnfPkgId);
         try {
-            vnfPackageManagementInterface.deleteVnfPkgInfo(vnfPkgId);
+            vnfPackageManagementInterface.deleteVnfPkgInfo(vnfPkgId, project);
             log.debug("VNF Pkg info removed");
             return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
         } catch (NotExistingEntityException e) {
@@ -251,7 +256,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         }
     }
 
-    public ResponseEntity<?> getVNFD(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId) {
+    public ResponseEntity<?> getVNFD(@RequestParam(required = false) String project, @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId) {
         String accept = request.getHeader("Accept");
 
         // TODO: consistency between accept values and input format when onboarding
@@ -262,7 +267,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         log.debug("Processing REST request to retrieve VNFD for VNF Pkg info ID " + vnfPkgId);
 
         try {
-            Object vnfd = vnfPackageManagementInterface.getVnfd(vnfPkgId, false);
+            Object vnfd = vnfPackageManagementInterface.getVnfd(vnfPkgId, false, project);
             // TODO: here it needs to check the type of entity that is returned
             return new ResponseEntity<Resource>((Resource) vnfd, HttpStatus.OK);
         } catch (NotExistingEntityException e) {
@@ -282,7 +287,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         }
     }
 
-    public ResponseEntity<?> getVNFPkg(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId, @ApiParam(value = "") @RequestHeader(value = "Range", required = false) String range) {
+    public ResponseEntity<?> getVNFPkg(@RequestParam(required = false) String project, @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId, @ApiParam(value = "") @RequestHeader(value = "Range", required = false) String range) {
         String accept = request.getHeader("Accept");
 
         // TODO: consistency between accept values and input format when onboarding
@@ -293,7 +298,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         log.debug("Processing REST request to retrieve VNF Pkg for VNF Pkg info ID " + vnfPkgId);
 
         try {
-            Object vnfPkg = vnfPackageManagementInterface.getVnfPkg(vnfPkgId, false);
+            Object vnfPkg = vnfPackageManagementInterface.getVnfPkg(vnfPkgId, false, project);
             // TODO: here it needs to check the type of entity that is returned
             return new ResponseEntity<Resource>((Resource) vnfPkg, HttpStatus.OK);
         } catch (NotExistingEntityException e) {
@@ -313,7 +318,8 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         }
     }
 
-    public ResponseEntity<?> uploadVNFPkg(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
+    public ResponseEntity<?> uploadVNFPkg(@RequestParam(required = false) String project,
+                                          @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
                                           @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
                                           @ApiParam(value = "The payload body contains a VNF Package ZIP file. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType) {
         log.debug("Processing REST request for Uploading VNF Pkg content in VNF Pkg info " + vnfPkgId);
@@ -338,7 +344,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
                     return new ResponseEntity<String>("Unable to parse file type that is not .zip",
                             HttpStatus.NOT_IMPLEMENTED);
                 }
-                vnfPackageManagementInterface.uploadVnfPkg(vnfPkgId, body, type, false);
+                vnfPackageManagementInterface.uploadVnfPkg(vnfPkgId, body, type, false, project);
                 log.debug("Upload processing done");
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
                 // TODO: check if we need to introduce the asynchronous mode
@@ -369,12 +375,14 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         }*/
     }
 
-    public ResponseEntity<Void> uploadVNFPkgFromURI(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId, @ApiParam(value = "", required = true) @Valid @RequestBody UploadVnfPackageFromUriRequest body) {
+    public ResponseEntity<Void> uploadVNFPkgFromURI(@RequestParam(required = false) String project,
+                                                    @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId, @ApiParam(value = "", required = true) @Valid @RequestBody UploadVnfPackageFromUriRequest body) {
         String accept = request.getHeader("Accept");
         return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
     }
 
-    public ResponseEntity<Object> queryVNFPkgArtifact(@ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId, @ApiParam(value = "", required = true) @PathVariable("artifactPath") String artifactPath, @ApiParam(value = "") @RequestHeader(value = "Range", required = false) String range) {
+    public ResponseEntity<Object> queryVNFPkgArtifact(@RequestParam(required = false) String project,
+                                                      @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId, @ApiParam(value = "", required = true) @PathVariable("artifactPath") String artifactPath, @ApiParam(value = "") @RequestHeader(value = "Range", required = false) String range) {
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("")) {
             try {

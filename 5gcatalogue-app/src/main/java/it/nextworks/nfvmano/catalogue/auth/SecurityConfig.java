@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -67,7 +68,10 @@ public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
                 .antMatchers("/catalogue/cat2catManagement/*").hasRole("ADMIN")
                 .antMatchers("/catalogue/vimManagement/*").hasRole("ADMIN")
                 .antMatchers("/catalogue/manoManagement/*").hasRole("ADMIN")
-                .antMatchers("/catalogue/projectManagement/*").hasAnyRole("ADMIN", "USER")
+                .antMatchers("/catalogue/projectManagement/projects*").hasRole("ADMIN")
+                .antMatchers("/catalogue/projectManagement/users*").hasRole("ADMIN")
+                .antMatchers(HttpMethod.GET, "/catalogue/projectManagement/users/*").hasAnyRole("ADMIN","USER")
+                .antMatchers(HttpMethod.OPTIONS, "/catalogue/projectManagement/users/*").hasAnyRole("ADMIN","USER")
                 .anyRequest().permitAll();
     }
 }

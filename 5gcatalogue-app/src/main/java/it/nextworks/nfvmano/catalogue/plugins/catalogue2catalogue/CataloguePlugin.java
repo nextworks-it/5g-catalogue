@@ -203,7 +203,7 @@ public class CataloguePlugin extends Plugin
                         request.setUserDefinedData(keyValuePairs);
                     }
 
-                    File nsd = ((Resource) nsdService.getNsd(notification.getNsdInfoId(), true)).getFile();
+                    File nsd = ((Resource) nsdService.getNsd(notification.getNsdInfoId(), true, nsdInfoResource.getProjectId())).getFile();
 
                     NsdInfo nsdInfo;
                     try {
@@ -280,7 +280,7 @@ public class CataloguePlugin extends Plugin
                         request.setUserDefinedData(keyValuePairs);
                     }
 
-                    File pnfd = ((Resource) nsdService.getPnfd(notification.getPnfdInfoId(), true)).getFile();
+                    File pnfd = ((Resource) nsdService.getPnfd(notification.getPnfdInfoId(), true, pnfdInfoResource.getProjectId())).getFile();
 
                     PnfdInfo pnfdInfo;
                     try {
@@ -351,7 +351,7 @@ public class CataloguePlugin extends Plugin
                         request.setUserDefinedData(keyValuePairs);
                     }
 
-                    File vnfPkg = ((Resource) vnfdService.getVnfPkg(notification.getVnfPkgInfoId(), true)).getFile();
+                    File vnfPkg = ((Resource) vnfdService.getVnfPkg(notification.getVnfPkgInfoId(), true, vnfPkgInfoResource.getProjectId())).getFile();
 
                     VnfPkgInfo vnfPkgInfo;
                     try {
@@ -435,6 +435,7 @@ public class CataloguePlugin extends Plugin
                 continue;
             } else {
                 VnfPkgInfoResource vnfPkgTargetResource = buildVnfPkgInfoResource(vnfPkgInfo);
+                vnfPkgTargetResource.setProjectId("Admins");
                 VnfPkgInfoResource createdVnfPkgInfo = vnfPkgInfoRepository.saveAndFlush(vnfPkgTargetResource);
 
                 Resource obj;
@@ -456,7 +457,7 @@ public class CataloguePlugin extends Plugin
                 } catch (RestClientException e1) {
                     log.error("Error when trying to get VNF Pkg with vnfPkgInfo  " + vnfPkgInfo.getId().toString() + ". Error: " + e1.getMessage());
                     try {
-                        vnfdService.deleteVnfPkgInfo(createdVnfPkgInfo.getId().toString());
+                        vnfdService.deleteVnfPkgInfo(createdVnfPkgInfo.getId().toString(), "Admins");
                     } catch (Exception e) {
                         log.error("Unable to delete vnfPkgInfo " + createdVnfPkgInfo.getId().toString() + " after failure while loading VNF Pkg: " + e.getMessage());
                     }
@@ -468,7 +469,7 @@ public class CataloguePlugin extends Plugin
 
                 MultipartFile multipartFile = createMultiPartFromFile(targetFile, "multipart/form-data");
                 try {
-                    vnfdService.uploadVnfPkg(vnfPkgTargetResource.getId().toString(), multipartFile, ContentType.ZIP, true);
+                    vnfdService.uploadVnfPkg(vnfPkgTargetResource.getId().toString(), multipartFile, ContentType.ZIP, true, "Admins");
                 } catch (Exception e) {
                     log.error("Error while uploading VNF Pkg with vnfPkgInfoId " + vnfPkgTargetResource.getId().toString() + ": " + e.getMessage());
                     throw new FailedOperationException("Error while uploading VNF Pkg with vnfPkgInfoId " + vnfPkgTargetResource.getId().toString() + ": " + e.getMessage());
@@ -491,6 +492,7 @@ public class CataloguePlugin extends Plugin
                 continue;
             } else {
                 PnfdInfoResource pnfdTargetResource = buildPnfdInfoResource(pnfdInfo);
+                pnfdTargetResource.setProjectId("Admins");
                 PnfdInfoResource createdPnfdInfo = pnfdInfoRepository.saveAndFlush(pnfdTargetResource);
 
                 Resource obj;
@@ -512,7 +514,7 @@ public class CataloguePlugin extends Plugin
                 } catch (RestClientException e1) {
                     log.error("Error when trying to get PNFD with pnfdInfo  " + pnfdInfo.getId().toString() + ". Error: " + e1.getMessage());
                     try {
-                        nsdService.deletePnfdInfo(createdPnfdInfo.getId().toString());
+                        nsdService.deletePnfdInfo(createdPnfdInfo.getId().toString(), "Admins");
                     } catch (Exception e) {
                         log.error("Unable to delete pnfdInfo " + createdPnfdInfo.getId().toString() + " after failure while loading PNFD: " + e.getMessage());
                     }
@@ -524,7 +526,7 @@ public class CataloguePlugin extends Plugin
 
                 MultipartFile multipartFile = createMultiPartFromFile(targetFile, "application/yaml");
                 try {
-                    nsdService.uploadPnfd(pnfdTargetResource.getId().toString(), multipartFile, ContentType.YAML, true);
+                    nsdService.uploadPnfd(pnfdTargetResource.getId().toString(), multipartFile, ContentType.YAML, true, "Admins");
                 } catch (Exception e) {
                     log.error("Error while uploading PNFD with pnfdInfoId " + pnfdTargetResource.getId().toString() + ": " + e.getMessage());
                     throw new FailedOperationException("Error while uploading PNFD with pnfdInfoId " + pnfdTargetResource.getId().toString() + ": " + e.getMessage());
@@ -547,6 +549,7 @@ public class CataloguePlugin extends Plugin
                 continue;
             } else {
                 NsdInfoResource nsdTargetResource = buildNsdInfoResource(nsdInfo);
+                nsdTargetResource.setProjectId("Admins");
                 NsdInfoResource createdNsdInfo = nsdInfoRepository.saveAndFlush(nsdTargetResource);
 
                 Resource obj;
@@ -566,7 +569,7 @@ public class CataloguePlugin extends Plugin
                 } catch (RestClientException e1) {
                     log.error("Error when trying to get NSD with nsdInfo  " + nsdInfo.getId().toString() + ". Error: " + e1.getMessage());
                     try {
-                        nsdService.deleteNsdInfo(createdNsdInfo.getId().toString());
+                        nsdService.deleteNsdInfo(createdNsdInfo.getId().toString(), "Admins");
                     } catch (Exception e) {
                         log.error("Unable to delete nsdInfo " + createdNsdInfo.getId().toString() + " after failure while loading NSD: " + e.getMessage());
                     }
@@ -578,7 +581,7 @@ public class CataloguePlugin extends Plugin
 
                 MultipartFile multipartFile = createMultiPartFromFile(targetFile, "application/yaml");
                 try {
-                    nsdService.uploadNsd(nsdTargetResource.getId().toString(), multipartFile, ContentType.YAML, true);
+                    nsdService.uploadNsd(nsdTargetResource.getId().toString(), multipartFile, ContentType.YAML, true, "Admins");
                 } catch (Exception e) {
                     log.error("Error while uploading NSD with nsdInfoId " + nsdTargetResource.getId().toString() + ": " + e.getMessage());
                     throw new FailedOperationException("Error while uploading NSD with nsdInfoId " + nsdTargetResource.getId().toString() + ": " + e.getMessage());

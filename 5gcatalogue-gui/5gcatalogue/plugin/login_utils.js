@@ -41,6 +41,8 @@ function logout() {
     deleteCookie('TOKEN');
     deleteCookie('PROJECT');
     
+    refresh(false);
+
     keycloak.logout()
 }
 
@@ -86,6 +88,8 @@ function selectProject(projectName) {
 
     document.getElementById('project').innerHTML = '<b>' + projectName + '</b>';
     document.getElementById('projectBar').innerHTML = '<b>' + projectName + '</b>';
+
+    refresh(false);
 }
 
 function setCookie(cname, cvalue, exdays) {

@@ -26,6 +26,10 @@ function getAllUsers(tableId, resId) {
 	getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/projectManagement/users", createUsersTable, [tableId, resId]);
 }
 
+function getUser(divId, resId, callback) {
+    getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/projectManagement/users/" + divId, callback, [divId, resId]);
+}
+
 function createNewProject(inputs) {
     var projectId = document.getElementById(inputs[0]).value;
     var projectDescription = document.getElementById(inputs[1]).value;
@@ -66,7 +70,7 @@ function createNewUser(inputs) {
 function putUserToProject(userNameInput, projectIdInput) {
     var userName = document.getElementById(userNameInput).value;
     var projecId = document.getElementById(projectIdInput).value;
-    putToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/projectManagement/projects/" + projecId + "/users/" + userName, showResultMessage, ["User" + userName + " has been successfully added to Project" + projecId + "."]);
+    putToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/projectManagement/projects/" + projecId + "/users/" + userName, showResultMessage, ["User" + userName + " has been successfully added to Project " + projecId + "."]);
 }
 
 function postProject(projectId, data) {
@@ -340,35 +344,30 @@ function createAddToProjectModal(data, params) {
 }
 
 function fillProjectsData(data, params) {
-    var projectsDropDown = document.getElementById("userProjects");
-
     var projCookie = getCookie("PROJECT");
     console.log("Current project: " + projCookie);
     var service_role = getCookie("ROLE");
     if(service_role.indexOf("ADMIN") >= 0) {
         if (projCookie == "") {
             setCookie("PROJECT", "Admins", 1);
+            projCookie = "Admins";
         }
     } else {
         if (projCookie == "") {
-            for (var i in data) {
-                if (data[i]['projectId'].toLowerCase().indexOf("admin") < 0) {
-                    setCookie("PROJECT", data[i]['projectId'], 1);
-                    found = true;
-                    break;
-                }
+            if (data['projects'].length >= 1) {
+                setCookie("PROJECT", data['projects'][0], 1);
+                projCookie = data['projects'][0];
             }
         }
     }
-    document.getElementById('project').innerHTML = '<b>' + getCookie("PROJECT") + '</b>';
-    document.getElementById('projectBar').innerHTML = '<b>' + getCookie("PROJECT") + '</b>';
 
-    for (var i = 0 ; i < data.length; i++) {
-        console.log("Project: "  + data[i]['projectId']);
-        if (data[i]['projectId'].toLowerCase().indexOf("admin") >= 0 && service_role.indexOf("ADMIN") < 0) {
-            continue;
-        } else {
-            projectsDropDown.innerHTML += '<li><a onclick=selectProject("' + data[i]['projectId'] + '"); href="#">' + data[i]['projectId'] + '</a></li>';
-        }
-    }
+    document.getElementById('project').innerHTML = projCookie;
+    document.getElementById('projectBar').innerHTML = '<b>' + projCookie + '</b>';
+    
+    var projectsDropDown = document.getElementById("userProjects");
+    
+    for (var i = 0 ; i < data['projects'].length; i++) {
+        console.log("Project: "  + data['projects'][i]);
+        projectsDropDown.innerHTML += '<li><a onclick=selectProject("' + data['projects'][i] + '"); href="#">' + data['projects'][i] + '</a></li>';
+    }    
 }

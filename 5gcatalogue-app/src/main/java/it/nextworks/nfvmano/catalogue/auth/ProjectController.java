@@ -19,7 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,10 +52,19 @@ public class ProjectController {
         }*/
 
         ProjectResource project = new ProjectResource("Admins", "Admins project");
+        project.addUser("admin");
         Optional<ProjectResource> optional = projectRepository.findByProjectId(project.getProjectId());
         if (!optional.isPresent()) {
             projectRepository.saveAndFlush(project);
             log.debug("Project " + project.getProjectId() + " successfully created");
+        }
+
+        UserResource userResource = new UserResource("admin", "Admin", "Admin", "Admins");
+        userResource.addProject("Admins");
+        Optional<UserResource> optionalUserResource = userRepository.findByUserName(userResource.getUserName());
+        if (!optionalUserResource.isPresent()) {
+            userRepository.saveAndFlush(userResource);
+            log.debug("User " + userResource.getUserName() + " successfully created");
         }
     }
 
@@ -76,8 +84,21 @@ public class ProjectController {
         if (optional.isPresent()) {
             return new ResponseEntity<String>("Project already present in DB", HttpStatus.CONFLICT);
         } else {
+            project.addUser("admin");
             createdProjectResource = projectRepository.saveAndFlush(project);
             log.debug("Project " + project.getProjectId() + " successfully created");
+
+            log.debug("Going to update user admin with new created project " + project.getProjectId());
+            Optional<UserResource> optionalUserResource = userRepository.findByUserName("admin");
+            if (optionalUserResource.isPresent()) {
+                UserResource userResource = optionalUserResource.get();
+                userResource.addProject(createdProjectResource.getProjectId());
+                userRepository.saveAndFlush(userResource);
+                log.debug("User admin successfully updated with new project " + createdProjectResource.getProjectId());
+            } else {
+                log.warn("Unable to update user admin with new created project " + createdProjectResource.getProjectId());
+            }
+
         }
 
         return new ResponseEntity<ProjectResource>(createdProjectResource, HttpStatus.CREATED);
@@ -158,6 +179,23 @@ public class ProjectController {
         }
 
         return new ResponseEntity<List<UserResource>>(userResources, HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/users/{userName}", method = RequestMethod.GET)
+    public ResponseEntity<?> getUser(@ApiParam(value = "", required = true)
+                                     @PathVariable("userName") String userName,
+                                     @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+
+        log.debug("Received request for getting User " + userName);
+
+        UserResource userResource;
+        Optional<UserResource>  optional = userRepository.findByUserName(userName);
+        if (optional.isPresent()) {
+            userResource = optional.get();
+            return new ResponseEntity<UserResource>(userResource, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<String>("User with userName " + userName + " not present in DB", HttpStatus.BAD_REQUEST);
+        }
     }
 
     @RequestMapping(value = "/users", method = RequestMethod.POST)

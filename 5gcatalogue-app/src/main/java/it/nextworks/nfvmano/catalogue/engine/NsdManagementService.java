@@ -112,7 +112,7 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
-    public NsdInfo createNsdInfo(CreateNsdInfoRequest request)
+    public NsdInfo createNsdInfo(CreateNsdInfoRequest request, String project)
             throws FailedOperationException, MalformattedElementException, MethodNotImplementedException {
         log.debug("Processing request to create a new NSD info.");
         KeyValuePairs kvp = request.getUserDefinedData();
@@ -123,6 +123,8 @@ public class NsdManagementService implements NsdManagementInterface {
             }
         }
         NsdInfoResource nsdInfoResource = new NsdInfoResource(targetKvp);
+        if (project != null)
+            nsdInfoResource.setProjectId(project);
         nsdInfoRepo.saveAndFlush(nsdInfoResource);
         UUID nsdInfoId = nsdInfoResource.getId();
         log.debug("Created NSD info with ID " + nsdInfoId);
@@ -132,7 +134,7 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
-    public synchronized void deleteNsdInfo(String nsdInfoId)
+    public synchronized void deleteNsdInfo(String nsdInfoId, String project)
             throws FailedOperationException, NotExistingEntityException, MalformattedElementException,
             NotPermittedOperationException, MethodNotImplementedException {
         log.debug("Processing request to delete an NSD info.");
@@ -148,6 +150,11 @@ public class NsdManagementService implements NsdManagementInterface {
                 log.debug("Found NSD info resource with id: " + nsdInfoId);
 
                 NsdInfoResource nsdInfo = optional.get();
+
+                if (project != null && !nsdInfo.getProjectId().equals(project)) {
+                    throw new NotPermittedOperationException("Specified project differs from NSD info project");
+                }
+
                 nsdInfo.isDeletable();
 
                 List<UUID> vnfPkgInfoIds = nsdInfo.getVnfPkgIds();
@@ -227,10 +234,15 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
-    public Object getNsdFile(String nsdInfoId, boolean isInternalRequest) throws FailedOperationException, NotExistingEntityException,
+    public Object getNsdFile(String nsdInfoId, boolean isInternalRequest, String project) throws FailedOperationException, NotExistingEntityException,
             MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
         log.debug("Processing request to retrieve an NSD content for NSD info " + nsdInfoId);
         NsdInfoResource nsdInfo = getNsdInfoResource(nsdInfoId);
+
+        if (project != null && !nsdInfo.getProjectId().equals(project)) {
+            throw new NotPermittedOperationException("Specified project differs from NSD info project");
+        }
+
         if ((!isInternalRequest) && (nsdInfo.getNsdOnboardingState() != NsdOnboardingStateType.ONBOARDED
                 && nsdInfo.getNsdOnboardingState() != NsdOnboardingStateType.LOCAL_ONBOARDED)) {
             log.error("NSD info " + nsdInfoId + " does not have an onboarded NSD yet");
@@ -250,10 +262,15 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
-    public Object getNsd(String nsdInfoId, boolean isInternalRequest) throws FailedOperationException, NotExistingEntityException,
+    public Object getNsd(String nsdInfoId, boolean isInternalRequest, String project) throws FailedOperationException, NotExistingEntityException,
             MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
         log.debug("Processing request to retrieve an NSD content for NSD info " + nsdInfoId);
         NsdInfoResource nsdInfo = getNsdInfoResource(nsdInfoId);
+
+        if (project != null && !nsdInfo.getProjectId().equals(project)) {
+            throw new NotPermittedOperationException("Specified project differs from NSD info project");
+        }
+
         if ((!isInternalRequest) && (nsdInfo.getNsdOnboardingState() != NsdOnboardingStateType.ONBOARDED
                 && nsdInfo.getNsdOnboardingState() != NsdOnboardingStateType.LOCAL_ONBOARDED)) {
             log.error("NSD info " + nsdInfoId + " does not have an onboarded NSD yet");
@@ -306,10 +323,15 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
-    public NsdInfo getNsdInfo(String nsdInfoId) throws FailedOperationException, NotExistingEntityException,
+    public NsdInfo getNsdInfo(String nsdInfoId, String project) throws NotPermittedOperationException, NotExistingEntityException,
             MalformattedElementException, MethodNotImplementedException {
         log.debug("Processing request to get an NSD info.");
         NsdInfoResource nsdInfoResource = getNsdInfoResource(nsdInfoId);
+
+        if (project != null && !nsdInfoResource.getProjectId().equals(project)) {
+            throw new NotPermittedOperationException("Specified project differs from NSD info project");
+        }
+
         log.debug("Found NSD info resource with id: " + nsdInfoId);
         NsdInfo nsdInfo = buildNsdInfo(nsdInfoResource);
         log.debug("Built NSD info with id: " + nsdInfoId);
@@ -340,25 +362,33 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
-    public List<NsdInfo> getAllNsdInfos() throws FailedOperationException, MethodNotImplementedException {
+    public List<NsdInfo> getAllNsdInfos(String project) throws FailedOperationException, MethodNotImplementedException {
         log.debug("Processing request to get all NSD infos.");
 
         List<NsdInfoResource> nsdInfoResources = nsdInfoRepo.findAll();
         List<NsdInfo> nsdInfos = new ArrayList<>();
 
         for (NsdInfoResource nsdInfoResource : nsdInfoResources) {
-            NsdInfo nsdInfo = buildNsdInfo(nsdInfoResource);
-            nsdInfos.add(nsdInfo);
-            log.debug("Added NSD info " + nsdInfoResource.getId());
+            if (project != null && !nsdInfoResource.getProjectId().equals(project)) {
+                continue;
+            } else {
+                NsdInfo nsdInfo = buildNsdInfo(nsdInfoResource);
+                nsdInfos.add(nsdInfo);
+                log.debug("Added NSD info " + nsdInfoResource.getId());
+            }
         }
         return nsdInfos;
     }
 
     @Override
-    public synchronized NsdInfoModifications updateNsdInfo(NsdInfoModifications nsdInfoModifications, String nsdInfoId)
+    public synchronized NsdInfoModifications updateNsdInfo(NsdInfoModifications nsdInfoModifications, String nsdInfoId, String project)
             throws NotExistingEntityException, MalformattedElementException, NotPermittedOperationException {
         log.debug("Processing request to update NSD info: " + nsdInfoId);
         NsdInfoResource nsdInfo = getNsdInfoResource(nsdInfoId);
+
+        if (project != null && !nsdInfo.getProjectId().equals(project)) {
+            throw new NotPermittedOperationException("Specified project differs from NSD info project");
+        }
 
         if (nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.ONBOARDED
                 || nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.LOCAL_ONBOARDED) {
@@ -396,11 +426,15 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
-    public synchronized void uploadNsd(String nsdInfoId, MultipartFile nsd, ContentType contentType, boolean isInternalRequest) throws MalformattedElementException, FailedOperationException, NotExistingEntityException, NotPermittedOperationException, MethodNotImplementedException {
+    public synchronized void uploadNsd(String nsdInfoId, MultipartFile nsd, ContentType contentType, boolean isInternalRequest, String project) throws MalformattedElementException, FailedOperationException, NotExistingEntityException, NotPermittedOperationException, MethodNotImplementedException {
 
         log.debug("Processing request to upload NSD content for NSD info " + nsdInfoId);
 
         NsdInfoResource nsdInfo = getNsdInfoResource(nsdInfoId);
+
+        if (project != null && !nsdInfo.getProjectId().equals(project)) {
+            throw new NotPermittedOperationException("Specified project differs from NSD info project");
+        }
 
         if (nsdInfo.getNsdOnboardingState() != NsdOnboardingStateType.CREATED) {
             log.error("NSD info " + nsdInfoId + " not in CREATED onboarding state.");
@@ -632,7 +666,7 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
-    public PnfdInfo createPnfdInfo(CreatePnfdInfoRequest request) throws FailedOperationException, MalformattedElementException, MethodNotImplementedException {
+    public PnfdInfo createPnfdInfo(CreatePnfdInfoRequest request, String project) throws FailedOperationException, MalformattedElementException, MethodNotImplementedException {
         log.debug("Processing request to create a new PNFD info.");
         KeyValuePairs kvp = request.getUserDefinedData();
         Map<String, String> targetKvp = new HashMap<>();
@@ -642,6 +676,8 @@ public class NsdManagementService implements NsdManagementInterface {
             }
         }
         PnfdInfoResource pnfdInfoResource = new PnfdInfoResource(targetKvp);
+        if (project != null)
+            pnfdInfoResource.setProjectId(project);
         pnfdInfoRepo.saveAndFlush(pnfdInfoResource);
         UUID pnfdInfoId = pnfdInfoResource.getId();
         log.debug("Created PNFD info with ID " + pnfdInfoId);
@@ -651,7 +687,7 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
-    public void deletePnfdInfo(String pnfdInfoId) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
+    public void deletePnfdInfo(String pnfdInfoId, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
         log.debug("Processing request to delete an PNFD info");
 
         if (pnfdInfoId == null)
@@ -665,6 +701,11 @@ public class NsdManagementService implements NsdManagementInterface {
                 log.debug("Found PNFD info resource with id: " + pnfdInfoId);
 
                 PnfdInfoResource pnfdInfo = optional.get();
+
+                if (project != null && !pnfdInfo.getProjectId().equals(project)) {
+                    throw new NotPermittedOperationException("Specified project differs from PNFD info project");
+                }
+
                 pnfdInfo.isDeletable();
 
                 log.debug("The PNFD info can be removed.");
@@ -703,14 +744,19 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
-    public PnfdInfoModifications updatePnfdInfo(PnfdInfoModifications pnfdInfoModifications, String pnfdInfoId) throws NotExistingEntityException, MalformattedElementException, NotPermittedOperationException {
+    public PnfdInfoModifications updatePnfdInfo(PnfdInfoModifications pnfdInfoModifications, String pnfdInfoId, String project) throws NotExistingEntityException, MalformattedElementException, NotPermittedOperationException {
         return null;
     }
 
     @Override
-    public Object getPnfd(String pnfdInfoId, boolean isInternalRequest) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
+    public Object getPnfd(String pnfdInfoId, boolean isInternalRequest, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
         log.debug("Processing request to retrieve an PNFD content for PNFD info " + pnfdInfoId);
         PnfdInfoResource pnfdInfo = getPnfdInfoResource(pnfdInfoId);
+
+        if (project != null && !pnfdInfo.getProjectId().equals(project)) {
+            throw new NotPermittedOperationException("Specified project differs from PNFD info project");
+        }
+
         if ((!isInternalRequest) && (pnfdInfo.getPnfdOnboardingState() != PnfdOnboardingStateType.ONBOARDED
                 && pnfdInfo.getPnfdOnboardingState() != PnfdOnboardingStateType.LOCAL_ONBOARDED)) {
             log.error("PNFD info " + pnfdInfoId + " does not have an onboarded PNFD yet");
@@ -742,9 +788,14 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
-    public PnfdInfo getPnfdInfo(String pnfdInfoId) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, MethodNotImplementedException {
+    public PnfdInfo getPnfdInfo(String pnfdInfoId, String project) throws NotPermittedOperationException, NotExistingEntityException, MalformattedElementException, MethodNotImplementedException {
         log.debug("Processing request to get an PNFD info");
         PnfdInfoResource pnfdInfoResource = getPnfdInfoResource(pnfdInfoId);
+
+        if (project != null && !pnfdInfoResource.getProjectId().equals(project)) {
+            throw new NotPermittedOperationException("Specified project differs from PNFD info project");
+        }
+
         log.debug("Found PNFD info resource with id: " + pnfdInfoId);
         PnfdInfo pnfdInfo = buildPnfdInfo(pnfdInfoResource);
         log.debug("Built PNFD info with id: " + pnfdInfoId);
@@ -752,25 +803,33 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
-    public List<PnfdInfo> getAllPnfdInfos() throws FailedOperationException, MethodNotImplementedException {
+    public List<PnfdInfo> getAllPnfdInfos(String project) throws FailedOperationException, MethodNotImplementedException {
         log.debug("Processing request to get all PNFD infos");
 
         List<PnfdInfoResource> pnfdInfoResources = pnfdInfoRepo.findAll();
         List<PnfdInfo> pnfdInfos = new ArrayList<>();
 
         for (PnfdInfoResource pnfdInfoResource : pnfdInfoResources) {
-            PnfdInfo pnfdInfo = buildPnfdInfo(pnfdInfoResource);
-            pnfdInfos.add(pnfdInfo);
-            log.debug("Added Pnfd info " + pnfdInfoResource.getId());
+            if (project != null && !pnfdInfoResource.getProjectId().equals(project)) {
+                continue;
+            } else {
+                PnfdInfo pnfdInfo = buildPnfdInfo(pnfdInfoResource);
+                pnfdInfos.add(pnfdInfo);
+                log.debug("Added Pnfd info " + pnfdInfoResource.getId());
+            }
         }
         return pnfdInfos;
     }
 
     @Override
-    public void uploadPnfd(String pnfdInfoId, MultipartFile pnfd, ContentType contentType, boolean isInternalRequest) throws MalformattedElementException, NotExistingEntityException, NotPermittedOperationException, FailedOperationException, MethodNotImplementedException {
+    public void uploadPnfd(String pnfdInfoId, MultipartFile pnfd, ContentType contentType, boolean isInternalRequest, String project) throws MalformattedElementException, NotExistingEntityException, NotPermittedOperationException, FailedOperationException, MethodNotImplementedException {
         log.debug("Processing request to upload PNFD content for PNFD info " + pnfdInfoId);
 
         PnfdInfoResource pnfdInfo = getPnfdInfoResource(pnfdInfoId);
+
+        if (project != null && !pnfdInfo.getProjectId().equals(project)) {
+            throw new NotPermittedOperationException("Specified project differs from PNFD info project");
+        }
 
         if (pnfdInfo.getPnfdOnboardingState() != PnfdOnboardingStateType.CREATED) {
             log.error("PNFD info " + pnfdInfoId + " not in CREATED onboarding state.");
