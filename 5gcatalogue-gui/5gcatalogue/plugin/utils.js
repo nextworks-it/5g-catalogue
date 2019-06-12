@@ -18,7 +18,7 @@
 var catalogueAddr = window.location.hostname;
 var cataloguePort = '8083';
 var isPublic = true;
-var kcEnabled = true;
+var kcEnabled = true
 
 var stopRefreshing = false;
 
@@ -327,8 +327,9 @@ function createLinkSet(id, resId, btnNames, btnCallbacks) {
 					text += '<a title="Delete" class="btn btn-link">\
 								<i class="fa fa-close"  onclick=' + btnCallbacks[i] + '("' + id + '","' + resId + '")></i>\
 							</a>';
-				} 	else if (btnCallbacks[i].toLowerCase().indexOf("update") >= 0) {
-						text += '<a title="Operational State" class="btn btn-link">\
+				} 	else if (btnCallbacks[i].toLowerCase().indexOf("update") >= 0 ||
+							btnCallbacks[i].toLowerCase().indexOf("project") >= 0) {
+						text += '<a title="' + btnNames[i] + '" class="btn btn-link">\
 									<i class="fa fa-gear" "buttonModal_'+ btnCallbacks[i] + '"  data-toggle="modal" data-target="#' + btnCallbacks[i] + id + '" data-id="' + id + '"></i>\
 								</a>';
 				} 	else if (btnCallbacks[i].toLowerCase().indexOf("open") >= 0) {

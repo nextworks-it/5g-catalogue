@@ -160,8 +160,8 @@ function postJsonToURL(resourceUrl, jsonData, callback, params) {
     }).fail(function (response) {
         console.log(response);
         if (callback == showResultMessage) {
-            var errorMsg = "Status code: " + response.responseJSON.status;
-            errorMsg +=  " Reason: " + response.responseJSON.detail;
+            var errorMsg = "Status code: " + response.status;
+            errorMsg +=  " Reason: " + response.responseText;
             callback(false, errorMsg);
         }
     });
@@ -195,8 +195,8 @@ function postJsonToURLWithAuth(resourceUrl, jsonData, callback, params) {
         } else if (response.status == 403) {
             location.href = '/5gcatalogue/403.html';
         } else if (callback == showResultMessage) {
-            var errorMsg = "Status code: " + response.responseJSON.status;
-            errorMsg +=  " Reason: " + response.responseJSON.detail;
+            var errorMsg = "Status code: " + response.status;
+            errorMsg +=  " Reason: " + response.responseText;
             callback(false, errorMsg);
         }
     });
@@ -220,8 +220,8 @@ function postToURL(resourceUrl, callback, params) {
     }).fail(function (response) {
         console.log(response);
         if (callback == showResultMessage) {
-            var errorMsg = "Status code: " + response.responseJSON.status;
-            errorMsg +=  " Reason: " + response.responseJSON.detail;
+            var errorMsg = "Status code: " + response.status;
+            errorMsg +=  " Reason: " + response.responseText;
             callback(false, errorMsg);
         }
     });
@@ -252,8 +252,8 @@ function postToURLWithAuth(resourceUrl, callback, params) {
         } else if (response.status == 403) {
             location.href = '/5gcatalogue/403.html';
         } else if (callback == showResultMessage) {
-            var errorMsg = "Status code: " + response.responseJSON.status;
-            errorMsg +=  " Reason: " + response.responseJSON.detail;
+            var errorMsg = "Status code: " + response.status;
+            errorMsg +=  " Reason: " + response.responseText;
             callback(false, errorMsg);
         }
     });
@@ -332,8 +332,8 @@ function putFileToURL(resourceUrl, file, callback, params) {
     }).fail(function (response) {
         console.log(response);
         if (callback == showResultMessage) {
-            var errorMsg = "Status code: " + response.responseJSON.status;
-            errorMsg +=  " Reason: " + response.responseJSON.detail;
+            var errorMsg = "Status code: " + response.status;
+            errorMsg +=  " Reason: " + response.responseText;
             callback(false, errorMsg);
         }
     });
@@ -368,8 +368,8 @@ function putFileToURLWithAuth(resourceUrl, file, callback, params) {
         } else if (response.status == 403) {
             location.href = '/5gcatalogue/403.html';
         } else if (callback == showResultMessage) {
-            var errorMsg = "Status code: " + response.responseJSON.status;
-            errorMsg +=  " Reason: " + response.responseJSON.detail;
+            var errorMsg = "Status code: " + response.status;
+            errorMsg +=  " Reason: " + response.responseText;
             callback(false, errorMsg);
         }
     });
@@ -409,13 +409,21 @@ function putToURLWithAuth(resourceUrl, callback, params) {
 
     $.ajax(settings).done(function (response) {
         console.log(response);
-        callback(response);
+        if (callback == showResultMessage) {
+            callback(true, params[0]);
+        } else {
+            callback(response, params);
+        }
     }).fail(function (response) {
         console.log(response);
         if (response.status == 401) {
             location.href = '/5gcatalogue/401.html';
         } else if (response.status == 403) {
             location.href = '/5gcatalogue/403.html';
+        } else if (callback == showResultMessage) {
+            var errorMsg = "Status code: " + response.status;
+            errorMsg +=  " Reason: " + response.responseText;
+            callback(false, errorMsg);
         }
     });
 }
@@ -438,8 +446,8 @@ function deleteRequestToURL(resourceUrl, callback, params) {
     }).fail(function (response) {
         console.log(response);
         if (callback == showResultMessage) {
-            var errorMsg = "Status code: " + response.responseJSON.status;
-            errorMsg +=  " Reason: " + response.responseJSON.detail;
+            var errorMsg = "Status code: " + response.status;
+            errorMsg +=  " Reason: " + response.responseText;
             callback(false, errorMsg);
         }
     });
@@ -470,8 +478,8 @@ function deleteRequestToURLWithAuth(resourceUrl, callback, params) {
         } else if (response.status == 403) {
             location.href = '/5gcatalogue/403.html';
         } else if (callback == showResultMessage) {
-            var errorMsg = "Status code: " + response.responseJSON.status;
-            errorMsg +=  " Reason: " + response.responseJSON.detail;
+            var errorMsg = "Status code: " + response.status;
+            errorMsg +=  " Reason: " + response.responseText;
             callback(false, errorMsg);
         }
     });
@@ -500,8 +508,8 @@ function patchJsonRequestToURL(resourceUrl, jsonData, callback, params) {
     }).fail(function (response) {
         console.log(response);
         if (callback == showResultMessage) {
-            var errorMsg = "Status code: " + response.responseJSON.status;
-            errorMsg +=  " Reason: " + response.responseJSON.detail;
+            var errorMsg = "Status code: " + response.status;
+            errorMsg +=  " Reason: " + response.responseText;
             callback(false, errorMsg);
         }
     });
@@ -535,8 +543,8 @@ function patchJsonRequestToURLWithAuth(resourceUrl, jsonData, callback, params) 
         } else if (response.status == 403) {
             location.href = '/5gcatalogue/403.html';
         } else if (callback == showResultMessage) {
-            var errorMsg = "Status code: " + response.responseJSON.status;
-            errorMsg +=  " Reason: " + response.responseJSON.detail;
+            var errorMsg = "Status code: " + response.status;
+            errorMsg +=  " Reason: " + response.responseText;
             callback(false, errorMsg);
         }
     });

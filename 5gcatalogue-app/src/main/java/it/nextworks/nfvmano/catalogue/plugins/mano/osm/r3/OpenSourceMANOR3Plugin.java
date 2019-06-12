@@ -119,7 +119,7 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
 
                 for (String vnfPkgInfoId : notification.getIncludedVnfds()) {
                     DescriptorTemplate vnfd = DescriptorsParser.fileToDescriptorTemplate(
-                            ((Resource) vnfdService.getVnfd(vnfPkgInfoId, true)).getFile());
+                            ((Resource) vnfdService.getVnfd(vnfPkgInfoId, true, null)).getFile());
                     includedVnfds.add(vnfd);
                 }
 
@@ -389,7 +389,7 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
     private DescriptorTemplate retrieveTemplate(String nsdInfoId)
             throws FailedOperationException, MalformattedElementException, NotExistingEntityException,
             MethodNotImplementedException, NotPermittedOperationException, IOException {
-        Object nsd = nsdService.getNsdFile(nsdInfoId, true);
+        Object nsd = nsdService.getNsdFile(nsdInfoId, true, null);
         if (!(Resource.class.isAssignableFrom(nsd.getClass()))) {
             throw new MethodNotImplementedException(
                     String.format("NSD storage type %s unsupported.", nsd.getClass().getSimpleName()));
@@ -401,7 +401,7 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
     private DescriptorTemplate retrieveVnfdTemplate(String vnfdInfoId)
             throws FailedOperationException, MalformattedElementException, NotExistingEntityException,
             MethodNotImplementedException, NotPermittedOperationException, IOException {
-        Object vnfd = vnfdService.getVnfd(vnfdInfoId, true);
+        Object vnfd = vnfdService.getVnfd(vnfdInfoId, true, null);
         if (!(Resource.class.isAssignableFrom(vnfd.getClass()))) {
             throw new MethodNotImplementedException(
                     String.format("VNFD storage type %s unsupported.", vnfd.getClass().getSimpleName()));
