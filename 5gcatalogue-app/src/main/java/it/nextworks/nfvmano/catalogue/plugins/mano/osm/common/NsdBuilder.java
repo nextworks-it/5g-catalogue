@@ -103,15 +103,14 @@ public class NsdBuilder {
                     ConstituentVnfd constituentVnfd = new ConstituentVnfd().setVnfdIdRef(vnfdId);
                     constituentVnfds.add(constituentVnfd);
 
-                    List<String> vls = vnfNode.getValue().getRequirements().getVirtualLink();
-
-                    for (String vlId : vls) {
-                        vlToVnfMapping.putIfAbsent(vlId, new HashMap<>());
+                    Map<String, String> vLinksAssociations = vnfNode.getValue().getRequirements().getVirtualLink();
+                    for(Map.Entry<String, String> entry : vLinksAssociations.entrySet()){
+                        vlToVnfMapping.putIfAbsent(entry.getValue(), new HashMap<>());
                         List<VirtualLinkPair> pairs = vnfd.getTopologyTemplate().getSubstituitionMappings().getRequirements().getVirtualLink();
                         for (VirtualLinkPair pair : pairs) {
-                            if (pair.getVl().equalsIgnoreCase(vlId)) {
+                            if (pair.getVl().equalsIgnoreCase(entry.getKey())) {
                                 String cpId = pair.getCp();
-                                vlToVnfMapping.get(vlId).put(constituentVnfd, cpId);
+                                vlToVnfMapping.get(entry.getValue()).put(constituentVnfd, cpId);
                             }
                         }
                     }
