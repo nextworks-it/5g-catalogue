@@ -63,7 +63,7 @@ public class NsdApiController implements NsdApi {
     }
 
     public ResponseEntity<?> createNsdInfo(
-            @RequestParam(required = false) String project,
+            @RequestParam(required = false, defaultValue = "Admins") String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "", required = true) @Valid @RequestBody CreateNsdInfoRequest body) {
         String accept = request.getHeader("Accept");
@@ -147,7 +147,7 @@ public class NsdApiController implements NsdApi {
     }
 
     public ResponseEntity<?> updateNSDInfo(
-            @RequestParam(required = false) String project,
+            @RequestParam(required = false, defaultValue = "Admins") String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
             @ApiParam(value = "", required = true) @Valid @RequestBody NsdInfoModifications body) {
@@ -251,7 +251,7 @@ public class NsdApiController implements NsdApi {
     }
 
     public ResponseEntity<?> uploadNSD(
-            @RequestParam(required = false) String project,
+            @RequestParam(required = false, defaultValue = "Admins") String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
             @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,

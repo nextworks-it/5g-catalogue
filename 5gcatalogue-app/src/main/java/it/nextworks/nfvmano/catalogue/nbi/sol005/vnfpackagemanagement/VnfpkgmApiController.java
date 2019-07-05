@@ -67,7 +67,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         this.request = request;
     }
 
-    public ResponseEntity<?> createVNFPkgInfo(@RequestParam(required = false) String project, @ApiParam(value = "", required = true) @Valid @RequestBody CreateVnfPkgInfoRequest body) {
+    public ResponseEntity<?> createVNFPkgInfo(@RequestParam(required = false, defaultValue = "Admins") String project, @ApiParam(value = "", required = true) @Valid @RequestBody CreateVnfPkgInfoRequest body) {
 
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
@@ -192,7 +192,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         }
     }
 
-    public ResponseEntity<?> updateVNFPkgInfo(@RequestParam(required = false) String project, @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
+    public ResponseEntity<?> updateVNFPkgInfo(@RequestParam(required = false, defaultValue = "Admins") String project, @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
                                               @ApiParam(value = "", required = true) @Valid @RequestBody VnfPkgInfoModifications body) {
         String accept = request.getHeader("Accept");
 
@@ -318,7 +318,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         }
     }
 
-    public ResponseEntity<?> uploadVNFPkg(@RequestParam(required = false) String project,
+    public ResponseEntity<?> uploadVNFPkg(@RequestParam(required = false, defaultValue = "Admins") String project,
                                           @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
                                           @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
                                           @ApiParam(value = "The payload body contains a VNF Package ZIP file. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType) {
@@ -375,7 +375,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         }*/
     }
 
-    public ResponseEntity<Void> uploadVNFPkgFromURI(@RequestParam(required = false) String project,
+    public ResponseEntity<Void> uploadVNFPkgFromURI(@RequestParam(required = false, defaultValue = "Admins") String project,
                                                     @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId, @ApiParam(value = "", required = true) @Valid @RequestBody UploadVnfPackageFromUriRequest body) {
         String accept = request.getHeader("Accept");
         return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
