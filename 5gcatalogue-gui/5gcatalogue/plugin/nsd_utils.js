@@ -15,14 +15,17 @@
 */
 
 function getAllNsdInfos(elemId, callback, resId) {
-    getJsonFromURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors", callback, [elemId, resId]);
+    var project = document.getElementById('project').innerHTML;
+    getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors?project=" + getCookie("PROJECT"), callback, [elemId, resId]);
 }
 
 function getNsdInfo(nsdInfoId, callback, elemId) {
-    getJsonFromURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId, callback, [elemId]);
+    var project = document.getElementById('project').innerHTML;
+    getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "?project=" + getCookie("PROJECT"), callback, [elemId]);
 }
 
 function fillNSDsCounter(data, params) {
+    var project = document.getElementById('project').innerHTML;
     var countDiv = document.getElementById(params[0]);
 
 	//console.log(JSON.stringify(data, null, 4));
@@ -30,7 +33,8 @@ function fillNSDsCounter(data, params) {
 }
 
 function deleteNsdInfo(nsdInfoId, resId) {
-    deleteRequestToURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId, showResultMessage, ["NSD with nsdInfoID " + nsdInfoId + " successfully deleted."]);
+    var project = document.getElementById('project').innerHTML;
+    deleteRequestToURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "?project=" + getCookie("PROJECT"), showResultMessage, ["NSD with nsdInfoID " + nsdInfoId + " successfully deleted."]);
 }
 
 function updateNsdInfo(nsdInfoId, elemId) {
@@ -41,7 +45,8 @@ function updateNsdInfo(nsdInfoId, elemId) {
     var json = JSON.stringify(jsonObj, null, 4);
 
     console.log("NsdInfoModifications: " + json);
-    patchJsonRequestToURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId, json, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully updated."]);
+    var project = document.getElementById('project').innerHTML;
+    patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "?project=" + getCookie("PROJECT"), json, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully updated."]);
 }
 
 function loadNSDFile(elemId, resId) {
@@ -59,7 +64,8 @@ function createNsdInfoId(file, resId) {
     var jsonObj = {"userDefinedData" : {} };
     var json = JSON.stringify(jsonObj, null, 4);
 
-    postJsonToURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors", json, uploadNsdContent, [file, resId]);
+    var project = document.getElementById('project').innerHTML;
+    postJsonToURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors?project=" + getCookie("PROJECT"), json, uploadNsdContent, [file, resId]);
 }
 
 function uploadNsdContent(data, params) {
@@ -70,11 +76,12 @@ function uploadNsdContent(data, params) {
     formData.append("pippo","pluto");
     var nsdInfoId = data['id'];
 
-    putFileToURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content", formData, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully updated."]);
+    var project = document.getElementById('project').innerHTML;
+    putFileToURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content?project=" + getCookie("PROJECT"), formData, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully updated."]);
 }
 
 function exportNsd(nsdInfoId, resId) {
-    postToURL("http://" + catalogueAddr + ":8083/catalogue/cat2catOperation/exportNsd/" + nsdInfoId, showResultMessage, ["Request for uploading NSD with nsdInfoId " + nsdInfoId + " successfully submitted to public 5G Catalogue."])
+    postToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/cat2catOperation/exportNsd/" + nsdInfoId, showResultMessage, ["Request for uploading NSD with nsdInfoId " + nsdInfoId + " successfully submitted to public 5G Catalogue."])
 }
 
 function getDescription(descrId) {
@@ -97,7 +104,8 @@ function readNSD(graphId) {
 }
 
 function getNSD(nsdInfoId, elemId, callback) {
-    getFileFromURL("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content", callback, [nsdInfoId, elemId]);
+    var project = document.getElementById('project').innerHTML;
+    getFileFromURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content?project=" + getCookie("PROJECT"), callback, [nsdInfoId, elemId]);
 }
 
 function showNsdGraphCanvas(data,params) {

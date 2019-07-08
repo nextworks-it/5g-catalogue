@@ -2,12 +2,6 @@
 
 ## Getting Started
 
-Initialize submodules:
-
-```
-git submodule update --init
-```
-
 ### Installing
 
 Apache 2 configuration for running the WEB GUI (Ubuntu)

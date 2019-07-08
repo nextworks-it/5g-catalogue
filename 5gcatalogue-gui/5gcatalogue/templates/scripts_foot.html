@@ -45,16 +45,36 @@
 <script src="/gentelella/build/js/custom.min.js"></script>
 
 <script>
-      var time = new Date().getTime();
-      $(document.body).bind("mousemove keypress", function() {
-          time = new Date().getTime();
-      });
-
-      function autoRefresh() {
-          if(new Date().getTime() - time >= 60000) 
-              window.location.reload(true);
-          else 
-              setTimeout(autoRefresh, 5000);
+    if(!kcEnabled) {
+      document.getElementById("userInfo").classList += " isHidden";
+      document.getElementById("userInfoBar").style.display = "none";
+    } else {
+      var role = getCookie("ROLE");
+      //console.log("Role: " + role);
+      var adminElems = document.getElementsByClassName("admin");
+      if(role.indexOf('ROLE_SERVICE_ADMIN') >= 0) {
+        //console.log(adminElems);
+        for (var i = 0; i < adminElems.length; i++) {
+          adminElems[i].style = '';
+        }
+      } else {
+        for (var i = 0; i < adminElems.length; i++) {
+          adminElems[i].style.display = 'none';
+        }
       }
-      setTimeout(autoRefresh, 5000);
+    }
+</script>
+<script>
+    var time = new Date().getTime();
+    $(document.body).bind("mousemove keypress", function() {
+        time = new Date().getTime();
+    });
+
+    function autoRefresh() {
+        if(new Date().getTime() - time >= 60000) 
+            window.location.reload(true);
+        else 
+            setTimeout(autoRefresh, 5000);
+    }
+    setTimeout(autoRefresh, 5000);
 </script>

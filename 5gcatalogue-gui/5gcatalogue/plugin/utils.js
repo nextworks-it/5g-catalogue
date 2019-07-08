@@ -17,7 +17,8 @@
 //var catalogueAddr = '10.0.8.44';
 var catalogueAddr = window.location.hostname;
 var cataloguePort = '8083';
-var isPublic = false;
+var isPublic = true;
+var kcEnabled = true
 
 var stopRefreshing = false;
 
@@ -60,6 +61,24 @@ function clearForms(parentId, flag) {
 		var modal = document.getElementById(parentId);
 		modal.style = 'display:none';
 	}
+}
+
+function redirectToError(errorType) {
+	//var path = location.pathname;
+	var hostname = '/5gcatalogue/';
+	var new_path = '';
+  
+	/*var steps_back = path.split('/');
+	  console.log(steps_back.length);
+		  
+	  for (var i = 0; i < steps_back.length - stepsToRoot; i++) {
+		  new_path += '../';
+	  }*/
+  
+	//new_path += errorType + '.html';
+	new_path += hostname + errorType + '.html';
+	//console.log(new_path);
+	location.href = new_path;
 }
 
 function getURLParameter(name) {
@@ -308,8 +327,9 @@ function createLinkSet(id, resId, btnNames, btnCallbacks) {
 					text += '<a title="Delete" class="btn btn-link">\
 								<i class="fa fa-close"  onclick=' + btnCallbacks[i] + '("' + id + '","' + resId + '")></i>\
 							</a>';
-				} 	else if (btnCallbacks[i].toLowerCase().indexOf("update") >= 0) {
-						text += '<a title="Operational State" class="btn btn-link">\
+				} 	else if (btnCallbacks[i].toLowerCase().indexOf("update") >= 0 ||
+							btnCallbacks[i].toLowerCase().indexOf("project") >= 0) {
+						text += '<a title="' + btnNames[i] + '" class="btn btn-link">\
 									<i class="fa fa-gear" "buttonModal_'+ btnCallbacks[i] + '"  data-toggle="modal" data-target="#' + btnCallbacks[i] + id + '" data-id="' + id + '"></i>\
 								</a>';
 				} 	else if (btnCallbacks[i].toLowerCase().indexOf("open") >= 0) {

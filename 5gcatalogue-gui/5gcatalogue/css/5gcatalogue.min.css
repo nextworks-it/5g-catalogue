@@ -230,3 +230,7 @@ body {
 	opacity: 0.5;
 	text-decoration: none;
 }
+
+.isHidden {
+	display: none;
+}

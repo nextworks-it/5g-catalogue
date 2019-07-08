@@ -24,6 +24,7 @@ import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -45,7 +46,7 @@ public class MANOManagementController {
     }
 
     @RequestMapping(value = "/manos", method = RequestMethod.POST)
-    public ResponseEntity<?> createMANO(@ApiParam(value = "", required = true) @RequestBody MANO mano) throws MethodNotImplementedException {
+    public ResponseEntity<?> createMANO(@ApiParam(value = "", required = true) @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization, @RequestBody MANO mano) throws MethodNotImplementedException {
 
         log.debug("Received request for new MANO loading");
         if ((mano == null) || (mano.getManoId() == null)) {
@@ -74,7 +75,7 @@ public class MANOManagementController {
     }
 
     @RequestMapping(value = "/manos", method = RequestMethod.GET)
-    public ResponseEntity<List<MANO>> getMANOs() throws MethodNotImplementedException {
+    public ResponseEntity<List<MANO>> getMANOs(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) throws MethodNotImplementedException {
 
         log.debug("Received request for getting MANO plugins");
 
@@ -84,7 +85,7 @@ public class MANOManagementController {
     }
 
     @RequestMapping(value = "/manos/{manoId}", method = RequestMethod.GET)
-    public ResponseEntity<?> getMANO(@ApiParam(value = "", required = true) @PathVariable("manoId") String manoId) throws MethodNotImplementedException {
+    public ResponseEntity<?> getMANO(@ApiParam(value = "", required = true) @PathVariable("manoId") String manoId, @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) throws MethodNotImplementedException {
 
         log.debug("Received request for getting MANO plugin with manoId {}", manoId);
 

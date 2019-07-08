@@ -57,6 +57,8 @@ public class VnfPkgInfoResource {
     @Fetch(FetchMode.SELECT)
     private List<String> parentNsds = new ArrayList<>();
 
+    private String projectId;
+
     private boolean isPublished;
 
     public VnfPkgInfoResource() {
@@ -234,6 +236,14 @@ public class VnfPkgInfoResource {
 
     public void setParentNsds(List<String> parentNsds) {
         this.parentNsds = parentNsds;
+    }
+
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
     }
 
     public boolean isPublished() {

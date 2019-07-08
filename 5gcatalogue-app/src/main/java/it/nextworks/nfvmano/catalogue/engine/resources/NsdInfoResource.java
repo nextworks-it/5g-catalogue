@@ -74,6 +74,10 @@ public class NsdInfoResource {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Fetch(FetchMode.SELECT)
+    private List<String> nsdPkgFilename = new ArrayList<>();
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     private Map<String, String> userDefinedData = new HashMap<>();
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -81,6 +85,8 @@ public class NsdInfoResource {
     @Fetch(FetchMode.SELECT)
     @Cascade(org.hibernate.annotations.CascadeType.ALL)
     private Map<String, NotificationResource> acknowledgedOnboardOpConsumers = new HashMap<>();
+
+    private String projectId;
 
     private boolean isPublished;
 
@@ -306,8 +312,24 @@ public class NsdInfoResource {
         return nsdFilename;
     }
 
+    public void setNsdFilename(List<String> nsdFilename) {
+        this.nsdFilename = nsdFilename;
+    }
+
     public void addNsdFilename(String filename) {
         this.nsdFilename.add(filename);
+    }
+
+    public List<String> getNsdPkgFilename() {
+        return nsdPkgFilename;
+    }
+
+    public void setNsdPkgFilename(List<String> nsdPkgFilename) {
+        this.nsdPkgFilename = nsdPkgFilename;
+    }
+
+    public void addNsdPkgFilename(String nsdPkgFilename) {
+        this.nsdPkgFilename.add(nsdPkgFilename);
     }
 
     /**
@@ -321,8 +343,12 @@ public class NsdInfoResource {
         this.acknowledgedOnboardOpConsumers = acknowledgedOnboardOpConsumers;
     }
 
-    public void setNsdFilename(List<String> nsdFilename) {
-        this.nsdFilename = nsdFilename;
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
     }
 
     public boolean isPublished() {

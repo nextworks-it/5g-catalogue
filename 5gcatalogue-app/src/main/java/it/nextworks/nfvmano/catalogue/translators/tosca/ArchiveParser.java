@@ -115,7 +115,7 @@ public class ArchiveParser {
         }
     }
 
-    public static CSARInfo archiveToMainDescriptor(MultipartFile file)
+    public static CSARInfo archiveToMainDescriptor(MultipartFile file, boolean isVnfPkg)
             throws IOException, MalformattedElementException, FailedOperationException {
 
         DescriptorTemplate dt = null;
@@ -139,23 +139,23 @@ public class ArchiveParser {
                 String mst_content = mainServiceTemplate.toString("UTF-8");
                 dt = DescriptorsParser.stringToDescriptorTemplate(mst_content);
                 csarInfo.setMst(dt);
-                log.debug("Main service template with vnfdId {} and verions {} successfully parsed", dt.getMetadata().getDescriptorId(), dt.getMetadata().getVersion());
+                log.debug("Main service template with descriptor Id {} and verions {} successfully parsed", dt.getMetadata().getDescriptorId(), dt.getMetadata().getVersion());
             }
 
             try {
-                String vnfPkg_filename = FileSystemStorageService.storeVnfPkg(dt.getMetadata().getDescriptorId(), dt.getMetadata().getVersion(), file);
-                csarInfo.setVnfPkgFilename(vnfPkg_filename);
-                log.debug("Stored VNF Pkg: " + vnfPkg_filename);
+                String packageFilename = FileSystemStorageService.storePkg(dt.getMetadata().getDescriptorId(), dt.getMetadata().getVersion(), file, isVnfPkg);
+                csarInfo.setPackageFilename(packageFilename);
+                log.debug("Stored Pkg: " + packageFilename);
             } catch (FailedOperationException e) {
-                log.error("Failure while storing VNF Pkg with vnfdId " + dt.getMetadata().getDescriptorId() + ": " + e.getMessage());
-                throw new FailedOperationException("Failure while storing VNF Pkg with vnfdId " + dt.getMetadata().getDescriptorId() + ": " + e.getMessage());
+                log.error("Failure while storing Pkg with descriptor Id " + dt.getMetadata().getDescriptorId() + ": " + e.getMessage());
+                throw new FailedOperationException("Failure while storing Pkg with descriptor Id " + dt.getMetadata().getDescriptorId() + ": " + e.getMessage());
             }
 
             try {
-                unzip(new ByteArrayInputStream(bytes), dt);
+                unzip(new ByteArrayInputStream(bytes), dt, isVnfPkg);
             } catch (FailedOperationException e) {
-                log.error("Failure while unzipping VNF Pkg with vnfdId " + dt.getMetadata().getDescriptorId() + ": " + e.getMessage());
-                throw new FailedOperationException("Failure while unzipping VNF Pkg with vnfdId " + dt.getMetadata().getDescriptorId() + ": " + e.getMessage());
+                log.error("Failure while unzipping Pkg with descriptor Id " + dt.getMetadata().getDescriptorId() + ": " + e.getMessage());
+                throw new FailedOperationException("Failure while unzipping Pkg with descriptor Id " + dt.getMetadata().getDescriptorId() + ": " + e.getMessage());
             }
 
             mainServiceTemplate.close();
@@ -188,7 +188,7 @@ public class ArchiveParser {
                         Matcher matcher = pattern.matcher(line);
                         if (matcher.find()) {
                             String mst_name = matcher.group(1);
-                            csarInfo.setVnfdFilename(mst_name);
+                            csarInfo.setDescriptorFilename(mst_name);
                             log.debug("Parsing metadata: found Main Service Template " + mst_name);
                             if (templates.containsKey(mst_name)) {
                                 mainServiceTemplate = templates.get(mst_name);
@@ -206,14 +206,14 @@ public class ArchiveParser {
         }
     }
 
-    public static void unzip(InputStream archive, DescriptorTemplate dt) throws IOException, FailedOperationException, MalformattedElementException {
+    public static void unzip(InputStream archive, DescriptorTemplate dt, boolean isVnfPkg) throws IOException, FailedOperationException, MalformattedElementException {
         ZipInputStream zis = new ZipInputStream(archive);
         ZipEntry zipEntry = zis.getNextEntry();
         String element_filename;
         while (zipEntry != null) {
             log.debug("Storing CSAR element: " + zipEntry.getName());
-            element_filename = FileSystemStorageService.storeVnfPkgElement(zis, zipEntry, dt.getMetadata().getDescriptorId(), dt.getMetadata().getVersion());
-            log.debug("Stored VNF Pkg element: " + element_filename);
+            element_filename = FileSystemStorageService.storePkgElement(zis, zipEntry, dt.getMetadata().getDescriptorId(), dt.getMetadata().getVersion(), isVnfPkg);
+            log.debug("Stored Pkg element: " + element_filename);
             zipEntry = zis.getNextEntry();
         }
         zis.closeEntry();

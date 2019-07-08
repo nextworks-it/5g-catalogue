@@ -18,8 +18,7 @@ function login(userNameId, passwordId){
     var username = document.getElementById(userNameId).value;
     var password = document.getElementById(passwordId).value;
     
-    //loginToURL('http://' + vsAddr + ':' + vsPort + '/login', username, password, getUserInfo, failedLogin);
-    window.location.href = "/5gcatalogue/index.html"   
+    loginToURL('http://' + vsAddr + ':' + vsPort + '/login', username, password, getUserInfo, failedLogin);  
 }
 
 function failedLogin(response) {
@@ -37,11 +36,14 @@ function failedLogin(response) {
 }
 
 function logout() {
-    deleteCookie('username');
-    deleteCookie('role');
-    deleteCookie('JSESSIONID');
+    deleteCookie('USERNAME');
+    deleteCookie('ROLE');
+    deleteCookie('TOKEN');
+    deleteCookie('PROJECT');
     
-    redirectToError('index');
+    refresh(false);
+
+    keycloak.logout()
 }
 
 function getUserInfo() {
@@ -63,8 +65,8 @@ function storeUserInfo(data) {
         "role": "ADMIN"
     };*/
     
-    setCookie("username", data.username, 1);
-    setCookie("role", data.role, 1);
+    setCookie("USERNAME", data.username, 1);
+    setCookie("ROLE", data.role, 1);
     
     if (data.role == 'ADMIN') {
         location.href = './admin/index.html';
@@ -76,9 +78,18 @@ function storeUserInfo(data) {
 function displayUserInfo(userInfoId) {
     var elem = document.getElementById(userInfoId);
     
-    var value = getCookie("username");
+    var value = getCookie("USERNAME");
     
     elem.innerHTML = value;
+}
+
+function selectProject(projectName) {
+    setCookie("PROJECT", projectName, 1);
+
+    document.getElementById('project').innerHTML = '<b>' + projectName + '</b>';
+    document.getElementById('projectBar').innerHTML = '<b>' + projectName + '</b>';
+
+    refresh(false);
 }
 
 function setCookie(cname, cvalue, exdays) {

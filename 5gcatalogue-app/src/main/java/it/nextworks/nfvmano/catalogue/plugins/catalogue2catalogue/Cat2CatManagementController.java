@@ -7,6 +7,7 @@ import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +29,7 @@ public class Cat2CatManagementController {
     }
 
     @RequestMapping(value = "/5gcatalogues", method = RequestMethod.POST)
-    public ResponseEntity<?> create5GCatalogue(@ApiParam(value = "", required = true) @RequestBody Catalogue catalogue) {
+    public ResponseEntity<?> create5GCatalogue(@ApiParam(value = "", required = true) @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization, @RequestBody Catalogue catalogue) {
 
         log.debug("Received request for new 5G Catalogue loading");
         if ((catalogue == null) || (catalogue.getCatalogueId() == null)) {
@@ -48,7 +49,7 @@ public class Cat2CatManagementController {
     }
 
     @RequestMapping(value = "/5gcatalogues", method = RequestMethod.GET)
-    public ResponseEntity<List<Catalogue>> get5GCatalogues() {
+    public ResponseEntity<List<Catalogue>> get5GCatalogues(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
 
         log.debug("Received request for getting 5G Catalogue plugins");
 
@@ -58,7 +59,7 @@ public class Cat2CatManagementController {
     }
 
     @RequestMapping(value = "/5gcatalogues/{catalogueId}", method = RequestMethod.GET)
-    public ResponseEntity<?> get5Gcatalogue(@ApiParam(value = "", required = true) @PathVariable("catalogueId") String catalogueId) {
+    public ResponseEntity<?> get5Gcatalogue(@ApiParam(value = "", required = true) @PathVariable("catalogueId") String catalogueId, @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
 
         log.debug("Received request for getting 5G Catalogue plugin with catalogueId {}", catalogueId);
 

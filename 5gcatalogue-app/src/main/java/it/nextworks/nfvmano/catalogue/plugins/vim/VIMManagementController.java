@@ -9,6 +9,7 @@ import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +31,7 @@ public class VIMManagementController {
     }
 
     @RequestMapping(value = "/vims", method = RequestMethod.POST)
-    public ResponseEntity<?> createVIM(@ApiParam(value = "", required = true) @RequestBody VIM vim) throws MethodNotImplementedException {
+    public ResponseEntity<?> createVIM(@ApiParam(value = "", required = true) @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization, @RequestBody VIM vim) throws MethodNotImplementedException {
 
         log.debug("Received request for new VIM loading");
         if ((vim == null) || (vim.getVimId() == null)) {
@@ -59,7 +60,7 @@ public class VIMManagementController {
     }
 
     @RequestMapping(value = "/vims", method = RequestMethod.GET)
-    public ResponseEntity<List<VIM>> getVIMs() throws MethodNotImplementedException {
+    public ResponseEntity<List<VIM>> getVIMs(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) throws MethodNotImplementedException {
 
         log.debug("Received request for getting VIM plugins");
 
@@ -69,7 +70,7 @@ public class VIMManagementController {
     }
 
     @RequestMapping(value = "/vims/{vimId}", method = RequestMethod.GET)
-    public ResponseEntity<?> getVIM(@ApiParam(value = "", required = true) @PathVariable("vimId") String vimId) throws MethodNotImplementedException {
+    public ResponseEntity<?> getVIM(@ApiParam(value = "", required = true) @PathVariable("vimId") String vimId, @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) throws MethodNotImplementedException {
 
         log.debug("Received request for getting VIM plugin with vimId {}", vimId);
 
