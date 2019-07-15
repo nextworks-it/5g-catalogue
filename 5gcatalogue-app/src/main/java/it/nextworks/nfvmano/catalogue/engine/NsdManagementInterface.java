@@ -23,33 +23,33 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface NsdManagementInterface {
-    NsdInfo createNsdInfo(CreateNsdInfoRequest request, String project) throws FailedOperationException, MalformattedElementException, MethodNotImplementedException;
+    NsdInfo createNsdInfo(CreateNsdInfoRequest request, String project) throws FailedOperationException, MalformattedElementException, MethodNotImplementedException, NotPermittedOperationException, NotAuthorizedOperationException;
 
-    void deleteNsdInfo(String nsdInfoId, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException;
+    void deleteNsdInfo(String nsdInfoId, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException, NotAuthorizedOperationException;
 
-    NsdInfoModifications updateNsdInfo(NsdInfoModifications nsdInfoModification, String nsdInfoId, String project) throws NotExistingEntityException, MalformattedElementException, NotPermittedOperationException;
+    NsdInfoModifications updateNsdInfo(NsdInfoModifications nsdInfoModification, String nsdInfoId, String project) throws NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, NotAuthorizedOperationException;
 
-    Object getNsdFile(String nsdInfoId, boolean isInternalRequest, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException;
+    Object getNsdFile(String nsdInfoId, boolean isInternalRequest, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException, NotAuthorizedOperationException;
 
-    Object getNsd(String nsdInfoId, boolean isInternalRequest, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException;
+    Object getNsd(String nsdInfoId, boolean isInternalRequest, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException, NotAuthorizedOperationException;
 
-    NsdInfo getNsdInfo(String nsdInfoId, String project) throws NotPermittedOperationException, NotExistingEntityException, MalformattedElementException, MethodNotImplementedException;
+    NsdInfo getNsdInfo(String nsdInfoId, String project) throws NotPermittedOperationException, NotExistingEntityException, MalformattedElementException, MethodNotImplementedException, NotAuthorizedOperationException;
 
-    List<NsdInfo> getAllNsdInfos(String project) throws FailedOperationException, MethodNotImplementedException;
+    List<NsdInfo> getAllNsdInfos(String project) throws FailedOperationException, MethodNotImplementedException, NotAuthorizedOperationException;
 
     void uploadNsd(String nsdInfoId, MultipartFile nsd, ContentType contentType, boolean isInternalRequest, String project) throws Exception, FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException;
 
-    PnfdInfo createPnfdInfo(CreatePnfdInfoRequest request, String project) throws FailedOperationException, MalformattedElementException, MethodNotImplementedException;
+    PnfdInfo createPnfdInfo(CreatePnfdInfoRequest request, String project) throws FailedOperationException, MalformattedElementException, MethodNotImplementedException, NotAuthorizedOperationException;
 
-    void deletePnfdInfo(String pnfdInfoId, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException;
+    void deletePnfdInfo(String pnfdInfoId, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException, NotAuthorizedOperationException;
 
     PnfdInfoModifications updatePnfdInfo(PnfdInfoModifications pnfdInfoModifications, String pnfdInfoId, String project) throws NotExistingEntityException, MalformattedElementException, NotPermittedOperationException;
 
-    Object getPnfd(String pnfdInfoId, boolean isInternalRequest, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException;
+    Object getPnfd(String pnfdInfoId, boolean isInternalRequest, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException, NotAuthorizedOperationException;
 
-    PnfdInfo getPnfdInfo(String pnfdInfoId, String project) throws NotPermittedOperationException, NotExistingEntityException, MalformattedElementException, MethodNotImplementedException;
+    PnfdInfo getPnfdInfo(String pnfdInfoId, String project) throws NotPermittedOperationException, NotExistingEntityException, MalformattedElementException, MethodNotImplementedException, NotAuthorizedOperationException;
 
-    List<PnfdInfo> getAllPnfdInfos(String project) throws FailedOperationException, MethodNotImplementedException;
+    List<PnfdInfo> getAllPnfdInfos(String project) throws FailedOperationException, MethodNotImplementedException, NotAuthorizedOperationException;
 
     void uploadPnfd(String pnfdInfoId, MultipartFile pnfd, ContentType contentType, boolean isInternalRequest, String project) throws Exception, FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException;
 

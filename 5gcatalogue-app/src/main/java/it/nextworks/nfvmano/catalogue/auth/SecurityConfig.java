@@ -70,8 +70,8 @@ public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
                 .antMatchers("/catalogue/manoManagement/*").hasRole("ADMIN")
                 .antMatchers("/catalogue/projectManagement/projects*").hasRole("ADMIN")
                 .antMatchers("/catalogue/projectManagement/users*").hasRole("ADMIN")
-                .antMatchers(HttpMethod.GET, "/catalogue/projectManagement/users/*").hasAnyRole("ADMIN","USER")
-                .antMatchers(HttpMethod.OPTIONS, "/catalogue/projectManagement/users/*").hasAnyRole("ADMIN","USER")
+                .antMatchers(HttpMethod.GET, "/catalogue/projectManagement/users/*").hasAnyRole("ADMIN", "USER")
+                .antMatchers(HttpMethod.OPTIONS, "/catalogue/projectManagement/users/*").hasAnyRole("ADMIN", "USER")
                 .anyRequest().permitAll();
     }
 }

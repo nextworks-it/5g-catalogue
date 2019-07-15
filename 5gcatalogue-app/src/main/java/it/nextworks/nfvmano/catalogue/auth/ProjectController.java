@@ -189,7 +189,7 @@ public class ProjectController {
         log.debug("Received request for getting User " + userName);
 
         UserResource userResource;
-        Optional<UserResource>  optional = userRepository.findByUserName(userName);
+        Optional<UserResource> optional = userRepository.findByUserName(userName);
         if (optional.isPresent()) {
             userResource = optional.get();
             return new ResponseEntity<UserResource>(userResource, HttpStatus.OK);

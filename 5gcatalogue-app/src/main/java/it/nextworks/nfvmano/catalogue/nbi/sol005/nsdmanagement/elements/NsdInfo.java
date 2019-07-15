@@ -87,6 +87,9 @@ public class NsdInfo {
     @JsonProperty("c2cOnboardingState")
     private C2COnboardingStateType c2cOnboardingState;
 
+    @JsonProperty("projectId")
+    private String projectId;
+
     public NsdInfo id(UUID id) {
         this.id = id;
         return this;
@@ -456,6 +459,14 @@ public class NsdInfo {
 
     public void setC2cOnboardingState(C2COnboardingStateType c2cOnboardingState) {
         this.c2cOnboardingState = c2cOnboardingState;
+    }
+
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
     }
 
     @Override
