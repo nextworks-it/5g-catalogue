@@ -31,9 +31,6 @@ public class Cat2CatOperationService {
 
     private static final Logger log = LoggerFactory.getLogger(Cat2CatOperationService.class);
 
-    @Value("${kafkatopic.exportLocal}")
-    String localNotificationTopic;
-
     @Autowired
     NotificationManager notificationManager;
 

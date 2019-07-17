@@ -16,6 +16,7 @@
 package it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiParam;
 import it.nextworks.nfvmano.catalogue.common.Utilities;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
@@ -28,6 +29,8 @@ import it.nextworks.nfvmano.libs.common.exceptions.NotPermittedOperationExceptio
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -53,11 +56,14 @@ public class NsdApiController implements NsdApi {
 
     private final HttpServletRequest request;
 
+    @Value("${keycloak.enabled:true}")
+    private boolean keycloakEnabled;
+
     @Autowired
     NsdManagementInterface nsdManagementService;
 
     @Autowired
-    public NsdApiController(ObjectMapper objectMapper, HttpServletRequest request) {
+    public NsdApiController(ObjectMapper objectMapper, HttpServletRequest request)  {
         this.objectMapper = objectMapper;
         this.request = request;
     }
@@ -66,6 +72,14 @@ public class NsdApiController implements NsdApi {
             @RequestParam(required = false, defaultValue = "Admins") String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "", required = true) @Valid @RequestBody CreateNsdInfoRequest body) {
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             log.debug("Processing REST request to create an NSD info");
@@ -87,8 +101,15 @@ public class NsdApiController implements NsdApi {
 
     public ResponseEntity<?> getNSDsInfo(@RequestParam(required = false) String project, @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         log.debug("Processing REST request to retrieve all NSD infos");
-        String accept = request.getHeader("Accept");
 
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
+        String accept = request.getHeader("Accept");
         // TODO: process URI parameters for filters and attributes. At the moment it returns all the NSDs info
         if (accept != null && accept.contains("application/json")) {
             try {
@@ -111,8 +132,15 @@ public class NsdApiController implements NsdApi {
             @RequestParam(required = false) String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId) {
-        String accept = request.getHeader("Accept");
 
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
+        String accept = request.getHeader("Accept");
         log.debug("Processing REST request to retrieve NSD info " + nsdInfoId);
         if (accept != null && accept.contains("application/json")) {
             try {
@@ -152,6 +180,13 @@ public class NsdApiController implements NsdApi {
             @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
             @ApiParam(value = "", required = true) @Valid @RequestBody NsdInfoModifications body) {
 
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         log.debug("Processing REST request for Updating NSD info " + nsdInfoId);
         if (body == null) {
             return new ResponseEntity<String>("Error message: Body is empty!", HttpStatus.BAD_REQUEST);
@@ -185,6 +220,14 @@ public class NsdApiController implements NsdApi {
             @RequestParam(required = false) String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId) {
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
         log.debug("Processing REST request to delete NSD info " + nsdInfoId);
         try {
@@ -220,6 +263,14 @@ public class NsdApiController implements NsdApi {
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
             @ApiParam(value = "The request may contain a \"Range\" HTTP header to obtain single range of bytes from the NSD file. This can be used to continue an aborted transmission.  If the NFVO does not support range requests, the NFVO shall ignore the 'Range\" header, process the GET request, and return the whole NSD file with a 200 OK response (rather than returning a 4xx error status code).") @RequestHeader(value = "Range", required = false) String range) {
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
 
         // TODO: consistency between accept values and input format when onboarding
@@ -258,6 +309,13 @@ public class NsdApiController implements NsdApi {
             @ApiParam(value = "The payload body contains a copy of the file representing the NSD or a ZIP file that contains the file or multiple files representing the NSD, as specified above. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType) {
 
         log.debug("Processing REST request for Uploading NSD content in NSD info " + nsdInfoId);
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
 
         String accept = request.getHeader("Accept");
         //if (accept != null && accept.contains("application/json")) {
@@ -318,6 +376,14 @@ public class NsdApiController implements NsdApi {
             @RequestParam(required = false) String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "", required = true) @Valid @RequestBody CreatePnfdInfoRequest body) {
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             log.debug("Processing REST request to create a PNFD info");
@@ -358,6 +424,14 @@ public class NsdApiController implements NsdApi {
             @Valid @RequestParam(value = "exclude_default", required = false) String excludeDefault,
             @ApiParam(value = "Include all complex attributes in the response. See clause 4.3.3 for details. The NFVO shall support this parameter.") @Valid @RequestParam(value = "all_fields", required = false) String allFields) {
         log.debug("Processing REST request to retrieve all PNFD infos");
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
 
         // TODO: process URI parameters for filters and attributes. At the moment it returns all the PNFDs info
@@ -396,6 +470,14 @@ public class NsdApiController implements NsdApi {
             @RequestParam(required = false) String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId) {
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
 
         log.debug("Processing REST request to retrieve PNFD info " + pnfdInfoId);
@@ -445,11 +527,19 @@ public class NsdApiController implements NsdApi {
         return new ResponseEntity<PnfdInfo>(HttpStatus.NOT_IMPLEMENTED);*/
     }
 
-    public ResponseEntity<PnfdInfoModifications> updatePNFDInfo(
+    public ResponseEntity<?> updatePNFDInfo(
             @RequestParam(required = false) String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId,
             @ApiParam(value = "", required = true) @Valid @RequestBody PnfdInfoModifications body) {
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
@@ -469,6 +559,14 @@ public class NsdApiController implements NsdApi {
             @RequestParam(required = false) String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId) {
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
         log.debug("Processing REST request to delete PNFD info " + pnfdInfoId);
         try {
@@ -506,6 +604,14 @@ public class NsdApiController implements NsdApi {
             @RequestParam(required = false) String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId) {
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
 
         // TODO: consistency between accept values and input format when onboarding
@@ -557,6 +663,13 @@ public class NsdApiController implements NsdApi {
             @RequestParam(required = false) String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         log.debug("Processing REST request for Uploading PNFD content in PNFD info " + pnfdInfoId);
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
 
         String accept = request.getHeader("Accept");
         //if (accept != null && accept.contains("application/json")) {
@@ -615,9 +728,17 @@ public class NsdApiController implements NsdApi {
     }
 
 
-    public ResponseEntity<NsdmSubscription> createSubscription(
+    public ResponseEntity<?> createSubscription(
             @ApiParam(value = "", required = true) @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @Valid @RequestBody NsdmSubscriptionRequest body) {
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
@@ -633,7 +754,14 @@ public class NsdApiController implements NsdApi {
         return new ResponseEntity<NsdmSubscription>(HttpStatus.NOT_IMPLEMENTED);
     }
 
-    public ResponseEntity<List<NsdmSubscription>> getSubscriptions(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+    public ResponseEntity<?> getSubscriptions(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
@@ -650,9 +778,16 @@ public class NsdApiController implements NsdApi {
     }
 
 
-    public ResponseEntity<NsdmSubscription> getSubscription(
+    public ResponseEntity<?> getSubscription(
             @ApiParam(value = "", required = true) @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @PathVariable("subscriptionId") String subscriptionId) {
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
@@ -668,8 +803,16 @@ public class NsdApiController implements NsdApi {
         return new ResponseEntity<NsdmSubscription>(HttpStatus.NOT_IMPLEMENTED);
     }
 
-    public ResponseEntity<Void> deleteSubscription(
-            @ApiParam(value = "", required = true) @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization, @PathVariable("subscriptionId") String subscriptionId) {
+    public ResponseEntity<?> deleteSubscription(
+            @ApiParam(value = "", required = true) @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @PathVariable("subscriptionId") String subscriptionId) {
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
         return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
     }

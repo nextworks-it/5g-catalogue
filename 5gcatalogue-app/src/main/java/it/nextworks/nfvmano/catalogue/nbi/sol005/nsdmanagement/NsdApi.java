@@ -22,6 +22,7 @@ package it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement;
 
 import io.swagger.annotations.*;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.*;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

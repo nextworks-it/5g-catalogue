@@ -57,8 +57,10 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
     @Autowired
     private ArchiveParser archiveParser;
 
+    /*
     @Autowired
     private KeycloakService keycloakService;
+    */
 
     private Map<String, Map<String, NotificationResource>> operationIdToConsumersAck = new HashMap<>();
 

@@ -30,6 +30,7 @@ import it.nextworks.nfvmano.libs.common.exceptions.NotPermittedOperationExceptio
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -58,8 +59,13 @@ public class VnfpkgmApiController implements VnfpkgmApi {
     @Autowired
     VnfPackageManagementInterface vnfPackageManagementInterface;
 
+    /*
     @Autowired
     KeycloakService keycloakService;
+    */
+
+    @Value("${keycloak.enabled:true}")
+    private boolean keycloakEnabled;
 
     @Autowired
     public VnfpkgmApiController(ObjectMapper objectMapper, HttpServletRequest request) {
@@ -67,7 +73,16 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         this.request = request;
     }
 
-    public ResponseEntity<?> createVNFPkgInfo(@RequestParam(required = false, defaultValue = "Admins") String project, @ApiParam(value = "", required = true) @Valid @RequestBody CreateVnfPkgInfoRequest body) {
+    public ResponseEntity<?> createVNFPkgInfo(@RequestParam(required = false, defaultValue = "Admins") String project,
+                                              @ApiParam(value = "", required = true) @Valid @RequestBody CreateVnfPkgInfoRequest body,
+                                              @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
 
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
@@ -88,7 +103,16 @@ public class VnfpkgmApiController implements VnfpkgmApi {
                     "Accept header null or different from application/json"), HttpStatus.PRECONDITION_FAILED);
     }
 
-    public ResponseEntity<?> getVNFPkgsInfo(@RequestParam(required = false) String project, @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+    public ResponseEntity<?> getVNFPkgsInfo(@RequestParam(required = false) String project,
+                                            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
 
         /*if (authorization != null) {
@@ -155,7 +179,17 @@ public class VnfpkgmApiController implements VnfpkgmApi {
                     "Accept header null or different from application/json"), HttpStatus.PRECONDITION_FAILED);
     }
 
-    public ResponseEntity<?> queryVNFPkgInfo(@RequestParam(required = false) String project, @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId) {
+    public ResponseEntity<?> queryVNFPkgInfo(@RequestParam(required = false) String project,
+                                             @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
+                                             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
 
         log.debug("Processing REST request to retrieve VNF Pkg info " + vnfPkgId);
@@ -192,8 +226,18 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         }
     }
 
-    public ResponseEntity<?> updateVNFPkgInfo(@RequestParam(required = false, defaultValue = "Admins") String project, @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
-                                              @ApiParam(value = "", required = true) @Valid @RequestBody VnfPkgInfoModifications body) {
+    public ResponseEntity<?> updateVNFPkgInfo(@RequestParam(required = false, defaultValue = "Admins") String project,
+                                              @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
+                                              @ApiParam(value = "", required = true) @Valid @RequestBody VnfPkgInfoModifications body,
+                                              @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
 
 
@@ -225,7 +269,17 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         }
     }
 
-    public ResponseEntity<?> deleteVNFPkgInfo(@RequestParam(required = false) String project, @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId) {
+    public ResponseEntity<?> deleteVNFPkgInfo(@RequestParam(required = false) String project,
+                                              @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
+                                              @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
         log.debug("Processing REST request to delete VNF Pkg info " + vnfPkgId);
         try {
@@ -256,7 +310,17 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         }
     }
 
-    public ResponseEntity<?> getVNFD(@RequestParam(required = false) String project, @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId) {
+    public ResponseEntity<?> getVNFD(@RequestParam(required = false) String project,
+                                     @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
+                                     @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
 
         // TODO: consistency between accept values and input format when onboarding
@@ -287,7 +351,18 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         }
     }
 
-    public ResponseEntity<?> getVNFPkg(@RequestParam(required = false) String project, @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId, @ApiParam(value = "") @RequestHeader(value = "Range", required = false) String range) {
+    public ResponseEntity<?> getVNFPkg(@RequestParam(required = false) String project,
+                                       @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
+                                       @ApiParam(value = "") @RequestHeader(value = "Range", required = false) String range,
+                                       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
 
         // TODO: consistency between accept values and input format when onboarding
@@ -321,8 +396,16 @@ public class VnfpkgmApiController implements VnfpkgmApi {
     public ResponseEntity<?> uploadVNFPkg(@RequestParam(required = false, defaultValue = "Admins") String project,
                                           @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
                                           @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
-                                          @ApiParam(value = "The payload body contains a VNF Package ZIP file. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType) {
+                                          @ApiParam(value = "The payload body contains a VNF Package ZIP file. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType,
+                                          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         log.debug("Processing REST request for Uploading VNF Pkg content in VNF Pkg info " + vnfPkgId);
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
 
         String accept = request.getHeader("Accept");
         //if (accept != null && accept.contains("application/json")) {
@@ -375,14 +458,32 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         }*/
     }
 
-    public ResponseEntity<Void> uploadVNFPkgFromURI(@RequestParam(required = false, defaultValue = "Admins") String project,
-                                                    @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId, @ApiParam(value = "", required = true) @Valid @RequestBody UploadVnfPackageFromUriRequest body) {
+    public ResponseEntity<?> uploadVNFPkgFromURI(@RequestParam(required = false, defaultValue = "Admins") String project,
+                                                    @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
+                                                    @ApiParam(value = "", required = true) @Valid @RequestBody UploadVnfPackageFromUriRequest body,
+                                                    @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
         String accept = request.getHeader("Accept");
         return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
     }
 
-    public ResponseEntity<Object> queryVNFPkgArtifact(@RequestParam(required = false) String project,
-                                                      @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId, @ApiParam(value = "", required = true) @PathVariable("artifactPath") String artifactPath, @ApiParam(value = "") @RequestHeader(value = "Range", required = false) String range) {
+    public ResponseEntity<?> queryVNFPkgArtifact(@RequestParam(required = false) String project,
+                                                      @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
+                                                      @ApiParam(value = "", required = true) @PathVariable("artifactPath") String artifactPath,
+                                                      @ApiParam(value = "") @RequestHeader(value = "Range", required = false) String range,
+                                                      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("")) {
             try {
@@ -396,7 +497,16 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         return new ResponseEntity<Object>(HttpStatus.NOT_IMPLEMENTED);
     }
 
-    public ResponseEntity<?> createSubscription(@ApiParam(value = "", required = true) @Valid @RequestBody PkgmSubscriptionRequest body) {
+    public ResponseEntity<?> createSubscription(@ApiParam(value = "", required = true) @Valid @RequestBody PkgmSubscriptionRequest body,
+                                                @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
@@ -410,7 +520,15 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
     }
 
-    public ResponseEntity<?> getSubscriptions() {
+    public ResponseEntity<?> getSubscriptions(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
@@ -424,7 +542,16 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
     }
 
-    public ResponseEntity<?> getSubscription(@ApiParam(value = "", required = true) @PathVariable("subscriptionId") String subscriptionId) {
+    public ResponseEntity<?> getSubscription(@ApiParam(value = "", required = true) @PathVariable("subscriptionId") String subscriptionId,
+                                             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
@@ -438,7 +565,16 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
     }
 
-    public ResponseEntity<Void> deleteSubscription(@ApiParam(value = "", required = true) @PathVariable("subscriptionId") String subscriptionId) {
+    public ResponseEntity<?> deleteSubscription(@ApiParam(value = "", required = true) @PathVariable("subscriptionId") String subscriptionId,
+                                                   @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+
+        if(keycloakEnabled && authorization == null){
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
+                            "Missing request header 'Authorization'"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+
         String accept = request.getHeader("Accept");
         return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
     }

@@ -45,7 +45,8 @@ public interface VnfpkgmApi {
             consumes = {"application/json"},
             method = RequestMethod.POST)
     ResponseEntity<?> createVNFPkgInfo(@RequestParam(required = false) String project,
-                                       @ApiParam(value = "", required = true) @Valid @RequestBody CreateVnfPkgInfoRequest body);
+                                       @ApiParam(value = "", required = true) @Valid @RequestBody CreateVnfPkgInfoRequest body,
+                                       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization);
 
     @ApiOperation(value = "Query VNF Packages Info", nickname = "getVNFPkgsInfo", notes = "", response = VnfPkgInfo.class, responseContainer = "List", tags = {})
     @ApiResponses(value = {
@@ -69,7 +70,8 @@ public interface VnfpkgmApi {
             produces = {"application/json"},
             method = RequestMethod.GET)
     ResponseEntity<?> queryVNFPkgInfo(@RequestParam(required = false) String project,
-                                      @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId);
+                                      @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
+                                      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization);
 
     @ApiOperation(value = "Update a VNF Package Info", nickname = "updateVNFPkgInfo", notes = "", response = VnfPkgInfoModifications.class, tags = {})
     @ApiResponses(value = {
@@ -85,7 +87,8 @@ public interface VnfpkgmApi {
             method = RequestMethod.PATCH)
     ResponseEntity<?> updateVNFPkgInfo(@RequestParam(required = false) String project,
                                        @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
-                                       @ApiParam(value = "", required = true) @Valid @RequestBody VnfPkgInfoModifications body);
+                                       @ApiParam(value = "", required = true) @Valid @RequestBody VnfPkgInfoModifications body,
+                                       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization);
 
     @ApiOperation(value = "Delete a VNF Package", nickname = "deleteVNFPkgInfo", notes = "", tags = {})
     @ApiResponses(value = {
@@ -97,7 +100,8 @@ public interface VnfpkgmApi {
             produces = {"application/json"},
             method = RequestMethod.DELETE)
     ResponseEntity<?> deleteVNFPkgInfo(@RequestParam(required = false) String project,
-                                       @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId);
+                                       @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
+                                       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization);
 
     @ApiOperation(value = "Get VNF Desriptor in a VNF Package.", nickname = "getVNFD", notes = "", response = Object.class, tags = {})
     @ApiResponses(value = {
@@ -111,7 +115,8 @@ public interface VnfpkgmApi {
             produces = {"application/json", "application/yaml", "text/plain", "application/zip"},
             method = RequestMethod.GET)
     ResponseEntity<?> getVNFD(@RequestParam(required = false) String project,
-                              @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId);
+                              @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
+                              @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization);
 
     @ApiOperation(value = "Get VNF Package content.", nickname = "getVNFPkg", notes = "", response = Object.class, tags = {})
     @ApiResponses(value = {
@@ -127,7 +132,8 @@ public interface VnfpkgmApi {
             method = RequestMethod.GET)
     ResponseEntity<?> getVNFPkg(@RequestParam(required = false) String project,
                                 @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
-                                @ApiParam(value = "") @RequestHeader(value = "Range", required = false) String range);
+                                @ApiParam(value = "") @RequestHeader(value = "Range", required = false) String range,
+                                @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization);
 
     @ApiOperation(value = "Upload VNF Package content.", nickname = "uploadVNFPkg", notes = "", tags = {})
     @ApiResponses(value = {
@@ -143,7 +149,8 @@ public interface VnfpkgmApi {
     ResponseEntity<?> uploadVNFPkg(@RequestParam(required = false) String project,
                                    @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
                                    @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
-                                   @ApiParam(value = "The payload body contains a VNF Package ZIP file. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType);
+                                   @ApiParam(value = "The payload body contains a VNF Package ZIP file. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType,
+                                   @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization);
 
     @ApiOperation(value = "Upload VNF Package content from URI.", nickname = "uploadVNFPkgFromURI", notes = "", tags = {})
     @ApiResponses(value = {
@@ -156,9 +163,10 @@ public interface VnfpkgmApi {
             produces = {"application/json"},
             consumes = {"application/json"},
             method = RequestMethod.POST)
-    ResponseEntity<Void> uploadVNFPkgFromURI(@RequestParam(required = false) String project,
+    ResponseEntity<?> uploadVNFPkgFromURI(@RequestParam(required = false) String project,
                                              @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
-                                             @ApiParam(value = "", required = true) @Valid @RequestBody UploadVnfPackageFromUriRequest body);
+                                             @ApiParam(value = "", required = true) @Valid @RequestBody UploadVnfPackageFromUriRequest body,
+                                             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization);
 
     @ApiOperation(value = "Query VNF Package artifact.", nickname = "queryVNFPkgArtifact", notes = "", response = Object.class, tags = {})
     @ApiResponses(value = {
@@ -175,7 +183,8 @@ public interface VnfpkgmApi {
     ResponseEntity<?> queryVNFPkgArtifact(@RequestParam(required = false) String project,
                                           @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
                                           @ApiParam(value = "", required = true) @PathVariable("artifactPath") String artifactPath,
-                                          @ApiParam(value = "") @RequestHeader(value = "Range", required = false) String range);
+                                          @ApiParam(value = "") @RequestHeader(value = "Range", required = false) String range,
+                                          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization);
 
     @ApiOperation(value = "Create Subscription Information", nickname = "createSubscription", notes = "", response = PkgmSubscription.class, tags = {})
     @ApiResponses(value = {
@@ -186,7 +195,8 @@ public interface VnfpkgmApi {
     @RequestMapping(value = "/vnfpkgm/v1/subscriptions",
             produces = {"application/json"},
             method = RequestMethod.POST)
-    ResponseEntity<?> createSubscription(@ApiParam(value = "", required = true) @Valid @RequestBody PkgmSubscriptionRequest body);
+    ResponseEntity<?> createSubscription(@ApiParam(value = "", required = true) @Valid @RequestBody PkgmSubscriptionRequest body,
+                                         @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization);
 
     @ApiOperation(value = "Query Subscriptions Information", nickname = "getSubscriptions", notes = "", response = PkgmSubscription.class, responseContainer = "List", tags = {})
     @ApiResponses(value = {
@@ -196,7 +206,7 @@ public interface VnfpkgmApi {
     @RequestMapping(value = "/vnfpkgm/v1/subscriptions",
             produces = {"application/json"},
             method = RequestMethod.GET)
-    ResponseEntity<?> getSubscriptions();
+    ResponseEntity<?> getSubscriptions(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization);
 
     @ApiOperation(value = "Query Subscription Information", nickname = "getSubscription", notes = "", response = PkgmSubscription.class, tags = {})
     @ApiResponses(value = {
@@ -206,7 +216,8 @@ public interface VnfpkgmApi {
     @RequestMapping(value = "/vnfpkgm/v1/subscriptions/{subscriptionId}",
             produces = {"application/json"},
             method = RequestMethod.GET)
-    ResponseEntity<?> getSubscription(@ApiParam(value = "", required = true) @PathVariable("subscriptionId") String subscriptionId);
+    ResponseEntity<?> getSubscription(@ApiParam(value = "", required = true) @PathVariable("subscriptionId") String subscriptionId,
+                                      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization);
 
     @ApiOperation(value = "Delete Subscription Information", nickname = "deleteSubscription", notes = "", tags = {})
     @ApiResponses(value = {
@@ -216,5 +227,6 @@ public interface VnfpkgmApi {
     @RequestMapping(value = "/vnfpkgm/v1/subscriptions/{subscriptionId}",
             produces = {"application/json"},
             method = RequestMethod.DELETE)
-    ResponseEntity<?> deleteSubscription(@ApiParam(value = "", required = true) @PathVariable("subscriptionId") String subscriptionId);
+    ResponseEntity<?> deleteSubscription(@ApiParam(value = "", required = true) @PathVariable("subscriptionId") String subscriptionId,
+                                         @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization);
 }
