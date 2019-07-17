@@ -23,10 +23,7 @@ import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.ProblemDetails;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.*;
 import it.nextworks.nfvmano.catalogue.repos.ContentType;
-import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
-import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
-import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
-import it.nextworks.nfvmano.libs.common.exceptions.NotPermittedOperationException;
+import it.nextworks.nfvmano.libs.common.exceptions.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,11 +89,16 @@ public class VnfpkgmApiController implements VnfpkgmApi {
                 return new ResponseEntity<VnfPkgInfo>(vnfPkgInfo, HttpStatus.CREATED);
             } catch (MalformattedElementException e) {
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
-                        "VNF Pkg info cannot be created"), HttpStatus.BAD_REQUEST);
+                        e.getMessage()), HttpStatus.BAD_REQUEST);
+            } catch (NotPermittedOperationException e) {
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
+                        e.getMessage()), HttpStatus.BAD_REQUEST);
+            } catch (NotAuthorizedOperationException e) {
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
+                        e.getMessage()), HttpStatus.FORBIDDEN);
             } catch (Exception e) {
-                log.error("Exception while creating VNF Pkg info: " + e.getMessage());
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                        "VNF Pkg info cannot be created"), HttpStatus.INTERNAL_SERVER_ERROR);
+                        e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } else
             return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.PRECONDITION_FAILED.value(),
@@ -115,64 +117,22 @@ public class VnfpkgmApiController implements VnfpkgmApi {
 
         String accept = request.getHeader("Accept");
 
-        /*if (authorization != null) {
-            log.debug("Received getVNFPkgsInfo request with TOKEN :" + authorization);
-
-            log.debug("Going to validate received TOKEN for getting user infos...");
-
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            log.debug("Authenticated user: " + authentication.getName()
-                    + " | Role: " + authentication.getAuthorities().toString()
-                    + " | Credentials: " + authentication.getCredentials().toString()
-                    + " | Details: " + authentication.getDetails().toString()
-                    + " | Principal: " + authentication.getPrincipal().toString());
-
-            if (authentication.getPrincipal() instanceof KeycloakPrincipal) {
-                KeycloakPrincipal<KeycloakSecurityContext> kp = (KeycloakPrincipal<KeycloakSecurityContext>) authentication.getPrincipal();
-                // retrieving username here
-                String username = kp.getKeycloakSecurityContext().getToken().getPreferredUsername();
-            }
-
-            try {
-                keycloakService.getUsers();
-            } catch (FailedOperationException e) {
-                e.printStackTrace();
-            }
-            UserRepresentation userRepresentation = keycloakService.buildUserRepresentation("test5gcatalogue", "5gcatalogue", "5gcatalogue");
-            try {
-                keycloakService.createUser(userRepresentation);
-            } catch (FailedOperationException e) {
-                e.printStackTrace();
-            } catch (AlreadyExistingEntityException e) {
-                e.printStackTrace();
-            } catch (MalformattedElementException e) {
-                e.printStackTrace();
-            }
-            List<UserRepresentation> userRepresentations = null;
-            try {
-                userRepresentations = keycloakService.getUsers();
-            } catch (FailedOperationException e) {
-                e.printStackTrace();
-            }
-            for (UserRepresentation userRepresentation1 : userRepresentations) {
-                if (userRepresentation1.getUsername().equalsIgnoreCase("test5gcatalogue")) {
-                    keycloakService.addUserToGroup(userRepresentation1.getId());
-                }
-            }
-        }*/
-
         // TODO: process URI parameters for filters and attributes. At the moment it returns all the VNF Pkgs info
         if (accept != null && accept.contains("application/json")) {
             try {
                 List<VnfPkgInfo> vnfPkgInfos = vnfPackageManagementInterface.getAllVnfPkgInfos(project);
                 log.debug("VNF Pkg infos retrieved");
                 return new ResponseEntity<List<VnfPkgInfo>>(vnfPkgInfos, HttpStatus.OK);
+            } catch (NotPermittedOperationException e) {
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
+                        e.getMessage()), HttpStatus.BAD_REQUEST);
+            } catch (NotAuthorizedOperationException e) {
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
+                        e.getMessage()), HttpStatus.FORBIDDEN);
             } catch (Exception e) {
-                log.error("General exception while retrieving set of VNF Pkg infos: " + e.getMessage());
                 return new ResponseEntity<ProblemDetails>(
                         Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                                "General exception while retrieving set of VNF Pkg infos: " + e.getMessage()),
-                        HttpStatus.INTERNAL_SERVER_ERROR);
+                                e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } else
             return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.PRECONDITION_FAILED.value(),
@@ -201,23 +161,26 @@ public class VnfpkgmApiController implements VnfpkgmApi {
             } catch (NotExistingEntityException e) {
                 log.error("VNF Pkg info " + vnfPkgId + " not found");
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
-                        "VNF Pkg info " + vnfPkgId + " not found"), HttpStatus.NOT_FOUND);
+                        e.getMessage()), HttpStatus.NOT_FOUND);
             } catch (MalformattedElementException e) {
                 log.error("VNF Pkg info " + vnfPkgId + " cannot be found: not acceptable VNF Pkg Info ID format");
                 return new ResponseEntity<ProblemDetails>(
                         Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
-                                "VNF Pkg info " + vnfPkgId + " cannot be found: not acceptable VNF Pkg Info ID format"),
+                                e.getMessage()),
                         HttpStatus.BAD_REQUEST);
             } catch (NotPermittedOperationException e) {
                 return new ResponseEntity<ProblemDetails>(
                         Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
                                 e.getMessage()),
                         HttpStatus.BAD_REQUEST);
+            } catch (NotAuthorizedOperationException e) {
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
+                        e.getMessage()), HttpStatus.FORBIDDEN);
             } catch (Exception e) {
                 log.error("VNF Pkg info " + vnfPkgId + " cannot be retrieved: general internal error");
                 return new ResponseEntity<ProblemDetails>(
                         Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                                "VNF Pkg info " + vnfPkgId + " cannot be retrieved: general internal error"),
+                                e.getMessage()),
                         HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } else {
@@ -253,15 +216,18 @@ public class VnfpkgmApiController implements VnfpkgmApi {
             } catch (NotExistingEntityException e) {
                 log.error("Impossible to update VNF Pkg info: " + e.getMessage());
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
-                        "Impossible to update VNF Pkg info: " + e.getMessage()), HttpStatus.NOT_FOUND);
+                        e.getMessage()), HttpStatus.NOT_FOUND);
             } catch (MalformattedElementException e) {
                 log.error("Impossible to update VNF Pkg info: " + e.getMessage());
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
-                        "Impossible to update VNF Pkg info: " + e.getMessage()), HttpStatus.BAD_REQUEST);
+                        e.getMessage()), HttpStatus.BAD_REQUEST);
             } catch (NotPermittedOperationException e) {
                 log.error("Impossible to update VNF Pkg info: " + e.getMessage());
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
-                        "Impossible to update VNF Pkg info: " + e.getMessage()), HttpStatus.CONFLICT);
+                        e.getMessage()), HttpStatus.CONFLICT);
+            } catch (NotAuthorizedOperationException e) {
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
+                        e.getMessage()), HttpStatus.FORBIDDEN);
             }
         } else {
             return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.PRECONDITION_FAILED.value(),
@@ -289,23 +255,25 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         } catch (NotExistingEntityException e) {
             log.error("VNF Pkg info " + vnfPkgId + " not found");
             return new ResponseEntity<ProblemDetails>(
-                    Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(), "VNF Pkg info " + vnfPkgId + " not found"),
+                    Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(), e.getMessage()),
                     HttpStatus.NOT_FOUND);
         } catch (NotPermittedOperationException e) {
             log.error("VNF Pkg info " + vnfPkgId + " cannot be removed: " + e.getMessage());
             return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
-                    "VNF Pkg info " + vnfPkgId + " cannot be removed: " + e.getMessage()), HttpStatus.CONFLICT);
+                    e.getMessage()), HttpStatus.CONFLICT);
         } catch (MalformattedElementException e) {
             log.error("VNF Pkg info " + vnfPkgId + " cannot be removed: not acceptable VNF Pkg Info ID format");
             return new ResponseEntity<ProblemDetails>(
-                    Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
-                            "VNF Pkg info " + vnfPkgId + " cannot be removed: not acceptable VNF Pkg Info ID format"),
+                    Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(), e.getMessage()),
                     HttpStatus.BAD_REQUEST);
+        } catch (NotAuthorizedOperationException e) {
+            return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
+                    e.getMessage()), HttpStatus.FORBIDDEN);
         } catch (Exception e) {
             log.error("VNF Pkg info " + vnfPkgId + " cannot be removed: general internal error");
             return new ResponseEntity<ProblemDetails>(
                     Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                            "VNF Pkg info " + vnfPkgId + " cannot be removed: general internal error"),
+                            e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -338,15 +306,18 @@ public class VnfpkgmApiController implements VnfpkgmApi {
             log.error("VNFD for VNF Pkg info ID " + vnfPkgId + " not found");
             return new ResponseEntity<ProblemDetails>(
                     Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
-                            "VNFD for VNF Pkg info ID " + vnfPkgId + " not found: " + e.getMessage()),
+                            e.getMessage()),
                     HttpStatus.NOT_FOUND);
         } catch (NotPermittedOperationException e) {
             return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
-                    "VNFD for VNF Pkg info ID " + vnfPkgId + " not found: " + e.getMessage()), HttpStatus.CONFLICT);
+                    e.getMessage()), HttpStatus.CONFLICT);
+        } catch (NotAuthorizedOperationException e) {
+            return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
+                    e.getMessage()), HttpStatus.FORBIDDEN);
         } catch (Exception e) {
             return new ResponseEntity<ProblemDetails>(
                     Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                            "VNFD for VNF Pkg info ID " + vnfPkgId + " not found: " + e.getMessage()),
+                            e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -380,15 +351,18 @@ public class VnfpkgmApiController implements VnfpkgmApi {
             log.error("VNF Pkg for VNF Pkg info ID " + vnfPkgId + " not found");
             return new ResponseEntity<ProblemDetails>(
                     Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
-                            "VNF Pkg for VNF Pkg info ID " + vnfPkgId + " not found: " + e.getMessage()),
+                            e.getMessage()),
                     HttpStatus.NOT_FOUND);
         } catch (NotPermittedOperationException e) {
             return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
-                    "VNF Pkg for VNF Pkg info ID " + vnfPkgId + " not found: " + e.getMessage()), HttpStatus.CONFLICT);
+                    e.getMessage()), HttpStatus.CONFLICT);
+        } catch (NotAuthorizedOperationException e) {
+            return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
+                    e.getMessage()), HttpStatus.FORBIDDEN);
         } catch (Exception e) {
             return new ResponseEntity<ProblemDetails>(
                     Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                            "VNF Pkg for VNF Pkg info ID " + vnfPkgId + " not found: " + e.getMessage()),
+                            e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -434,21 +408,24 @@ public class VnfpkgmApiController implements VnfpkgmApi {
             } catch (NotPermittedOperationException | AlreadyExistingEntityException e) {
                 log.error("Impossible to upload VNF Pkg: " + e.getMessage());
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
-                        "Impossible to upload VNF Pkg: " + e.getMessage()), HttpStatus.CONFLICT);
+                        e.getMessage()), HttpStatus.CONFLICT);
             } catch (MalformattedElementException e) {
                 log.error("Impossible to upload VNF Pkg: " + e.getMessage());
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
-                        "Impossible to upload VNF Pkg: " + e.getMessage()), HttpStatus.BAD_REQUEST);
+                        e.getMessage()), HttpStatus.BAD_REQUEST);
             } catch (NotExistingEntityException e) {
                 log.error("Impossible to upload VNF PkgD: " + e.getMessage());
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
-                        "Impossible to upload VNF Pkg: " + e.getMessage()), HttpStatus.NOT_FOUND);
+                        e.getMessage()), HttpStatus.NOT_FOUND);
+            } catch (NotAuthorizedOperationException e) {
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
+                        e.getMessage()), HttpStatus.FORBIDDEN);
             } catch (Exception e) {
                 log.error("General exception while uploading VNF Pkg content: " + e.getMessage());
                 log.error("Details: ", e);
                 return new ResponseEntity<ProblemDetails>(
                         Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                                "General exception while uploading VNF Pkg content: " + e.getMessage()),
+                                e.getMessage()),
                         HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }

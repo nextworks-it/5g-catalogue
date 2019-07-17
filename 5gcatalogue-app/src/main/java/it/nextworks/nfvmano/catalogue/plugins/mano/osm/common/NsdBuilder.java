@@ -104,7 +104,7 @@ public class NsdBuilder {
                     constituentVnfds.add(constituentVnfd);
 
                     Map<String, String> vLinksAssociations = vnfNode.getValue().getRequirements().getVirtualLink();
-                    for(Map.Entry<String, String> entry : vLinksAssociations.entrySet()){
+                    for (Map.Entry<String, String> entry : vLinksAssociations.entrySet()) {
                         vlToVnfMapping.putIfAbsent(entry.getValue(), new HashMap<>());
                         List<VirtualLinkPair> pairs = vnfd.getTopologyTemplate().getSubstituitionMappings().getRequirements().getVirtualLink();
                         for (VirtualLinkPair pair : pairs) {

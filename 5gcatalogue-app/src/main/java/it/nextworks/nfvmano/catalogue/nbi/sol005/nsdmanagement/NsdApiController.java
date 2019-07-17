@@ -22,10 +22,7 @@ import it.nextworks.nfvmano.catalogue.common.Utilities;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.*;
 import it.nextworks.nfvmano.catalogue.repos.ContentType;
-import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
-import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
-import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
-import it.nextworks.nfvmano.libs.common.exceptions.NotPermittedOperationException;
+import it.nextworks.nfvmano.libs.common.exceptions.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,11 +85,14 @@ public class NsdApiController implements NsdApi {
                 return new ResponseEntity<NsdInfo>(nsdInfo, HttpStatus.CREATED);
             } catch (MalformattedElementException e) {
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
-                        "NSD info cannot be created"), HttpStatus.BAD_REQUEST);
+                        e.getMessage()), HttpStatus.BAD_REQUEST);
+            } catch (NotAuthorizedOperationException e) {
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
+                        e.getMessage()), HttpStatus.FORBIDDEN);
             } catch (Exception e) {
                 log.error("Exception while creating NSD info: " + e.getMessage());
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                        "NSD info cannot be created"), HttpStatus.INTERNAL_SERVER_ERROR);
+                        e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } else
             return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.PRECONDITION_FAILED.value(),
@@ -116,11 +116,14 @@ public class NsdApiController implements NsdApi {
                 List<NsdInfo> nsdInfos = nsdManagementService.getAllNsdInfos(project);
                 log.debug("NSD infos retrieved");
                 return new ResponseEntity<List<NsdInfo>>(nsdInfos, HttpStatus.OK);
+            } catch (NotAuthorizedOperationException e) {
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
+                        e.getMessage()), HttpStatus.FORBIDDEN);
             } catch (Exception e) {
                 log.error("General exception while retrieving set of NSD infos: " + e.getMessage());
                 return new ResponseEntity<ProblemDetails>(
                         Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                                "General exception while retrieving set of NSD infos: " + e.getMessage()),
+                                e.getMessage()),
                         HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } else
@@ -150,23 +153,26 @@ public class NsdApiController implements NsdApi {
             } catch (NotExistingEntityException e) {
                 log.error("NSD info " + nsdInfoId + " not found");
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
-                        "NSD info " + nsdInfoId + " not found"), HttpStatus.NOT_FOUND);
+                        e.getMessage()), HttpStatus.NOT_FOUND);
             } catch (MalformattedElementException e) {
                 log.error("NSD info " + nsdInfoId + " cannot be found: not acceptable NSD Info ID format");
                 return new ResponseEntity<ProblemDetails>(
                         Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
-                                "NSD info " + nsdInfoId + " cannot be found: not acceptable NSD Info ID format"),
+                                e.getMessage()),
                         HttpStatus.BAD_REQUEST);
             } catch (NotPermittedOperationException e) {
                 return new ResponseEntity<ProblemDetails>(
                         Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
                                 e.getMessage()),
                         HttpStatus.BAD_REQUEST);
+            } catch (NotAuthorizedOperationException e) {
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
+                        e.getMessage()), HttpStatus.FORBIDDEN);
             } catch (Exception e) {
                 log.error("NSD info " + nsdInfoId + " cannot be retrieved: general internal error");
                 return new ResponseEntity<ProblemDetails>(
                         Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                                "NSD info " + nsdInfoId + " cannot be retrieved: general internal error"),
+                                e.getMessage()),
                         HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } else
@@ -200,15 +206,18 @@ public class NsdApiController implements NsdApi {
             } catch (NotExistingEntityException e) {
                 log.error("Impossible to update NSD info: " + e.getMessage());
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
-                        "Impossible to update NSD info: " + e.getMessage()), HttpStatus.NOT_FOUND);
+                        e.getMessage()), HttpStatus.NOT_FOUND);
             } catch (MalformattedElementException e) {
                 log.error("Impossible to update NSD info: " + e.getMessage());
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
-                        "Impossible to update NSD info: " + e.getMessage()), HttpStatus.BAD_REQUEST);
+                        e.getMessage()), HttpStatus.BAD_REQUEST);
             } catch (NotPermittedOperationException e) {
                 log.error("Impossible to update NSD info: " + e.getMessage());
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
-                        "Impossible to update NSD info: " + e.getMessage()), HttpStatus.CONFLICT);
+                        e.getMessage()), HttpStatus.CONFLICT);
+            } catch (NotAuthorizedOperationException e) {
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
+                        e.getMessage()), HttpStatus.FORBIDDEN);
             }
         } else {
             return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.PRECONDITION_FAILED.value(),
@@ -237,23 +246,26 @@ public class NsdApiController implements NsdApi {
         } catch (NotExistingEntityException e) {
             log.error("NSD info " + nsdInfoId + " not found");
             return new ResponseEntity<ProblemDetails>(
-                    Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(), "NSD info " + nsdInfoId + " not found"),
+                    Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(), e.getMessage()),
                     HttpStatus.NOT_FOUND);
         } catch (NotPermittedOperationException e) {
             log.error("NSD info " + nsdInfoId + " cannot be removed: " + e.getMessage());
             return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
-                    "NSD info " + nsdInfoId + " cannot be removed: " + e.getMessage()), HttpStatus.CONFLICT);
+                    e.getMessage()), HttpStatus.CONFLICT);
         } catch (MalformattedElementException e) {
             log.error("NSD info " + nsdInfoId + " cannot be removed: not acceptable NSD Info ID format");
             return new ResponseEntity<ProblemDetails>(
                     Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
-                            "NSD info " + nsdInfoId + " cannot be removed: not acceptable NSD Info ID format"),
+                            e.getMessage()),
                     HttpStatus.BAD_REQUEST);
+        } catch (NotAuthorizedOperationException e) {
+            return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
+                    e.getMessage()), HttpStatus.FORBIDDEN);
         } catch (Exception e) {
             log.error("NSD info " + nsdInfoId + " cannot be removed: general internal error");
             return new ResponseEntity<ProblemDetails>(
                     Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                            "NSD info " + nsdInfoId + " cannot be removed: general internal error"),
+                            e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -288,15 +300,18 @@ public class NsdApiController implements NsdApi {
             log.error("NSD for NSD info ID " + nsdInfoId + " not found");
             return new ResponseEntity<ProblemDetails>(
                     Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
-                            "NSD for NSD info ID " + nsdInfoId + " not found: " + e.getMessage()),
+                            e.getMessage()),
                     HttpStatus.NOT_FOUND);
         } catch (NotPermittedOperationException e) {
             return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
-                    "NSD for NSD info ID " + nsdInfoId + " not found: " + e.getMessage()), HttpStatus.CONFLICT);
+                    e.getMessage()), HttpStatus.CONFLICT);
+        } catch (NotAuthorizedOperationException e) {
+            return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
+                    e.getMessage()), HttpStatus.FORBIDDEN);
         } catch (Exception e) {
             return new ResponseEntity<ProblemDetails>(
                     Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                            "NSD for NSD info ID " + nsdInfoId + " not found: " + e.getMessage()),
+                            e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -348,21 +363,24 @@ public class NsdApiController implements NsdApi {
             } catch (NotPermittedOperationException | AlreadyExistingEntityException e) {
                 log.error("Impossible to upload NSD: " + e.getMessage());
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
-                        "Impossible to upload NSD: " + e.getMessage()), HttpStatus.CONFLICT);
+                        e.getMessage()), HttpStatus.CONFLICT);
             } catch (MalformattedElementException e) {
                 log.error("Impossible to upload NSD: " + e.getMessage());
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
-                        "Impossible to upload NSD: " + e.getMessage()), HttpStatus.BAD_REQUEST);
+                        e.getMessage()), HttpStatus.BAD_REQUEST);
             } catch (NotExistingEntityException e) {
                 log.error("Impossible to upload NSD: " + e.getMessage());
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
-                        "Impossible to upload NSD: " + e.getMessage()), HttpStatus.NOT_FOUND);
+                        e.getMessage()), HttpStatus.NOT_FOUND);
+            } catch (NotAuthorizedOperationException e) {
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
+                        e.getMessage()), HttpStatus.FORBIDDEN);
             } catch (Exception e) {
                 log.error("General exception while uploading NSD content: " + e.getMessage());
                 log.error("Details: ", e);
                 return new ResponseEntity<ProblemDetails>(
                         Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                                "General exception while uploading NSD content: " + e.getMessage()),
+                                e.getMessage()),
                         HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }
@@ -392,11 +410,14 @@ public class NsdApiController implements NsdApi {
                 return new ResponseEntity<PnfdInfo>(pnfdInfo, HttpStatus.CREATED);
             } catch (MalformattedElementException e) {
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
-                        "PNFD info cannot be created"), HttpStatus.BAD_REQUEST);
+                        e.getMessage()), HttpStatus.BAD_REQUEST);
+            } catch (NotAuthorizedOperationException e) {
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
+                        e.getMessage()), HttpStatus.FORBIDDEN);
             } catch (Exception e) {
                 log.error("Exception while creating PNFD info: " + e.getMessage());
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                        "PNFD info cannot be created"), HttpStatus.INTERNAL_SERVER_ERROR);
+                        e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } else
             return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.PRECONDITION_FAILED.value(),
@@ -440,11 +461,14 @@ public class NsdApiController implements NsdApi {
                 List<PnfdInfo> pnfdInfos = nsdManagementService.getAllPnfdInfos(project);
                 log.debug("PNFD infos retrieved");
                 return new ResponseEntity<List<PnfdInfo>>(pnfdInfos, HttpStatus.OK);
+            } catch (NotAuthorizedOperationException e) {
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
+                        e.getMessage()), HttpStatus.FORBIDDEN);
             } catch (Exception e) {
                 log.error("General exception while retrieving set of PNFD infos: " + e.getMessage());
                 return new ResponseEntity<ProblemDetails>(
                         Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                                "General exception while retrieving set of PNFD infos: " + e.getMessage()),
+                                e.getMessage()),
                         HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } else
@@ -489,23 +513,26 @@ public class NsdApiController implements NsdApi {
             } catch (NotExistingEntityException e) {
                 log.error("PNFD info " + pnfdInfoId + " not found");
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
-                        "PNFD info " + pnfdInfoId + " not found"), HttpStatus.NOT_FOUND);
+                        e.getMessage()), HttpStatus.NOT_FOUND);
             } catch (MalformattedElementException e) {
                 log.error("PNFD info " + pnfdInfoId + " cannot be found: not acceptable PNFD Info ID format");
                 return new ResponseEntity<ProblemDetails>(
                         Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
-                                "PNFD info " + pnfdInfoId + " cannot be found: not acceptable PNFD Info ID format"),
+                                e.getMessage()),
                         HttpStatus.BAD_REQUEST);
             } catch (NotPermittedOperationException e) {
                 return new ResponseEntity<ProblemDetails>(
                         Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
                                 e.getMessage()),
                         HttpStatus.BAD_REQUEST);
+            } catch (NotAuthorizedOperationException e) {
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
+                        e.getMessage()), HttpStatus.FORBIDDEN);
             } catch (Exception e) {
                 log.error("PNFD info " + pnfdInfoId + " cannot be retrieved: general internal error");
                 return new ResponseEntity<ProblemDetails>(
                         Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                                "PNFD info " + pnfdInfoId + " cannot be retrieved: general internal error"),
+                                e.getMessage()),
                         HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } else
@@ -576,23 +603,26 @@ public class NsdApiController implements NsdApi {
         } catch (NotExistingEntityException e) {
             log.error("PNFD info " + pnfdInfoId + " not found");
             return new ResponseEntity<ProblemDetails>(
-                    Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(), "PNFD info " + pnfdInfoId + " not found"),
+                    Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(), e.getMessage()),
                     HttpStatus.NOT_FOUND);
         } catch (NotPermittedOperationException e) {
             log.error("PNFD info " + pnfdInfoId + " cannot be removed: " + e.getMessage());
             return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
-                    "PNFD info " + pnfdInfoId + " cannot be removed: " + e.getMessage()), HttpStatus.CONFLICT);
+                    e.getMessage()), HttpStatus.CONFLICT);
         } catch (MalformattedElementException e) {
             log.error("PNFD info " + pnfdInfoId + " cannot be removed: not acceptable PNFD Info ID format");
             return new ResponseEntity<ProblemDetails>(
                     Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
-                            "PNFD info " + pnfdInfoId + " cannot be removed: not acceptable PNFD Info ID format"),
+                            e.getMessage()),
                     HttpStatus.BAD_REQUEST);
+        } catch (NotAuthorizedOperationException e) {
+            return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
+                    e.getMessage()), HttpStatus.FORBIDDEN);
         } catch (Exception e) {
             log.error("PNFD info " + pnfdInfoId + " cannot be removed: general internal error");
             return new ResponseEntity<ProblemDetails>(
                     Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                            "PNFD info " + pnfdInfoId + " cannot be removed: general internal error"),
+                            e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -629,15 +659,18 @@ public class NsdApiController implements NsdApi {
             log.error("PNFD for PNFD info ID " + pnfdInfoId + " not found");
             return new ResponseEntity<ProblemDetails>(
                     Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
-                            "PNFD for PNFD info ID " + pnfdInfoId + " not found: " + e.getMessage()),
+                            e.getMessage()),
                     HttpStatus.NOT_FOUND);
         } catch (NotPermittedOperationException e) {
             return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
-                    "PNFD for PNFD info ID " + pnfdInfoId + " not found: " + e.getMessage()), HttpStatus.CONFLICT);
+                    e.getMessage()), HttpStatus.CONFLICT);
+        } catch (NotAuthorizedOperationException e) {
+            return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
+                    e.getMessage()), HttpStatus.FORBIDDEN);
         } catch (Exception e) {
             return new ResponseEntity<ProblemDetails>(
                     Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                            "PNFD for PNFD info ID " + pnfdInfoId + " not found: " + e.getMessage()),
+                            e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -702,21 +735,24 @@ public class NsdApiController implements NsdApi {
             } catch (NotPermittedOperationException | AlreadyExistingEntityException e) {
                 log.error("Impossible to upload PNFD: " + e.getMessage());
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
-                        "Impossible to upload PNFD: " + e.getMessage()), HttpStatus.CONFLICT);
+                        e.getMessage()), HttpStatus.CONFLICT);
             } catch (MalformattedElementException e) {
                 log.error("Impossible to upload PNFD: " + e.getMessage());
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
-                        "Impossible to upload PNFD: " + e.getMessage()), HttpStatus.BAD_REQUEST);
+                        e.getMessage()), HttpStatus.BAD_REQUEST);
             } catch (NotExistingEntityException e) {
                 log.error("Impossible to upload PNFD: " + e.getMessage());
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
-                        "Impossible to upload PNFD: " + e.getMessage()), HttpStatus.NOT_FOUND);
+                        e.getMessage()), HttpStatus.NOT_FOUND);
+            } catch (NotAuthorizedOperationException e) {
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
+                        e.getMessage()), HttpStatus.FORBIDDEN);
             } catch (Exception e) {
                 log.error("General exception while uploading PNFD content: " + e.getMessage());
                 log.error("Details: ", e);
                 return new ResponseEntity<ProblemDetails>(
                         Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                                "General exception while uploading PNFD content: " + e.getMessage()),
+                                e.getMessage()),
                         HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }

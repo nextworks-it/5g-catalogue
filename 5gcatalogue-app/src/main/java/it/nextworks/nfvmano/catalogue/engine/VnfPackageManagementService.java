@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import it.nextworks.nfvmano.catalogue.auth.KeycloakService;
+import it.nextworks.nfvmano.catalogue.auth.AuthUtilities;
+import it.nextworks.nfvmano.catalogue.auth.Resources.UserResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.NotificationResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
 import it.nextworks.nfvmano.catalogue.messages.CatalogueMessageType;
@@ -18,6 +19,7 @@ import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.C2COnboardingS
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.repos.ContentType;
 import it.nextworks.nfvmano.catalogue.repos.MANORepository;
+import it.nextworks.nfvmano.catalogue.repos.UserRepository;
 import it.nextworks.nfvmano.catalogue.repos.VnfPkgInfoRepository;
 import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
 import it.nextworks.nfvmano.catalogue.translators.tosca.ArchiveParser;
@@ -57,10 +59,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
     @Autowired
     private ArchiveParser archiveParser;
 
-    /*
-    @Autowired
-    private KeycloakService keycloakService;
-    */
+    private UserRepository userRepository;
 
     private Map<String, Map<String, NotificationResource>> operationIdToConsumersAck = new HashMap<>();
 
@@ -91,7 +90,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
     }
 
     @Override
-    public VnfPkgInfo createVnfPkgInfo(CreateVnfPkgInfoRequest request, String project) throws FailedOperationException, MalformattedElementException, MethodNotImplementedException {
+    public VnfPkgInfo createVnfPkgInfo(CreateVnfPkgInfoRequest request, String project) throws FailedOperationException, MalformattedElementException, MethodNotImplementedException, NotPermittedOperationException, NotAuthorizedOperationException {
         log.debug("Processing request to create a new VNF Pkg info.");
         KeyValuePairs kvp = request.getUserDefinedData();
         Map<String, String> targetKvp = new HashMap<>();
@@ -101,8 +100,17 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             }
         }
         VnfPkgInfoResource vnfPkgInfoResource = new VnfPkgInfoResource(targetKvp);
-        if (project != null)
-            vnfPkgInfoResource.setProjectId(project);
+        if (project != null) {
+            try {
+                if (checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                    vnfPkgInfoResource.setProjectId(project);
+                } else {
+                    throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
+                }
+            } catch (NotExistingEntityException e) {
+                throw new NotAuthorizedOperationException(e.getMessage());
+            }
+        }
         vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
         UUID vnfPkgInfoId = vnfPkgInfoResource.getId();
         log.debug("Created VNF Pkg info with ID " + vnfPkgInfoId);
@@ -112,7 +120,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
     }
 
     @Override
-    public void deleteVnfPkgInfo(String vnfPkgInfoId, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
+    public void deleteVnfPkgInfo(String vnfPkgInfoId, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException, NotAuthorizedOperationException {
         log.debug("Processing request to delete an VNF Pkg info.");
 
         if (vnfPkgInfoId == null)
@@ -129,7 +137,15 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                 VnfPkgInfoResource vnfPkgInfoResource = optional.get();
 
                 if (project != null && !vnfPkgInfoResource.getProjectId().equals(project)) {
-                    throw new NotPermittedOperationException("Specified project differs from VNF Pkg info project");
+                    throw new NotAuthorizedOperationException("Specified project differs from VNF Pkg info project");
+                } else {
+                    try {
+                        if (!checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                            throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
+                        }
+                    } catch (NotExistingEntityException e) {
+                        throw new NotAuthorizedOperationException(e.getMessage());
+                    }
                 }
 
                 vnfPkgInfoResource.isDeletable();
@@ -172,12 +188,20 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
     }
 
     @Override
-    public VnfPkgInfoModifications updateVnfPkgInfo(VnfPkgInfoModifications vnfPkgInfoModifications, String vnfPkgInfoId, String project) throws NotExistingEntityException, MalformattedElementException, NotPermittedOperationException {
+    public VnfPkgInfoModifications updateVnfPkgInfo(VnfPkgInfoModifications vnfPkgInfoModifications, String vnfPkgInfoId, String project) throws NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, NotAuthorizedOperationException {
         log.debug("Processing request to update VNF Pkg info: " + vnfPkgInfoId);
         VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
 
         if (project != null && !vnfPkgInfoResource.getProjectId().equals(project)) {
-            throw new NotPermittedOperationException("Specified project differs from VNF Pkg info project");
+            throw new NotAuthorizedOperationException("Specified project differs from VNF Pkg info project");
+        } else {
+            try {
+                if (!checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                    throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
+                }
+            } catch (NotExistingEntityException e) {
+                throw new NotAuthorizedOperationException(e.getMessage());
+            }
         }
 
         if (vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.ONBOARDED
@@ -216,13 +240,21 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
     }
 
     @Override
-    public Object getVnfd(String vnfPkgInfoId, boolean isInternalRequest, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException {
+    public Object getVnfd(String vnfPkgInfoId, boolean isInternalRequest, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, NotAuthorizedOperationException {
         log.debug("Processing request to retrieve a VNFD content for VNF Pkg info " + vnfPkgInfoId);
 
         VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
 
         if (project != null && !vnfPkgInfoResource.getProjectId().equals(project)) {
-            throw new NotPermittedOperationException("Specified project differs from VNF Pkg info project");
+            throw new NotAuthorizedOperationException("Specified project differs from VNF Pkg info project");
+        } else {
+            try {
+                if (!checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                    throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
+                }
+            } catch (NotExistingEntityException e) {
+                throw new NotAuthorizedOperationException(e.getMessage());
+            }
         }
 
         if ((!isInternalRequest) && (vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.ONBOARDED
@@ -244,13 +276,21 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
     }
 
     @Override
-    public Object getVnfPkg(String vnfPkgInfoId, boolean isInternalRequest, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
+    public Object getVnfPkg(String vnfPkgInfoId, boolean isInternalRequest, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException, NotAuthorizedOperationException {
         log.debug("Processing request to retrieve a VNF Pkg content for VNF Pkg info " + vnfPkgInfoId);
 
         VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
 
         if (project != null && !vnfPkgInfoResource.getProjectId().equals(project)) {
-            throw new NotPermittedOperationException("Specified project differs from VNF Pkg info project");
+            throw new NotAuthorizedOperationException("Specified project differs from VNF Pkg info project");
+        } else {
+            try {
+                if (!checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                    throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
+                }
+            } catch (NotExistingEntityException e) {
+                throw new NotAuthorizedOperationException(e.getMessage());
+            }
         }
 
         if ((!isInternalRequest) && (vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.ONBOARDED
@@ -282,12 +322,20 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
     }
 
     @Override
-    public VnfPkgInfo getVnfPkgInfo(String vnfPkgInfoId, String project) throws NotPermittedOperationException, NotExistingEntityException, MalformattedElementException, MethodNotImplementedException {
+    public VnfPkgInfo getVnfPkgInfo(String vnfPkgInfoId, String project) throws NotPermittedOperationException, NotExistingEntityException, MalformattedElementException, MethodNotImplementedException, NotAuthorizedOperationException {
         log.debug("Processing request to get a VNF Pkg info.");
         VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
 
         if (project != null && !vnfPkgInfoResource.getProjectId().equals(project)) {
-            throw new NotPermittedOperationException("Specified project differs from VNF Pkg info project");
+            throw new NotAuthorizedOperationException("Specified project differs from VNF Pkg info project");
+        } else {
+            try {
+                if (!checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                    throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
+                }
+            } catch (NotExistingEntityException e) {
+                throw new NotAuthorizedOperationException(e.getMessage());
+            }
         }
 
         log.debug("Found VNF Pkg info resource with id: " + vnfPkgInfoId);
@@ -297,8 +345,16 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
     }
 
     @Override
-    public List<VnfPkgInfo> getAllVnfPkgInfos(String project) throws FailedOperationException, MethodNotImplementedException {
+    public List<VnfPkgInfo> getAllVnfPkgInfos(String project) throws FailedOperationException, MethodNotImplementedException, NotPermittedOperationException, NotAuthorizedOperationException {
         log.debug("Processing request to get all VNF Pkg infos.");
+
+        try {
+            if (!checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
+            }
+        } catch (NotExistingEntityException e) {
+            throw new NotAuthorizedOperationException(e.getMessage());
+        }
 
         List<VnfPkgInfoResource> vnfPkgInfoResources = vnfPkgInfoRepository.findAll();
         List<VnfPkgInfo> vnfPkgInfos = new ArrayList<>();
@@ -316,12 +372,20 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
     }
 
     @Override
-    public void uploadVnfPkg(String vnfPkgInfoId, MultipartFile vnfPkg, ContentType contentType, boolean isInternalRequest, String project) throws FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException {
+    public void uploadVnfPkg(String vnfPkgInfoId, MultipartFile vnfPkg, ContentType contentType, boolean isInternalRequest, String project) throws FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException, NotAuthorizedOperationException {
         log.debug("Processing request to upload VNF Pkg content for VNFD info " + vnfPkgInfoId);
         VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
 
         if (project != null && !vnfPkgInfoResource.getProjectId().equals(project)) {
-            throw new NotPermittedOperationException("Specified project differs from VNF Pkg info project");
+            throw new NotAuthorizedOperationException("Specified project differs from VNF Pkg info project");
+        } else {
+            try {
+                if (!checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                    throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
+                }
+            } catch (NotExistingEntityException e) {
+                throw new NotAuthorizedOperationException(e.getMessage());
+            }
         }
 
         if (vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.CREATED) {
@@ -443,6 +507,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         vnfPkgInfo.setVnfProductName(vnfPkgInfoResource.getVnfProductName());
         vnfPkgInfo.setVnfProvider(vnfPkgInfoResource.getVnfProvider());
         vnfPkgInfo.setVnfSoftwareVersion(vnfPkgInfoResource.getVnfSoftwareVersion());
+        vnfPkgInfo.setProjectId(vnfPkgInfoResource.getProjectId());
 
         Map<String, NotificationResource> acksMap = vnfPkgInfoResource.getAcknowledgedOnboardOpConsumers();
         Map<String, PackageOnboardingStateType> manoIdToOnboardingStatus = new HashMap<>();
@@ -592,5 +657,24 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         } catch (IOException e) {
             throw new FailedOperationException("CSAR Archive is corrupted: " + e.getMessage());
         }
+    }
+
+    public boolean checkUserProjects(String userName, String projectId) throws NotExistingEntityException {
+
+        Optional<UserResource> optional = userRepository.findByUserName(userName);
+
+        if (optional.isPresent()) {
+            UserResource userResource = optional.get();
+
+            List<String> projectResources = userResource.getProjects();
+            for (String project : projectResources) {
+                if (project.equals(projectId))
+                    return true;
+            }
+        } else {
+            throw new NotExistingEntityException("User with userName " + userName + " not found in Catalogue's DB");
+        }
+
+        return false;
     }
 }

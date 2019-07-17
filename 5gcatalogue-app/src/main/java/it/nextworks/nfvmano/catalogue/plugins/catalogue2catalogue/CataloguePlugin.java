@@ -435,7 +435,7 @@ public class CataloguePlugin extends Plugin
                 continue;
             } else {
                 VnfPkgInfoResource vnfPkgTargetResource = buildVnfPkgInfoResource(vnfPkgInfo);
-                vnfPkgTargetResource.setProjectId("Admins");
+                vnfPkgTargetResource.setProjectId(vnfPkgInfo.getProjectId());
                 VnfPkgInfoResource createdVnfPkgInfo = vnfPkgInfoRepository.saveAndFlush(vnfPkgTargetResource);
 
                 Resource obj;
@@ -492,7 +492,7 @@ public class CataloguePlugin extends Plugin
                 continue;
             } else {
                 PnfdInfoResource pnfdTargetResource = buildPnfdInfoResource(pnfdInfo);
-                pnfdTargetResource.setProjectId("Admins");
+                pnfdTargetResource.setProjectId(pnfdInfo.getProjectId());
                 PnfdInfoResource createdPnfdInfo = pnfdInfoRepository.saveAndFlush(pnfdTargetResource);
 
                 Resource obj;
@@ -549,7 +549,7 @@ public class CataloguePlugin extends Plugin
                 continue;
             } else {
                 NsdInfoResource nsdTargetResource = buildNsdInfoResource(nsdInfo);
-                nsdTargetResource.setProjectId("Admins");
+                nsdTargetResource.setProjectId(nsdInfo.getProjectId());
                 NsdInfoResource createdNsdInfo = nsdInfoRepository.saveAndFlush(nsdTargetResource);
 
                 Resource obj;
