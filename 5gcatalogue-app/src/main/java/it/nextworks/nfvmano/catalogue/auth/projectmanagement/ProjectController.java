@@ -1,22 +1,15 @@
-package it.nextworks.nfvmano.catalogue.auth;
+package it.nextworks.nfvmano.catalogue.auth.projectmanagement;
 
 import io.swagger.annotations.ApiParam;
-import it.nextworks.nfvmano.catalogue.auth.Resources.ProjectResource;
-import it.nextworks.nfvmano.catalogue.auth.Resources.UserResource;
+import it.nextworks.nfvmano.catalogue.auth.usermanagement.UserResource;
 import it.nextworks.nfvmano.catalogue.common.Utilities;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.ProblemDetails;
 import it.nextworks.nfvmano.catalogue.repos.ProjectRepository;
 import it.nextworks.nfvmano.catalogue.repos.UserRepository;
-import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
-import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
-import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
-import it.nextworks.nfvmano.libs.common.exceptions.NotPermittedOperationException;
-import org.keycloak.representations.idm.UserRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,9 +31,6 @@ public class ProjectController {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Value("${keycloak.enabled:true}")
-    private boolean keycloakEnabled;
 
     public ProjectController() {
     }
@@ -77,14 +67,6 @@ public class ProjectController {
                                            @RequestBody ProjectResource project) {
 
         log.debug("Received request for new Project creation");
-
-        if(keycloakEnabled && authorization == null){
-            return new ResponseEntity<ProblemDetails>(
-                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
-                            "Missing request header 'Authorization'"),
-                    HttpStatus.UNAUTHORIZED);
-        }
-
         if ((project == null) || (project.getProjectId() == null)) {
             log.error("Malformatted Project - Not acceptable");
             return new ResponseEntity<String>("Project or Project ID null", HttpStatus.BAD_REQUEST);
@@ -120,13 +102,6 @@ public class ProjectController {
 
         log.debug("Received request for getting Projects");
 
-        if(keycloakEnabled && authorization == null){
-            return new ResponseEntity<ProblemDetails>(
-                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
-                            "Missing request header 'Authorization'"),
-                    HttpStatus.UNAUTHORIZED);
-        }
-
         List<ProjectResource> projectResources = projectRepository.findAll();
 
         return new ResponseEntity<List<ProjectResource>>(projectResources, HttpStatus.OK);
@@ -138,13 +113,6 @@ public class ProjectController {
                                         @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
 
         log.debug("Received request for getting Project with Project ID " + projectId);
-
-        if(keycloakEnabled && authorization == null){
-            return new ResponseEntity<ProblemDetails>(
-                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
-                            "Missing request header 'Authorization'"),
-                    HttpStatus.UNAUTHORIZED);
-        }
 
         Optional<ProjectResource> optional = projectRepository.findByProjectId(projectId);
         if (optional.isPresent()) {
@@ -160,13 +128,6 @@ public class ProjectController {
                                            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
 
         log.debug("Received request for deleting Project with Project ID " + projectId);
-
-        if(keycloakEnabled && authorization == null){
-            return new ResponseEntity<ProblemDetails>(
-                    Utilities.buildProblemDetails(HttpStatus.UNAUTHORIZED.value(),
-                            "Missing request header 'Authorization'"),
-                    HttpStatus.UNAUTHORIZED);
-        }
 
         ProjectResource projectResource;
         Optional<ProjectResource> optional = projectRepository.findByProjectId(projectId);

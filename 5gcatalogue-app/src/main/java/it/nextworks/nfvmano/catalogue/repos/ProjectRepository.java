@@ -1,6 +1,6 @@
 package it.nextworks.nfvmano.catalogue.repos;
 
-import it.nextworks.nfvmano.catalogue.auth.Resources.ProjectResource;
+import it.nextworks.nfvmano.catalogue.auth.projectmanagement.ProjectResource;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
