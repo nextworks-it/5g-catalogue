@@ -6,7 +6,9 @@ import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticatio
 import org.keycloak.adapters.springsecurity.client.KeycloakClientRequestFactory;
 import org.keycloak.adapters.springsecurity.client.KeycloakRestTemplate;
 import org.keycloak.adapters.springsecurity.config.KeycloakWebSecurityConfigurerAdapter;
+import org.keycloak.adapters.springsecurity.filter.KeycloakPreAuthActionsFilter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +18,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper;
 import org.springframework.security.core.session.SessionRegistryImpl;
@@ -56,22 +59,29 @@ public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
     }
 
     @Override
+    public void configure(WebSecurity web) throws Exception {
+        web.ignoring().antMatchers("/v2/api-docs", "/configuration/ui", "/swagger-resources/**", "/configuration/**", "/swagger-ui.html", "/webjars/**");
+
+    }
+
+    @Override
     protected void configure(HttpSecurity http) throws Exception {
         super.configure(http);
         http
                 .csrf().disable()
                 .cors().and()
+                .addFilterBefore(new AuthorizationFilter(), KeycloakPreAuthActionsFilter.class)
                 .authorizeRequests()
-                .antMatchers("/vnfpkgm/*").hasAnyRole("ADMIN", "USER")
-                .antMatchers("/nsd/*").hasAnyRole("ADMIN", "USER")
-                .antMatchers("/catalogue/cat2catOperation/*").hasAnyRole("ADMIN", "USER")
-                .antMatchers("/catalogue/cat2catManagement/*").hasRole("ADMIN")
-                .antMatchers("/catalogue/vimManagement/*").hasRole("ADMIN")
-                .antMatchers("/catalogue/manoManagement/*").hasRole("ADMIN")
-                .antMatchers(HttpMethod.GET, "/catalogue/userManagement/users/*").hasAnyRole("ADMIN","USER")
-                .antMatchers(HttpMethod.OPTIONS, "/catalogue/userManagement/users/*").hasAnyRole("ADMIN","USER")
-                .antMatchers("/catalogue/projectManagement/*").hasRole("ADMIN")
-                .antMatchers("/catalogue/userManagement/*").hasRole("ADMIN")
+                .antMatchers("/vnfpkgm/**").hasAnyRole("Administrator", "User")
+                .antMatchers("/nsd/**").hasAnyRole("Administrator", "User")
+                .antMatchers("/catalogue/cat2catOperation/**").hasAnyRole("Administrator", "User")
+                .antMatchers("/catalogue/cat2catManagement/**").hasRole("Administrator")
+                .antMatchers("/catalogue/vimManagement/**").hasRole("Administrator")
+                .antMatchers("/catalogue/manoManagement/**").hasRole("Administrator")
+                .antMatchers(HttpMethod.GET, "/catalogue/userManagement/users/**").hasAnyRole("Administrator","User")
+                .antMatchers(HttpMethod.OPTIONS, "/catalogue/userManagement/users/**").hasAnyRole("Administrator","User")
+                .antMatchers("/catalogue/projectManagement/**").hasRole("Administrator")
+                .antMatchers("/catalogue/userManagement/**").hasRole("Administrator")
                 .anyRequest().permitAll();
     }
 }

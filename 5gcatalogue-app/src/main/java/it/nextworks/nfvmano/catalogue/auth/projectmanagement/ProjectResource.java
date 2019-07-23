@@ -1,4 +1,4 @@
-package it.nextworks.nfvmano.catalogue.auth.Resources;
+package it.nextworks.nfvmano.catalogue.auth.projectmanagement;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import it.nextworks.nfvmano.libs.common.DescriptorInformationElement;

@@ -44,26 +44,6 @@ public class SwaggerConfig extends WebMvcConfigurationSupport {
                 .apiInfo(apiInfo());
     }
 
-    /*
-    @Bean
-    public UiConfiguration uiConfig() {
-        return UiConfiguration.DEFAULT;
-    }
-*/
-    /*
-    private ApiInfo apiInfo() {
-        ApiInfo apiInfo = new ApiInfo(
-                "5G App and Service Catalogue",
-                "The API of the 5G App and Service Catalogue",
-                "1.0",
-                "",
-                new Contact("Francesca Moscatelli", "http://www.nextworks.it", "f.moscatelli@nextworks.it"),
-                "Apache License Version 2.0",
-                "http://www.apache.org/licenses/LICENSE-2.0"
-        );
-        return apiInfo;
-    }
-    */
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
                 .title("5G App and Service Catalogue")
