@@ -16,6 +16,7 @@
 
 function getAllVnfInfos(elemId, callback, resId) {
     var project = document.getElementById('project').innerHTML;
+    console.log("PROJECT COOKIE: " + getCookie("PROJECT"));
     getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages?project=" + getCookie("PROJECT"), callback, [elemId, resId]);
 }
 

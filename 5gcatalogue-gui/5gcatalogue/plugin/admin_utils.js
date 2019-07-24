@@ -23,11 +23,11 @@ function getAllProjects(tableId, resId, callback) {
 }
 
 function getAllUsers(tableId, resId) {
-	getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/projectManagement/users", createUsersTable, [tableId, resId]);
+	getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/userManagement/users", createUsersTable, [tableId, resId]);
 }
 
 function getUser(divId, resId, callback) {
-    getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/projectManagement/users/" + divId, callback, [divId, resId]);
+    getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/userManagement/users/" + divId, callback, [divId, resId]);
 }
 
 function createNewProject(inputs) {
@@ -70,7 +70,7 @@ function createNewUser(inputs) {
 function putUserToProject(userNameInput, projectIdInput) {
     var userName = document.getElementById(userNameInput).value;
     var projecId = document.getElementById(projectIdInput).value;
-    putToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/projectManagement/projects/" + projecId + "/users/" + userName, showResultMessage, ["User" + userName + " has been successfully added to Project " + projecId + "."]);
+    putToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/userManagement/projects/" + projecId + "/users/" + userName, showResultMessage, ["User" + userName + " has been successfully added to Project " + projecId + "."]);
 }
 
 function postProject(projectId, data) {
@@ -78,7 +78,7 @@ function postProject(projectId, data) {
 }
 
 function postUser(userName, data) {
-    postJsonToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/projectManagement/users", data, showResultMessage, ["User " + userName + " has been successfully created."]);
+    postJsonToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/userManagement/users", data, showResultMessage, ["User " + userName + " has been successfully created."]);
 }
 
 function createPluginsTable(data, params) {
@@ -345,15 +345,17 @@ function createAddToProjectModal(data, params) {
 
 function fillProjectsData(data, params) {
     var projCookie = getCookie("PROJECT");
-    console.log("Current project: " + projCookie);
+    //console.log("Current project: " + projCookie);
+
     var service_role = getCookie("ROLE");
-    if(service_role.indexOf("ADMIN") >= 0) {
-        if (projCookie == "") {
-            setCookie("PROJECT", "Admins", 1);
-            projCookie = "Admins";
+    //console.log("Current service role: " + service_role);
+    if(service_role.indexOf("ROLE_SERVICE_ADMIN") >= 0) {
+        if (projCookie == null) {
+            setCookie("PROJECT", "admin", 1);
+            projCookie = "admin";
         }
     } else {
-        if (projCookie == "") {
+        if (projCookie == null) {
             if (data['projects'].length >= 1) {
                 setCookie("PROJECT", data['projects'][0], 1);
                 projCookie = data['projects'][0];
@@ -367,7 +369,7 @@ function fillProjectsData(data, params) {
     var projectsDropDown = document.getElementById("userProjects");
     
     for (var i = 0 ; i < data['projects'].length; i++) {
-        console.log("Project: "  + data['projects'][i]);
+        console.log("Project #" + i + ": "  + data['projects'][i]);
         projectsDropDown.innerHTML += '<li><a onclick=selectProject("' + data['projects'][i] + '"); href="#">' + data['projects'][i] + '</a></li>';
     }    
 }

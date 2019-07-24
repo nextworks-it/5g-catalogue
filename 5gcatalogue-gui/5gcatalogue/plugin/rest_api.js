@@ -68,6 +68,7 @@ function getJsonFromURL(resourceUrl, callback, params) {
 }
 
 function getJsonFromURLWithAuth(resourceUrl, callback, params) {
+    //console.log("TOKEN: " + "Bearer " + getCookie("TOKEN"));
     var settings = {
         "async": true,
         //"crossDomain": true,
@@ -85,7 +86,7 @@ function getJsonFromURLWithAuth(resourceUrl, callback, params) {
     }).fail(function (response) {
         console.log(response);
         if (response.status == 401) {
-            location.href = '/5gcatalogue/401.html';
+            location.href = '/5gcatalogue/index.html';
         } else if (response.status == 403) {
             location.href = '/5gcatalogue/403.html';
         }
@@ -130,7 +131,7 @@ function getFileFromURLWithAuth(resourceUrl, callback, params) {
     }).fail(function (response) {
         console.log(response);
         if (response.status == 401) {
-            location.href = '/5gcatalogue/401.html';
+            location.href = '/5gcatalogue/index.html';
         } else if (response.status == 403) {
             location.href = '/5gcatalogue/403.html';
         }
@@ -191,7 +192,7 @@ function postJsonToURLWithAuth(resourceUrl, jsonData, callback, params) {
     }).fail(function (response) {
         console.log(response);
         if (response.status == 401) {
-            location.href = '/5gcatalogue/401.html';
+            location.href = '/5gcatalogue/index.html';
         } else if (response.status == 403) {
             location.href = '/5gcatalogue/403.html';
         } else if (callback == showResultMessage) {
@@ -248,7 +249,7 @@ function postToURLWithAuth(resourceUrl, callback, params) {
     }).fail(function (response) {
         console.log(response);
         if (response.status == 401) {
-            location.href = '/5gcatalogue/401.html';
+            location.href = '/5gcatalogue/index.html';
         } else if (response.status == 403) {
             location.href = '/5gcatalogue/403.html';
         } else if (callback == showResultMessage) {
@@ -277,7 +278,7 @@ function putJsonToURL(resourceUrl, jsonData, callback, params) {
     }).fail(function (response) {
         console.log(response);
         if (response.status == 401) {
-            location.href = '/5gcatalogue/401.html';
+            location.href = '/5gcatalogue/index.html';
         } else if (response.status == 403) {
             location.href = '/5gcatalogue/403.html';
         }
@@ -303,7 +304,7 @@ function putJsonToURLWithAuth(resourceUrl, jsonData, callback, params) {
     }).fail(function (response) {
         console.log(response);
         if (response.status == 401) {
-            location.href = '/5gcatalogue/401.html';
+            location.href = '/5gcatalogue/index.html';
         } else if (response.status == 403) {
             location.href = '/5gcatalogue/403.html';
         }
@@ -364,7 +365,7 @@ function putFileToURLWithAuth(resourceUrl, file, callback, params) {
     }).fail(function (response) {
         console.log(response);
         if (response.status == 401) {
-            location.href = '/5gcatalogue/401.html';
+            location.href = '/5gcatalogue/index.html';
         } else if (response.status == 403) {
             location.href = '/5gcatalogue/403.html';
         } else if (callback == showResultMessage) {
@@ -389,7 +390,7 @@ function putToURL(resourceUrl, callback, params) {
     }).fail(function (response) {
         console.log(response);
         if (response.status == 401) {
-            location.href = '/5gcatalogue/401.html';
+            location.href = '/5gcatalogue/index.html';
         } else if (response.status == 403) {
             location.href = '/5gcatalogue/403.html';
         }
@@ -417,7 +418,7 @@ function putToURLWithAuth(resourceUrl, callback, params) {
     }).fail(function (response) {
         console.log(response);
         if (response.status == 401) {
-            location.href = '/5gcatalogue/401.html';
+            location.href = '/5gcatalogue/index.html';
         } else if (response.status == 403) {
             location.href = '/5gcatalogue/403.html';
         } else if (callback == showResultMessage) {
@@ -474,7 +475,7 @@ function deleteRequestToURLWithAuth(resourceUrl, callback, params) {
     }).fail(function (response) {
         console.log(response);
         if (response.status == 401) {
-            location.href = '/5gcatalogue/401.html';
+            location.href = '/5gcatalogue/index.html';
         } else if (response.status == 403) {
             location.href = '/5gcatalogue/403.html';
         } else if (callback == showResultMessage) {
@@ -539,7 +540,7 @@ function patchJsonRequestToURLWithAuth(resourceUrl, jsonData, callback, params) 
     }).fail(function (response) {
         console.log(response);
         if (response.status == 401) {
-            location.href = '/5gcatalogue/401.html';
+            location.href = '/5gcatalogue/index.html';
         } else if (response.status == 403) {
             location.href = '/5gcatalogue/403.html';
         } else if (callback == showResultMessage) {

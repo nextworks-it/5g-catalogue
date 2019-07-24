@@ -119,7 +119,7 @@
         </a>
         <ul id="userProjects" class="dropdown-menu dropdown-usermenu pull-right">
         </ul>
-      </li>-->
+      </li>
     </ul>
   </nav>
 </div>
@@ -159,7 +159,8 @@
                 //document.getElementById('givenName').innerHTML = keycloak.idTokenParsed.given_name;
                 //document.getElementById('familyName').innerHTML = keycloak.idTokenParsed.family_name;
             } else {
-                window.location.replace("/5gcatalogue/401.html");
+                //window.location.replace("/5gcatalogue/401.html");
+                refresh(false);
             }
         };
         var loadFailure = function () {
