@@ -148,11 +148,11 @@ public class UserController {
         Optional<ProjectResource> optional = projectRepository.findByProjectId(projectId);
         if (optional.isPresent()) {
             projectResource = optional.get();
-            projectResource.addUser(userName);
-            projectRepository.saveAndFlush(projectResource);
-            log.debug("User " + userName + " successfully added to project " + projectId);
             Optional<UserResource> userResourceOptional = userRepository.findByUserName(userName);
             if (userResourceOptional.isPresent()) {
+                projectResource.addUser(userName);
+                projectRepository.saveAndFlush(projectResource);
+                log.debug("User " + userName + " successfully added to project " + projectId);
                 UserResource userResource = userResourceOptional.get();
                 if (userResource.getProjects().isEmpty()) {
                     userResource.setDefaultProject(projectId);

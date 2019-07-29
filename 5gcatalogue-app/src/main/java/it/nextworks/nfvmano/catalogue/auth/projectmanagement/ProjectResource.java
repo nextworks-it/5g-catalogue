@@ -111,7 +111,7 @@ public class ProjectResource implements DescriptorInformationElement {
     }
 
     public boolean isDeletable() {
-        if (!users.isEmpty() || !nsds.isEmpty() || !pnfds.isEmpty() || !vnfPackages.isEmpty()) {
+        if (!nsds.isEmpty() || !pnfds.isEmpty() || !vnfPackages.isEmpty()) {
             return false;
         }
         return true;

@@ -138,9 +138,11 @@ public class ProjectController {
                 log.debug("Project " + projectId + " successfully deleted");
                 return new ResponseEntity<>(HttpStatus.OK);
             } else {
-                return new ResponseEntity<String>("Project canot be deleted because in use", HttpStatus.CONFLICT);
+                log.error("Project cannot be deleted because in use");
+                return new ResponseEntity<String>("Project cannot be deleted because in use", HttpStatus.CONFLICT);
             }
         } else {
+            log.error("Project with sliceId " + projectId + " not present in DB");
             return new ResponseEntity<String>("Project with projectId " + projectId + " not present in DB", HttpStatus.BAD_REQUEST);
         }
     }
