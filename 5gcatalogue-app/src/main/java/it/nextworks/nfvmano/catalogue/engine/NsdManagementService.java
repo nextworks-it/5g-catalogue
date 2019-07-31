@@ -291,7 +291,7 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new NotAuthorizedOperationException("Specified project differs from NSD info project");
         } else {
             try {
-                if (keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                if (!isInternalRequest && keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
                     throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
                 }
             } catch (NotExistingEntityException e) {
@@ -333,7 +333,7 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new NotAuthorizedOperationException("Specified project differs from NSD info project");
         } else {
             try {
-                if (keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                if (!isInternalRequest && keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
                     throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
                 }
             } catch (NotExistingEntityException e) {
@@ -556,7 +556,7 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new NotAuthorizedOperationException("Specified project differs from NSD info project");
         } else {
             try {
-                if (keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                if (!isInternalRequest && keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
                     throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
                 }
             } catch (NotExistingEntityException e) {
@@ -931,7 +931,7 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new NotAuthorizedOperationException("Specified project differs from PNFD info project");
         } else {
             try {
-                if (keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                if (!isInternalRequest && keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
                     throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
                 }
             } catch (NotExistingEntityException e) {
@@ -1048,7 +1048,7 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new NotAuthorizedOperationException("Specified project differs from PNFD info project");
         } else {
             try {
-                if (keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                if (!isInternalRequest && keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
                     throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
                 }
             } catch (NotExistingEntityException e) {
@@ -1696,6 +1696,8 @@ public class NsdManagementService implements NsdManagementInterface {
         Optional<UserResource> optional = userRepository.findByUserName(userName);
 
         if (optional.isPresent()) {
+            if(projectId == null)
+                return true;
             UserResource userResource = optional.get();
 
             List<String> projectResources = userResource.getProjects();

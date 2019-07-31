@@ -275,11 +275,11 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         }
         VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
 
-        if (project != null && !vnfPkgInfoResource.getProjectId().equals(project)) {
+        if (!isInternalRequest && project != null && !vnfPkgInfoResource.getProjectId().equals(project)) {
             throw new NotAuthorizedOperationException("Specified project differs from VNF Pkg info project");
         } else {
             try {
-                if (keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                if (!isInternalRequest && keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
                     throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
                 }
             } catch (NotExistingEntityException e) {
@@ -321,7 +321,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             throw new NotAuthorizedOperationException("Specified project differs from VNF Pkg info project");
         } else {
             try {
-                if (keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                if (!isInternalRequest && keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
                     throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
                 }
             } catch (NotExistingEntityException e) {
@@ -436,7 +436,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             throw new NotAuthorizedOperationException("Specified project differs from VNF Pkg info project");
         } else {
             try {
-                if (keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                if (!isInternalRequest && keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
                     throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
                 }
             } catch (NotExistingEntityException e) {

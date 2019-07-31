@@ -138,9 +138,7 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
         log.debug("Body: {}", notification);
         if (notification.getScope() == ScopeType.LOCAL) {
             try {
-                log.debug("BEFORE");
                 DescriptorTemplate descriptorTemplate = retrieveNsdTemplate(notification.getNsdInfoId());
-                log.debug("AFTER");
                 NsdBuilder nsdBuilder = new NsdBuilder(logo);
 
                 List<DescriptorTemplate> includedVnfds = new ArrayList<>();
