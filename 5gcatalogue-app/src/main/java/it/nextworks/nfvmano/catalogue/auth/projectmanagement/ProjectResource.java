@@ -110,6 +110,10 @@ public class ProjectResource implements DescriptorInformationElement {
         this.users.add(userName);
     }
 
+    public void delUser(String userName) {
+        this.users.remove(userName);
+    }
+
     public boolean isDeletable() {
         if (!nsds.isEmpty() || !pnfds.isEmpty() || !vnfPackages.isEmpty()) {
             return false;

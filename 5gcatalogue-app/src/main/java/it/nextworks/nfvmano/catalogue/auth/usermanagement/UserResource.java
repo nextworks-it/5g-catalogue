@@ -103,6 +103,10 @@ public class UserResource implements DescriptorInformationElement {
         this.projects.add(projectId);
     }
 
+    public void delProject(String projectId) {
+        this.projects.remove(projectId);
+    }
+
     @Override
     public void isValid() throws MalformattedElementException {
         if (this.userName == null)

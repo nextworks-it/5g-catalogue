@@ -152,13 +152,52 @@ public class UserController {
             if (userResourceOptional.isPresent()) {
                 projectResource.addUser(userName);
                 projectRepository.saveAndFlush(projectResource);
-                log.debug("User " + userName + " successfully added to project " + projectId);
                 UserResource userResource = userResourceOptional.get();
                 if (userResource.getProjects().isEmpty()) {
                     userResource.setDefaultProject(projectId);
                 }
                 userResource.addProject(projectId);
                 userRepository.saveAndFlush(userResource);
+                log.debug("User " + userName + " successfully added to project " + projectId);
+            } else {
+                return new ResponseEntity<String>("User with userName " + userName + " not present in DB", HttpStatus.BAD_REQUEST);
+            }
+            return new ResponseEntity<ProjectResource>(projectResource, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<String>("Project with projectId " + projectId + " not present in DB", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @RequestMapping(value = "/projects/{projectId}/users/{userName}", method = RequestMethod.DELETE)
+    public ResponseEntity<?> delUserFromProject(@ApiParam(value = "", required = true)
+                                                @PathVariable("projectId") String projectId,
+                                                @ApiParam(value = "", required = true)
+                                                @PathVariable("userName") String userName,
+                                                @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+
+        log.debug("Received request for delete User " + userName + " from project " + projectId);
+        ProjectResource projectResource;
+        Optional<ProjectResource> optional = projectRepository.findByProjectId(projectId);
+        if (optional.isPresent()) {
+            projectResource = optional.get();
+            Optional<UserResource> userResourceOptional = userRepository.findByUserName(userName);
+            if (userResourceOptional.isPresent()) {
+                //check if user is present in the slice
+                List<String> projectUsers = projectResource.getUsers();
+                if(!projectUsers.contains(userName)){
+                    log.error("User not present in the project");
+                    return new ResponseEntity<String>("User not present in the project", HttpStatus.BAD_REQUEST);
+                }
+                projectResource.delUser(userName);
+                projectRepository.saveAndFlush(projectResource);
+                log.debug("User " + userName + " successfully deleted from project " + projectId);
+                UserResource userResource = userResourceOptional.get();
+                userResource.delProject(projectId);
+                if (userResource.getDefaultProject().equals(projectId)) {
+                    userResource.setDefaultProject(null);
+                }
+                userRepository.saveAndFlush(userResource);
+                log.debug("User " + userName + " successfully deleted from project " + projectId);
             } else {
                 return new ResponseEntity<String>("User with userName " + userName + " not present in DB", HttpStatus.BAD_REQUEST);
             }
