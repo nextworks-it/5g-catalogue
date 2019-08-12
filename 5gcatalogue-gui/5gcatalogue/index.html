@@ -113,9 +113,22 @@
   <!--#include virtual="/5gcatalogue/templates/scripts_foot.html" -->
 
   <!-- CATALOGUE COUNTERS -->
-  <script>getAllNsdInfos("count-NSD", fillNSDsCounter, "response");</script>
+  <script>
+    var project = getCookie("PROJECT");
+
+    if (project == null) {
+      refresh(false);
+    } else {
+      console.log("PROJECT: " + project);
+      getAllNsdInfos("count-NSD", fillNSDsCounter, "response");
+      getAllVnfInfos("count-VNF", fillVNFsCounter, "response");
+      getAllPnfdInfos("count-PNFD", fillPNFDsCounter, "response");
+    }
+  </script>
+  
+  <!--<script>getAllNsdInfos("count-NSD", fillNSDsCounter, "response");</script>
   <script>getAllVnfInfos("count-VNF", fillVNFsCounter, "response");</script>
-  <script>getAllPnfdInfos("count-PNFD", fillPNFDsCounter, "response");</script>
+  <script>getAllPnfdInfos("count-PNFD", fillPNFDsCounter, "response");</script>-->
 
 </body>
 

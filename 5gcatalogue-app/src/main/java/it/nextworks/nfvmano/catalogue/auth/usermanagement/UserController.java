@@ -53,6 +53,7 @@ public class UserController {
 
         List<UserRepresentation> users;
         List<UserResource> userResources;
+        //userResources = userRepository.findAll();
         try {
             users = keycloakService.getUsers();
             for (UserRepresentation userRepresentation : users) {
