@@ -1,0 +1,51 @@
+---
+# tasks file for 5g_catalogue
+
+- name: Install JAVA8
+  #include_tasks : java8.yml
+  #include_tasks : openJDK.yml
+  include_role:
+    name: java_role
+
+- name: openjdk-8-jre
+  apt:
+    name: openjdk-8-jre
+    state: present
+
+- name: openjfx
+  apt:
+    name: openjfx
+    state: present
+
+- name: Install Maven
+  include_tasks : maven.yml
+
+### Install PostgresSQL ###
+
+# Variable configuration.
+- include_tasks: pg_variables.yml
+
+# Setup/install tasks.
+- include_tasks: pg_setup.yml
+  
+- include_tasks: pg_initialize.yml
+- include_tasks: pg_configure.yml
+
+- name: Ensure PostgreSQL is started and enabled on boot.
+  service:
+    name: "{{ postgresql_daemon }}"
+    state: "{{ postgresql_service_state }}"
+    enabled: "{{ postgresql_service_enabled }}"
+
+### Install Zookeeper ###
+
+#- name: Include ansible-zookeeper
+#  include_role:
+#    name: ansible-zookeeper
+  
+### Install and setup KAFKA ###
+
+- name: Include kafka_role
+  include_role:
+    name: ansible-kafka
+  
