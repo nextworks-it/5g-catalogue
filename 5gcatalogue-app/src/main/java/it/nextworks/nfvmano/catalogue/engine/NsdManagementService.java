@@ -318,7 +318,7 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
-    public Object getNsd(String nsdInfoId, boolean isInternalRequest, String project) throws FailedOperationException, NotExistingEntityException,
+    public Object getNsd(String nsdInfoId, boolean isInternalRequest, String project, String accept) throws FailedOperationException, NotExistingEntityException,
             MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException, NotAuthorizedOperationException {
         log.debug("Processing request to retrieve an NSD content for NSD info " + nsdInfoId);
         if (project != null) {
@@ -354,7 +354,10 @@ public class NsdManagementService implements NsdManagementInterface {
          * log.debug("Got NSD content.");
          */
 
-        ContentType ct = nsdInfo.getContentType();
+        ContentType ct = ContentType.YAML;
+        if (accept.contains("multipart") || accept.contains("zip")) {
+            ct = ContentType.ZIP;
+        }
         switch (ct) {
             case YAML: {
                 // try {
@@ -540,7 +543,7 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
-    public synchronized void uploadNsd(String nsdInfoId, MultipartFile nsd, ContentType contentType, boolean isInternalRequest, String project) throws MalformattedElementException, FailedOperationException, NotExistingEntityException, NotPermittedOperationException, MethodNotImplementedException, NotAuthorizedOperationException {
+    public synchronized void uploadNsd(String nsdInfoId, MultipartFile nsd, ContentType contentType, boolean isInternalRequest, String project) throws MalformattedElementException, FailedOperationException, NotExistingEntityException, NotPermittedOperationException, MethodNotImplementedException, NotAuthorizedOperationException, AlreadyExistingEntityException {
 
         log.debug("Processing request to upload NSD content for NSD info " + nsdInfoId);
         if (project != null) {
@@ -553,19 +556,27 @@ public class NsdManagementService implements NsdManagementInterface {
         NsdInfoResource nsdInfo = getNsdInfoResource(nsdInfoId);
 
         if (project != null && !nsdInfo.getProjectId().equals(project)) {
+            nsdInfo.setNsdOnboardingState(NsdOnboardingStateType.FAILED);
+            nsdInfoRepo.saveAndFlush(nsdInfo);
             throw new NotAuthorizedOperationException("Specified project differs from NSD info project");
         } else {
             try {
                 if (!isInternalRequest && keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                    nsdInfo.setNsdOnboardingState(NsdOnboardingStateType.FAILED);
+                    nsdInfoRepo.saveAndFlush(nsdInfo);
                     throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
                 }
             } catch (NotExistingEntityException e) {
+                nsdInfo.setNsdOnboardingState(NsdOnboardingStateType.FAILED);
+                nsdInfoRepo.saveAndFlush(nsdInfo);
                 throw new NotAuthorizedOperationException(e.getMessage());
             }
         }
 
         if (nsdInfo.getNsdOnboardingState() != NsdOnboardingStateType.CREATED) {
             log.error("NSD info " + nsdInfoId + " not in CREATED onboarding state.");
+            nsdInfo.setNsdOnboardingState(NsdOnboardingStateType.FAILED);
+            nsdInfoRepo.saveAndFlush(nsdInfo);
             throw new NotPermittedOperationException("NSD info " + nsdInfoId + " not in CREATED onboarding state.");
         }
 
@@ -575,6 +586,8 @@ public class NsdManagementService implements NsdManagementInterface {
             inputFile = convertToFile(nsd);
         } catch (Exception e) {
             log.error("Error while parsing NSD in zip format: " + e.getMessage());
+            nsdInfo.setNsdOnboardingState(NsdOnboardingStateType.FAILED);
+            nsdInfoRepo.saveAndFlush(nsdInfo);
             throw new MalformattedElementException("Error while parsing NSD.");
         }
 
@@ -612,6 +625,12 @@ public class NsdManagementService implements NsdManagementInterface {
                     includedPnfds = checkPNFDs(dt, project);
 
                     nsdId = UUID.fromString(dt.getMetadata().getDescriptorId());
+
+                    Optional<NsdInfoResource> optionalNsdInfoResource = nsdInfoRepo.findByNsdIdAndNsdVersion(nsdId, dt.getMetadata().getVersion());
+                    if (optionalNsdInfoResource.isPresent()) {
+                        throw new AlreadyExistingEntityException("An NSD with the same id and version already exists in the Catalogue DB");
+                    }
+
                     nsdInfo.setNsdId(nsdId);
 
                     log.debug("NSD successfully parsed - its content is: \n"
@@ -651,6 +670,11 @@ public class NsdManagementService implements NsdManagementInterface {
                     nsdInfo.setNsdOnboardingState(onboardingStateType);
                     nsdInfoRepo.saveAndFlush(nsdInfo);
                     throw new NotAuthorizedOperationException(e.getMessage());
+                } catch (AlreadyExistingEntityException e) {
+                    onboardingStateType = NsdOnboardingStateType.FAILED;
+                    nsdInfo.setNsdOnboardingState(onboardingStateType);
+                    nsdInfoRepo.saveAndFlush(nsdInfo);
+                    throw new AlreadyExistingEntityException(e.getMessage());
                 } catch (Exception e) {
                     onboardingStateType = NsdOnboardingStateType.FAILED;
                     nsdInfo.setNsdOnboardingState(onboardingStateType);
@@ -670,6 +694,12 @@ public class NsdManagementService implements NsdManagementInterface {
                     includedPnfds = checkPNFDs(dt, project);
 
                     nsdId = UUID.fromString(dt.getMetadata().getDescriptorId());
+
+                    Optional<NsdInfoResource> optionalNsdInfoResource = nsdInfoRepo.findByNsdIdAndNsdVersion(nsdId, dt.getMetadata().getVersion());
+                    if (optionalNsdInfoResource.isPresent()) {
+                        throw new AlreadyExistingEntityException("An NSD with the same id and version already exists in the Catalogue DB");
+                    }
+
                     nsdInfo.setNsdId(nsdId);
 
                     log.debug("NSD successfully parsed - its content is: \n"
@@ -702,6 +732,11 @@ public class NsdManagementService implements NsdManagementInterface {
                     nsdInfo.setNsdOnboardingState(onboardingStateType);
                     nsdInfoRepo.saveAndFlush(nsdInfo);
                     throw new NotAuthorizedOperationException(e.getMessage());
+                } catch (AlreadyExistingEntityException e) {
+                    onboardingStateType = NsdOnboardingStateType.FAILED;
+                    nsdInfo.setNsdOnboardingState(onboardingStateType);
+                    nsdInfoRepo.saveAndFlush(nsdInfo);
+                    throw new AlreadyExistingEntityException(e.getMessage());
                 }
                 break;
             }
@@ -1033,7 +1068,7 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
-    public void uploadPnfd(String pnfdInfoId, MultipartFile pnfd, ContentType contentType, boolean isInternalRequest, String project) throws MalformattedElementException, NotExistingEntityException, NotPermittedOperationException, FailedOperationException, MethodNotImplementedException, NotAuthorizedOperationException {
+    public void uploadPnfd(String pnfdInfoId, MultipartFile pnfd, ContentType contentType, boolean isInternalRequest, String project) throws MalformattedElementException, NotExistingEntityException, NotPermittedOperationException, FailedOperationException, MethodNotImplementedException, NotAuthorizedOperationException, AlreadyExistingEntityException {
         log.debug("Processing request to upload PNFD content for PNFD info " + pnfdInfoId);
         if (project != null) {
             Optional<ProjectResource> projectOptional = projectRepository.findByProjectId(project);
@@ -1045,19 +1080,27 @@ public class NsdManagementService implements NsdManagementInterface {
         PnfdInfoResource pnfdInfo = getPnfdInfoResource(pnfdInfoId);
 
         if (project != null && !pnfdInfo.getProjectId().equals(project)) {
+            pnfdInfo.setPnfdOnboardingState(PnfdOnboardingStateType.FAILED);
+            pnfdInfoRepo.saveAndFlush(pnfdInfo);
             throw new NotAuthorizedOperationException("Specified project differs from PNFD info project");
         } else {
             try {
                 if (!isInternalRequest && keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                    pnfdInfo.setPnfdOnboardingState(PnfdOnboardingStateType.FAILED);
+                    pnfdInfoRepo.saveAndFlush(pnfdInfo);
                     throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
                 }
             } catch (NotExistingEntityException e) {
+                pnfdInfo.setPnfdOnboardingState(PnfdOnboardingStateType.FAILED);
+                pnfdInfoRepo.saveAndFlush(pnfdInfo);
                 throw new NotAuthorizedOperationException(e.getMessage());
             }
         }
 
         if (pnfdInfo.getPnfdOnboardingState() != PnfdOnboardingStateType.CREATED) {
             log.error("PNFD info " + pnfdInfoId + " not in CREATED onboarding state.");
+            pnfdInfo.setPnfdOnboardingState(PnfdOnboardingStateType.FAILED);
+            pnfdInfoRepo.saveAndFlush(pnfdInfo);
             throw new NotPermittedOperationException("PNFD info " + pnfdInfoId + " not in CREATED onboarding state.");
         }
 
@@ -1067,6 +1110,8 @@ public class NsdManagementService implements NsdManagementInterface {
             inputFile = convertToFile(pnfd);
         } catch (Exception e) {
             log.error("Error while parsing PNFD in zip format: " + e.getMessage());
+            pnfdInfo.setPnfdOnboardingState(PnfdOnboardingStateType.FAILED);
+            pnfdInfoRepo.saveAndFlush(pnfdInfo);
             throw new MalformattedElementException("Error while parsing PNFD.");
         }
 
@@ -1089,6 +1134,12 @@ public class NsdManagementService implements NsdManagementInterface {
                     dt = DescriptorsParser.fileToDescriptorTemplate(pnfdFile);
 
                     pnfdId = UUID.fromString(dt.getMetadata().getDescriptorId());
+
+                    Optional<PnfdInfoResource> optionalPnfdInfoResource = pnfdInfoRepo.findByPnfdIdAndPnfdVersion(pnfdId, dt.getMetadata().getVersion());
+                    if (optionalPnfdInfoResource.isPresent()) {
+                        throw new AlreadyExistingEntityException("A PNFD with the same id and version already exists in the Catalogue DB");
+                    }
+
                     pnfdInfo.setPnfdId(pnfdId);
 
                     log.debug("PNFD successfully parsed - its content is: \n"
@@ -1125,6 +1176,11 @@ public class NsdManagementService implements NsdManagementInterface {
                     pnfdInfo.setPnfdOnboardingState(onboardingStateType);
                     pnfdInfoRepo.saveAndFlush(pnfdInfo);
                     throw new FailedOperationException("Error while storing PNFD");
+                } catch (AlreadyExistingEntityException e) {
+                    onboardingStateType = PnfdOnboardingStateType.FAILED;
+                    pnfdInfo.setPnfdOnboardingState(onboardingStateType);
+                    pnfdInfoRepo.saveAndFlush(pnfdInfo);
+                    throw new AlreadyExistingEntityException(e.getMessage());
                 } catch (Exception e) {
                     log.error("Error while storing PNFD in zip format: " + e.getMessage());
                     onboardingStateType = PnfdOnboardingStateType.FAILED;
@@ -1141,6 +1197,12 @@ public class NsdManagementService implements NsdManagementInterface {
                     dt = DescriptorsParser.fileToDescriptorTemplate(inputFile);
 
                     pnfdId = UUID.fromString(dt.getMetadata().getDescriptorId());
+
+                    Optional<PnfdInfoResource> optionalPnfdInfoResource = pnfdInfoRepo.findByPnfdIdAndPnfdVersion(pnfdId, dt.getMetadata().getVersion());
+                    if (optionalPnfdInfoResource.isPresent()) {
+                        throw new AlreadyExistingEntityException("A PNFD with the same id and version already exists in the Catalogue DB");
+                    }
+
                     pnfdInfo.setPnfdId(pnfdId);
 
                     log.debug("PNFD successfully parsed - its content is: \n"
@@ -1164,6 +1226,11 @@ public class NsdManagementService implements NsdManagementInterface {
                     pnfdInfo.setPnfdOnboardingState(onboardingStateType);
                     pnfdInfoRepo.saveAndFlush(pnfdInfo);
                     throw new MalformattedElementException("Error while parsing PNFD");
+                } catch (AlreadyExistingEntityException e) {
+                    onboardingStateType = PnfdOnboardingStateType.FAILED;
+                    pnfdInfo.setPnfdOnboardingState(onboardingStateType);
+                    pnfdInfoRepo.saveAndFlush(pnfdInfo);
+                    throw new AlreadyExistingEntityException(e.getMessage());
                 }
                 break;
             }

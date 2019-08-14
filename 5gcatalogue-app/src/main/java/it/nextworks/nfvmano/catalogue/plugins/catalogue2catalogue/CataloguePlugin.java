@@ -203,7 +203,7 @@ public class CataloguePlugin extends Plugin
                         request.setUserDefinedData(keyValuePairs);
                     }
 
-                    File nsd = ((Resource) nsdService.getNsd(notification.getNsdInfoId(), true, nsdInfoResource.getProjectId())).getFile();
+                    File nsd = ((Resource) nsdService.getNsd(notification.getNsdInfoId(), true, nsdInfoResource.getProjectId(), "application/yaml")).getFile();
 
                     NsdInfo nsdInfo;
                     try {

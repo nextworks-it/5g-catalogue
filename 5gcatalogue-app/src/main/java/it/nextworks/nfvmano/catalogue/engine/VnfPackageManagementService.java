@@ -14,6 +14,7 @@ import it.nextworks.nfvmano.catalogue.messages.ScopeType;
 import it.nextworks.nfvmano.catalogue.messages.VnfPkgDeletionNotificationMessage;
 import it.nextworks.nfvmano.catalogue.messages.VnfPkgOnBoardingNotificationMessage;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboardingStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.*;
 import it.nextworks.nfvmano.catalogue.plugins.PluginType;
 import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.C2COnboardingStateType;
@@ -427,25 +428,34 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             Optional<ProjectResource> projectOptional = projectRepository.findByProjectId(project);
             if (!projectOptional.isPresent()) {
                 log.error("Project with id " + project + " does not exist");
+
                 throw new FailedOperationException("Project with id " + project + " does not exist");
             }
         }
         VnfPkgInfoResource vnfPkgInfoResource = getVnfPkgInfoResource(vnfPkgInfoId);
 
         if (project != null && !vnfPkgInfoResource.getProjectId().equals(project)) {
+            vnfPkgInfoResource.setOnboardingState(PackageOnboardingStateType.FAILED);
+            vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
             throw new NotAuthorizedOperationException("Specified project differs from VNF Pkg info project");
         } else {
             try {
                 if (!isInternalRequest && keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                    vnfPkgInfoResource.setOnboardingState(PackageOnboardingStateType.FAILED);
+                    vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
                     throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
                 }
             } catch (NotExistingEntityException e) {
+                vnfPkgInfoResource.setOnboardingState(PackageOnboardingStateType.FAILED);
+                vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
                 throw new NotAuthorizedOperationException(e.getMessage());
             }
         }
 
         if (vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.CREATED) {
             log.error("VNF Pkg info " + vnfPkgInfoId + " not in CREATED onboarding state.");
+            vnfPkgInfoResource.setOnboardingState(PackageOnboardingStateType.FAILED);
+            vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
             throw new NotPermittedOperationException("VNF Pkg info " + vnfPkgInfoId + " not in CREATED onboarding state.");
         }
 
@@ -456,6 +466,8 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
 
         if (contentType != ContentType.ZIP) {
             log.error("VNF Pkg upload request with wrong content-type.");
+            vnfPkgInfoResource.setOnboardingState(PackageOnboardingStateType.FAILED);
+            vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
             throw new MalformattedElementException("VNF Pkg " + vnfPkgInfoId + " upload request with wrong content-type.");
         }
 
@@ -467,6 +479,12 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             vnfPkgFilename = csarInfo.getPackageFilename();
 
             vnfdId = UUID.fromString(dt.getMetadata().getDescriptorId());
+
+            Optional<VnfPkgInfoResource> optionalVnfPkgInfoResource = vnfPkgInfoRepository.findByVnfdIdAndVnfdVersion(vnfdId, dt.getMetadata().getVersion());
+            if (optionalVnfPkgInfoResource.isPresent()) {
+                throw new AlreadyExistingEntityException("A VNFD with the same id and version already exists in the Catalogue DB");
+            }
+
             vnfPkgInfoResource.setVnfdId(vnfdId);
             log.debug("VNFD in Pkg successfully parsed - its content is: \n"
                     + DescriptorsParser.descriptorTemplateToString(dt));
@@ -479,10 +497,18 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             log.debug("VNF Pkg file successfully stored: " + vnfPkgFilename);
         } catch (IOException e) {
             log.error("Error while parsing VNF Pkg: " + e.getMessage());
+            vnfPkgInfoResource.setOnboardingState(PackageOnboardingStateType.FAILED);
+            vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
             throw new MalformattedElementException("Error while parsing VNF Pkg.");
         } catch (MalformattedElementException e) {
             log.error("Error while parsing VNF Pkg, not aligned with CSAR format: " + e.getMessage());
+            vnfPkgInfoResource.setOnboardingState(PackageOnboardingStateType.FAILED);
+            vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
             throw new MalformattedElementException("Error while parsing VNF Pkg, not aligned with CSAR format.");
+        } catch (AlreadyExistingEntityException e) {
+            vnfPkgInfoResource.setOnboardingState(PackageOnboardingStateType.FAILED);
+            vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
+            throw new AlreadyExistingEntityException(e.getMessage());
         }
 
         if (vnfPkgFilename == null || dt == null) {

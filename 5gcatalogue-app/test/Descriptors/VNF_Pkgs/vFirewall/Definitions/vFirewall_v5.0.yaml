@@ -1,0 +1,74 @@
+toscaDefinitionsVersion: tosca_simple_yaml_1_2
+description: vFirewall descriptor
+
+metadata:
+  descriptorId: aa6a284e-e369-4d7d-a465-57ddc6e8c027
+  vendor: Nextworks
+  version: "v5.0"
+
+topologyTemplate:
+  substitutionMappings:
+    nodeType: tosca.nodes.nfv.VNF
+    requirements:
+      virtualLink: [{cp: eth0, vl: link1_mgmt}]
+  
+  nodeTemplates:
+  
+    vFirewall-v5:
+      type: "tosca.nodes.nfv.VNF"
+      properties:
+        descriptorId: "aa6a284e-e369-4d7d-a465-57ddc6e8c027"
+        descriptorVersion: "v5.0"
+        provider: "NXW"
+        productName: "vFirewall-v5"
+        softwareVersion: "v5.0"
+        productInfoName: "vFirewall-v5"
+        productInfoDescription: "Virtual Firewall"
+        vnfmInfo:
+        - "juju"
+        localizationLanguages:
+        - "EN"
+        defaultLocalizationLanguage: "EN"
+        flavourId: "static_df"
+        flavourDescription: "static_df"
+        vnfProfile: null
+    
+    vFirewall_vdu:
+      type: tosca.nodes.nfv.Vdu.Compute
+      properties:
+        name: vFirewall_vdu
+        vduProfile:
+          minNumberOfInstances: 1
+          maxNumberOfInstances: 1
+      capabilities:
+        virtualCompute:
+          properties:
+            virtualMemory:
+              virtualMemSize: 2048
+            virtualCpu:
+              numVirtualCpu: 1
+      requirements:
+        virtualStorage: [vFirewall_storage]
+    
+    vFirewall_storage:
+      type: tosca.nodes.nfv.Vdu.VirtualBlockStorage
+      properties:
+        virtualBlockStorageData:
+          sizeOfStorage: 3
+        swImageData:
+          imageName: vFirewall
+          version: "0.5.0"
+          checksum: 9c2faca5501dc925c7b3155f8f1f16dc
+          containerFormat: BARE
+          diskFormat: QCOW2
+          size: 2
+    
+    eth0:
+      type: tosca.nodes.nfv.VnfExtCp
+      properties:
+        protocol: [associatedLayerProtocol: IPV4]
+        layerProtocols: [IPV4]
+        role: LEAF
+        description: mgmt interface
+      requirements:
+        externalVirtualLink: [link1_mgmt]

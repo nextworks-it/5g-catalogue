@@ -243,6 +243,14 @@ public class NsdApiController implements NsdApi {
 
         String accept = request.getHeader("Accept");
 
+        if (accept == null) {
+            log.error("Accept header should be specified for get NSD request");
+            return new ResponseEntity<ProblemDetails>(
+                    Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
+                            "Accept header should be specified for get NSD request"),
+                    HttpStatus.BAD_REQUEST);
+        }
+
         // TODO: consistency between accept values and input format when onboarding
         // should be better checked.
         // TODO: probably we should select the format based on the accept values. At the
@@ -251,7 +259,7 @@ public class NsdApiController implements NsdApi {
         log.debug("Processing REST request to retrieve NSD for NSD info ID " + nsdInfoId);
 
         try {
-            Object nsd = nsdManagementService.getNsd(nsdInfoId, false, project);
+            Object nsd = nsdManagementService.getNsd(nsdInfoId, false, project, accept);
             // TODO: here it needs to check the type of entity that is returned
             return new ResponseEntity<Resource>((Resource) nsd, HttpStatus.OK);
         } catch (NotExistingEntityException e) {
