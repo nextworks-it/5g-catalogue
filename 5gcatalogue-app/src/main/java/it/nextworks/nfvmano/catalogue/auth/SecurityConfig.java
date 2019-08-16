@@ -8,6 +8,7 @@ import org.keycloak.adapters.springsecurity.client.KeycloakRestTemplate;
 import org.keycloak.adapters.springsecurity.config.KeycloakWebSecurityConfigurerAdapter;
 import org.keycloak.adapters.springsecurity.filter.KeycloakPreAuthActionsFilter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -29,6 +30,12 @@ import org.springframework.security.web.authentication.session.SessionAuthentica
 @ConditionalOnProperty(value = "keycloak.enabled", matchIfMissing = true)
 @ComponentScan(basePackageClasses = KeycloakSecurityComponents.class)
 public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
+
+    @Value("${catalogue.adminRole}")
+    private String adminRole;
+
+    @Value("${catalogue.userRole}")
+    private String userRole;
 
     @Autowired
     public KeycloakClientRequestFactory keycloakClientRequestFactory;
@@ -71,16 +78,16 @@ public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
                 .cors().and()
                 .addFilterBefore(new AuthorizationFilter(), KeycloakPreAuthActionsFilter.class)
                 .authorizeRequests()
-                .antMatchers("/vnfpkgm/**").hasAnyRole("Administrator", "User")
-                .antMatchers("/nsd/**").hasAnyRole("Administrator", "User")
-                .antMatchers("/catalogue/cat2catOperation/**").hasAnyRole("Administrator", "User")
-                .antMatchers("/catalogue/cat2catManagement/**").hasRole("Administrator")
-                .antMatchers("/catalogue/vimManagement/**").hasRole("Administrator")
-                .antMatchers("/catalogue/manoManagement/**").hasRole("Administrator")
+                .antMatchers("/vnfpkgm/**").hasAnyRole(adminRole, userRole)
+                .antMatchers("/nsd/**").hasAnyRole(adminRole, userRole)
+                .antMatchers("/catalogue/cat2catOperation/**").hasAnyRole(adminRole, userRole)
+                .antMatchers("/catalogue/cat2catManagement/**").hasRole(adminRole)
+                .antMatchers("/catalogue/vimManagement/**").hasRole(adminRole)
+                .antMatchers("/catalogue/manoManagement/**").hasRole(adminRole)
                 //.antMatchers(HttpMethod.OPTIONS, "/catalogue/userManagement/users/**").hasAnyRole("Administrator","User")
-                .antMatchers(HttpMethod.GET, "/catalogue/userManagement/users/**").hasAnyRole("Administrator", "User")
-                .antMatchers("/catalogue/projectManagement/**").hasRole("Administrator")
-                .antMatchers("/catalogue/userManagement/**").hasRole("Administrator")
+                .antMatchers(HttpMethod.GET, "/catalogue/userManagement/users/**").hasAnyRole(adminRole, userRole)
+                .antMatchers("/catalogue/projectManagement/**").hasRole(adminRole)
+                .antMatchers("/catalogue/userManagement/**").hasRole(adminRole)
                 .anyRequest().permitAll();
     }
 }
