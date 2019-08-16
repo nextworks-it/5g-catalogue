@@ -15,8 +15,8 @@
  */
 package it.nextworks.nfvmano.catalogue.engine;
 
+import it.nextworks.nfvmano.catalogue.engine.elements.ContentType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.*;
-import it.nextworks.nfvmano.catalogue.repos.ContentType;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
 import org.springframework.web.multipart.MultipartFile;
 

@@ -22,6 +22,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
 import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
 import it.nextworks.nfvmano.catalogue.messages.*;
+import it.nextworks.nfvmano.catalogue.messages.elements.ScopeType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
@@ -238,9 +239,9 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
 
                 CSARInfo csarInfo = notification.getCsarInfo();
 
-                File mf = FileSystemStorageService.loadVnfPkgMfAsResource(descriptorTemplate.getMetadata().getDescriptorId(),
+                File mf = FileSystemStorageService.loadFileAsResource(descriptorTemplate.getMetadata().getDescriptorId(),
                         descriptorTemplate.getMetadata().getVersion(),
-                        csarInfo.getMfFilename()).getFile();
+                        csarInfo.getMfFilename(), true).getFile();
 
                 String cloudInitFilename = null;
 
@@ -276,9 +277,9 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
                 ArchiveBuilder archiver = new ArchiveBuilder(osmDir, logo);
                 File cloudInit = null;
                 if (cloudInitFilename != null) {
-                    cloudInit = FileSystemStorageService.loadVnfPkgCloudInitAsResource(
+                    cloudInit = FileSystemStorageService.loadFileAsResource(
                             descriptorTemplate.getMetadata().getDescriptorId(),
-                            descriptorTemplate.getMetadata().getVersion(), cloudInitFilename).getFile();
+                            descriptorTemplate.getMetadata().getVersion(), cloudInitFilename, true).getFile();
                 } else {
                     log.debug("No cloud-init file found for VNF Pkg {}", notification.getVnfPkgInfoId());
                 }

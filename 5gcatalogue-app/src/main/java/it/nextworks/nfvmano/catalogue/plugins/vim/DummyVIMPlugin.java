@@ -3,6 +3,7 @@ package it.nextworks.nfvmano.catalogue.plugins.vim;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
 import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
 import it.nextworks.nfvmano.catalogue.messages.*;
+import it.nextworks.nfvmano.catalogue.messages.elements.ScopeType;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

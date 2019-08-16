@@ -13,13 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.nextworks.nfvmano.catalogue.repos;
+package it.nextworks.nfvmano.catalogue.messages.elements;
 
-public enum ContentType {
-
-    UNSPECIFIED,
-    ZIP,
-    YAML,
-    JSON
-
+public enum CatalogueMessageType {
+    NSD_ONBOARDING_NOTIFICATION,
+    NSD_CHANGE_NOTIFICATION,
+    NSD_DELETION_NOTIFICATION,
+    PNFD_ONBOARDING_NOTIFICATION,
+    PNFD_DELETION_NOTIFICATION,
+    VNFPKG_ONBOARDING_NOTIFICATION,
+    VNFPKG_CHANGE_NOTIFICATION,
+    VNFPKG_DELETION_NOTIFICATION,
+    VNFIMG_UPLOADING_NOTIFICATION,
+    VNFIMG_CHANGE_NOTIFICATION,
+    VNFIMG_DELETION_NOTIFICATION
 }

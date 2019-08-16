@@ -50,42 +50,6 @@ public class FileSystemStorageService {
     public FileSystemStorageService() {
     }
 
-    /*
-    public static String storeNsd(String nsdId, String version, MultipartFile file) throws MalformattedElementException, FailedOperationException {
-        String filename = StringUtils.cleanPath(file.getOriginalFilename());
-        try {
-            if (file.isEmpty()) {
-                throw new MalformattedElementException("Failed to store empty file " + filename);
-            }
-            if (filename.contains("..")) {
-                // This is a security check
-                throw new MalformattedElementException(
-                        "Cannot store file with relative path outside current directory "
-                                + filename);
-            }
-            //create nsd + version dedicated directories, if not there
-            Path locationRoot = Paths.get(nsdsLocation + "/" + nsdId);
-            Path locationVersion = Paths.get(nsdsLocation + "/" + nsdId + "/" + version);
-            if (!Files.isDirectory(locationRoot, LinkOption.NOFOLLOW_LINKS)) {
-                if (!Files.isDirectory(locationVersion, LinkOption.NOFOLLOW_LINKS)) {
-                    Files.createDirectories(locationVersion);
-                }
-            } else {
-                if (!Files.isDirectory(locationVersion, LinkOption.NOFOLLOW_LINKS)) {
-                    Files.createDirectories(locationVersion);
-                }
-            }
-
-            try (InputStream inputStream = file.getInputStream()) {
-                Files.copy(inputStream, locationVersion.resolve(filename),
-                        StandardCopyOption.REPLACE_EXISTING);
-                return filename;
-            }
-        } catch (IOException e) {
-            throw new FailedOperationException("Failed to store file " + filename, e);
-        }
-    }
-    */
     public static String storePkg(String descriptorId, String version, MultipartFile file, boolean isVnfPkg) throws MalformattedElementException, FailedOperationException {
         String filename = StringUtils.cleanPath(file.getOriginalFilename());
         try {
@@ -188,17 +152,6 @@ public class FileSystemStorageService {
                 log.debug("File {} sucessfully created: {}", filename, newFile.getAbsolutePath());
             }
 
-            /*if (!newFile.exists()) {
-                throw new FailedOperationException("Failed to store new file " + filename);
-            }
-
-            boolean mkdirs = new File(newFile.getParent()).mkdirs();
-
-            if (!mkdirs) {
-                log.error("Not able to create parent folders for file: " + filename);
-                throw new FailedOperationException("Not able to create parent folders for file: " + filename);
-            }*/
-
             FileOutputStream fos;
             try {
                 fos = new FileOutputStream(newFile);
@@ -223,126 +176,21 @@ public class FileSystemStorageService {
         return filename;
     }
 
-    public static Path loadNsPkg(String nsdId, String version, String filename) {
-        log.debug("Loading file " + filename + " for NS Pkg " + nsdId);
-        Path location = Paths.get(nsdsLocation + "/" + nsdId + "/" + version);
+    public static Path loadFile(Path path, String id, String version, String filename) {
+        log.debug("Loading file " + filename + " for VNFD|NSD|PNFD " + id);
+        Path location = Paths.get(path + "/" + id + "/" + version);
         return location.resolve(filename);
     }
 
-    public static Path loadNsd(String nsdId, String version, String filename) {
-        log.debug("Loading file " + filename + " for NSD " + nsdId);
-        Path location = Paths.get(nsdsLocation + "/" + nsdId + "/" + version);
-        return location.resolve(filename);
-    }
-
-    public static Path loadVnfPkg(String vnfdId, String version, String filename) {
-        log.debug("Loading file " + filename + " for VNF Pkg " + vnfdId);
-        Path location = Paths.get(vnfPkgsLocation + "/" + vnfdId + "/" + version);
-        return location.resolve(filename);
-    }
-
-    public static Path loadVnfd(String vnfdId, String version, String filename) {
-        log.debug("Loading file " + filename + " for VNFD " + vnfdId);
-        Path location = Paths.get(vnfPkgsLocation + "/" + vnfdId + "/" + version);
-        return location.resolve(filename);
-    }
-
-    public static Path loadCloudInit(String vnfdId, String version, String filename) {
-        log.debug("Loading file " + filename + " for VNFD " + vnfdId);
-        Path location = Paths.get(vnfPkgsLocation + "/" + vnfdId + "/" + version);
-        return location.resolve(filename);
-    }
-
-    public static Path loadMf(String vnfdId, String version, String filename) {
-        log.debug("Loading file " + filename + " for VNFD " + vnfdId);
-        Path location = Paths.get(vnfPkgsLocation + "/" + vnfdId + "/" + version);
-        return location.resolve(filename);
-    }
-
-    public static Resource loadNsdAsResource(String nsdId, String version, String filename) throws NotExistingEntityException {
+    public static Resource loadFileAsResource(String id, String version, String filename, boolean isVnfPkg) throws NotExistingEntityException {
         log.debug("Searching file " + filename);
         try {
-            Path file = loadNsd(nsdId, version, filename);
-            Resource resource = new UrlResource(file.toUri());
-            if (resource.exists() || resource.isReadable()) {
-                log.debug("Found file " + filename);
-                return resource;
+            Path file = null;
+            if (isVnfPkg) {
+                file = loadFile(vnfPkgsLocation, id, version, filename);
             } else {
-                throw new NotExistingEntityException("Could not read file: " + filename);
+                file = loadFile(nsdsLocation, id, version, filename);
             }
-        } catch (MalformedURLException e) {
-            throw new NotExistingEntityException("Could not read file: " + filename, e);
-        }
-    }
-
-    public static Resource loadNsPkgAsResource(String nsdId, String version, String filename) throws NotExistingEntityException {
-        log.debug("Searching file " + filename);
-        try {
-            Path file = loadNsPkg(nsdId, version, filename);
-            Resource resource = new UrlResource(file.toUri());
-            if (resource.exists() || resource.isReadable()) {
-                log.debug("Found file " + filename);
-                return resource;
-            } else {
-                throw new NotExistingEntityException("Could not read file: " + filename);
-            }
-        } catch (MalformedURLException e) {
-            throw new NotExistingEntityException("Could not read file: " + filename, e);
-        }
-    }
-
-    public static Resource loadVnfPkgAsResource(String vnfdId, String version, String filename) throws NotExistingEntityException {
-        log.debug("Searching file " + filename);
-        try {
-            Path file = loadVnfPkg(vnfdId, version, filename);
-            Resource resource = new UrlResource(file.toUri());
-            if (resource.exists() || resource.isReadable()) {
-                log.debug("Found file " + filename);
-                return resource;
-            } else {
-                throw new NotExistingEntityException("Could not read file: " + filename);
-            }
-        } catch (MalformedURLException e) {
-            throw new NotExistingEntityException("Could not read file: " + filename, e);
-        }
-    }
-
-    public static Resource loadVnfdAsResource(String vnfdId, String version, String filename) throws NotExistingEntityException {
-        log.debug("Searching file " + filename);
-        try {
-            Path file = loadVnfd(vnfdId, version, filename);
-            Resource resource = new UrlResource(file.toUri());
-            if (resource.exists() || resource.isReadable()) {
-                log.debug("Found file " + filename);
-                return resource;
-            } else {
-                throw new NotExistingEntityException("Could not read file: " + filename);
-            }
-        } catch (MalformedURLException e) {
-            throw new NotExistingEntityException("Could not read file: " + filename, e);
-        }
-    }
-
-    public static Resource loadVnfPkgCloudInitAsResource(String vnfdId, String version, String filename) throws NotExistingEntityException {
-        log.debug("Searching file " + filename);
-        try {
-            Path file = loadCloudInit(vnfdId, version, filename);
-            Resource resource = new UrlResource(file.toUri());
-            if (resource.exists() || resource.isReadable()) {
-                log.debug("Found file " + filename);
-                return resource;
-            } else {
-                throw new NotExistingEntityException("Could not read file: " + filename);
-            }
-        } catch (MalformedURLException e) {
-            throw new NotExistingEntityException("Could not read file: " + filename, e);
-        }
-    }
-
-    public static Resource loadVnfPkgMfAsResource(String vnfdId, String version, String filename) throws NotExistingEntityException {
-        log.debug("Searching file " + filename);
-        try {
-            Path file = loadMf(vnfdId, version, filename);
             Resource resource = new UrlResource(file.toUri());
             if (resource.exists() || resource.isReadable()) {
                 log.debug("Found file " + filename);
@@ -400,17 +248,10 @@ public class FileSystemStorageService {
         log.debug("Removed all stored files");
     }
 
-    private static File newFile(String destinationDir, String filename) /*throws IOException*/ {
+    private static File newFile(String destinationDir, String filename) {
         log.debug("Creating new file for zip entry: " + filename);
         File destFile = new File(destinationDir + File.separator + filename);
         log.debug("New file created for zip entry: " + filename);
-
-        /*String destDirPath = destinationDir.getCanonicalPath();
-        String destFilePath = destFile.getCanonicalPath();
-
-        if (!destFilePath.startsWith(destDirPath + File.separator)) {
-            throw new IOException("Entry is outside of the target dir: " + zipEntry.getName());
-        }*/
 
         return destFile;
     }
@@ -431,7 +272,7 @@ public class FileSystemStorageService {
     public void init() throws FailedOperationException {
         log.debug("Initializing storage directories...");
         try {
-            //create rootLocation + nsds and vnfpckgs folders
+            //create rootLocation + nsds and vnfpkgs folders
             Files.createDirectories(nsdsLocation);
             Files.createDirectories(vnfPkgsLocation);
         } catch (IOException e) {

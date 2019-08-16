@@ -17,7 +17,6 @@ package it.nextworks.nfvmano.catalogue.translators;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import it.nextworks.nfvmano.catalogue.repos.DescriptorTemplateRepository;
 import it.nextworks.nfvmano.catalogue.translators.tosca.ArchiveParser;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
@@ -61,9 +60,6 @@ public class ToscaTranslatorTests {
 
     @Autowired
     ArchiveParser archiveParser;
-
-    @Autowired
-    DescriptorTemplateRepository descriptorTemplateRepository;
 
     static String readFile(String path, Charset encoding) throws IOException {
         byte[] encoded = Files.readAllBytes(Paths.get(path));

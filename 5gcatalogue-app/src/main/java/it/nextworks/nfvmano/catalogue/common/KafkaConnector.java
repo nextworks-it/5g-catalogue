@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.nextworks.nfvmano.catalogue.plugins;
+package it.nextworks.nfvmano.catalogue.common;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.nextworks.nfvmano.catalogue.messages.CatalogueMessage;
-import it.nextworks.nfvmano.catalogue.messages.CatalogueMessageType;
+import it.nextworks.nfvmano.catalogue.messages.elements.CatalogueMessageType;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -31,6 +31,7 @@ import org.springframework.kafka.listener.config.ContainerProperties;
 
 import java.util.*;
 import java.util.function.Consumer;
+
 public class KafkaConnector {
 
     public static final Map<String, Object> DEFAULT_PROPS;

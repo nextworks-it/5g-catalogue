@@ -31,14 +31,12 @@ import org.springframework.security.web.authentication.session.SessionAuthentica
 @ComponentScan(basePackageClasses = KeycloakSecurityComponents.class)
 public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
 
-    @Value("${catalogue.adminRole}")
-    private String adminRole;
-
-    @Value("${catalogue.userRole}")
-    private String userRole;
-
     @Autowired
     public KeycloakClientRequestFactory keycloakClientRequestFactory;
+    @Value("${catalogue.adminRole}")
+    private String adminRole;
+    @Value("${catalogue.userRole}")
+    private String userRole;
 
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {

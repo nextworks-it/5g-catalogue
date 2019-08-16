@@ -1,9 +1,9 @@
 package it.nextworks.nfvmano.catalogue.engine.resources;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import it.nextworks.nfvmano.catalogue.engine.elements.ContentType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnboardingStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdUsageStateType;
-import it.nextworks.nfvmano.catalogue.repos.ContentType;
 import it.nextworks.nfvmano.libs.common.exceptions.NotPermittedOperationException;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Fetch;

@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.nextworks.nfvmano.catalogue.messages;
+package it.nextworks.nfvmano.catalogue.messages.interfaces;
 
 
+import it.nextworks.nfvmano.catalogue.messages.VnfPkgChangeNotificationMessage;
+import it.nextworks.nfvmano.catalogue.messages.VnfPkgDeletionNotificationMessage;
+import it.nextworks.nfvmano.catalogue.messages.VnfPkgOnBoardingNotificationMessage;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
 

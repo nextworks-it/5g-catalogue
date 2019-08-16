@@ -22,7 +22,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.gwt.editor.client.Editor.Ignore;
 import it.nextworks.nfvmano.catalogue.engine.NotificationManager;
 import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
-import it.nextworks.nfvmano.catalogue.messages.ScopeType;
+import it.nextworks.nfvmano.catalogue.messages.elements.ScopeType;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import org.junit.Test;
 import org.junit.runner.RunWith;

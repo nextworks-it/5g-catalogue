@@ -1,4 +1,4 @@
-package it.nextworks.nfvmano.catalogue.messages;
+package it.nextworks.nfvmano.catalogue.messages.elements;
 
 public enum PackageChangeType {
 

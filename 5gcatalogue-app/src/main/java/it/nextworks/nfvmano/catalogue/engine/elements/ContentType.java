@@ -13,18 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.nextworks.nfvmano.catalogue;
+package it.nextworks.nfvmano.catalogue.engine.elements;
 
-import org.springframework.http.MediaType;
-import org.springframework.http.converter.StringHttpMessageConverter;
+public enum ContentType {
 
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+    UNSPECIFIED,
+    ZIP,
+    YAML,
+    JSON
 
-final class Http2YamlStringMessageConverter extends StringHttpMessageConverter {
-    Http2YamlStringMessageConverter() {
-        //super();
-        super(StandardCharsets.UTF_8);
-        setSupportedMediaTypes(Arrays.asList(MediaType.parseMediaType("application/x-yaml")));
-    }
 }

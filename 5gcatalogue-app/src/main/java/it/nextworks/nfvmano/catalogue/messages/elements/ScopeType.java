@@ -13,14 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.nextworks.nfvmano.catalogue;
+package it.nextworks.nfvmano.catalogue.messages.elements;
 
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.AbstractJackson2HttpMessageConverter;
-
-final class YamlJackson2HttpMessageConverter extends AbstractJackson2HttpMessageConverter {
-    YamlJackson2HttpMessageConverter() {
-        super(new YAMLMapper(), MediaType.parseMediaType("application/x-yaml"));
-    }
+public enum ScopeType {
+    LOCAL,
+    REMOTE,
+    C2C,
+    GLOBAL
 }

@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.nextworks.nfvmano.catalogue.messages;
+package it.nextworks.nfvmano.catalogue.messages.interfaces;
 
+import it.nextworks.nfvmano.catalogue.messages.*;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
 
 public interface NsdNotificationsConsumerInterface {

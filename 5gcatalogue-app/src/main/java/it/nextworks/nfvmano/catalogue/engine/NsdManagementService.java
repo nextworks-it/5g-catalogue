@@ -21,13 +21,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import it.nextworks.nfvmano.catalogue.auth.AuthUtilities;
 import it.nextworks.nfvmano.catalogue.auth.projectmanagement.ProjectResource;
-import it.nextworks.nfvmano.catalogue.auth.usermanagement.UserResource;
 import it.nextworks.nfvmano.catalogue.common.Utilities;
+import it.nextworks.nfvmano.catalogue.engine.elements.ContentType;
 import it.nextworks.nfvmano.catalogue.engine.resources.NotificationResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.PnfdInfoResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
-import it.nextworks.nfvmano.catalogue.messages.*;
+import it.nextworks.nfvmano.catalogue.messages.NsdDeletionNotificationMessage;
+import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
+import it.nextworks.nfvmano.catalogue.messages.PnfdDeletionNotificationMessage;
+import it.nextworks.nfvmano.catalogue.messages.PnfdOnBoardingNotificationMessage;
+import it.nextworks.nfvmano.catalogue.messages.elements.CatalogueMessageType;
+import it.nextworks.nfvmano.catalogue.messages.elements.ScopeType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.*;
 import it.nextworks.nfvmano.catalogue.plugins.PluginType;
 import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.C2COnboardingStateType;
@@ -48,16 +53,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
+
+import static it.nextworks.nfvmano.catalogue.engine.Utilities.*;
 
 @Service
 public class NsdManagementService implements NsdManagementInterface {
@@ -144,7 +148,7 @@ public class NsdManagementService implements NsdManagementInterface {
                 throw new FailedOperationException("Project with id " + project + " does not exist");
             }
             try {
-                if (!keycloakEnabled || checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                if (!keycloakEnabled || checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
                     nsdInfoResource.setProjectId(project);
                 } else {
                     throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
@@ -190,7 +194,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     throw new NotAuthorizedOperationException("Specified project differs from NSD info project");
                 } else {
                     try {
-                        if (keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                        if (keycloakEnabled && !checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
                             throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
                         }
                     } catch (NotExistingEntityException e) {
@@ -292,7 +296,7 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new NotAuthorizedOperationException("Specified project differs from NSD info project");
         } else {
             try {
-                if (!isInternalRequest && keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                if (!isInternalRequest && keycloakEnabled && !checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
                     throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
                 }
             } catch (NotExistingEntityException e) {
@@ -315,7 +319,7 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new FailedOperationException("Found more than one file for NSD in YAML format. Error");
         }
         String nsdFilename = nsdFilenames.get(0);
-        return storageService.loadNsdAsResource(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdFilename);
+        return storageService.loadFileAsResource(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdFilename, false);
     }
 
     @Override
@@ -334,7 +338,7 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new NotAuthorizedOperationException("Specified project differs from NSD info project");
         } else {
             try {
-                if (!isInternalRequest && keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                if (!isInternalRequest && keycloakEnabled && !checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
                     throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
                 }
             } catch (NotExistingEntityException e) {
@@ -368,7 +372,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     throw new FailedOperationException("Found more than one file for NSD in YAML format");
                 }
                 String nsdFilename = nsdFilenames.get(0);
-                return storageService.loadNsdAsResource(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdFilename);
+                return storageService.loadFileAsResource(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdFilename, false);
 
                 /*
                  * //String nsdString = DescriptorsParser.descriptorTemplateToString(nsd);
@@ -386,7 +390,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     throw new FailedOperationException("Found more than one file for NSD in YAML format. Error");
                 }
                 String nsdFilename = nsdFilenames.get(0);
-                return storageService.loadNsPkgAsResource(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdFilename);
+                return storageService.loadFileAsResource(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdFilename, false);
             }
             default: {
                 log.error("Content type not yet supported");
@@ -412,7 +416,7 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new NotAuthorizedOperationException("Specified project differs from NSD info project");
         } else {
             try {
-                if (keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                if (keycloakEnabled && !checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
                     throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
                 }
             } catch (NotExistingEntityException e) {
@@ -460,7 +464,7 @@ public class NsdManagementService implements NsdManagementInterface {
             }
         }
         try {
-            if (keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+            if (keycloakEnabled && !checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
                 throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
             }
         } catch (NotExistingEntityException e) {
@@ -500,7 +504,7 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new NotAuthorizedOperationException("Specified project differs from NSD info project");
         } else {
             try {
-                if (keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                if (keycloakEnabled && !checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
                     throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
                 }
             } catch (NotExistingEntityException e) {
@@ -562,7 +566,7 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new NotAuthorizedOperationException("Specified project differs from NSD info project");
         } else {
             try {
-                if (!isInternalRequest && keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                if (!isInternalRequest && keycloakEnabled && !checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
                     nsdInfo.setNsdOnboardingState(NsdOnboardingStateType.FAILED);
                     nsdInfoRepo.saveAndFlush(nsdInfo);
                     throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
@@ -627,7 +631,7 @@ public class NsdManagementService implements NsdManagementInterface {
 
                     String nsdId_string = dt.getMetadata().getDescriptorId();
 
-                    if (!Utilities.checkIdFormat(nsdId_string)) {
+                    if (!Utilities.isUUID(nsdId_string)) {
                         throw new MalformattedElementException("NSD id not in UUID format");
                     }
 
@@ -702,7 +706,7 @@ public class NsdManagementService implements NsdManagementInterface {
 
                     String nsdId_string = dt.getMetadata().getDescriptorId();
 
-                    if (!Utilities.checkIdFormat(nsdId_string)) {
+                    if (!Utilities.isUUID(nsdId_string)) {
                         throw new MalformattedElementException("NSD id not in UUID format");
                     }
 
@@ -869,7 +873,7 @@ public class NsdManagementService implements NsdManagementInterface {
                 throw new FailedOperationException("Project with id " + project + " does not exist");
             }
             try {
-                if (!keycloakEnabled || checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                if (!keycloakEnabled || checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
                     pnfdInfoResource.setProjectId(project);
                 } else {
                     throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
@@ -912,7 +916,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     throw new NotAuthorizedOperationException("Specified project differs from PNFD info project");
                 } else {
                     try {
-                        if (keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                        if (keycloakEnabled && !checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
                             throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
                         }
                     } catch (NotExistingEntityException e) {
@@ -979,7 +983,7 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new NotAuthorizedOperationException("Specified project differs from PNFD info project");
         } else {
             try {
-                if (!isInternalRequest && keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                if (!isInternalRequest && keycloakEnabled && !checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
                     throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
                 }
             } catch (NotExistingEntityException e) {
@@ -1005,7 +1009,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     throw new FailedOperationException("Found more than one file for PNFD in YAML format. Error");
                 }
                 String pnfdFilename = pnfdFilenames.get(0);
-                Resource pnfd = storageService.loadNsdAsResource(pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfdFilename);
+                Resource pnfd = storageService.loadFileAsResource(pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfdFilename, false);
 
                 return pnfd;
             }
@@ -1033,7 +1037,7 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new NotAuthorizedOperationException("Specified project differs from PNFD info project");
         } else {
             try {
-                if (keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                if (keycloakEnabled && !checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
                     throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
                 }
             } catch (NotExistingEntityException e) {
@@ -1058,7 +1062,7 @@ public class NsdManagementService implements NsdManagementInterface {
             }
         }
         try {
-            if (keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+            if (keycloakEnabled && !checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
                 throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
             }
         } catch (NotExistingEntityException e) {
@@ -1098,7 +1102,7 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new NotAuthorizedOperationException("Specified project differs from PNFD info project");
         } else {
             try {
-                if (!isInternalRequest && keycloakEnabled && !checkUserProjects(AuthUtilities.getUserNameFromJWT(), project)) {
+                if (!isInternalRequest && keycloakEnabled && !checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
                     pnfdInfo.setPnfdOnboardingState(PnfdOnboardingStateType.FAILED);
                     pnfdInfoRepo.saveAndFlush(pnfdInfo);
                     throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
@@ -1148,7 +1152,7 @@ public class NsdManagementService implements NsdManagementInterface {
 
                     String pnfdId_string = dt.getMetadata().getDescriptorId();
 
-                    if (!Utilities.checkIdFormat(pnfdId_string)) {
+                    if (!Utilities.isUUID(pnfdId_string)) {
                         throw new MalformattedElementException("PNFD id not in UUID format");
                     }
 
@@ -1217,7 +1221,7 @@ public class NsdManagementService implements NsdManagementInterface {
 
                     String pnfdId_string = dt.getMetadata().getDescriptorId();
 
-                    if (!Utilities.checkIdFormat(pnfdId_string)) {
+                    if (!Utilities.isUUID(pnfdId_string)) {
                         throw new MalformattedElementException("PNFD id not in UUID format");
                     }
 
@@ -1384,7 +1388,7 @@ public class NsdManagementService implements NsdManagementInterface {
             String fileName = vnfPkgInfoResource.getVnfdFilename();
 
             log.debug("Searching VNFD {} with vnfdId {} and version {}", fileName, vnfdId, version);
-            File vnfd_file = storageService.loadVnfdAsResource(vnfdId, version, fileName).getFile();
+            File vnfd_file = storageService.loadFileAsResource(vnfdId, version, fileName, true).getFile();
             DescriptorTemplate vnfd = DescriptorsParser.fileToDescriptorTemplate(vnfd_file);
 
             log.debug("VNFD successfully parsed - its content is: \n"
@@ -1445,7 +1449,7 @@ public class NsdManagementService implements NsdManagementInterface {
             String fileName = pnfdInfoResource.getPnfdFilename().get(0);
 
             log.debug("Searching PNFD {} with pnfdId {} and version {}", fileName, pnfdId, version);
-            File pnfd_file = storageService.loadNsdAsResource(pnfdId, version, fileName).getFile();
+            File pnfd_file = storageService.loadFileAsResource(pnfdId, version, fileName, false).getFile();
             DescriptorTemplate pnfd = DescriptorsParser.fileToDescriptorTemplate(pnfd_file);
 
             log.debug("PNFD successfully parsed - its content is: \n"
@@ -1708,99 +1712,5 @@ public class NsdManagementService implements NsdManagementInterface {
         }
 
         return pnfdInfo;
-    }
-
-    private File convertToFile(MultipartFile multipart) throws Exception {
-        File convFile = new File(multipart.getOriginalFilename());
-        convFile.createNewFile();
-        FileOutputStream fos = new FileOutputStream(convFile);
-        fos.write(multipart.getBytes());
-        fos.close();
-        return convFile;
-    }
-
-    @SuppressWarnings("resource")
-    private MultipartFile extractFile(File file) throws IOException {
-
-        MultipartFile archived = null;
-
-        ZipFile zipFile = new ZipFile(file);
-        if (zipFile.size() == 0) {
-            throw new IOException("The zip archive does not contain any entries");
-        }
-        if (zipFile.size() > 1) {
-            throw new IOException("The zip archive contains more than one entry");
-        }
-        Enumeration<? extends ZipEntry> entries = zipFile.entries();
-
-        while (entries.hasMoreElements()) {
-            ZipEntry entry = entries.nextElement();
-            if (!entry.isDirectory() && entry.getName().endsWith(".yaml")) {
-                // it is the NSD/PNFD
-                log.debug("File inside zip: " + entry.getName());
-
-                if (archived != null) {
-                    log.error("Archive validation failed: multiple NSDs/PNFDs in the zip");
-                    throw new IOException("Multiple NSDs/PNFDs in the zip");
-                }
-                InputStream zipIn = zipFile.getInputStream(entry);
-                archived = new MockMultipartFile(entry.getName(), entry.getName(), null, zipIn);
-                // found (ASSUME one single .yaml in the zip)
-                break;
-            }
-        }
-        if (archived == null) {
-            throw new IOException("The zip archive does not contain NSD/PNFD file");
-        }
-        zipFile.close();
-        return archived;
-    }
-
-    private void checkZipArchive(MultipartFile nsd) throws FailedOperationException {
-
-        byte[] bytes = new byte[0];
-        try {
-            bytes = nsd.getBytes();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        InputStream is = new ByteArrayInputStream(bytes);
-
-        ZipInputStream zis = new ZipInputStream(is);
-
-        try {
-            zis.getNextEntry();
-        } catch (IOException e) {
-            throw new FailedOperationException("CSAR Archive is corrupted: " + e.getMessage());
-        }
-
-        try {
-            zis.closeEntry();
-            zis.close();
-        } catch (IOException e) {
-            throw new FailedOperationException("CSAR Archive is corrupted: " + e.getMessage());
-        }
-    }
-
-    public boolean checkUserProjects(String userName, String projectId) throws NotExistingEntityException {
-
-        Optional<UserResource> optional = userRepository.findByUserName(userName);
-
-        if (optional.isPresent()) {
-            if (projectId == null)
-                return true;
-            UserResource userResource = optional.get();
-
-            List<String> projectResources = userResource.getProjects();
-            for (String project : projectResources) {
-                if (project.equals(projectId))
-                    return true;
-            }
-        } else {
-            throw new NotExistingEntityException("User with userName " + userName + " not found in Catalogue's DB");
-        }
-        log.error("Current user cannot access to the specified project");
-        return false;
     }
 }

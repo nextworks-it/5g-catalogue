@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.nextworks.nfvmano.catalogue.plugins.utils;
+package it.nextworks.nfvmano.catalogue.common;
 
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
@@ -21,7 +21,7 @@ import org.springframework.kafka.listener.config.ContainerProperties;
 
 import java.util.Map;
 
-public final class PluginKafkaConsumerUtils {
+public final class PluginKafkaConsumer {
 
     public static KafkaMessageListenerContainer<Integer, String> createContainer(ContainerProperties containerProps,
                                                                                  Map<String, Object> comsumerProps) {

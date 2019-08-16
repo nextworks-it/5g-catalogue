@@ -3,6 +3,8 @@ package it.nextworks.nfvmano.catalogue.messages;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import it.nextworks.nfvmano.catalogue.messages.elements.CatalogueMessageType;
+import it.nextworks.nfvmano.catalogue.messages.elements.ScopeType;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 
 import java.util.UUID;
