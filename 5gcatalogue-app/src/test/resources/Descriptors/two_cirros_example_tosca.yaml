@@ -60,7 +60,7 @@ topologyTemplate:
         flavourDescription: cirros DF
       requirements:
         virtualLink:
-          - vld_mgmt
+          vld_mgmt: vld_mgmt
     
     secondVNF:
       type: tosca.nodes.nfv.VNF
@@ -84,4 +84,4 @@ topologyTemplate:
         flavourDescription: cirros DF
       requirements:
         virtualLink:
-          - vld_mgmt
+          vld_mgmt: vld_mgmt

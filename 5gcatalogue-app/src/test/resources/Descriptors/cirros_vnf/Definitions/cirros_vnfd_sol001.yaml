@@ -68,6 +68,3 @@ topologyTemplate:
         description: mgmt interface
       requirements:
         externalVirtualLink: [vld_mgmt]
-
-
-

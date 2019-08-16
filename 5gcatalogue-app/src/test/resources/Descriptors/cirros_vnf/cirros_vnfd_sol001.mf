@@ -10,5 +10,5 @@ monitoring:
 
 configuration:
 	cloud_init:
-	Source: Files/Scripts/cloud.init
+		Source: Files/Scripts/cloud.init
 
