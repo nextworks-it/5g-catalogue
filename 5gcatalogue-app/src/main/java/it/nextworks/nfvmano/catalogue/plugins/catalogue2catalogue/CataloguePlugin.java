@@ -187,7 +187,7 @@ public class CataloguePlugin extends Plugin
 
     @Override
     public void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
-        log.info("Received NSD onboarding notification.");
+        log.info("Received NSD onboarding notification");
         log.debug("Body: {}", notification);
         if (notification.getScope() == ScopeType.C2C) {
             try {
@@ -252,19 +252,19 @@ public class CataloguePlugin extends Plugin
 
     @Override
     public void acceptNsdChangeNotification(NsdChangeNotificationMessage notification) throws MethodNotImplementedException {
-        log.info("Received NSD change notification.");
+        log.info("Received NSD change notification");
         log.debug("Body: {}", notification);
     }
 
     @Override
     public void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification) throws MethodNotImplementedException {
-        log.info("Received NSD deletion notification.");
+        log.info("Received NSD deletion notification");
         log.debug("Body: {}", notification);
     }
 
     @Override
     public void acceptPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
-        log.info("Received PNFD onboarding notification.");
+        log.info("Received PNFD onboarding notification");
         log.debug("Body: {}", notification);
         if (notification.getScope() == ScopeType.C2C) {
             try {
@@ -329,13 +329,13 @@ public class CataloguePlugin extends Plugin
 
     @Override
     public void acceptPnfdDeletionNotification(PnfdDeletionNotificationMessage notification) throws MethodNotImplementedException {
-        log.info("Received PNFD deletion notification.");
+        log.info("Received PNFD deletion notification");
         log.debug("Body: {}", notification);
     }
 
     @Override
     public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
-        log.info("Received VNF Pkg onboarding notification.");
+        log.info("Received VNF Pkg onboarding notification");
         log.debug("Body: {}", notification);
         if (notification.getScope() == ScopeType.C2C) {
             try {
@@ -400,13 +400,13 @@ public class CataloguePlugin extends Plugin
 
     @Override
     public void acceptVnfPkgChangeNotification(VnfPkgChangeNotificationMessage notification) throws MethodNotImplementedException {
-        log.info("Received VNF Pkg change notification.");
+        log.info("Received VNF Pkg change notification");
         log.debug("Body: {}", notification);
     }
 
     @Override
     public void acceptVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) throws MethodNotImplementedException {
-        log.info("Received VNF Pkg deletion notification.");
+        log.info("Received VNF Pkg deletion notification");
         log.debug("Body: {}", notification);
     }
 

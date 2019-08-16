@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import it.nextworks.nfvmano.catalogue.auth.AuthUtilities;
 import it.nextworks.nfvmano.catalogue.auth.projectmanagement.ProjectResource;
 import it.nextworks.nfvmano.catalogue.auth.usermanagement.UserResource;
+import it.nextworks.nfvmano.catalogue.common.Utilities;
 import it.nextworks.nfvmano.catalogue.engine.resources.NotificationResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
 import it.nextworks.nfvmano.catalogue.messages.CatalogueMessageType;
@@ -14,7 +15,6 @@ import it.nextworks.nfvmano.catalogue.messages.ScopeType;
 import it.nextworks.nfvmano.catalogue.messages.VnfPkgDeletionNotificationMessage;
 import it.nextworks.nfvmano.catalogue.messages.VnfPkgOnBoardingNotificationMessage;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboardingStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.*;
 import it.nextworks.nfvmano.catalogue.plugins.PluginType;
 import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.C2COnboardingStateType;
@@ -98,7 +98,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
 
     @Override
     public VnfPkgInfo createVnfPkgInfo(CreateVnfPkgInfoRequest request, String project) throws FailedOperationException, MalformattedElementException, MethodNotImplementedException, NotPermittedOperationException, NotAuthorizedOperationException {
-        log.debug("Processing request to create a new VNF Pkg info.");
+        log.debug("Processing request to create a new VNF Pkg info");
         KeyValuePairs kvp = request.getUserDefinedData();
         Map<String, String> targetKvp = new HashMap<>();
         if (kvp != null) {
@@ -133,10 +133,10 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
 
     @Override
     public void deleteVnfPkgInfo(String vnfPkgInfoId, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException, NotAuthorizedOperationException {
-        log.debug("Processing request to delete an VNF Pkg info.");
+        log.debug("Processing request to delete an VNF Pkg info");
 
         if (vnfPkgInfoId == null)
-            throw new MalformattedElementException("Invalid VNF Pkg info ID.");
+            throw new MalformattedElementException("Invalid VNF Pkg info ID");
 
         try {
             UUID id = UUID.fromString(vnfPkgInfoId);
@@ -168,24 +168,24 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
 
                 vnfPkgInfoResource.isDeletable();
 
-                log.debug("The VNF Pkg info can be removed.");
+                log.debug("The VNF Pkg info can be removed");
                 if (vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.ONBOARDED
                         || vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.LOCAL_ONBOARDED
                         || vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.PROCESSING) {
-                    log.debug("The VNF Pkg info is associated to an onboarded VNF Pkg. Removing it.");
+                    log.debug("The VNF Pkg info is associated to an onboarded VNF Pkg. Removing it");
                     UUID vnfdId = vnfPkgInfoResource.getVnfdId();
 
                     try {
                         storageService.deleteVnfPkg(vnfPkgInfoResource.getVnfdId().toString(), vnfPkgInfoResource.getVnfdVersion());
                     } catch (Exception e) {
-                        log.error("Unable to delete VNF Pkg with vnfdId {} from fylesystem.", vnfPkgInfoResource.getVnfdId().toString());
+                        log.error("Unable to delete VNF Pkg with vnfdId {} from fylesystem", vnfPkgInfoResource.getVnfdId().toString());
                         log.error("Details: ", e);
                     }
 
                     UUID operationId = insertOperationInfoInConsumersMap(vnfPkgInfoId,
                             CatalogueMessageType.NSD_DELETION_NOTIFICATION, OperationStatus.SENT);
 
-                    log.debug("VNF Pkg {} locally removed. Sending vnfPkgDeletionNotificationMessage to bus.", vnfdId);
+                    log.debug("VNF Pkg {} locally removed. Sending vnfPkgDeletionNotificationMessage to bus", vnfdId);
 
                     VnfPkgDeletionNotificationMessage msg = new VnfPkgDeletionNotificationMessage(vnfPkgInfoId, vnfdId.toString(), operationId, ScopeType.LOCAL, OperationStatus.SENT);
                     msg.setVnfName(vnfPkgInfoResource.getVnfProductName());
@@ -195,8 +195,8 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                 vnfPkgInfoRepository.deleteById(id);
                 log.debug("Deleted VNF Pkg info resource with id: " + vnfPkgInfoId);
             } else {
-                log.debug("VNF Pkg info resource with id " + vnfPkgInfoId + "not found.");
-                throw new NotExistingEntityException("VNF Pkg info resource with id " + vnfPkgInfoId + "not found.");
+                log.debug("VNF Pkg info resource with id " + vnfPkgInfoId + "not found");
+                throw new NotExistingEntityException("VNF Pkg info resource with id " + vnfPkgInfoId + "not found");
             }
         } catch (IllegalArgumentException e) {
             log.error("Wrong ID format: " + vnfPkgInfoId);
@@ -234,9 +234,9 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             if (vnfPkgInfoModifications.getOperationalState() != null) {
                 if (vnfPkgInfoResource.getOperationalState() == vnfPkgInfoModifications.getOperationalState()) {
                     log.error("VNF Pkg operational state already "
-                            + vnfPkgInfoResource.getOperationalState() + ". Cannot update VNF Pkg info.");
+                            + vnfPkgInfoResource.getOperationalState() + ". Cannot update VNF Pkg info");
                     throw new NotPermittedOperationException("VNF Pkg operational state already "
-                            + vnfPkgInfoResource.getOperationalState() + ". Cannot update VNF Pkg info.");
+                            + vnfPkgInfoResource.getOperationalState() + ". Cannot update VNF Pkg info");
                 } else {
                     vnfPkgInfoResource.setOperationalState(vnfPkgInfoModifications.getOperationalState());
                 }
@@ -256,10 +256,10 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                 log.error("Unable to parse received vnfPkgInfoModifications: " + e.getMessage());
             }
             vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
-            log.debug("VnfPkgInfoResource successfully updated.");
+            log.debug("VnfPkgInfoResource successfully updated");
         } else {
-            log.error("VNF Pkg onboarding state not ONBOARDED. Cannot update VNF Pkg info.");
-            throw new NotPermittedOperationException("VNF Pkg onboarding state not ONBOARDED/LOCAL_ONBOARDED. Cannot update VNF Pkg info.");
+            log.error("VNF Pkg onboarding state not ONBOARDED. Cannot update VNF Pkg info");
+            throw new NotPermittedOperationException("VNF Pkg onboarding state not ONBOARDED/LOCAL_ONBOARDED. Cannot update VNF Pkg info");
         }
         return vnfPkgInfoModifications;
     }
@@ -299,8 +299,8 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
 
         String vnfdFilename = vnfPkgInfoResource.getVnfdFilename();
         if (vnfdFilename == null) {
-            log.error("Found zero file for VNFD in YAML format. Error.");
-            throw new FailedOperationException("Found zero file for VNFD in YAML format. Error.");
+            log.error("Found zero file for VNFD in YAML format");
+            throw new FailedOperationException("Found zero file for VNFD in YAML format");
         }
 
         return storageService.loadVnfdAsResource(vnfPkgInfoResource.getVnfdId().toString(), vnfPkgInfoResource.getVnfdVersion(), vnfdFilename);
@@ -344,23 +344,23 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                 // try {
                 String vnfPkgFilename = vnfPkgInfoResource.getVnfPkgFilename();
                 if (vnfPkgFilename == null) {
-                    log.error("Found zero file for VNF Pkg in ZIP format. Error.");
-                    throw new FailedOperationException("Found zero file for VNF Pkg in ZIP format. Error.");
+                    log.error("Found zero file for VNF Pkg in ZIP format");
+                    throw new FailedOperationException("Found zero file for VNF Pkg in ZIP format");
                 }
 
                 return storageService.loadVnfPkgAsResource(vnfPkgInfoResource.getVnfdId().toString(), vnfPkgInfoResource.getVnfdVersion(), vnfPkgFilename);
             }
 
             default: {
-                log.error("Content type not yet supported.");
-                throw new MethodNotImplementedException("Content type not yet supported.");
+                log.error("Content type not yet supported");
+                throw new MethodNotImplementedException("Content type not yet supported");
             }
         }
     }
 
     @Override
     public VnfPkgInfo getVnfPkgInfo(String vnfPkgInfoId, String project) throws FailedOperationException, NotPermittedOperationException, NotExistingEntityException, MalformattedElementException, MethodNotImplementedException, NotAuthorizedOperationException {
-        log.debug("Processing request to get a VNF Pkg info.");
+        log.debug("Processing request to get a VNF Pkg info");
         if (project != null) {
             Optional<ProjectResource> projectOptional = projectRepository.findByProjectId(project);
             if (!projectOptional.isPresent()) {
@@ -390,7 +390,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
 
     @Override
     public List<VnfPkgInfo> getAllVnfPkgInfos(String project) throws FailedOperationException, MethodNotImplementedException, NotPermittedOperationException, NotAuthorizedOperationException {
-        log.debug("Processing request to get all VNF Pkg infos.");
+        log.debug("Processing request to get all VNF Pkg infos");
         if (project != null) {
             Optional<ProjectResource> projectOptional = projectRepository.findByProjectId(project);
             if (!projectOptional.isPresent()) {
@@ -453,10 +453,10 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         }
 
         if (vnfPkgInfoResource.getOnboardingState() != PackageOnboardingStateType.CREATED) {
-            log.error("VNF Pkg info " + vnfPkgInfoId + " not in CREATED onboarding state.");
+            log.error("VNF Pkg info " + vnfPkgInfoId + " not in CREATED onboarding state");
             vnfPkgInfoResource.setOnboardingState(PackageOnboardingStateType.FAILED);
             vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
-            throw new NotPermittedOperationException("VNF Pkg info " + vnfPkgInfoId + " not in CREATED onboarding state.");
+            throw new NotPermittedOperationException("VNF Pkg info " + vnfPkgInfoId + " not in CREATED onboarding state");
         }
 
         String vnfPkgFilename = null;
@@ -465,10 +465,10 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         UUID vnfdId = null;
 
         if (contentType != ContentType.ZIP) {
-            log.error("VNF Pkg upload request with wrong content-type.");
+            log.error("VNF Pkg upload request with wrong content-type");
             vnfPkgInfoResource.setOnboardingState(PackageOnboardingStateType.FAILED);
             vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
-            throw new MalformattedElementException("VNF Pkg " + vnfPkgInfoId + " upload request with wrong content-type.");
+            throw new MalformattedElementException("VNF Pkg " + vnfPkgInfoId + " upload request with wrong content-type");
         }
 
         checkZipArchive(vnfPkg);
@@ -478,7 +478,13 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             dt = csarInfo.getMst();
             vnfPkgFilename = csarInfo.getPackageFilename();
 
-            vnfdId = UUID.fromString(dt.getMetadata().getDescriptorId());
+            String vnfPkgId_string = dt.getMetadata().getDescriptorId();
+
+            if (!Utilities.checkIdFormat(vnfPkgId_string)) {
+                throw new MalformattedElementException("VNFD id not in UUID format");
+            }
+
+            vnfdId = UUID.fromString(vnfPkgId_string);
 
             Optional<VnfPkgInfoResource> optionalVnfPkgInfoResource = vnfPkgInfoRepository.findByVnfdIdAndVnfdVersion(vnfdId, dt.getMetadata().getVersion());
             if (optionalVnfPkgInfoResource.isPresent()) {
@@ -499,12 +505,12 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             log.error("Error while parsing VNF Pkg: " + e.getMessage());
             vnfPkgInfoResource.setOnboardingState(PackageOnboardingStateType.FAILED);
             vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
-            throw new MalformattedElementException("Error while parsing VNF Pkg.");
+            throw new MalformattedElementException("Error while parsing VNF Pkg");
         } catch (MalformattedElementException e) {
             log.error("Error while parsing VNF Pkg, not aligned with CSAR format: " + e.getMessage());
             vnfPkgInfoResource.setOnboardingState(PackageOnboardingStateType.FAILED);
             vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
-            throw new MalformattedElementException("Error while parsing VNF Pkg, not aligned with CSAR format.");
+            throw new MalformattedElementException("Error while parsing VNF Pkg, not aligned with CSAR format");
         } catch (AlreadyExistingEntityException e) {
             vnfPkgInfoResource.setOnboardingState(PackageOnboardingStateType.FAILED);
             vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
@@ -512,7 +518,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         }
 
         if (vnfPkgFilename == null || dt == null) {
-            throw new FailedOperationException("Invalid internal structures.");
+            throw new FailedOperationException("Invalid internal structures");
         }
 
         log.debug("Updating VNF Pkg info");
@@ -641,8 +647,8 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                 log.debug("Found VNF Pkg info resource with id: " + vnfPkgInfoId);
                 return vnfPkgInfoResource;
             } else {
-                log.debug("VNF Pkg info resource with id " + vnfPkgInfoId + " not found.");
-                throw new NotExistingEntityException("VNF Pkg info resource with id " + vnfPkgInfoId + " not found.");
+                log.debug("VNF Pkg info resource with id " + vnfPkgInfoId + " not found");
+                throw new NotExistingEntityException("VNF Pkg info resource with id " + vnfPkgInfoId + " not found");
             }
         } catch (IllegalArgumentException e) {
             log.error("Wrong ID format: " + vnfPkgInfoId);
@@ -660,7 +666,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
     }
 
     public void updateVnfPkgInfoOperationStatus(String vnfPkgInfoId, String pluginId, OperationStatus opStatus, CatalogueMessageType type) throws NotExistingEntityException {
-        log.debug("Retrieving vnfPkgInfoResource {} from DB for updating with onboarding status info for plugin {}.",
+        log.debug("Retrieving vnfPkgInfoResource {} from DB for updating with onboarding status info for plugin {}",
                 vnfPkgInfoId, pluginId);
         Optional<VnfPkgInfoResource> optionalVnfPkgInfoResource = vnfPkgInfoRepository.findById(UUID.fromString(vnfPkgInfoId));
 
@@ -676,11 +682,11 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                 vnfPkgInfoResource.setAcknowledgedOnboardOpConsumers(ackMap);
 
                 if (type == CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION) {
-                    log.debug("Checking VNF Pkg with vnfPkgInfoId {} onboarding state.", vnfPkgInfoId);
+                    log.debug("Checking VNF Pkg with vnfPkgInfoId {} onboarding state", vnfPkgInfoId);
                     vnfPkgInfoResource.setOnboardingState(checkVnfPkgOnboardingState(vnfPkgInfoId, ackMap));
                 }
 
-                log.debug("Updating VnfPkgInfoResource {} with onboardingState {}.", vnfPkgInfoId,
+                log.debug("Updating VnfPkgInfoResource {} with onboardingState {}", vnfPkgInfoId,
                         vnfPkgInfoResource.getOnboardingState());
                 vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
             } catch (Exception e) {
@@ -688,7 +694,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                 log.error("Details: ", e);
             }
         } else {
-            throw new NotExistingEntityException("VnfPkgInfoResource " + vnfPkgInfoId + " not present in DB.");
+            throw new NotExistingEntityException("VnfPkgInfoResource " + vnfPkgInfoId + " not present in DB");
         }
     }
 
@@ -697,7 +703,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         for (Map.Entry<String, NotificationResource> entry : ackMap.entrySet()) {
             if (entry.getValue().getOperation() == CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION && entry.getValue().getPluginType() == PluginType.MANO) {
                 if (entry.getValue().getOpStatus() == OperationStatus.FAILED) {
-                    log.error("VNF Pkg with vnfPkgInfoId {} onboarding failed for mano with manoId {}.", vnfPkgInfoId,
+                    log.error("VNF Pkg with vnfPkgInfoId {} onboarding failed for mano with manoId {}", vnfPkgInfoId,
                             entry.getKey());
 
                     // TODO: Decide how to handle MANO onboarding failures.
@@ -705,12 +711,12 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                 } else if (entry.getValue().getOpStatus() == OperationStatus.SENT
                         || entry.getValue().getOpStatus() == OperationStatus.RECEIVED
                         || entry.getValue().getOpStatus() == OperationStatus.PROCESSING) {
-                    log.debug("VNF Pkg with vnfPkgInfoId {} onboarding still in progress for mano with manoId {}.");
+                    log.debug("VNF Pkg with vnfPkgInfoId {} onboarding still in progress for mano with manoId {}");
                     return PackageOnboardingStateType.LOCAL_ONBOARDED;
                 }
             }
         }
-        log.debug("VNF Pkg with vnfPkgInfoId " + vnfPkgInfoId + " successfully onboarded by all expected consumers.");
+        log.debug("VNF Pkg with vnfPkgInfoId " + vnfPkgInfoId + " successfully onboarded by all expected consumers");
         return PackageOnboardingStateType.ONBOARDED;
     }
 
@@ -746,7 +752,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         Optional<UserResource> optional = userRepository.findByUserName(userName);
 
         if (optional.isPresent()) {
-            if(projectId == null)
+            if (projectId == null)
                 return true;
             UserResource userResource = optional.get();
 

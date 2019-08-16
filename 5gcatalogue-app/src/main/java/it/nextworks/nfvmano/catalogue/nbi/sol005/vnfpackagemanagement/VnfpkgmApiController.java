@@ -17,7 +17,6 @@ package it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.ApiParam;
-import it.nextworks.nfvmano.catalogue.auth.KeycloakService;
 import it.nextworks.nfvmano.catalogue.common.Utilities;
 import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.ProblemDetails;
@@ -27,7 +26,6 @@ import it.nextworks.nfvmano.libs.common.exceptions.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -261,7 +259,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         } catch (NotAuthorizedOperationException e) {
             return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
                     e.getMessage()), HttpStatus.FORBIDDEN);
-        }catch (FailedOperationException e) {
+        } catch (FailedOperationException e) {
             return new ResponseEntity<ProblemDetails>(
                     Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(), e.getMessage()),
                     HttpStatus.BAD_REQUEST);
@@ -304,7 +302,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
             return new ResponseEntity<ProblemDetails>(
                     Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(), e.getMessage()),
                     HttpStatus.BAD_REQUEST);
-        }catch (NotAuthorizedOperationException e) {
+        } catch (NotAuthorizedOperationException e) {
             return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
                     e.getMessage()), HttpStatus.FORBIDDEN);
         } catch (Exception e) {
@@ -318,7 +316,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
     public ResponseEntity<?> uploadVNFPkg(@RequestParam(required = false) String project,
                                           @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
                                           @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
-                                          @ApiParam(value = "The payload body contains a VNF Package ZIP file. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType,
+                                          @ApiParam(value = "The payload body contains a VNF Package ZIP file. The request shall set the \"Content-Type\" HTTP header as defined above") @RequestHeader(value = "Content-Type", required = false) String contentType,
                                           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         log.debug("Processing REST request for Uploading VNF Pkg content in VNF Pkg info " + vnfPkgId);
 
@@ -377,18 +375,18 @@ public class VnfpkgmApiController implements VnfpkgmApi {
     }
 
     public ResponseEntity<?> uploadVNFPkgFromURI(@RequestParam(required = false) String project,
-                                                    @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
-                                                    @ApiParam(value = "", required = true) @Valid @RequestBody UploadVnfPackageFromUriRequest body,
-                                                    @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+                                                 @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
+                                                 @ApiParam(value = "", required = true) @Valid @RequestBody UploadVnfPackageFromUriRequest body,
+                                                 @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         String accept = request.getHeader("Accept");
         return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
     }
 
     public ResponseEntity<?> queryVNFPkgArtifact(@RequestParam(required = false) String project,
-                                                      @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
-                                                      @ApiParam(value = "", required = true) @PathVariable("artifactPath") String artifactPath,
-                                                      @ApiParam(value = "") @RequestHeader(value = "Range", required = false) String range,
-                                                      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+                                                 @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
+                                                 @ApiParam(value = "", required = true) @PathVariable("artifactPath") String artifactPath,
+                                                 @ApiParam(value = "") @RequestHeader(value = "Range", required = false) String range,
+                                                 @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("")) {
             try {
@@ -447,7 +445,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
     }
 
     public ResponseEntity<?> deleteSubscription(@ApiParam(value = "", required = true) @PathVariable("subscriptionId") String subscriptionId,
-                                                   @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+                                                @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         String accept = request.getHeader("Accept");
         return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
     }

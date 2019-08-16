@@ -53,7 +53,7 @@ public class DummyMANOPlugin extends MANOPlugin {
     @Override
     public void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) {
         if (notification.getScope() == ScopeType.LOCAL) {
-            log.info("Received NSD onboarding notification.");
+            log.info("Received NSD onboarding notification");
             log.debug("Body: {}", notification);
             NsdOnBoardingNotificationMessage response = new NsdOnBoardingNotificationMessage(
                     notification.getNsdInfoId(),
@@ -71,7 +71,7 @@ public class DummyMANOPlugin extends MANOPlugin {
     @Override
     public void acceptNsdChangeNotification(NsdChangeNotificationMessage notification) {
         if (notification.getScope() == ScopeType.LOCAL) {
-            log.info("Received NSD change notification.");
+            log.info("Received NSD change notification");
             log.debug("Body: {}", notification);
         }
     }
@@ -79,7 +79,7 @@ public class DummyMANOPlugin extends MANOPlugin {
     @Override
     public void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification) {
         if (notification.getScope() == ScopeType.LOCAL) {
-            log.info("Received NSD deletion notification.");
+            log.info("Received NSD deletion notification");
             log.debug("Body: {}", notification);
             NsdDeletionNotificationMessage response = new NsdDeletionNotificationMessage(
                     notification.getNsdInfoId(),
@@ -97,7 +97,7 @@ public class DummyMANOPlugin extends MANOPlugin {
     @Override
     public void acceptPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
         if (notification.getScope() == ScopeType.LOCAL) {
-            log.info("Received PNFD onboarding notification.");
+            log.info("Received PNFD onboarding notification");
             log.debug("Body: {}", notification);
             PnfdOnBoardingNotificationMessage response = new PnfdOnBoardingNotificationMessage(
                     notification.getPnfdInfoId(),
@@ -115,7 +115,7 @@ public class DummyMANOPlugin extends MANOPlugin {
     @Override
     public void acceptPnfdDeletionNotification(PnfdDeletionNotificationMessage notification) throws MethodNotImplementedException {
         if (notification.getScope() == ScopeType.LOCAL) {
-            log.info("Received PNFD deletion notification.");
+            log.info("Received PNFD deletion notification");
             log.debug("Body: {}", notification);
             PnfdDeletionNotificationMessage response = new PnfdDeletionNotificationMessage(
                     notification.getPnfdInfoId(),
@@ -133,7 +133,7 @@ public class DummyMANOPlugin extends MANOPlugin {
     @Override
     public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) {
         if (notification.getScope() == ScopeType.LOCAL) {
-            log.info("Received VNF Pkg onboarding notification.");
+            log.info("Received VNF Pkg onboarding notification");
             log.debug("Body: {}", notification);
             VnfPkgOnBoardingNotificationMessage response = new VnfPkgOnBoardingNotificationMessage(
                     notification.getVnfPkgInfoId(),
@@ -151,7 +151,7 @@ public class DummyMANOPlugin extends MANOPlugin {
     @Override
     public void acceptVnfPkgChangeNotification(VnfPkgChangeNotificationMessage notification) {
         if (notification.getScope() == ScopeType.LOCAL) {
-            log.info("Received VNF Pkg change notification.");
+            log.info("Received VNF Pkg change notification");
             log.debug("Body: {}", notification);
         }
     }
@@ -159,7 +159,7 @@ public class DummyMANOPlugin extends MANOPlugin {
     @Override
     public void acceptVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) {
         if (notification.getScope() == ScopeType.LOCAL) {
-            log.info("Received VNF Pkg deletion notification.");
+            log.info("Received VNF Pkg deletion notification");
             log.debug("Body: {}", notification);
             VnfPkgDeletionNotificationMessage response = new VnfPkgDeletionNotificationMessage(
                     notification.getVnfPkgInfoId(),

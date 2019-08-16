@@ -30,4 +30,11 @@ public class Utilities {
         return pd;
     }
 
+    public static boolean checkIdFormat(String id) {
+        String regex = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"; //UUID format
+        if (id.matches(regex))
+            return true;
+        return false;
+    }
+
 }

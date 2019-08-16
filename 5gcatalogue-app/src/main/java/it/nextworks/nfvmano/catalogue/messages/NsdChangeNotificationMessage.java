@@ -24,11 +24,6 @@ import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 
 import java.util.UUID;
 
-/**
- * Created by Marco Capitani on 17/08/18.
- *
- * @author Marco Capitani <m.capitani AT nextworks.it>
- */
 public class NsdChangeNotificationMessage extends CatalogueMessage {
 
 

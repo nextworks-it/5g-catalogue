@@ -66,7 +66,7 @@ public abstract class MANOPlugin
         this.vnfdService = vnfdService;
         this.remoteTopic = remoteTopic;
         if (this.mano.getManoType() != this.manoType) {
-            throw new IllegalArgumentException("Mano type and Mano do not agree.");
+            throw new IllegalArgumentException("Mano type and Mano do not agree");
         }
         String connectorID = "MANO_" + mano.getManoId(); // assuming it's unique among MANOs
         Map<CatalogueMessageType, Consumer<CatalogueMessage>> functor = new HashMap<>();

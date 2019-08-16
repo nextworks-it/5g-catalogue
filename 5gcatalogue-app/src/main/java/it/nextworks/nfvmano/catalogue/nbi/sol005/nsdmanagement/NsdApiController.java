@@ -16,7 +16,6 @@
 package it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiParam;
 import it.nextworks.nfvmano.catalogue.common.Utilities;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
@@ -26,8 +25,6 @@ import it.nextworks.nfvmano.libs.common.exceptions.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -57,7 +54,7 @@ public class NsdApiController implements NsdApi {
     NsdManagementInterface nsdManagementService;
 
     @Autowired
-    public NsdApiController(ObjectMapper objectMapper, HttpServletRequest request)  {
+    public NsdApiController(ObjectMapper objectMapper, HttpServletRequest request) {
         this.objectMapper = objectMapper;
         this.request = request;
     }
@@ -102,7 +99,7 @@ public class NsdApiController implements NsdApi {
             } catch (NotAuthorizedOperationException e) {
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
                         e.getMessage()), HttpStatus.FORBIDDEN);
-            }  catch (FailedOperationException e) {
+            } catch (FailedOperationException e) {
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
                         e.getMessage()), HttpStatus.BAD_REQUEST);
             } catch (Exception e) {
@@ -139,7 +136,7 @@ public class NsdApiController implements NsdApi {
                         Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
                                 e.getMessage()),
                         HttpStatus.BAD_REQUEST);
-            } catch (NotPermittedOperationException e ) {
+            } catch (NotPermittedOperationException e) {
                 return new ResponseEntity<ProblemDetails>(
                         Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
                                 e.getMessage()),
@@ -239,7 +236,7 @@ public class NsdApiController implements NsdApi {
             @RequestParam(required = false) String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
-            @ApiParam(value = "The request may contain a \"Range\" HTTP header to obtain single range of bytes from the NSD file. This can be used to continue an aborted transmission.  If the NFVO does not support range requests, the NFVO shall ignore the 'Range\" header, process the GET request, and return the whole NSD file with a 200 OK response (rather than returning a 4xx error status code).") @RequestHeader(value = "Range", required = false) String range) {
+            @ApiParam(value = "The request may contain a \"Range\" HTTP header to obtain single range of bytes from the NSD file. This can be used to continue an aborted transmission.  If the NFVO does not support range requests, the NFVO shall ignore the 'Range\" header, process the GET request, and return the whole NSD file with a 200 OK response (rather than returning a 4xx error status code)") @RequestHeader(value = "Range", required = false) String range) {
 
         String accept = request.getHeader("Accept");
 
@@ -279,7 +276,7 @@ public class NsdApiController implements NsdApi {
                     Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
                             e.getMessage()),
                     HttpStatus.BAD_REQUEST);
-        }catch (Exception e) {
+        } catch (Exception e) {
             return new ResponseEntity<ProblemDetails>(
                     Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
                             e.getMessage()),
@@ -292,7 +289,7 @@ public class NsdApiController implements NsdApi {
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
             @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
-            @ApiParam(value = "The payload body contains a copy of the file representing the NSD or a ZIP file that contains the file or multiple files representing the NSD, as specified above. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType) {
+            @ApiParam(value = "The payload body contains a copy of the file representing the NSD or a ZIP file that contains the file or multiple files representing the NSD, as specified above. The request shall set the \"Content-Type\" HTTP header as defined above") @RequestHeader(value = "Content-Type", required = false) String contentType) {
 
         log.debug("Processing REST request for Uploading NSD content in NSD info " + nsdInfoId);
 
@@ -398,9 +395,9 @@ public class NsdApiController implements NsdApi {
     public ResponseEntity<?> getPNFDsInfo(
             @RequestParam(required = false) String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
-            @ApiParam(value = "Indicates to exclude the following complex attributes from the response. See clause 4.3.3 for details. The NFVO shall support this parameter. The following attributes shall be excluded from the PnfdInfo structure in the response body if this parameter is provided, or none of the parameters \"all_fields,\" \"fields\", \"exclude_fields\", \"exclude_default\" are provided: userDefinedData.")
+            @ApiParam(value = "Indicates to exclude the following complex attributes from the response. See clause 4.3.3 for details. The NFVO shall support this parameter. The following attributes shall be excluded from the PnfdInfo structure in the response body if this parameter is provided, or none of the parameters \"all_fields,\" \"fields\", \"exclude_fields\", \"exclude_default\" are provided: userDefinedData")
             @Valid @RequestParam(value = "exclude_default", required = false) String excludeDefault,
-            @ApiParam(value = "Include all complex attributes in the response. See clause 4.3.3 for details. The NFVO shall support this parameter.") @Valid @RequestParam(value = "all_fields", required = false) String allFields) {
+            @ApiParam(value = "Include all complex attributes in the response. See clause 4.3.3 for details. The NFVO shall support this parameter") @Valid @RequestParam(value = "all_fields", required = false) String allFields) {
         log.debug("Processing REST request to retrieve all PNFD infos");
 
         String accept = request.getHeader("Accept");
@@ -597,7 +594,7 @@ public class NsdApiController implements NsdApi {
                     Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
                             e.getMessage()),
                     HttpStatus.BAD_REQUEST);
-        }catch (Exception e) {
+        } catch (Exception e) {
             return new ResponseEntity<ProblemDetails>(
                     Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
                             e.getMessage()),
@@ -621,7 +618,7 @@ public class NsdApiController implements NsdApi {
     public ResponseEntity<?> uploadPNFD(
             @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId,
             @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
-            @ApiParam(value = "The request shall set the \"Content-Type\" HTTP header to \"text/plain\".")
+            @ApiParam(value = "The request shall set the \"Content-Type\" HTTP header to \"text/plain\"")
             @RequestHeader(value = "Content-Type", required = false) String contentType,
             @RequestParam(required = false) String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {

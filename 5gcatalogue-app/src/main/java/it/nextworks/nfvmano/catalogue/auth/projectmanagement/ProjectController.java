@@ -2,14 +2,11 @@ package it.nextworks.nfvmano.catalogue.auth.projectmanagement;
 
 import io.swagger.annotations.ApiParam;
 import it.nextworks.nfvmano.catalogue.auth.usermanagement.UserResource;
-import it.nextworks.nfvmano.catalogue.common.Utilities;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.ProblemDetails;
 import it.nextworks.nfvmano.catalogue.repos.ProjectRepository;
 import it.nextworks.nfvmano.catalogue.repos.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

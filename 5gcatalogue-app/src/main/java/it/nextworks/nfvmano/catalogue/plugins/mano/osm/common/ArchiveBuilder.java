@@ -53,7 +53,7 @@ public class ArchiveBuilder {
 
     public File makeNewArchive(OsmNsdPackage ymlFile, String readmeContent, File logoFile) {
         if (!(ymlFile.getNsdCatalog().getNsd().size() == 1)) {
-            throw new IllegalArgumentException("Too many Nsds in file.");
+            throw new IllegalArgumentException("Too many NSDs in file");
         }
         String nsdId = ymlFile.getNsdCatalog().getNsd().get(0).getId();
         File folder = makeFolder(nsdId);
@@ -82,7 +82,7 @@ public class ArchiveBuilder {
 
     public File makeNewArchive(OsmVNFPackage ymlFile, String readmeContent, File logoFile, File cloudInitFile) {
         if (!(ymlFile.getVnfdCatalog().getVnfd().size() == 1)) {
-            throw new IllegalArgumentException("Too many Vnfds in file.");
+            throw new IllegalArgumentException("Too many VNFDs in file");
         }
         String vnfdId = ymlFile.getVnfdCatalog().getVnfd().get(0).getId();
         File folder = makeFolder(vnfdId);
@@ -112,7 +112,7 @@ public class ArchiveBuilder {
     private File makeFolder(String Id) {
         File folder = new File(tmpDir, Id);
         if (folder.isDirectory()) {
-            log.debug("Temporary folder {} already existing. Overwriting.", folder.getAbsolutePath());
+            log.debug("Temporary folder {} already existing. Overwriting", folder.getAbsolutePath());
             if (!rmRecursively(folder)) {
                 throw new IllegalStateException(
                         String.format("Could not delete folder %s", folder.getAbsolutePath())
@@ -153,7 +153,7 @@ public class ArchiveBuilder {
             return true;
         } catch (IOException e) {
             log.error(
-                    "Could not recursively delete folder {}. Error: {}.",
+                    "Could not recursively delete folder {}. Error: {}",
                     folder.getAbsolutePath(),
                     e.getMessage()
             );
@@ -201,7 +201,7 @@ public class ArchiveBuilder {
             Files.write(readme.toPath(), strings);
         } catch (IOException e) {
             String msg = String.format(
-                    "Could not write readme file %s. Error: %s.",
+                    "Could not write readme file %s. Error: %s",
                     readme.getPath(),
                     e.getMessage()
             );

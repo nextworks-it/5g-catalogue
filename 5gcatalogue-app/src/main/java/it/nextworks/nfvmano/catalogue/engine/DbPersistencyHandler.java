@@ -60,8 +60,8 @@ public class DbPersistencyHandler {
         String version = source.getMetadata().getVersion();
         log.debug("NSD ID " + descriptorId + " - Vendor " + vendor + " - Version " + version);
         if (templateRepo.findByMetadataDescriptorIdAndMetadataVendorAndMetadataVersion(descriptorId, vendor, version).isPresent()) {
-            log.error("NSD already available in DB. Impossible to create a new one.");
-            throw new AlreadyExistingEntityException("NSD already available in DB. Impossible to create a new one." + "NSD ID " + descriptorId + " - Vendor " + vendor + " - Version " + version);
+            log.error("NSD already available in DB. Impossible to create a new one");
+            throw new AlreadyExistingEntityException("NSD already available in DB. Impossible to create a new one" + "NSD ID " + descriptorId + " - Vendor " + vendor + " - Version " + version);
         }
 
         DescriptorTemplate target = new DescriptorTemplate(source.getToscaDefinitionsVersion(),
@@ -94,8 +94,8 @@ public class DbPersistencyHandler {
         Optional<DescriptorTemplate> nsd = templateRepo.findById(internalNsdId);
         if (nsd.isPresent()) return nsd.get();
         else {
-            log.debug("Descriptor Template with internal ID " + internalNsdId + " not found in DB.");
-            throw new NotExistingEntityException("Descriptor Template with internal ID " + internalNsdId + " not found in DB.");
+            log.debug("Descriptor Template with internal ID " + internalNsdId + " not found in DB");
+            throw new NotExistingEntityException("Descriptor Template with internal ID " + internalNsdId + " not found in DB");
         }
     }
 
@@ -103,7 +103,7 @@ public class DbPersistencyHandler {
         log.debug("Removing NSD with internal ID " + internalNsdId);
         DescriptorTemplate dt = getNsd(internalNsdId);
         this.templateRepo.delete(dt);
-        log.debug("NSD removed from DB.");
+        log.debug("NSD removed from DB");
     }
 
 
@@ -113,7 +113,7 @@ public class DbPersistencyHandler {
             throw new MalformattedElementException("NSD descriptor template without topology template");
         Map<String, NSNode> nsNodes = topologySource.getNSNodes();
         if ((nsNodes == null) || (nsNodes.size() != 1))
-            throw new MalformattedElementException("NS node template not available or multiple.");
+            throw new MalformattedElementException("NS node template not available or multiple");
     }
 
 }

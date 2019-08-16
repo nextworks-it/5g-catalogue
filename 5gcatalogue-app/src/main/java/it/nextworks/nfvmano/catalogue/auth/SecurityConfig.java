@@ -8,7 +8,6 @@ import org.keycloak.adapters.springsecurity.client.KeycloakRestTemplate;
 import org.keycloak.adapters.springsecurity.config.KeycloakWebSecurityConfigurerAdapter;
 import org.keycloak.adapters.springsecurity.filter.KeycloakPreAuthActionsFilter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -79,7 +78,7 @@ public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
                 .antMatchers("/catalogue/vimManagement/**").hasRole("Administrator")
                 .antMatchers("/catalogue/manoManagement/**").hasRole("Administrator")
                 //.antMatchers(HttpMethod.OPTIONS, "/catalogue/userManagement/users/**").hasAnyRole("Administrator","User")
-                .antMatchers(HttpMethod.GET, "/catalogue/userManagement/users/**").hasAnyRole("Administrator","User")
+                .antMatchers(HttpMethod.GET, "/catalogue/userManagement/users/**").hasAnyRole("Administrator", "User")
                 .antMatchers("/catalogue/projectManagement/**").hasRole("Administrator")
                 .antMatchers("/catalogue/userManagement/**").hasRole("Administrator")
                 .anyRequest().permitAll();

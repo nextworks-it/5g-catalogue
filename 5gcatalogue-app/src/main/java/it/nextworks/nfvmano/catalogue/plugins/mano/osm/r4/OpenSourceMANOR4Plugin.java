@@ -93,8 +93,8 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
         mapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 
         if ((httpResponse.getCode() >= 300) || (httpResponse.getCode() < 200)) {
-            log.error("Unexpected response code {}: {}. OpId: {}.", httpResponse.getCode(), httpResponse.getMessage(), opId);
-            log.debug("Response content: {}.", httpResponse.getContent());
+            log.error("Unexpected response code {}: {}. OpId: {}", httpResponse.getCode(), httpResponse.getMessage(), opId);
+            log.debug("Response content: {}", httpResponse.getContent());
             throw new FailedOperationException(String.format("Unexpected code from MANO: %s", httpResponse.getCode()));
         }
         // else, code is 2XX
@@ -107,7 +107,7 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
                 Class<T[]> arrayClass = (Class<T[]>) Class.forName("[L" + clazz.getName() + ";");
                 objList = Arrays.asList(mapper.readValue(httpResponse.getContent(), arrayClass));
             } catch (Exception e) {
-                log.error("Could not obtain objects form response: {}.", e.getMessage());
+                log.error("Could not obtain objects form response: {}", e.getMessage());
                 e.printStackTrace();
                 throw new FailedOperationException("Could not obtain objects from MANO response");
             }
@@ -128,13 +128,13 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
 
     void initOsmConnection() {
         osmr4Client = new OSMr4Client(osm.getIpAddress(), osm.getUsername(), osm.getPassword(), osm.getProject());
-        log.info("OSM R4 instance addr {}, user {}, project {} connected.", osm.getIpAddress(), osm.getUsername(),
+        log.info("OSM R4 instance addr {}, user {}, project {} connected", osm.getIpAddress(), osm.getUsername(),
                 osm.getProject());
     }
 
     @Override
     public void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) {
-        log.info("Received NSD onboarding notificationfor Nsd {} info ID {}.", notification.getNsdId(), notification.getNsdInfoId());
+        log.info("Received NSD onboarding notificationfor Nsd {} info ID {}", notification.getNsdId(), notification.getNsdInfoId());
         log.debug("Body: {}", notification);
         if (notification.getScope() == ScopeType.LOCAL) {
             try {
@@ -174,7 +174,7 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
 
                 onBoardNsPackage(archive, notification.getNsdInfoId(), notification.getOperationId().toString());
 
-                log.info("Successfully uploaded Nsd {} with info ID {}.", notification.getNsdId(),
+                log.info("Successfully uploaded Nsd {} with info ID {}", notification.getNsdId(),
                         notification.getNsdInfoId());
                 sendNotification(new NsdOnBoardingNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(),
                         notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
@@ -192,19 +192,19 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
     // TODO: to be implemented according to new descriptor format in OSMR4
     @Override
     public void acceptNsdChangeNotification(NsdChangeNotificationMessage notification) {
-        log.info("Received Nsd change notification.");
+        log.info("Received Nsd change notification");
         log.debug("Body: {}", notification);
     }
 
     @Override
     public void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification) {
-        log.info("Received Nsd deletion notification for Nsd {} info ID {}.", notification.getNsdId(),
+        log.info("Received Nsd deletion notification for Nsd {} info ID {}", notification.getNsdId(),
                 notification.getNsdInfoId());
         log.debug("Body: {}", notification);
         if (notification.getScope() == ScopeType.LOCAL) {
             try {
                 deleteNsd(notification.getNsdInfoId(), notification.getOperationId().toString());
-                log.info("Successfully deleted Nsd {} with info ID {}.", notification.getNsdId(),
+                log.info("Successfully deleted Nsd {} with info ID {}", notification.getNsdId(),
                         notification.getNsdInfoId());
                 sendNotification(new NsdDeletionNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(),
                         notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
@@ -221,7 +221,7 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
 
     @Override
     public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) {
-        log.info("Received Vnfd onboarding notificationfor Vnfd {} info ID {}.", notification.getVnfdId(),
+        log.info("Received Vnfd onboarding notificationfor Vnfd {} info ID {}", notification.getVnfdId(),
                 notification.getVnfPkgInfoId());
         log.debug("Body: {}", notification);
         if (notification.getScope() == ScopeType.LOCAL) {
@@ -284,7 +284,7 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
                 }
                 File archive = archiver.makeNewArchive(packageData, "Generated by NXW Catalogue", cloudInit);
                 onBoardVnfPackage(archive, notification.getVnfPkgInfoId(), notification.getOperationId().toString());
-                log.info("Successfully uploaded Vnfd {} with info ID {}.", notification.getVnfdId(),
+                log.info("Successfully uploaded Vnfd {} with info ID {}", notification.getVnfdId(),
                         notification.getVnfPkgInfoId());
                 sendNotification(new VnfPkgOnBoardingNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(),
                         notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
@@ -302,19 +302,19 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
     // TODO: to be implemented according to new descriptor format in OSMR4
     @Override
     public void acceptVnfPkgChangeNotification(VnfPkgChangeNotificationMessage notification) {
-        log.info("Received VNF Pkg change notification.");
+        log.info("Received VNF Pkg change notification");
         log.debug("Body: {}", notification);
     }
 
     @Override
     public void acceptVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) {
-        log.info("Received Vnfd deletion notification for Vnfd {} info ID {}.", notification.getVnfPkgInfoId(),
+        log.info("Received Vnfd deletion notification for Vnfd {} info ID {}", notification.getVnfPkgInfoId(),
                 notification.getVnfPkgInfoId());
         log.debug("Body: {}", notification);
         if (notification.getScope() == ScopeType.LOCAL) {
             try {
                 deleteVnfd(notification.getVnfPkgInfoId(), notification.getOperationId().toString());
-                log.info("Successfully deleted Vnfd {} with info ID {}.", notification.getVnfdId(),
+                log.info("Successfully deleted Vnfd {} with info ID {}", notification.getVnfdId(),
                         notification.getVnfPkgInfoId());
                 sendNotification(new VnfPkgDeletionNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(),
                         notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
@@ -332,14 +332,14 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
     // TODO: to be implemented according to new descriptor format in OSMR4
     @Override
     public void acceptPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification) {
-        log.info("Received PNFD onboarding notification.");
+        log.info("Received PNFD onboarding notification");
         log.debug("Body: {}", notification);
     }
 
     // TODO: to be implemented according to new descriptor format in OSMR4
     @Override
     public void acceptPnfdDeletionNotification(PnfdDeletionNotificationMessage notification) {
-        log.info("Received PNFD deletion notification.");
+        log.info("Received PNFD deletion notification");
         log.debug("Body: {}", notification);
     }
 
@@ -354,7 +354,7 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
         }
         if (!(Resource.class.isAssignableFrom(nsd.getClass()))) {
             throw new MethodNotImplementedException(
-                    String.format("NSD storage type %s unsupported.", nsd.getClass().getSimpleName()));
+                    String.format("NSD storage type %s unsupported", nsd.getClass().getSimpleName()));
         }
         Resource resource = (Resource) nsd;
         return DescriptorsParser.fileToDescriptorTemplate(resource.getFile());
@@ -371,7 +371,7 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
         }
         if (!(Resource.class.isAssignableFrom(vnfd.getClass()))) {
             throw new MethodNotImplementedException(
-                    String.format("VNFD storage type %s unsupported.", vnfd.getClass().getSimpleName()));
+                    String.format("VNFD storage type %s unsupported", vnfd.getClass().getSimpleName()));
         }
         Resource resource = (Resource) vnfd;
         return DescriptorsParser.fileToDescriptorTemplate(resource.getFile());
@@ -394,7 +394,7 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
     }
 
     void onBoardNsPackage(File file, String nsdInfoId, String opId) throws FailedOperationException {
-        log.info("Onboarding ns package, opId: {}.", opId);
+        log.info("Onboarding ns package, opId: {}", opId);
         // Create the NS descriptor resource
         OSMHttpResponse httpResponse = osmr4Client.createNsd();
         IdObject content = parseResponse(httpResponse, opId, IdObject.class).get(0);
@@ -404,28 +404,28 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
         parseResponse(httpResponse, opId, null);
         osm.getOsmIdTranslation().put(nsdInfoId, osmNsdInfoId);
         MANORepository.saveAndFlush(osm);
-        log.info("Package onboarding successful. OpId: {}.", opId);
+        log.info("Package onboarding successful. OpId: {}", opId);
     }
 
     void deleteNsd(String nsdInfoId, String opId) throws FailedOperationException {
-        log.info("Deleting nsd {}, opId: {}.", nsdInfoId, opId);
+        log.info("Deleting nsd {}, opId: {}", nsdInfoId, opId);
         String osmNsdInfoId = translateCatalogIdToOsmId(nsdInfoId);
         OSMHttpResponse httpResponse = osmr4Client.deleteNsd(osmNsdInfoId);
         parseResponse(httpResponse, opId, null);
         osm.getOsmIdTranslation().remove(nsdInfoId);
         MANORepository.saveAndFlush(osm);
-        log.info("Nsd deleting successful. OpId: {}.", opId);
+        log.info("Nsd deleting successful. OpId: {}", opId);
     }
 
     List<String> getNsdIdList() throws FailedOperationException {
-        log.info("Getting nsd id list.");
+        log.info("Getting nsd id list");
         OSMHttpResponse httpResponse = osmr4Client.getNsdInfoList();
         List<OsmR4InfoObject> objList = parseResponse(httpResponse, null, OsmR4InfoObject.class);
         return objList.stream().map(OsmR4InfoObject::getDescriptorId).collect(Collectors.toList());
     }
 
     void onBoardVnfPackage(File file, String vnfdInfoId, String opId) throws FailedOperationException {
-        log.info("Onboarding vnf package, opId: {}.", opId);
+        log.info("Onboarding vnf package, opId: {}", opId);
         // Create the VNF descriptor resource
         OSMHttpResponse httpResponse = osmr4Client.createVnfPackage();
         IdObject content = parseResponse(httpResponse, opId, IdObject.class).get(0);
@@ -435,21 +435,21 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
         parseResponse(httpResponse, opId, null);
         osm.getOsmIdTranslation().put(vnfdInfoId, osmVnfdInfoId);
         MANORepository.saveAndFlush(osm);
-        log.info("Package onboarding successful. OpId: {}.", opId);
+        log.info("Package onboarding successful. OpId: {}", opId);
     }
 
     void deleteVnfd(String vnfdInfoId, String opId) throws FailedOperationException {
-        log.info("Deleting vnfd {}, opId: {}.", vnfdInfoId, opId);
+        log.info("Deleting vnfd {}, opId: {}", vnfdInfoId, opId);
         String osmVnfdInfoId = translateCatalogIdToOsmId(vnfdInfoId);
         OSMHttpResponse httpResponse = osmr4Client.deleteVnfPackage(osmVnfdInfoId);
         parseResponse(httpResponse, opId, null);
         osm.getOsmIdTranslation().remove(vnfdInfoId);
         MANORepository.saveAndFlush(osm);
-        log.info("Vnfd deleting successful. OpId: {}.", opId);
+        log.info("Vnfd deleting successful. OpId: {}", opId);
     }
 
     List<String> getVnfdIdList() throws FailedOperationException {
-        log.info("Getting vnfd id list.");
+        log.info("Getting vnfd id list");
         OSMHttpResponse httpResponse = osmr4Client.getVnfPackageList();
         List<OsmR4InfoObject> objList = parseResponse(httpResponse, null, OsmR4InfoObject.class);
         return objList.stream().map(OsmR4InfoObject::getDescriptorId).collect(Collectors.toList());

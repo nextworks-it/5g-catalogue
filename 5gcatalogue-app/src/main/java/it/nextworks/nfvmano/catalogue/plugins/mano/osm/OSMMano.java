@@ -31,11 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by Marco Capitani on 20/08/18.
- *
- * @author Marco Capitani <m.capitani AT nextworks.it>
- */
 @Entity
 public class OSMMano extends MANO {
 

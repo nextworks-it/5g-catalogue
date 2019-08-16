@@ -144,19 +144,19 @@ public class PluginsManager {
                 log.error("Unable to instantiate DUMMY MANO Plugin. Malformatted MANO: " + e.getMessage());
             }
         } else {
-            log.debug("Loading MANO info from DB.");
+            log.debug("Loading MANO info from DB");
             List<MANO> manos = MANORepository.findAll();
 
             if (manos.isEmpty())
-                log.debug("No MANO info stored in DB.");
+                log.debug("No MANO info stored in DB");
 
             for (MANO mano : manos) {
                 try {
                     log.debug("Instantiating MANO with manoId: " + mano.getManoId());
                     addMANO(mano);
-                    log.debug("MANO with manoId " + mano.getManoId() + " successfully instantiated.");
+                    log.debug("MANO with manoId " + mano.getManoId() + " successfully instantiated");
                 } catch (MalformattedElementException e) {
-                    log.error("Malformatted MANO: " + e.getMessage() + ". Skipping.");
+                    log.error("Malformatted MANO: " + e.getMessage() + ". Skipping");
                 }
             }
 
@@ -174,16 +174,16 @@ public class PluginsManager {
                                 try (final Reader reader = new InputStreamReader(resource)) {
                                     tmp = CharStreams.toString(reader);
                                 }
-                                log.debug("Loading MANO configuration from config file #" + i + ".");
+                                log.debug("Loading MANO configuration from config file #" + i + "");
                                 MANO newMano = mapper.readValue(tmp, MANO.class);
                                 log.debug("Successfully loaded configuration for MANO with manoId: "
                                         + newMano.getManoId());
                                 try {
                                     log.debug("Creating MANO Plugin with manoId " + newMano.getManoId()
-                                            + " from configuration file.");
+                                            + " from configuration file");
                                     createMANOPlugin(newMano);
                                 } catch (AlreadyExistingEntityException e) {
-                                    log.error("MANO with manoId " + newMano.getManoId() + " already present in DB.");
+                                    log.error("MANO with manoId " + newMano.getManoId() + " already present in DB");
                                 } catch (MethodNotImplementedException e) {
                                     log.error("Unsupported MANO type for MANO with manoId: " + newMano.getManoId());
                                 } catch (MalformattedElementException e) {
@@ -214,16 +214,16 @@ public class PluginsManager {
                             try (final Reader reader = new InputStreamReader(resource)) {
                                 tmp = CharStreams.toString(reader);
                             }
-                            log.debug("Loading 5G Catalogue configuration from config file #" + i + ".");
+                            log.debug("Loading 5G Catalogue configuration from config file #" + i + "");
                             Catalogue newCatalogue = mapper.readValue(tmp, Catalogue.class);
                             log.debug("Successfully loaded configuration for 5G Catalogue with catalogueId: "
                                     + newCatalogue.getCatalogueId());
                             try {
                                 log.debug("Creating 5G Catalogue Plugin with catalogueId " + newCatalogue.getCatalogueId()
-                                        + " from configuration file.");
+                                        + " from configuration file");
                                 create5GCatalogue(newCatalogue);
                             } catch (AlreadyExistingEntityException e) {
-                                log.error("5G Catalogue with catalogueId " + newCatalogue.getCatalogueId() + " already present in DB.");
+                                log.error("5G Catalogue with catalogueId " + newCatalogue.getCatalogueId() + " already present in DB");
                             }
                         } catch (IOException e) {
                             log.error("Unable to parse 5G Catalogue configuration file: " + e.getMessage());
@@ -262,7 +262,7 @@ public class PluginsManager {
             return new OpenSourceMANOR4Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, MANORepository,
                     localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr4Dir, logo);
         } else {
-            throw new MalformattedElementException("Unsupported MANO type. Skipping.");
+            throw new MalformattedElementException("Unsupported MANO type. Skipping");
         }
     }
 
@@ -279,7 +279,7 @@ public class PluginsManager {
         log.debug("RECEIVED MANO:\nMANO ID: " + manoId + "\nMANO TYPE: " + type);
 
         if (type == MANOType.OSMR3 || type == MANOType.OSMR4 || type == MANOType.OSMR5) {
-            log.debug("Processing request for creating " + type + "Plugin.");
+            log.debug("Processing request for creating " + type + "Plugin");
             OSMMano osmMano = (OSMMano) mano;
             OSMMano targetOsmMano = new OSMMano(
                     osmMano.getManoId(),
@@ -293,24 +293,24 @@ public class PluginsManager {
             targetOsmMano.isValid();
             log.debug("Persisting OSM MANO with manoId: " + manoId);
             OSMMano createdMano = MANORepository.saveAndFlush(targetOsmMano);
-            log.debug("OSM MANO with manoId " + manoId + " sucessfully persisted.");
+            log.debug("OSM MANO with manoId " + manoId + " sucessfully persisted");
             log.debug("Instantiating OSM MANO with manoId: " + manoId);
             try {
                 addMANO(createdMano);
             } catch (MalformattedElementException e) {
-                log.error("Unsupported MANO type.");
+                log.error("Unsupported MANO type");
             }
-            log.debug("OSM MANO with manoId " + manoId + " successfully instantiated.");
+            log.debug("OSM MANO with manoId " + manoId + " successfully instantiated");
             return String.valueOf(createdMano.getId());
         } else {
-            log.error("Unsupported MANO type.");
-            throw new MethodNotImplementedException("Unsupported MANO type.");
+            log.error("Unsupported MANO type");
+            throw new MethodNotImplementedException("Unsupported MANO type");
         }
     }
 
     public MANO getMANOPlugin(String manoId) throws NotExistingEntityException {
 
-        log.debug("Processing request for retrieving MANO Plugin with manoId {}.", manoId);
+        log.debug("Processing request for retrieving MANO Plugin with manoId {}", manoId);
 
         Optional<MANO> optionalMANO = MANORepository.findByManoId(manoId);
 
@@ -327,7 +327,7 @@ public class PluginsManager {
 
     public List<MANO> getAllMANOPlugins() {
 
-        log.debug("Processing request for retrieving all MANO Plugins.");
+        log.debug("Processing request for retrieving all MANO Plugins");
 
         List<MANO> manos = new ArrayList<>();
         manos = MANORepository.findAll();
@@ -341,7 +341,7 @@ public class PluginsManager {
             log.debug("Loading MANO configuration files from: " + configurationsDir);
             resources = ResourcePatternUtils.getResourcePatternResolver(resourceLoader)
                     .getResources(configurationsDir + "/*.json");
-            log.debug("MANO configuration files successfully loaded.");
+            log.debug("MANO configuration files successfully loaded");
         } catch (IOException e) {
             log.error("Unable to load MANO configuration files: " + e.getMessage());
         }
@@ -357,7 +357,7 @@ public class PluginsManager {
 
     public VIM getVIMPlugin(String vimId) throws NotExistingEntityException {
 
-        log.debug("Processing request for retrieving VIM Plugin with vimId {}.", vimId);
+        log.debug("Processing request for retrieving VIM Plugin with vimId {}", vimId);
 
         Optional<VIM> optionalVIM = vimRepository.findByVimId(vimId);
 
@@ -374,7 +374,7 @@ public class PluginsManager {
 
     public List<VIM> getAllVIMPlugins() {
 
-        log.debug("Processing request for retrieving all VIM Plugins.");
+        log.debug("Processing request for retrieving all VIM Plugins");
 
         List<VIM> vims = new ArrayList<>();
         vims = vimRepository.findAll();
@@ -427,16 +427,16 @@ public class PluginsManager {
         }
         log.debug("Persisting 5G Catalogue with catalogueId: " + catalogueId);
         Catalogue createdCatalogue = catalogueRepository.saveAndFlush(catalogue);
-        log.debug("5G Catalogue with catalogueId " + catalogueId + " sucessfully persisted.");
+        log.debug("5G Catalogue with catalogueId " + catalogueId + " sucessfully persisted");
         log.debug("Instantiating 5G Catalogue with catalogueId: " + catalogueId);
         addCatalogue(catalogue);
-        log.debug("5G Catalogue with catalogueId " + catalogueId + " successfully instantiated.");
+        log.debug("5G Catalogue with catalogueId " + catalogueId + " successfully instantiated");
         return String.valueOf(createdCatalogue.getId());
     }
 
     public Catalogue get5GCataloguePlugin(String catalogueId) throws NotExistingEntityException {
 
-        log.debug("Processing request for retrieving 5G Catalogue Plugin with catalogueId {}.", catalogueId);
+        log.debug("Processing request for retrieving 5G Catalogue Plugin with catalogueId {}", catalogueId);
 
         Optional<Catalogue> optionalCatalogue = catalogueRepository.findByCatalogueId(catalogueId);
 
@@ -453,7 +453,7 @@ public class PluginsManager {
 
     public List<Catalogue> getAll5GCataloguePlugins() {
 
-        log.debug("Processing request for retrieving all 5G Catalogue Plugins.");
+        log.debug("Processing request for retrieving all 5G Catalogue Plugins");
 
         List<Catalogue> catalogues = new ArrayList<>();
         catalogues = catalogueRepository.findAll();
@@ -467,7 +467,7 @@ public class PluginsManager {
             log.debug("Loading 5G Catalogue configuration files from: " + catalogueConfigurationsDir);
             resources = ResourcePatternUtils.getResourcePatternResolver(resourceLoader)
                     .getResources(catalogueConfigurationsDir + "/*.json");
-            log.debug("5G Catalogue configuration files successfully loaded.");
+            log.debug("5G Catalogue configuration files successfully loaded");
         } catch (IOException e) {
             log.error("Unable to load 5G Catalogue configuration files: " + e.getMessage());
         }

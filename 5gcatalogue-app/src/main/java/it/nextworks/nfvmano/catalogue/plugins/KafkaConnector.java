@@ -31,12 +31,6 @@ import org.springframework.kafka.listener.config.ContainerProperties;
 
 import java.util.*;
 import java.util.function.Consumer;
-
-/**
- * Created by Marco Capitani on 17/08/18.
- *
- * @author Marco Capitani <m.capitani AT nextworks.it>
- */
 public class KafkaConnector {
 
     public static final Map<String, Object> DEFAULT_PROPS;
@@ -111,11 +105,11 @@ public class KafkaConnector {
             container.setupMessageListener((MessageListener<Integer, String>) message -> {
 
                 // Log message
-                log.info("Received message from kafka bus. Bean {}. MsgId: {}.",
+                log.info("Received message from kafka bus. Bean {}. MsgId: {}",
                         beanId,
                         message.key()
                 );
-                log.debug("Message body: {}.", message.value());
+                log.debug("Message body: {}", message.value());
 
                 try {
                     // Read msg type
@@ -130,12 +124,12 @@ public class KafkaConnector {
                         return;
                     }
                     consumer.accept(catalogueMessage);
-                    log.info("Completed processing of message. Bean: {}. MsgId: {}.",
+                    log.info("Completed processing of message. Bean: {}. MsgId: {}",
                             beanId,
                             message.key()
                     );
                 } catch (Exception e) {
-                    log.error("Error while receiving message from kafka bus. BeanId {}. Error: {}. ",
+                    log.error("Error while receiving message from kafka bus. BeanId {}. Error: {}",
                             beanId,
                             e.getMessage()
                     );
@@ -146,7 +140,7 @@ public class KafkaConnector {
             container.start();
 
         } catch (Exception e) {
-            log.error("Could not initialize Kafka connector. Bean {}. Error: {}.", beanId, e.getMessage());
+            log.error("Could not initialize Kafka connector. Bean {}. Error: {}", beanId, e.getMessage());
             log.debug("Error details:", e);
         }
     }
@@ -206,13 +200,13 @@ public class KafkaConnector {
 
         public KafkaConnector build() {
             if (beanId == null) {
-                throw new IllegalArgumentException("A Bean ID must be provided.");
+                throw new IllegalArgumentException("A Bean ID must be provided");
             }
             if (kafkaBootstrapServers == null) {
-                throw new IllegalArgumentException("A Kafka bootstrap servers value must be provided.");
+                throw new IllegalArgumentException("A Kafka bootstrap servers value must be provided");
             }
             if (kafkaGroupId == null) {
-                throw new IllegalArgumentException("A Kafka group ID must be provided.");
+                throw new IllegalArgumentException("A Kafka group ID must be provided");
             }
             return new KafkaConnector(
                     beanId,

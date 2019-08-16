@@ -18,7 +18,7 @@ public class DummyVIMPlugin extends VIMPlugin {
 
     @Override
     public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) {
-        log.info("Received VNF Pkg onboarding notification.");
+        log.info("Received VNF Pkg onboarding notification");
         log.debug("Body: {}", notification);
         VnfImgUploadingNotificationMessage response = new VnfImgUploadingNotificationMessage(
                 notification.getVnfPkgInfoId(),
@@ -34,13 +34,13 @@ public class DummyVIMPlugin extends VIMPlugin {
 
     @Override
     public void acceptVnfPkgChangeNotification(VnfPkgChangeNotificationMessage notification) {
-        log.info("Received VNF Pkg change notification.");
+        log.info("Received VNF Pkg change notification");
         log.debug("Body: {}", notification);
     }
 
     @Override
     public void acceptVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) {
-        log.info("Received VNF Pkg deletion notification.");
+        log.info("Received VNF Pkg deletion notification");
         log.debug("Body: {}", notification);
         VnfImgDeletionNotificationMessage response = new VnfImgDeletionNotificationMessage(
                 notification.getVnfPkgInfoId(),

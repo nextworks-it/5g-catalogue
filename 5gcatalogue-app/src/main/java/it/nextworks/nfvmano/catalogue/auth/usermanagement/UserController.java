@@ -3,8 +3,6 @@ package it.nextworks.nfvmano.catalogue.auth.usermanagement;
 import io.swagger.annotations.ApiParam;
 import it.nextworks.nfvmano.catalogue.auth.KeycloakService;
 import it.nextworks.nfvmano.catalogue.auth.projectmanagement.ProjectResource;
-import it.nextworks.nfvmano.catalogue.common.Utilities;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.ProblemDetails;
 import it.nextworks.nfvmano.catalogue.repos.ProjectRepository;
 import it.nextworks.nfvmano.catalogue.repos.UserRepository;
 import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
@@ -15,14 +13,12 @@ import org.keycloak.representations.idm.UserRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.Optional;
 
@@ -82,7 +78,7 @@ public class UserController {
         log.debug("Received request for getting User " + userName);
 
         UserResource userResource;
-        Optional<UserResource>  optional = userRepository.findByUserName(userName);
+        Optional<UserResource> optional = userRepository.findByUserName(userName);
         if (optional.isPresent()) {
             userResource = optional.get();
             return new ResponseEntity<UserResource>(userResource, HttpStatus.OK);
@@ -185,7 +181,7 @@ public class UserController {
             if (userResourceOptional.isPresent()) {
                 //check if user is present in the slice
                 List<String> projectUsers = projectResource.getUsers();
-                if(!projectUsers.contains(userName)){
+                if (!projectUsers.contains(userName)) {
                     log.error("User not present in the project");
                     return new ResponseEntity<String>("User not present in the project", HttpStatus.BAD_REQUEST);
                 }

@@ -164,9 +164,9 @@ public interface VnfpkgmApi {
             consumes = {"application/json"},
             method = RequestMethod.POST)
     ResponseEntity<?> uploadVNFPkgFromURI(@RequestParam(required = false) String project,
-                                             @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
-                                             @ApiParam(value = "", required = true) @Valid @RequestBody UploadVnfPackageFromUriRequest body,
-                                             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization);
+                                          @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
+                                          @ApiParam(value = "", required = true) @Valid @RequestBody UploadVnfPackageFromUriRequest body,
+                                          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization);
 
     @ApiOperation(value = "Query VNF Package artifact.", nickname = "queryVNFPkgArtifact", notes = "", response = Object.class, tags = {})
     @ApiResponses(value = {

@@ -66,7 +66,7 @@ public abstract class VIMPlugin
         this.vnfdService = vnfdService;
         this.remoteTopic = remoteTopic;
         if (this.vim.getVimType() != this.vimType) {
-            throw new IllegalArgumentException("VIM type and VIM do not agree.");
+            throw new IllegalArgumentException("VIM type and VIM do not agree");
         }
         String connectorID = "VIM_" + vim.getVimId(); // assuming it's unique amongVIMs
         Map<CatalogueMessageType, Consumer<CatalogueMessage>> functor = new HashMap<>();

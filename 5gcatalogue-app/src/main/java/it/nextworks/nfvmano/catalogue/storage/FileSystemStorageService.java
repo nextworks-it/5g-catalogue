@@ -378,26 +378,26 @@ public class FileSystemStorageService {
     }
 
     public static void deleteNsd(String nsdId, String version) {
-        log.debug("Removing NSD with nsdId {} and version {}.", nsdId, version);
+        log.debug("Removing NSD with nsdId {} and version {}", nsdId, version);
         Path locationVersion = Paths.get(nsdsLocation + "/" + nsdId + "/" + version);
 
         FileSystemUtils.deleteRecursively(locationVersion.toFile());
-        log.debug("NSD with nsdId {} and version {} successfully removed.", nsdId, version);
+        log.debug("NSD with nsdId {} and version {} successfully removed", nsdId, version);
     }
 
     public static void deleteVnfPkg(String vnfdId, String version) {
-        log.debug("Removing VNF Pkg  with vnfdId {} and version {}.", vnfdId, version);
+        log.debug("Removing VNF Pkg  with vnfdId {} and version {}", vnfdId, version);
         Path locationVersion = Paths.get(vnfPkgsLocation + "/" + vnfdId + "/" + version);
 
         FileSystemUtils.deleteRecursively(locationVersion.toFile());
-        log.debug("VNF Pkg with vnfdId {} and version {} successfully removed.", vnfdId, version);
+        log.debug("VNF Pkg with vnfdId {} and version {} successfully removed", vnfdId, version);
     }
 
     public static void deleteAll() {
-        log.debug("Removing all stored files.");
+        log.debug("Removing all stored files");
         FileSystemUtils.deleteRecursively(nsdsLocation.toFile());
         FileSystemUtils.deleteRecursively(vnfPkgsLocation.toFile());
-        log.debug("Removed all stored files.");
+        log.debug("Removed all stored files");
     }
 
     private static File newFile(String destinationDir, String filename) /*throws IOException*/ {

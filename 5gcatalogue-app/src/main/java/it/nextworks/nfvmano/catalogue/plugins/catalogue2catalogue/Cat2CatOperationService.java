@@ -20,7 +20,6 @@ import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -128,7 +127,7 @@ public class Cat2CatOperationService {
     public synchronized void updateNsdInfoOperationStatus(String nsdInfoId, String catalogueId, OperationStatus opStatus,
                                                           CatalogueMessageType messageType) throws NotExistingEntityException {
 
-        log.debug("Retrieving nsdInfoResource {} from DB for updating with onboarding status info for plugin {}.",
+        log.debug("Retrieving nsdInfoResource {} from DB for updating with onboarding status info for plugin {}",
                 nsdInfoId, catalogueId);
         Optional<NsdInfoResource> optionalNsdInfoResource = nsdInfoRepo.findById(UUID.fromString(nsdInfoId));
 
@@ -144,11 +143,11 @@ public class Cat2CatOperationService {
                 nsdInfoResource.setAcknowledgedOnboardOpConsumers(ackMap);
 
                 if (messageType == CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION) {
-                    log.debug("Checking NSD with nsdInfoId {} onboarding state.", nsdInfoId);
+                    log.debug("Checking NSD with nsdInfoId {} onboarding state", nsdInfoId);
                     nsdInfoResource.setNsdOnboardingState(checkNsdOnboardingState(nsdInfoId, ackMap));
                 }
 
-                log.debug("Updating NsdInfoResource {} with onboardingState {}.", nsdInfoId,
+                log.debug("Updating NsdInfoResource {} with onboardingState {}", nsdInfoId,
                         nsdInfoResource.getNsdOnboardingState());
                 nsdInfoRepo.saveAndFlush(nsdInfoResource);
             } catch (Exception e) {
@@ -156,7 +155,7 @@ public class Cat2CatOperationService {
                 log.error("Details: ", e);
             }
         } else {
-            throw new NotExistingEntityException("NsdInfoResource " + nsdInfoId + " not present in DB.");
+            throw new NotExistingEntityException("NsdInfoResource " + nsdInfoId + " not present in DB");
         }
     }
 
@@ -166,7 +165,7 @@ public class Cat2CatOperationService {
             if (entry.getValue().getOperation() == CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION
                     && entry.getValue().getPluginType() == PluginType.C2C) {
                 if (entry.getValue().getOpStatus() == OperationStatus.FAILED) {
-                    log.error("NSD with nsdInfoId {} onboarding failed for 5G Catalogue with catalogueId {}.", nsdInfoId,
+                    log.error("NSD with nsdInfoId {} onboarding failed for 5G Catalogue with catalogueId {}", nsdInfoId,
                             entry.getKey());
 
                     // TODO: Decide how to handle 5G Catalogue onboarding failures.
@@ -174,12 +173,12 @@ public class Cat2CatOperationService {
                 } else if (entry.getValue().getOpStatus() == OperationStatus.SENT
                         || entry.getValue().getOpStatus() == OperationStatus.RECEIVED
                         || entry.getValue().getOpStatus() == OperationStatus.PROCESSING) {
-                    log.debug("NSD with nsdInfoId {} onboarding still in progress for 5G Catalogue with catalogueId {}.");
+                    log.debug("NSD with nsdInfoId {} onboarding still in progress for 5G Catalogue with catalogueId {}");
                     return NsdOnboardingStateType.LOCAL_ONBOARDED;
                 }
             }
         }
-        log.debug("NSD with nsdInfoId " + nsdInfoId + " successfully onboarded by all expected consumers.");
+        log.debug("NSD with nsdInfoId " + nsdInfoId + " successfully onboarded by all expected consumers");
         return NsdOnboardingStateType.ONBOARDED;
     }
 
@@ -242,7 +241,7 @@ public class Cat2CatOperationService {
     }
 
     public void updateVnfPkgInfoOperationStatus(String vnfPkgInfoId, String pluginId, OperationStatus opStatus, CatalogueMessageType type) throws NotExistingEntityException {
-        log.debug("Retrieving vnfPkgInfoResource {} from DB for updating with onboarding status info for plugin {}.",
+        log.debug("Retrieving vnfPkgInfoResource {} from DB for updating with onboarding status info for plugin {}",
                 vnfPkgInfoId, pluginId);
         Optional<VnfPkgInfoResource> optionalVnfPkgInfoResource = vnfPkgInfoRepository.findById(UUID.fromString(vnfPkgInfoId));
 
@@ -258,11 +257,11 @@ public class Cat2CatOperationService {
                 vnfPkgInfoResource.setAcknowledgedOnboardOpConsumers(ackMap);
 
                 if (type == CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION) {
-                    log.debug("Checking VNF Pkg with vnfPkgInfoId {} onboarding state.", vnfPkgInfoId);
+                    log.debug("Checking VNF Pkg with vnfPkgInfoId {} onboarding state", vnfPkgInfoId);
                     vnfPkgInfoResource.setOnboardingState(checkVnfPkgOnboardingState(vnfPkgInfoId, ackMap));
                 }
 
-                log.debug("Updating VnfPkgInfoResource {} with onboardingState {}.", vnfPkgInfoId,
+                log.debug("Updating VnfPkgInfoResource {} with onboardingState {}", vnfPkgInfoId,
                         vnfPkgInfoResource.getOnboardingState());
                 vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
             } catch (Exception e) {
@@ -270,7 +269,7 @@ public class Cat2CatOperationService {
                 log.error("Details: ", e);
             }
         } else {
-            throw new NotExistingEntityException("VnfPkgInfoResource " + vnfPkgInfoId + " not present in DB.");
+            throw new NotExistingEntityException("VnfPkgInfoResource " + vnfPkgInfoId + " not present in DB");
         }
     }
 
@@ -280,7 +279,7 @@ public class Cat2CatOperationService {
             if (entry.getValue().getOperation() == CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION
                     && entry.getValue().getPluginType() == PluginType.C2C) {
                 if (entry.getValue().getOpStatus() == OperationStatus.FAILED) {
-                    log.error("VNF Pkg with vnfPkgInfoId {} onboarding failed for 5G Catalogue with catalogueId {}.", vnfPkgInfoId,
+                    log.error("VNF Pkg with vnfPkgInfoId {} onboarding failed for 5G Catalogue with catalogueId {}", vnfPkgInfoId,
                             entry.getKey());
 
                     // TODO: Decide how to handle 5G Catalogue onboarding failures.
@@ -288,12 +287,12 @@ public class Cat2CatOperationService {
                 } else if (entry.getValue().getOpStatus() == OperationStatus.SENT
                         || entry.getValue().getOpStatus() == OperationStatus.RECEIVED
                         || entry.getValue().getOpStatus() == OperationStatus.PROCESSING) {
-                    log.debug("VNF Pkg with vnfPkgInfoId {} onboarding still in progress for 5G Catalogue with catalogueId {}.");
+                    log.debug("VNF Pkg with vnfPkgInfoId {} onboarding still in progress for 5G Catalogue with catalogueId {}");
                     return PackageOnboardingStateType.LOCAL_ONBOARDED;
                 }
             }
         }
-        log.debug("VNF Pkg with vnfPkgInfoId " + vnfPkgInfoId + " successfully onboarded by all expected consumers.");
+        log.debug("VNF Pkg with vnfPkgInfoId " + vnfPkgInfoId + " successfully onboarded by all expected consumers");
         return PackageOnboardingStateType.ONBOARDED;
     }
 }
