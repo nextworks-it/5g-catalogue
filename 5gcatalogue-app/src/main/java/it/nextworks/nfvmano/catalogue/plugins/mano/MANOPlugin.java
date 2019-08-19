@@ -28,6 +28,7 @@ import it.nextworks.nfvmano.catalogue.messages.interfaces.NsdNotificationsConsum
 import it.nextworks.nfvmano.catalogue.messages.interfaces.VnfPkgNotificationsConsumerInterface;
 import it.nextworks.nfvmano.catalogue.plugins.Plugin;
 import it.nextworks.nfvmano.catalogue.plugins.PluginType;
+import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +50,7 @@ public abstract class MANOPlugin
     protected KafkaConnector connector;
     protected NsdManagementInterface nsdService;
     protected VnfPackageManagementInterface vnfdService;
+    protected DescriptorsParser descriptorsParser;
     protected KafkaTemplate<String, String> kafkaTemplate;
     private String remoteTopic;
 
@@ -58,6 +60,7 @@ public abstract class MANOPlugin
             String kafkaBootstrapServers,
             NsdManagementInterface nsdService,
             VnfPackageManagementInterface vnfdService,
+            DescriptorsParser descriptorsParser,
             String localTopic,
             String remoteTopic,
             KafkaTemplate<String, String> kafkaTemplate
@@ -67,6 +70,7 @@ public abstract class MANOPlugin
         this.mano = mano;
         this.nsdService = nsdService;
         this.vnfdService = vnfdService;
+        this.descriptorsParser = descriptorsParser;
         this.remoteTopic = remoteTopic;
         if (this.mano.getManoType() != this.manoType) {
             throw new IllegalArgumentException("Mano type and Mano do not agree");

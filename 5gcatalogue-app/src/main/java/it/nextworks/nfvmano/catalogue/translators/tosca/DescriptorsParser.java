@@ -34,7 +34,17 @@ public class DescriptorsParser {
 
     private static final Logger log = LoggerFactory.getLogger(DescriptorsParser.class);
 
-    public static DescriptorTemplate fileToDescriptorTemplate(String fileName)
+    public DescriptorsParser() {
+    }
+
+    public static String descriptorTemplateToString(DescriptorTemplate descriptor)
+            throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        String dt = mapper.writeValueAsString(descriptor);
+        return dt;
+    }
+
+    public DescriptorTemplate fileToDescriptorTemplate(String fileName)
             throws JsonParseException, JsonMappingException, IOException {
 
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
@@ -44,7 +54,7 @@ public class DescriptorsParser {
         return descriptorTemplate;
     }
 
-    public static DescriptorTemplate fileToDescriptorTemplate(File file)
+    public DescriptorTemplate fileToDescriptorTemplate(File file)
             throws JsonParseException, JsonMappingException, IOException {
 
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
@@ -55,7 +65,7 @@ public class DescriptorsParser {
         return descriptorTemplate;
     }
 
-    public static DescriptorTemplate stringToDescriptorTemplate(String descriptor)
+    public DescriptorTemplate stringToDescriptorTemplate(String descriptor)
             throws JsonParseException, JsonMappingException, IOException {
 
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
@@ -63,12 +73,5 @@ public class DescriptorsParser {
         DescriptorTemplate descriptorTemplate = mapper.readValue(descriptor, DescriptorTemplate.class);
 
         return descriptorTemplate;
-    }
-
-    public static String descriptorTemplateToString(DescriptorTemplate descriptor)
-            throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        String dt = mapper.writeValueAsString(descriptor);
-        return dt;
     }
 }

@@ -87,6 +87,9 @@ public class NsdManagementService implements NsdManagementInterface {
     private VnfPkgInfoRepository vnfPkgInfoRepository;
 
     @Autowired
+    private DescriptorsParser descriptorsParser;
+
+    @Autowired
     private ArchiveParser archiveParser;
 
     @Autowired
@@ -622,7 +625,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     //File nsdFile = convertToFile(nsdMpFile);
                     //dt = DescriptorsParser.fileToDescriptorTemplate(nsdFile);
 
-                    csarInfo = archiveParser.archiveToMainDescriptor(nsd, false);
+                    csarInfo = archiveParser.archiveToCSARInfo(nsd, false, true);
                     dt = csarInfo.getMst();
                     nsdFilename = csarInfo.getPackageFilename();
 
@@ -699,7 +702,7 @@ public class NsdManagementService implements NsdManagementInterface {
                 try {
                     log.info("NSD file is in format: yaml");
 
-                    dt = DescriptorsParser.fileToDescriptorTemplate(inputFile);
+                    dt = descriptorsParser.fileToDescriptorTemplate(inputFile);
 
                     includedVnfds = checkVNFPkgs(dt, project);
                     includedPnfds = checkPNFDs(dt, project);
@@ -1148,7 +1151,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     // convert to File
                     File pnfdFile = convertToFile(pnfdMpFile);
 
-                    dt = DescriptorsParser.fileToDescriptorTemplate(pnfdFile);
+                    dt = descriptorsParser.fileToDescriptorTemplate(pnfdFile);
 
                     String pnfdId_string = dt.getMetadata().getDescriptorId();
 
@@ -1217,7 +1220,7 @@ public class NsdManagementService implements NsdManagementInterface {
                 try {
                     log.info("PNFD file is in format: yaml");
 
-                    dt = DescriptorsParser.fileToDescriptorTemplate(inputFile);
+                    dt = descriptorsParser.fileToDescriptorTemplate(inputFile);
 
                     String pnfdId_string = dt.getMetadata().getDescriptorId();
 
@@ -1389,7 +1392,7 @@ public class NsdManagementService implements NsdManagementInterface {
 
             log.debug("Searching VNFD {} with vnfdId {} and version {}", fileName, vnfdId, version);
             File vnfd_file = storageService.loadFileAsResource(vnfdId, version, fileName, true).getFile();
-            DescriptorTemplate vnfd = DescriptorsParser.fileToDescriptorTemplate(vnfd_file);
+            DescriptorTemplate vnfd = descriptorsParser.fileToDescriptorTemplate(vnfd_file);
 
             log.debug("VNFD successfully parsed - its content is: \n"
                     + DescriptorsParser.descriptorTemplateToString(vnfd));
@@ -1450,7 +1453,7 @@ public class NsdManagementService implements NsdManagementInterface {
 
             log.debug("Searching PNFD {} with pnfdId {} and version {}", fileName, pnfdId, version);
             File pnfd_file = storageService.loadFileAsResource(pnfdId, version, fileName, false).getFile();
-            DescriptorTemplate pnfd = DescriptorsParser.fileToDescriptorTemplate(pnfd_file);
+            DescriptorTemplate pnfd = descriptorsParser.fileToDescriptorTemplate(pnfd_file);
 
             log.debug("PNFD successfully parsed - its content is: \n"
                     + DescriptorsParser.descriptorTemplateToString(pnfd));

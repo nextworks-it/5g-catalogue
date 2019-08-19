@@ -28,6 +28,7 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.OpenSourceMANOR3Plugin
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r4.OpenSourceMANOR4Plugin;
 import it.nextworks.nfvmano.catalogue.plugins.vim.VIM;
 import it.nextworks.nfvmano.catalogue.repos.*;
+import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
@@ -110,6 +111,9 @@ public class PluginsManager {
 
     @Autowired
     private VnfPackageManagementInterface vnfdService;
+
+    @Autowired
+    private DescriptorsParser descriptorsParser;
 
     @Autowired
     private MANORepository MANORepository;
@@ -253,14 +257,14 @@ public class PluginsManager {
 
     private MANOPlugin buildMANOPlugin(MANO mano) throws MalformattedElementException {
         if (mano.getManoType().equals(MANOType.DUMMY)) {
-            return new DummyMANOPlugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, localNotificationTopic,
-                    remoteNotificationTopic, kafkaTemplate);
+            return new DummyMANOPlugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, descriptorsParser,
+                    localNotificationTopic, remoteNotificationTopic, kafkaTemplate);
         } else if (mano.getManoType().equals(MANOType.OSMR3)) {
-            return new OpenSourceMANOR3Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService,
+            return new OpenSourceMANOR3Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, descriptorsParser,
                     localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr3Dir, logo);
         } else if (mano.getManoType().equals(MANOType.OSMR4) || mano.getManoType().equals(MANOType.OSMR5)) {
-            return new OpenSourceMANOR4Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, MANORepository,
-                    localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr4Dir, logo);
+            return new OpenSourceMANOR4Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, descriptorsParser,
+                    MANORepository, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr4Dir, logo);
         } else {
             throw new MalformattedElementException("Unsupported MANO type. Skipping");
         }

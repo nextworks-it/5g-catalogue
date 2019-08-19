@@ -77,9 +77,9 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
     private Path osmDirPath;
 
     public OpenSourceMANOR3Plugin(MANOType manoType, MANO mano, String kafkaBootstrapServers,
-                                  NsdManagementInterface nsdService, VnfPackageManagementInterface vnfdService, String localTopic, String remoteTopic,
+                                  NsdManagementInterface nsdService, VnfPackageManagementInterface vnfdService, DescriptorsParser descriptorsParser, String localTopic, String remoteTopic,
                                   KafkaTemplate<String, String> kafkaTemplate, Path osmDirPath, Path logoPath) {
-        super(manoType, mano, kafkaBootstrapServers, nsdService, vnfdService, localTopic, remoteTopic, kafkaTemplate);
+        super(manoType, mano, kafkaBootstrapServers, nsdService, vnfdService, descriptorsParser, localTopic, remoteTopic, kafkaTemplate);
         if (MANOType.OSMR3 != manoType) {
             throw new IllegalArgumentException("OSM R3 plugin requires an OSM R3 type MANO");
         }
@@ -119,7 +119,7 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
                 List<DescriptorTemplate> includedVnfds = new ArrayList<>();
 
                 for (String vnfPkgInfoId : notification.getIncludedVnfds()) {
-                    DescriptorTemplate vnfd = DescriptorsParser.fileToDescriptorTemplate(
+                    DescriptorTemplate vnfd = descriptorsParser.fileToDescriptorTemplate(
                             ((Resource) vnfdService.getVnfd(vnfPkgInfoId, true, null)).getFile());
                     includedVnfds.add(vnfd);
                 }
@@ -401,7 +401,7 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
                     String.format("NSD storage type %s unsupported", nsd.getClass().getSimpleName()));
         }
         Resource resource = (Resource) nsd;
-        return DescriptorsParser.fileToDescriptorTemplate(resource.getFile());
+        return descriptorsParser.fileToDescriptorTemplate(resource.getFile());
     }
 
     private DescriptorTemplate retrieveVnfdTemplate(String vnfdInfoId)
@@ -418,7 +418,7 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
                     String.format("VNFD storage type %s unsupported", vnfd.getClass().getSimpleName()));
         }
         Resource resource = (Resource) vnfd;
-        return DescriptorsParser.fileToDescriptorTemplate(resource.getFile());
+        return descriptorsParser.fileToDescriptorTemplate(resource.getFile());
     }
 
     private File loadFile(String filename) {

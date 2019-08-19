@@ -19,13 +19,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.OpenSourceMANOR3Plugin;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.nsDescriptor.OsmNsdPackage;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
+import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -35,33 +36,40 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.junit.Assert.assertNotNull;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest
 public class NsdBuilderTest {
 
+    @Autowired
+    DescriptorsParser descriptorsParser;
+
     @Value("${catalogue.logo}")
-    private String logoPath;
+    private Path logoPath;
 
     private File DEF_IMG;
 
-    static DescriptorTemplate readFile(String path, Charset encoding) throws IOException {
+    DescriptorTemplate readFile(String path, Charset encoding) throws IOException {
         byte[] encoded = Files.readAllBytes(Paths.get(path));
         String result = new String(encoded, encoding);
-        return DescriptorsParser.stringToDescriptorTemplate(result);
+        return descriptorsParser.stringToDescriptorTemplate(result);
     }
 
     @Before
     public void setUp() {
-        DEF_IMG = new File(
-                OpenSourceMANOR3Plugin.class.getClassLoader().getResource(logoPath).getFile());
+        /*DEF_IMG = new File(
+                OpenSourceMANOR3Plugin.class.getClassLoader().getResource(logoPath).getFile());*/
+        DEF_IMG = new File(logoPath.toUri());
     }
 
     @Test
-    @Ignore
+    //@Ignore
     public void parseDescriptorTemplate() throws Exception {
         ClassLoader classLoader = getClass().getClassLoader();
         NsdBuilder nsdBuilder = new NsdBuilder(DEF_IMG);
@@ -75,7 +83,7 @@ public class NsdBuilderTest {
         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
 
         DescriptorTemplate vnfd_dt = readFile(
-                new File(classLoader.getResource("Descriptors/Definitions/cirros_vnfd_sol001.yaml").getFile()).getPath(),
+                new File(classLoader.getResource("Descriptors/cirros_vnf/Definitions/cirros_vnfd_sol001.yaml").getFile()).getPath(),
                 StandardCharsets.UTF_8
         );
 
@@ -84,14 +92,21 @@ public class NsdBuilderTest {
 
         nsdBuilder.parseDescriptorTemplate(dt, vnfds, MANOType.OSMR4);
 
+        OsmNsdPackage osmNsdPackage = nsdBuilder.getPackage();
+
+        assertNotNull(osmNsdPackage);
+
         ObjectMapper ymlMapper = new ObjectMapper(new YAMLFactory());
         ymlMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
 
-        System.out.println(ymlMapper.writeValueAsString(nsdBuilder.getPackage()));
+        System.out.println("\n===============================================================================================");
+        System.out.println("OSM NSD: ");
+        System.out.println(ymlMapper.writeValueAsString(osmNsdPackage));
+        System.out.println("===============================================================================================\n");
     }
 
     @Test
-    @Ignore
+    //@Ignore
     public void archiveTest() throws Exception {
         ClassLoader classLoader = getClass().getClassLoader();
 
@@ -107,7 +122,7 @@ public class NsdBuilderTest {
         NsdBuilder nsdBuilder = new NsdBuilder(DEF_IMG);
 
         DescriptorTemplate vnfd_dt = readFile(
-                new File(classLoader.getResource("Descriptors/Definitions/cirros_vnfd_sol001.yaml").getFile()).getPath(),
+                new File(classLoader.getResource("Descriptors/cirros_vnf/Definitions/cirros_vnfd_sol001.yaml").getFile()).getPath(),
                 StandardCharsets.UTF_8
         );
 
@@ -116,6 +131,11 @@ public class NsdBuilderTest {
 
         nsdBuilder.parseDescriptorTemplate(dt, vnfds, MANOType.OSMR4);
         File archive = archiveBuilder.makeNewArchive(nsdBuilder.getPackage(), "README CONTENT");
+
+        Assert.assertNotNull(archive);
+
+        System.out.println("\n===============================================================================================");
         System.out.println("NSD archive created in: " + archive.getAbsolutePath());
+        System.out.println("===============================================================================================\n");
     }
 }

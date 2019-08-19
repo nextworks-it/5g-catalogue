@@ -19,6 +19,7 @@ import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
 import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
 import it.nextworks.nfvmano.catalogue.messages.*;
 import it.nextworks.nfvmano.catalogue.messages.elements.ScopeType;
+import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
 import org.slf4j.Logger;
@@ -35,6 +36,7 @@ public class DummyMANOPlugin extends MANOPlugin {
             String kafkaBootstrapServers,
             NsdManagementInterface nsdService,
             VnfPackageManagementInterface vnfdService,
+            DescriptorsParser descriptorsParser,
             String localTopic,
             String remoteTopic,
             KafkaTemplate<String, String> kafkaTemplate
@@ -45,6 +47,7 @@ public class DummyMANOPlugin extends MANOPlugin {
                 kafkaBootstrapServers,
                 nsdService,
                 vnfdService,
+                descriptorsParser,
                 localTopic,
                 remoteTopic,
                 kafkaTemplate

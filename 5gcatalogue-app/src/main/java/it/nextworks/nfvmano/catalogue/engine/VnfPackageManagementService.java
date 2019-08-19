@@ -476,7 +476,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         it.nextworks.nfvmano.catalogue.engine.Utilities.checkZipArchive(vnfPkg);
 
         try {
-            csarInfo = archiveParser.archiveToMainDescriptor(vnfPkg, true);
+            csarInfo = archiveParser.archiveToCSARInfo(vnfPkg, true, true);
             dt = csarInfo.getMst();
             vnfPkgFilename = csarInfo.getPackageFilename();
 

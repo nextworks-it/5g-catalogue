@@ -20,9 +20,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
 import it.nextworks.nfvmano.catalogue.messages.elements.ScopeType;
-import it.nextworks.nfvmano.catalogue.plugins.mano.*;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.OpenSourceMANOR3Plugin;
+import it.nextworks.nfvmano.catalogue.plugins.mano.DummyMANOPlugin;
+import it.nextworks.nfvmano.catalogue.plugins.mano.DummyMano;
+import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
+import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -33,8 +34,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.UUID;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -53,17 +52,11 @@ public class CatalogueApplicationTests {
     @Value("${kafkatopic.remote}")
     private String remoteNotificationTopic;
 
-    @Value("${catalogue.osmr3.localDir}")
-    private String osmr3LocalDir;
-
-    @Value("${catalogue.logo}")
-    private String logoPath;
-
     @Test
     public void contextLoads() {
     }
 
-    // Infrastructure required, should not be run by default (hence @Ignore)
+    // Infrastructure required (Kafka), should not be run by default (hence @Ignore)
     // It's here for practicality (to be run via IDE)
     // NOTE: remove ignore to run (the spring runner will refuse to run it otherwise)
     @Test
@@ -80,20 +73,21 @@ public class CatalogueApplicationTests {
                 kafkaBootstrapServers,
                 null,
                 null,
+                null,
                 localNotificationTopic,
                 remoteNotificationTopic,
                 kafkaTemplate
         );
         plugin.init();
 
-        System.out.println("\nWait for consumer to setup ... \n");
+        System.out.println("Wait for consumer to setup ...");
         Thread.sleep(1500);
 
         NsdOnBoardingNotificationMessage msg =
                 new NsdOnBoardingNotificationMessage(
-                        "test-nsd-info",
-                        "test-nsd",
-                        UUID.fromString("7a4cea43-e29d-423b-9ac8-9f0110ede94e"),
+                        UUID.randomUUID().toString(),
+                        UUID.randomUUID().toString(),
+                        UUID.randomUUID(),
                         ScopeType.LOCAL,
                         OperationStatus.SENT
                 );
@@ -104,74 +98,11 @@ public class CatalogueApplicationTests {
 
         String json = mapper.writeValueAsString(msg);
 
-        System.out.println("\nSending message over kafka bus on topic 'onboard'\n" + json + "\n");
+        System.out.println("\n===============================================================================================");
+        System.out.println("Sending message over kafka bus on topic " + localNotificationTopic + ":\n" + json);
+        System.out.println("===============================================================================================\n");
 
-        kafkaTemplate.send("onboard", json);
-
-        //System.out.println("\nWait for consumer to process ... \n");
-        //Thread.sleep(5000);
-
-    }
-
-    // Infrastructure required, should not be run by default (hence @Ignore)
-    // It's here for practicality (to be run via IDE)
-    // NOTE: remove ignore to run (the spring runner will refuse to run it otherwise)
-    @Test
-    @Ignore
-    public void testIntegrationOSMR3() throws Exception {
-
-        //create r3 MANO
-        MANO mano = new OSMMano(
-                "test-r3",
-                "10.0.8.26",
-                "admin",
-                "admin",
-                "default",
-                MANOType.OSMR3,
-                new ArrayList<>()
-        );
-
-        //create r3 mano plugin
-        MANOPlugin plugin = new OpenSourceMANOR3Plugin(
-                MANOType.OSMR3,
-                mano,
-                kafkaBootstrapServers,
-                null,
-                null,
-                localNotificationTopic,
-                remoteNotificationTopic,
-                kafkaTemplate,
-                Paths.get(osmr3LocalDir),
-                Paths.get(logoPath)
-        );
-        plugin.init();
-
-        System.out.println("\nWait for consumer to setup ... \n");
-        Thread.sleep(1500);
-
-        NsdOnBoardingNotificationMessage msg =
-                new NsdOnBoardingNotificationMessage(
-                        "test-nsd-info",
-                        "test-nsd",
-                        UUID.fromString("7a4cea43-e29d-423b-9ac8-9f0110ede94e"),
-                        ScopeType.LOCAL,
-                        OperationStatus.SENT
-                );
-
-
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
-        mapper.setSerializationInclusion(Include.NON_EMPTY);
-
-        String json = mapper.writeValueAsString(msg);
-
-        System.out.println("\nSending message over kafka bus on topic 'onboard'\n" + json + "\n");
-
-        kafkaTemplate.send("onboard", json);
-
-        System.out.println("\nWait for consumer to process ... \n");
-        Thread.sleep(4000);
-
+        kafkaTemplate.send(localNotificationTopic, json);
     }
 
     // Infrastructure required, should not be run by default (hence @Ignore)
@@ -182,55 +113,47 @@ public class CatalogueApplicationTests {
     public void testMultiReceiver() throws Exception {
 
         //create fake MANO
-        MANO mano = new DummyMano("test-dummy", MANOType.DUMMY);
+        MANO mano1 = new DummyMano("test-dummy1", MANOType.DUMMY);
 
         //create dummy mano plugin
-        DummyMANOPlugin plugin = new DummyMANOPlugin(
+        DummyMANOPlugin plugin1 = new DummyMANOPlugin(
                 MANOType.DUMMY,
-                mano,
+                mano1,
                 kafkaBootstrapServers,
+                null,
                 null,
                 null,
                 localNotificationTopic,
                 remoteNotificationTopic,
                 kafkaTemplate
         );
-        plugin.init();
+        plugin1.init();
 
-        //create r3 MANO
-        MANO osmMano = new OSMMano(
-                "test-r3",
-                "10.0.8.26",
-                "admin",
-                "admin",
-                "default",
-                MANOType.OSMR3,
-                new ArrayList<>()
-        );
+        //create fake MANO
+        MANO mano2 = new DummyMano("test-dummy2", MANOType.DUMMY);
 
-        //create r3 mano plugin
-        MANOPlugin osmPlugin = new OpenSourceMANOR3Plugin(
-                MANOType.OSMR3,
-                osmMano,
+        //create dummy mano plugin
+        DummyMANOPlugin plugin2 = new DummyMANOPlugin(
+                MANOType.DUMMY,
+                mano2,
                 kafkaBootstrapServers,
+                null,
                 null,
                 null,
                 localNotificationTopic,
                 remoteNotificationTopic,
-                kafkaTemplate,
-                Paths.get(osmr3LocalDir),
-                Paths.get(logoPath)
+                kafkaTemplate
         );
-        osmPlugin.init();
+        plugin2.init();
 
-        System.out.println("\nWait for consumer to setup ... \n");
+        System.out.println("Wait for consumer to setup ...");
         Thread.sleep(1500);
 
         NsdOnBoardingNotificationMessage msg =
                 new NsdOnBoardingNotificationMessage(
-                        "test-nsd-info",
-                        "test-nsd",
-                        UUID.fromString("7a4cea43-e29d-423b-9ac8-9f0110ede94e"),
+                        UUID.randomUUID().toString(),
+                        UUID.randomUUID().toString(),
+                        UUID.randomUUID(),
                         ScopeType.LOCAL,
                         OperationStatus.SENT
                 );
@@ -242,12 +165,10 @@ public class CatalogueApplicationTests {
 
         String json = mapper.writeValueAsString(msg);
 
-        System.out.println("\nSending message over kafka bus on topic 'onboard'\n" + json + "\n");
+        System.out.println("\n===============================================================================================");
+        System.out.println("Sending message over kafka bus on topic " + localNotificationTopic + ":\n" + json);
+        System.out.println("===============================================================================================\n");
 
-        kafkaTemplate.send("onboard", json);
-
-        //System.out.println("\nWait for consumer to process ... \n");
-        Thread.sleep(4000);
-
+        kafkaTemplate.send(localNotificationTopic, json);
     }
 }

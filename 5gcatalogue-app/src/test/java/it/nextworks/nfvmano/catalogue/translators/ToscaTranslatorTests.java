@@ -20,7 +20,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import it.nextworks.nfvmano.catalogue.translators.tosca.ArchiveParser;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +35,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+
+import static org.junit.Assert.assertNotNull;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest
@@ -61,10 +62,13 @@ public class ToscaTranslatorTests {
         String nsd_string = readFile(nsd.getAbsolutePath(), StandardCharsets.UTF_8);
 
         DescriptorTemplate dt = descriptorParser.stringToDescriptorTemplate(nsd_string);
-        Assert.assertNotNull(dt);
 
+        assertNotNull(dt);
+
+        System.out.println("\n===============================================================================================");
         System.out.println("Successfull parsing. Parsed NSD: ");
         System.out.println(mapper.writeValueAsString(dt));
+        System.out.println("===============================================================================================\n");
     }
 
     @Test
@@ -75,9 +79,12 @@ public class ToscaTranslatorTests {
 
         DescriptorTemplate dt = descriptorParser.fileToDescriptorTemplate(nsd.getAbsolutePath());
 
-        Assert.assertNotNull(dt);
+        assertNotNull(dt);
+
+        System.out.println("\n===============================================================================================");
         System.out.println("Successfull parsing. Parsed NSD: ");
         System.out.println(mapper.writeValueAsString(dt));
+        System.out.println("===============================================================================================\n");
     }
 
     @Test
@@ -88,10 +95,13 @@ public class ToscaTranslatorTests {
         MultipartFile mp_file = new MockMultipartFile(archive.getName(), input);
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
-        DescriptorTemplate dt = archiveParser.archiveToMainDescriptor(mp_file, true).getMst();
+        DescriptorTemplate dt = archiveParser.archiveToCSARInfo(mp_file, true, false).getMst();
 
-        Assert.assertNotNull(dt);
+        assertNotNull(dt);
+
+        System.out.println("\n===============================================================================================");
         System.out.println("Successfull parsing. Parsed VNFD: ");
         System.out.println(mapper.writeValueAsString(dt));
+        System.out.println("===============================================================================================\n");
     }
 }
