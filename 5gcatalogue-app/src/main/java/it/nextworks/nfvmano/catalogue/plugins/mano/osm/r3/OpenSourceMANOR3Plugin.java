@@ -25,6 +25,7 @@ import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
 import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
 import it.nextworks.nfvmano.catalogue.messages.*;
 import it.nextworks.nfvmano.catalogue.messages.elements.ScopeType;
+import it.nextworks.nfvmano.catalogue.plugins.PluginOperationalState;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
@@ -111,7 +112,7 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
         log.info("Received NSD onboarding notificationfor NSD {} info id {}", notification.getNsdId(),
                 notification.getNsdInfoId());
         log.debug("Body: {}", notification);
-        if (notification.getScope() == ScopeType.LOCAL) {
+        if (notification.getScope() == ScopeType.LOCAL && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
             try {
                 DescriptorTemplate descriptorTemplate = retrieveTemplate(notification.getNsdInfoId());
                 NsdBuilder nsdBuilder = new NsdBuilder(logo);
@@ -170,6 +171,13 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
                         osm.getManoId()));
             }
         }
+
+        if (this.getPluginOperationalState() == PluginOperationalState.DISABLED || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
+            log.debug("NSD onboarding skipped");
+            sendNotification(new NsdOnBoardingNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(),
+                    notification.getOperationId(), ScopeType.REMOTE, OperationStatus.RECEIVED,
+                    osm.getManoId()));
+        }
     }
 
     @Override
@@ -183,7 +191,7 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
         log.info("Received NSD deletion notification for NSD {} info id {}", notification.getNsdId(),
                 notification.getNsdInfoId());
         log.debug("Body: {}", notification);
-        if (notification.getScope() == ScopeType.LOCAL) {
+        if (notification.getScope() == ScopeType.LOCAL && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
             try {
                 /*
                  * Test code deleting static packages deleteNsd(NSD_ID, "test_delete_nsd"); for
@@ -202,6 +210,13 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
                         notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
                         osm.getManoId()));
             }
+        }
+
+        if (this.getPluginOperationalState() == PluginOperationalState.DISABLED || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
+            log.debug("NSD deletion skipped");
+            sendNotification(new NsdDeletionNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(),
+                    notification.getOperationId(), ScopeType.REMOTE, OperationStatus.RECEIVED,
+                    osm.getManoId()));
         }
     }
 
@@ -222,7 +237,7 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
         log.info("Received Vnfd onboarding notificationfor Vnfd {} info ID {}", notification.getVnfdId(),
                 notification.getVnfPkgInfoId());
         log.debug("Body: {}", notification);
-        if (notification.getScope() == ScopeType.LOCAL) {
+        if (notification.getScope() == ScopeType.LOCAL && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
             try {
                 DescriptorTemplate descriptorTemplate = retrieveVnfdTemplate(notification.getVnfPkgInfoId());
                 VnfdBuilder vnfdBuilder = new VnfdBuilder(logo);
@@ -298,6 +313,13 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
                         osm.getManoId()));
             }
         }
+
+        if (this.getPluginOperationalState() == PluginOperationalState.DISABLED || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
+            log.debug("VNF Pkg onboarding skipped");
+            sendNotification(new VnfPkgOnBoardingNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(),
+                    notification.getOperationId(), ScopeType.REMOTE, OperationStatus.RECEIVED,
+                    osm.getManoId()));
+        }
     }
 
     // TODO: to be implemented according to descriptor format in OSMR3
@@ -312,7 +334,7 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
         log.info("Received Vnfd deletion notification for Vnfd {} info ID {}", notification.getVnfPkgInfoId(),
                 notification.getVnfPkgInfoId());
         log.debug("Body: {}", notification);
-        if (notification.getScope() == ScopeType.LOCAL) {
+        if (notification.getScope() == ScopeType.LOCAL && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
             try {
                 deleteVnfd(notification.getVnfdId(), notification.getOperationId().toString());
                 log.info("Successfully deleted Vnfd {} with info ID {}", notification.getVnfdId(),
@@ -327,6 +349,13 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
                         notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
                         osm.getManoId()));
             }
+        }
+
+        if (this.getPluginOperationalState() == PluginOperationalState.DISABLED || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
+            log.debug("VNF Pkg deletion skipped");
+            sendNotification(new VnfPkgDeletionNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(),
+                    notification.getOperationId(), ScopeType.REMOTE, OperationStatus.RECEIVED,
+                    osm.getManoId()));
         }
     }
 

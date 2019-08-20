@@ -33,6 +33,8 @@ public enum PackageOnboardingStateType {
 
     LOCAL_ONBOARDED("LOCAL_ONBOARDED"),
 
+    SKIPPED("SKIPPED"),
+
     FAILED("FAILED");
 
     private String value;

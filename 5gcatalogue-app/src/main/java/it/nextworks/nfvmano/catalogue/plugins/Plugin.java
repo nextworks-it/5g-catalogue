@@ -19,6 +19,7 @@ public abstract class Plugin {
 
     protected String pluginId;
     protected PluginType pluginType;
+    protected PluginOperationalState pluginOperationalState;
     //KAFKA config attributes
 
     public Plugin(String pluginId, PluginType pluginType) {
@@ -40,6 +41,14 @@ public abstract class Plugin {
 
     public void setPluginType(PluginType pluginType) {
         this.pluginType = pluginType;
+    }
+
+    public PluginOperationalState getPluginOperationalState() {
+        return pluginOperationalState;
+    }
+
+    public void setPluginOperationalState(PluginOperationalState pluginOperationalState) {
+        this.pluginOperationalState = pluginOperationalState;
     }
 
     public abstract void init();

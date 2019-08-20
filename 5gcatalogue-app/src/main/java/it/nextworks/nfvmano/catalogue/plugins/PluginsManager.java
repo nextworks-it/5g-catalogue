@@ -29,10 +29,7 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r4.OpenSourceMANOR4Plugin
 import it.nextworks.nfvmano.catalogue.plugins.vim.VIM;
 import it.nextworks.nfvmano.catalogue.repos.*;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
-import it.nextworks.nfvmano.libs.common.exceptions.AlreadyExistingEntityException;
-import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
-import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
-import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
+import it.nextworks.nfvmano.libs.common.exceptions.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -142,6 +139,7 @@ public class PluginsManager {
 
         if (defaultManoType.equalsIgnoreCase("DUMMY")) {
             MANO dummy = new DummyMano("DUMMY", MANOType.DUMMY);
+            MANORepository.saveAndFlush(dummy);
             try {
                 addMANO(dummy);
             } catch (MalformattedElementException e) {
@@ -157,8 +155,16 @@ public class PluginsManager {
             for (MANO mano : manos) {
                 try {
                     log.debug("Instantiating MANO with manoId: " + mano.getManoId());
-                    addMANO(mano);
-                    log.debug("MANO with manoId " + mano.getManoId() + " successfully instantiated");
+                    if (mano.getPluginOperationalState() != PluginOperationalState.DELETING) {
+                        log.debug("Instantiating MANO with manoId: " + mano.getManoId());
+                        addMANO(mano);
+                        log.debug("MANO with manoId " + mano.getManoId() + " successfully instantiated");
+                    } else {
+                        log.debug("Found MANO with manoId " + mano.getManoId() +  " in DELETING state: removing it");
+                        MANORepository.deleteById(mano.getId());
+                        log.debug("MANO with manoId " + mano.getManoId() + " successfully deleted");
+                    }
+
                 } catch (MalformattedElementException e) {
                     log.error("Malformatted MANO: " + e.getMessage() + ". Skipping");
                 }
@@ -204,7 +210,34 @@ public class PluginsManager {
         }
 
         if (catalogueScope.equalsIgnoreCase("private")) {
-            log.debug("Instantiating 5G Catalogue driver...");
+            log.debug("Instantiating 5G Catalogue drivers...");
+
+            log.debug("Loading Catalogue info from DB");
+            List<Catalogue> catalogues = catalogueRepository.findAll();
+
+            if (catalogues.isEmpty())
+                log.debug("No Catalogue info stored in DB");
+
+            for (Catalogue catalogue : catalogues) {
+                try {
+                    log.debug("Instantiating Catalogue with catalogueId: " + catalogue.getCatalogueId());
+                    if (catalogue.getPluginOperationalState() != PluginOperationalState.DELETING) {
+                        log.debug("Instantiating Catalogue with catalogueId: " + catalogue.getCatalogueId());
+                        create5GCatalogue(catalogue, true);
+                        log.debug("Catalogue with catalogueId " + catalogue.getCatalogueId() + " successfully instantiated");
+                    } else {
+                        log.debug("Found Catalogue with catalogueId " + catalogue.getCatalogueId() +  " in DELETING state: removing it");
+                        catalogueRepository.deleteById(catalogue.getId());
+                        log.debug("Catalogue with catalogueId " + catalogue.getCatalogueId() + " successfully deleted");
+                    }
+
+                } catch (AlreadyExistingEntityException e) {
+                    log.error("Catalogue with catalogueId " + catalogue.getCatalogueId() + " already exists");
+                }
+            }
+
+            log.debug("Loading Catalogue info from configuration files");
+
             resources = load5GCatalogueConfigurations();
 
             ObjectMapper mapper = new ObjectMapper();
@@ -225,7 +258,7 @@ public class PluginsManager {
                             try {
                                 log.debug("Creating 5G Catalogue Plugin with catalogueId " + newCatalogue.getCatalogueId()
                                         + " from configuration file");
-                                create5GCatalogue(newCatalogue);
+                                create5GCatalogue(newCatalogue, false);
                             } catch (AlreadyExistingEntityException e) {
                                 log.error("5G Catalogue with catalogueId " + newCatalogue.getCatalogueId() + " already present in DB");
                             }
@@ -242,7 +275,7 @@ public class PluginsManager {
         try {
             MANOPlugin manoPlugin = buildMANOPlugin(mano);
 
-            // Init kafka consumer
+            // Init kafka consumer and enable plugin
             manoPlugin.init();
 
             manoDrivers.put(mano.getManoId(), manoPlugin);
@@ -294,6 +327,7 @@ public class PluginsManager {
                     type,
                     osmMano.getVimAccounts()
             );
+            targetOsmMano.setPluginOperationalState(PluginOperationalState.ENABLED);
             targetOsmMano.isValid();
             log.debug("Persisting OSM MANO with manoId: " + manoId);
             OSMMano createdMano = MANORepository.saveAndFlush(targetOsmMano);
@@ -336,6 +370,34 @@ public class PluginsManager {
         List<MANO> manos = new ArrayList<>();
         manos = MANORepository.findAll();
         return manos;
+    }
+
+    public MANO updateMANOPlugin(String manoId, MANO mano) throws NotExistingEntityException, FailedOperationException {
+
+        log.debug("Processing request for updating MANO Plugin with manoId {}", manoId);
+
+        Optional<MANO> optionalMANO = MANORepository.findByManoId(manoId);
+
+        MANO manoInfo = null;
+
+        if (optionalMANO.isPresent()) {
+            manoInfo = optionalMANO.get();
+
+            if (manoInfo.getPluginOperationalState() == mano.getPluginOperationalState()) {
+                throw new FailedOperationException("MANO Plugin with manoId " +  manoId + " already in " + manoInfo.getPluginOperationalState() + " operational state");
+            } else {
+                manoInfo.setPluginOperationalState(mano.getPluginOperationalState());
+                MANORepository.saveAndFlush(manoInfo);
+
+                MANOPlugin manoPlugin = manoDrivers.get(manoInfo.getManoId());
+                manoPlugin.setPluginOperationalState(manoInfo.getPluginOperationalState());
+                manoDrivers.replace(manoInfo.getManoId(), manoPlugin);
+            }
+        } else {
+            throw new NotExistingEntityException("MANO Plugin with manoId " + manoId + " not present in DB");
+        }
+
+        return manoInfo;
     }
 
     private Resource[] loadMANOConfigurations() {
@@ -421,10 +483,11 @@ public class PluginsManager {
         );
     }
 
-    public String create5GCatalogue(Catalogue catalogue)
+    public String create5GCatalogue(Catalogue catalogue, boolean isInternal)
             throws AlreadyExistingEntityException {
         String catalogueId = catalogue.getCatalogueId();
-        if (catalogueRepository.findByCatalogueId(catalogueId).isPresent()) {
+        catalogue.setPluginOperationalState(PluginOperationalState.ENABLED);
+        if (catalogueRepository.findByCatalogueId(catalogueId).isPresent() && !isInternal) {
             log.error("A 5G Catalogue with the same ID is already available in DB - Not acceptable");
             throw new AlreadyExistingEntityException(
                     "A 5G Catalogue with the same ID is already available in DB - Not acceptable");
@@ -462,6 +525,34 @@ public class PluginsManager {
         List<Catalogue> catalogues = new ArrayList<>();
         catalogues = catalogueRepository.findAll();
         return catalogues;
+    }
+
+    public Catalogue update5GCataloguePlugin(String catalogueId, Catalogue catalogue) throws NotExistingEntityException, FailedOperationException {
+
+        log.debug("Processing request for updating 5G Catalogue Plugin with catalogueId {}", catalogueId);
+
+        Optional<Catalogue> optionalCatalogue = catalogueRepository.findByCatalogueId(catalogueId);
+
+        Catalogue catalogueInfo = null;
+
+        if (optionalCatalogue.isPresent()) {
+            catalogueInfo = optionalCatalogue.get();
+
+            if (catalogueInfo.getPluginOperationalState() == catalogue.getPluginOperationalState()) {
+                throw new FailedOperationException("Catalogue Plugin with catalogueId " +  catalogueId + " already in " + catalogueInfo.getPluginOperationalState() + " operational state");
+            } else {
+                catalogueInfo.setPluginOperationalState(catalogue.getPluginOperationalState());
+                catalogueRepository.saveAndFlush(catalogueInfo);
+
+                CataloguePlugin cataloguePlugin = catalogueDrivers.get(catalogueInfo.getCatalogueId());
+                cataloguePlugin.setPluginOperationalState(catalogueInfo.getPluginOperationalState());
+                catalogueDrivers.replace(catalogueInfo.getCatalogueId(), cataloguePlugin);
+            }
+        } else {
+            throw new NotExistingEntityException("Catalogue Plugin with catalogueId " + catalogueId + " not present in DB");
+        }
+
+        return catalogueInfo;
     }
 
     private Resource[] load5GCatalogueConfigurations() {

@@ -1,6 +1,7 @@
 {
-  "manoId": "NXW_OSMR5.0",
+  "manoId": "NXW_OSMR50",
   "manoType": "OSMR5",
+  "pluginOperationalState": "ENABLED",
   "ipAddress": "10.30.7.20",
   "username": "admin",
   "password": "admin",

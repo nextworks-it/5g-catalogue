@@ -609,7 +609,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                         pkgOnboardingStateType = PackageOnboardingStateType.UPLOADING;
                         break;
                     case RECEIVED:
-                        pkgOnboardingStateType = PackageOnboardingStateType.PROCESSING;
+                        pkgOnboardingStateType = PackageOnboardingStateType.SKIPPED;
                         break;
                     case PROCESSING:
                         pkgOnboardingStateType = PackageOnboardingStateType.PROCESSING;

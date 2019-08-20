@@ -1570,7 +1570,7 @@ public class NsdManagementService implements NsdManagementInterface {
                         nsdOnboardingStateType = NsdOnboardingStateType.UPLOADING;
                         break;
                     case RECEIVED:
-                        nsdOnboardingStateType = NsdOnboardingStateType.PROCESSING;
+                        nsdOnboardingStateType = NsdOnboardingStateType.SKIPPED;
                         break;
                     case PROCESSING:
                         nsdOnboardingStateType = NsdOnboardingStateType.PROCESSING;
@@ -1689,7 +1689,7 @@ public class NsdManagementService implements NsdManagementInterface {
                         pnfdOnboardingStateType = PnfdOnboardingStateType.UPLOADING;
                         break;
                     case RECEIVED:
-                        pnfdOnboardingStateType = PnfdOnboardingStateType.PROCESSING;
+                        pnfdOnboardingStateType = PnfdOnboardingStateType.SKIPPED;
                         break;
                     case PROCESSING:
                         pnfdOnboardingStateType = PnfdOnboardingStateType.PROCESSING;

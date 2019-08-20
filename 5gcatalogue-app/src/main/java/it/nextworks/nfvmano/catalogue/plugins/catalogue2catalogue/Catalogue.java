@@ -1,6 +1,7 @@
 package it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import it.nextworks.nfvmano.catalogue.plugins.PluginOperationalState;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -14,8 +15,8 @@ public class Catalogue {
     private Long id;
 
     private String catalogueId;
-
     private String url;
+    private PluginOperationalState pluginOperationalState;
 
     public Catalogue() {
     }
@@ -46,5 +47,14 @@ public class Catalogue {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    @JsonProperty("pluginOperationalState")
+    public PluginOperationalState getPluginOperationalState() {
+        return pluginOperationalState;
+    }
+
+    public void setPluginOperationalState(PluginOperationalState pluginOperationalState) {
+        this.pluginOperationalState = pluginOperationalState;
     }
 }

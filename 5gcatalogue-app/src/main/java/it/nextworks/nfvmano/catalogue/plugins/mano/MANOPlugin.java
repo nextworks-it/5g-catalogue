@@ -27,6 +27,7 @@ import it.nextworks.nfvmano.catalogue.messages.elements.CatalogueMessageType;
 import it.nextworks.nfvmano.catalogue.messages.interfaces.NsdNotificationsConsumerInterface;
 import it.nextworks.nfvmano.catalogue.messages.interfaces.VnfPkgNotificationsConsumerInterface;
 import it.nextworks.nfvmano.catalogue.plugins.Plugin;
+import it.nextworks.nfvmano.catalogue.plugins.PluginOperationalState;
 import it.nextworks.nfvmano.catalogue.plugins.PluginType;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
@@ -190,6 +191,7 @@ public abstract class MANOPlugin
 
     @Override
     public void init() {
+        this.setPluginOperationalState(PluginOperationalState.ENABLED);
         connector.init();
     }
 

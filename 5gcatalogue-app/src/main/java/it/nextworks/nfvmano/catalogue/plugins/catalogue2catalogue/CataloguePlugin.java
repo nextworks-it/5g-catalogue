@@ -21,6 +21,7 @@ import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.C
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.PackageOnboardingStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.VnfPkgInfo;
 import it.nextworks.nfvmano.catalogue.plugins.Plugin;
+import it.nextworks.nfvmano.catalogue.plugins.PluginOperationalState;
 import it.nextworks.nfvmano.catalogue.plugins.PluginType;
 import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.api.nsd.DefaultApi;
 import it.nextworks.nfvmano.catalogue.repos.NsdInfoRepository;
@@ -29,6 +30,7 @@ import it.nextworks.nfvmano.catalogue.repos.VnfPkgInfoRepository;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
+import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -38,6 +40,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -193,7 +196,7 @@ public class CataloguePlugin extends Plugin
     public void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
         log.info("Received NSD onboarding notification");
         log.debug("Body: {}", notification);
-        if (notification.getScope() == ScopeType.C2C) {
+        if (notification.getScope() == ScopeType.C2C && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
             try {
                 Optional<NsdInfoResource> nsdInfoResourceOptional = nsdInfoRepository.findById(UUID.fromString(notification.getNsdInfoId()));
 
@@ -270,7 +273,7 @@ public class CataloguePlugin extends Plugin
     public void acceptPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
         log.info("Received PNFD onboarding notification");
         log.debug("Body: {}", notification);
-        if (notification.getScope() == ScopeType.C2C) {
+        if (notification.getScope() == ScopeType.C2C && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
             try {
                 Optional<PnfdInfoResource> pnfdInfoResourceOptional = pnfdInfoRepository.findById(UUID.fromString(notification.getPnfdInfoId()));
 
@@ -341,7 +344,7 @@ public class CataloguePlugin extends Plugin
     public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
         log.info("Received VNF Pkg onboarding notification");
         log.debug("Body: {}", notification);
-        if (notification.getScope() == ScopeType.C2C) {
+        if (notification.getScope() == ScopeType.C2C && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
             try {
                 Optional<VnfPkgInfoResource> vnfPkgInfoResourceOptional = vnfPkgInfoRepository.findById(UUID.fromString(notification.getVnfPkgInfoId()));
 
@@ -650,15 +653,26 @@ public class CataloguePlugin extends Plugin
         );
     }
 
-    private MultipartFile createMultiPartFromFile(File file, String contentType) {
+    private MultipartFile createMultiPartFromFile(File file, String contentType) throws FailedOperationException {
 
-        byte[] content = null;
+        /*byte[] content = null;
         try {
             content = Files.readAllBytes(file.toPath());
         } catch (final IOException e) {
+        }*/
+
+        DiskFileItem fileItem = new DiskFileItem("file", contentType, false, file.getName(), (int) file.length() , file.getParentFile());
+        try {
+            fileItem.getOutputStream();
+        } catch (IOException e) {
+            log.error("Unable  to create Multipart file");
+            throw new FailedOperationException("Unable  to create Multipart file");
         }
-        MultipartFile multipartFile = new MockMultipartFile("file",
-                file.getName(), contentType, content);
+        MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
+
+        /*MultipartFile multipartFile = new MockMultipartFile("file",
+                file.getName(), contentType, content);*/
+
         return multipartFile;
     }
 
@@ -674,6 +688,7 @@ public class CataloguePlugin extends Plugin
 
     @Override
     public void init() {
+        this.setPluginOperationalState(PluginOperationalState.ENABLED);
         connector.init();
 
         try {

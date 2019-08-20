@@ -38,6 +38,8 @@ public enum NsdOnboardingStateType {
 
     LOCAL_ONBOARDED("LOCAL_ONBOARDED"),
 
+    SKIPPED ("SKIPPED"),
+
     FAILED("FAILED");
 
     private String value;

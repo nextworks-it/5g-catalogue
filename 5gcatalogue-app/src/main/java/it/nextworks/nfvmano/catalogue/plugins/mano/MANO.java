@@ -18,6 +18,7 @@ package it.nextworks.nfvmano.catalogue.plugins.mano;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import it.nextworks.nfvmano.catalogue.plugins.PluginOperationalState;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
 
 import javax.persistence.Entity;
@@ -38,14 +39,30 @@ public abstract class MANO {
 
     private String manoId;
     private MANOType manoType;
+    private PluginOperationalState pluginOperationalState;
 
     public MANO() {
         // JPA only
     }
 
+    public MANO(String manoId) {
+        this.manoId = manoId;
+    }
+
     public MANO(String manoId, MANOType manoType) {
         this.manoId = manoId;
         this.manoType = manoType;
+    }
+
+    public MANO(String manoId, PluginOperationalState pluginOperationalState) {
+        this.manoId = manoId;
+        this.pluginOperationalState = pluginOperationalState;
+    }
+
+    public MANO(String manoId, MANOType manoType, PluginOperationalState pluginOperationalState) {
+        this.manoId = manoId;
+        this.manoType = manoType;
+        this.pluginOperationalState = pluginOperationalState;
     }
 
     public Long getId() {
@@ -60,5 +77,14 @@ public abstract class MANO {
     @JsonProperty("manoType")
     public MANOType getManoType() {
         return manoType;
+    }
+
+    @JsonProperty("pluginOperationalState")
+    public PluginOperationalState getPluginOperationalState() {
+        return pluginOperationalState;
+    }
+
+    public void setPluginOperationalState(PluginOperationalState pluginOperationalState) {
+        this.pluginOperationalState = pluginOperationalState;
     }
 }
