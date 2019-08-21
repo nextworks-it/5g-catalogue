@@ -255,6 +255,13 @@ public class CataloguePlugin extends Plugin
                         catalogue.getCatalogueId()));
             }
         }
+
+        if (this.getPluginOperationalState() == PluginOperationalState.DISABLED || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
+            log.debug("NSD onboarding skipped");
+            sendNotification(new NsdOnBoardingNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(),
+                    notification.getOperationId(), ScopeType.C2C, OperationStatus.RECEIVED,
+                    catalogue.getCatalogueId()));
+        }
     }
 
     @Override
@@ -332,6 +339,13 @@ public class CataloguePlugin extends Plugin
                         catalogue.getCatalogueId()));
             }
         }
+
+        if (this.getPluginOperationalState() == PluginOperationalState.DISABLED || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
+            log.debug("PNFD onboarding skipped");
+            sendNotification(new PnfdOnBoardingNotificationMessage(notification.getPnfdInfoId(), notification.getPnfdId(),
+                    notification.getOperationId(), ScopeType.C2C, OperationStatus.RECEIVED,
+                    catalogue.getCatalogueId()));
+        }
     }
 
     @Override
@@ -402,6 +416,13 @@ public class CataloguePlugin extends Plugin
                         notification.getOperationId(), ScopeType.C2C, OperationStatus.FAILED,
                         catalogue.getCatalogueId()));
             }
+        }
+
+        if (this.getPluginOperationalState() == PluginOperationalState.DISABLED || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
+            log.debug("VNF Package onboarding skipped");
+            sendNotification(new VnfPkgOnBoardingNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(),
+                    notification.getOperationId(), ScopeType.C2C, OperationStatus.RECEIVED,
+                    catalogue.getCatalogueId()));
         }
     }
 
