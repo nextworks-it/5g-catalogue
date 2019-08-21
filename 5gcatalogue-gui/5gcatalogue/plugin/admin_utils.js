@@ -18,6 +18,10 @@ function getAllMANOPlugins(tableId, resId) {
 	getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/manoManagement/manos", createPluginsTable, [tableId, resId]);
 }
 
+function getAllCataloguePlugins(tableId, resId) {
+	getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/cat2catManagement/5gcatalogues", createCataloguePluginsTable, [tableId, resId]);
+}
+
 function getAllProjects(tableId, resId, callback) {
 	getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/projectManagement/projects", callback, [tableId, resId]);
 }
@@ -28,6 +32,36 @@ function getAllUsers(tableId, resId) {
 
 function getUser(divId, resId, callback) {
     getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/userManagement/users/" + divId, callback, [divId, resId]);
+}
+
+function loadMANOPlugin(textId, elemId, resId) {
+    
+    var files = document.getElementById(elemId).files;
+
+    if (files && files.length > 0) {
+        var text = document.getElementById(textId).innerHTML;
+        console.log(text);
+        var manoId = JSON.parse(text)['manoId'];
+        postMANO(manoId, text);
+    } else {
+        showResultMessage(false, "MANO descriptor not selected.");
+    }
+}
+
+function loadCataloguePlugin(catalogueIdInput, catalogueUrlInput, opStateInput) {
+    var catalogueId = document.getElementById(catalogueIdInput).value;
+    var catalogueUrl = document.getElementById(catalogueUrlInput).value;
+    var opState = document.getElementById(opStateInput).value;
+
+    var jsonObj = JSON.parse('{}');
+
+    jsonObj['catalogueId'] = catalogueId;
+    jsonObj['url'] = catalogueUrl;
+    jsonObj['pluginOperationalState'] = opState;
+
+    var json = JSON.stringify(jsonObj, null, 4);
+
+    postCatalogue(catalogueId, json);
 }
 
 function createNewProject(inputs) {
@@ -67,6 +101,14 @@ function createNewUser(inputs) {
     postUser(userName, json);
 }
 
+function postMANO(manoId, data) {
+    postJsonToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/manoManagement/manos", data, showResultMessage, ["MANO " + manoId + " has been successfully created."]);
+}
+
+function postCatalogue(manoId, data) {
+    postJsonToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/cat2catManagement/5gcatalogues", data, showResultMessage, ["Catalogue " + catalogueId + " has been successfully created."]);
+}
+
 function putUserToProject(userNameInput, projectIdInput) {
     var userName = document.getElementById(userNameInput).value;
     var projecId = document.getElementById(projectIdInput).value;
@@ -79,6 +121,31 @@ function postProject(projectId, data) {
 
 function postUser(userName, data) {
     postJsonToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/userManagement/users", data, showResultMessage, ["User " + userName + " has been successfully created."]);
+}
+
+function updateMANOPlugin(manoId, manoType, elemId) {
+    var opState = document.getElementById(elemId).value;
+
+    var jsonObj = JSON.parse("{}");
+    jsonObj['manoId'] = manoId;
+    jsonObj['manoType'] = manoType;
+    jsonObj['pluginOperationalState'] = opState;
+    var json = JSON.stringify(jsonObj, null, 4);
+
+    patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/manoManagement/manos/" + manoId, json, showResultMessage, ["MANO Plugin with manoId " + manoId + " successfully updated."]);
+}
+
+function updateCataloguePlugin(catalogueId, elemId) {
+    var opState = document.getElementById(elemId).value;
+
+    var jsonObj = JSON.parse("{}");
+    jsonObj['catalogueId'] = catalogueId;
+    jsonObj['pluginOperationalState'] = opState;
+    var json = JSON.stringify(jsonObj, null, 4);
+
+    console.log(json);
+
+    patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/cat2catManagement/5gcatalogues/" + catalogueId, json, showResultMessage, ["Catalogue Plugin with catalogueId " + catalogueId + " successfully updated."]);
 }
 
 function createPluginsTable(data, params) {
@@ -96,11 +163,11 @@ function createPluginsTable(data, params) {
         table.innerHTML = '<tr>No Plugins instantiated in Catalogue</tr>';
         return;
     }
-    var btnFlag = false;
-    var header = createTableHeaderByValues(['Id', 'Type', 'IP Address'], btnFlag, false);
-    var cbacks = [];
-    var names = [];
-    var columns = [['manoId'], ['manoType'], ['ipAddress']];
+    var btnFlag = true;
+    var header = createTableHeaderByValues(['Id', 'Type', 'IP Address', 'Operational State'], btnFlag, false);
+    var cbacks = ['updatePlugin_'];
+    var names = ['Update Plugin'];
+    var columns = [['manoId'], ['manoType'], ['ipAddress'], ['pluginOperationalState']];
 
     table.innerHTML = header + '<tbody>';
 
@@ -118,7 +185,8 @@ function createPluginsTableRow(data, btnFlag, cbacks, names, columns, resId) {
     var text = '';
     var btnText = '';
     if (btnFlag) {
-        btnText += createActionButton(data['manoId'], resId, names, cbacks);
+        btnText += createLinkSet(data['manoId'], resId, names, cbacks);
+        createUpdatePluginModal(data, data['pluginOperationalState'], "updatePluginModals");
     }
 
 	text += '<tr>';
@@ -146,6 +214,174 @@ function createPluginsTableRow(data, btnFlag, cbacks, names, columns, resId) {
 	text += btnText + '</tr>';
     
     return text;
+}
+
+function createUpdatePluginModal(mano, opState, modalsContainerId) {
+
+    var container = document.getElementById(modalsContainerId);
+    var manoId = mano['manoId'];
+    var manoType = mano['manoType'];
+
+    if (container) {
+        var text = '<div id="updatePlugin_' + manoId + '" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">\
+                    <div class="modal-dialog modal-lg">\
+                      <div class="modal-content">\
+                        <div class="modal-header">\
+                          <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span>\
+                          </button>\
+                          <h4 class="modal-title" id="myModalLabel">Enable / Disable / Delete Plugin</h4>\
+                        </div>\
+                        <div class="modal-body">\
+                            <form class="form-horizontal form-label-left">\
+								<div class="form-group">\
+									<label class="control-label col-md-3 col-sm-3 col-xs-12">Operational State</label>\
+									<div class="col-md-9 col-sm-9 col-xs-12">\
+										<select id="ed_' + manoId + '" class="form-control">';
+        if (opState == 'ENABLED') {
+            text += '<option value="ENABLED">ENABLED</option>\
+                    <option value="DISABLED">DISABLED</option>\
+                    <option value="DELETING">DELETING</option>';
+        } else if (opState == 'DISABLED') {
+            text += '<option value="DISABLED">DISABLED</option>\
+                    <option value="ENABLED">ENABLED</option>\
+                    <option value="DELETIING">DELETING</option>';
+        } else if (opState == 'DELETING') {
+            text += '<option value="DELETING">DELETING</option>\
+                    <option value="ENABLED">ENABLED</option>\
+                    <option value="DISABLED">DISABLED</option>';
+        }
+		text += '</select>\
+									</div>\
+								</div>\
+							</form>\
+                        </div>\
+                        <div class="modal-footer">\
+                          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>\
+                          <button type="button" class="btn btn-primary" data-dismiss="modal" onclick=updateMANOPlugin("' + manoId + '","' + manoType + '","ed_' + manoId + '");>Submit</button>\
+                        </div>\
+                      </div>\
+                    </div>\
+                </div>';
+
+        container.innerHTML += text;
+    }
+}
+
+function createCataloguePluginsTable(data, params) {
+	//console.log(JSON.stringify(data, null, 4));
+    //console.log(params);
+
+    var tableId = params[0];
+    var resId = params[1];
+    var table = document.getElementById(tableId);
+    if (!table) {
+        return;
+    }
+    if (!data || data.length == 0) {
+	//console.log('No NS Instances');
+        table.innerHTML = '<tr>No Catalogue-to-Catalogue Plugins instantiated in Catalogue</tr>';
+        return;
+    }
+    var btnFlag = true;
+    var header = createTableHeaderByValues(['Id', 'Url', 'Operational State'], btnFlag, false);
+    var cbacks = ['updateCataloguePlugin_'];
+    var names = ['Update Plugin'];
+    var columns = [['catalogueId'], ['url'], ['pluginOperationalState']];
+
+    table.innerHTML = header + '<tbody>';
+
+    var rows = '';
+    for (var i in data) {
+        rows +=  createCataloguePluginsTableRow(data[i], btnFlag, cbacks, names, columns, resId);
+    }
+    
+    table.innerHTML += rows + '</tbody>';
+}
+
+function createCataloguePluginsTableRow(data, btnFlag, cbacks, names, columns, resId) {
+    //console.log(JSON.stringify(data, null, 4));
+
+    var text = '';
+    var btnText = '';
+    if (btnFlag) {
+        btnText += createLinkSet(data['catalogueId'], resId, names, cbacks);
+        createUpdateCataloguePluginModal(data['catalogueId'], data['pluginOperationalState'], "updatePluginModals");
+    }
+
+	text += '<tr>';
+	for (var i in columns) {
+	    var values = [];
+	    getValuesFromKeyPath(data, columns[i], values);
+	    //console.log(values);
+
+	    var subText = '<td>';
+	    var subTable = '<table class="table table-borderless">';
+
+	    if (data.hasOwnProperty(columns[i][0])) {
+            if(values instanceof Array && values.length > 1) {
+                for (var v in values) {
+                    subTable += '<tr><td>' + values[v] + '</td><tr>';
+                }
+                subText += subTable + '</table>';
+            } else {
+                subText += values;
+            }
+	    }
+	    subText += '</td>';
+	    text += subText;
+	}
+	text += btnText + '</tr>';
+    
+    return text;
+}
+
+function createUpdateCataloguePluginModal(catalogueId, opState, modalsContainerId) {
+
+    var container = document.getElementById(modalsContainerId);
+
+    if (container) {
+        var text = '<div id="updateCataloguePlugin_' + catalogueId + '" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">\
+                    <div class="modal-dialog modal-lg">\
+                      <div class="modal-content">\
+                        <div class="modal-header">\
+                          <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span>\
+                          </button>\
+                          <h4 class="modal-title" id="myModalLabel">Enable / Disable / Delete Plugin</h4>\
+                        </div>\
+                        <div class="modal-body">\
+                            <form class="form-horizontal form-label-left">\
+								<div class="form-group">\
+									<label class="control-label col-md-3 col-sm-3 col-xs-12">Operational State</label>\
+									<div class="col-md-9 col-sm-9 col-xs-12">\
+										<select id="ed_' + catalogueId + '" class="form-control">';
+        if (opState == 'ENABLED') {
+            text += '<option value="ENABLED">ENABLED</option>\
+                    <option value="DISABLED">DISABLED</option>\
+                    <option value="DELETING">DELETING</option>';
+        } else if (opState == 'DISABLED') {
+            text += '<option value="DISABLED">DISABLED</option>\
+                    <option value="ENABLED">ENABLED</option>\
+                    <option value="DELETIING">DELETING</option>';
+        } else if (opState == 'DELETING') {
+            text += '<option value="DELETING">DELETING</option>\
+                    <option value="ENABLED">ENABLED</option>\
+                    <option value="DISABLED">DISABLED</option>';
+        }
+		text += '</select>\
+									</div>\
+								</div>\
+							</form>\
+                        </div>\
+                        <div class="modal-footer">\
+                          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>\
+                          <button type="button" class="btn btn-primary" data-dismiss="modal" onclick=updateCataloguePlugin("' + catalogueId + '","ed_' + catalogueId + '");>Submit</button>\
+                        </div>\
+                      </div>\
+                    </div>\
+                </div>';
+
+        container.innerHTML += text;
+    }
 }
 
 function createProjectsTable(data, params) {
