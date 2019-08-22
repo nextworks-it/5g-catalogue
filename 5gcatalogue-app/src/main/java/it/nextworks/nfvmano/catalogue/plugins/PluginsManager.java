@@ -142,6 +142,7 @@ public class PluginsManager {
 
         if (defaultManoType.equalsIgnoreCase("DUMMY")) {
             MANO dummy = new DummyMano("DUMMY", MANOType.DUMMY);
+            dummy.setPluginOperationalState(PluginOperationalState.ENABLED);
             MANORepository.saveAndFlush(dummy);
             try {
                 addMANO(dummy);
@@ -521,13 +522,14 @@ public class PluginsManager {
             throw new AlreadyExistingEntityException(
                     "A 5G Catalogue with the same ID is already available in DB - Not acceptable");
         }
-
+        ObjectMapper mapper = new ObjectMapper();
         log.debug("Persisting 5G Catalogue with catalogueId: " + catalogueId);
         if (catalogue.getPluginOperationalState() == null) {
             catalogue.setPluginOperationalState(PluginOperationalState.ENABLED);
         }
+
         Catalogue createdCatalogue = catalogueRepository.saveAndFlush(catalogue);
-        log.debug("5G Catalogue with catalogueId " + catalogueId + " sucessfully persisted");
+        log.debug("5G Catalogue with catalogueId " + catalogueId + " successfully persisted");
 
         log.debug("Instantiating 5G Catalogue with catalogueId: " + catalogueId);
         addCatalogue(catalogue);
