@@ -105,7 +105,7 @@ function postMANO(manoId, data) {
     postJsonToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/manoManagement/manos", data, showResultMessage, ["MANO " + manoId + " has been successfully created."]);
 }
 
-function postCatalogue(manoId, data) {
+function postCatalogue(catalogueId, data) {
     postJsonToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/cat2catManagement/5gcatalogues", data, showResultMessage, ["Catalogue " + catalogueId + " has been successfully created."]);
 }
 
