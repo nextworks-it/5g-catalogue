@@ -320,6 +320,10 @@ public class PluginsManager {
                     "A MANO with the same ID is already available in DB - Not acceptable");
 
         }
+
+        if (mano.getPluginOperationalState() == null) {
+            mano.setPluginOperationalState(PluginOperationalState.ENABLED);
+        }
         MANOType type = mano.getManoType();
         log.debug("RECEIVED MANO:\nMANO ID: " + manoId + "\nMANO TYPE: " + type);
 
@@ -339,7 +343,7 @@ public class PluginsManager {
             targetOsmMano.isValid();
             log.debug("Persisting OSM MANO with manoId: " + manoId);
             OSMMano createdMano = MANORepository.saveAndFlush(targetOsmMano);
-            log.debug("OSM MANO with manoId " + manoId + " sucessfully persisted");
+            log.debug("OSM MANO with manoId " + manoId + " successfully persisted");
             log.debug("Instantiating OSM MANO with manoId: " + manoId);
             try {
                 addMANO(createdMano);
@@ -353,7 +357,7 @@ public class PluginsManager {
             DummyMano dummyMano = (DummyMano) mano;
             log.debug("Persisting DUMMY MANO with manoId: " + manoId);
             DummyMano createdMano = MANORepository.saveAndFlush(dummyMano);
-            log.debug("DUMMY MANO with manoId " + manoId + " sucessfully persisted");
+            log.debug("DUMMY MANO with manoId " + manoId + " successfully persisted");
             log.debug("Instantiating DUMMY MANO with manoId: " + manoId);
             try {
                 addMANO(createdMano);
@@ -519,6 +523,9 @@ public class PluginsManager {
         }
 
         log.debug("Persisting 5G Catalogue with catalogueId: " + catalogueId);
+        if (catalogue.getPluginOperationalState() == null) {
+            catalogue.setPluginOperationalState(PluginOperationalState.ENABLED);
+        }
         Catalogue createdCatalogue = catalogueRepository.saveAndFlush(catalogue);
         log.debug("5G Catalogue with catalogueId " + catalogueId + " sucessfully persisted");
 

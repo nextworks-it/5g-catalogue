@@ -19,6 +19,7 @@ import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
 import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
 import it.nextworks.nfvmano.catalogue.messages.*;
 import it.nextworks.nfvmano.catalogue.messages.elements.ScopeType;
+import it.nextworks.nfvmano.catalogue.plugins.PluginOperationalState;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
@@ -57,16 +58,29 @@ public class DummyMANOPlugin extends MANOPlugin {
     @Override
     public void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) {
         if (notification.getScope() == ScopeType.LOCAL) {
-            log.info("Received NSD onboarding notification");
-            log.debug("Body: {}", notification);
-            NsdOnBoardingNotificationMessage response = new NsdOnBoardingNotificationMessage(
-                    notification.getNsdInfoId(),
-                    notification.getNsdId(),
-                    notification.getOperationId(),
-                    ScopeType.REMOTE,
-                    OperationStatus.SUCCESSFULLY_DONE,
-                    mano.getManoId()
-            );
+            NsdOnBoardingNotificationMessage response;
+            if (this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
+                log.info("Received NSD onboarding notification");
+                log.debug("Body: {}", notification);
+                response = new NsdOnBoardingNotificationMessage(
+                        notification.getNsdInfoId(),
+                        notification.getNsdId(),
+                        notification.getOperationId(),
+                        ScopeType.REMOTE,
+                        OperationStatus.SUCCESSFULLY_DONE,
+                        mano.getManoId()
+                );
+            } else {
+                log.info("Skipping NSD onboarding notification");
+                response = new NsdOnBoardingNotificationMessage(
+                        notification.getNsdInfoId(),
+                        notification.getNsdId(),
+                        notification.getOperationId(),
+                        ScopeType.REMOTE,
+                        OperationStatus.RECEIVED,
+                        mano.getManoId()
+                );
+            }
             sendNotification(response);
             log.debug("NsdOnBoardingNotification sent to NotificationManager");
         }
@@ -83,16 +97,29 @@ public class DummyMANOPlugin extends MANOPlugin {
     @Override
     public void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification) {
         if (notification.getScope() == ScopeType.LOCAL) {
-            log.info("Received NSD deletion notification");
-            log.debug("Body: {}", notification);
-            NsdDeletionNotificationMessage response = new NsdDeletionNotificationMessage(
-                    notification.getNsdInfoId(),
-                    notification.getNsdId(),
-                    notification.getOperationId(),
-                    ScopeType.REMOTE,
-                    OperationStatus.SUCCESSFULLY_DONE,
-                    mano.getManoId()
-            );
+            NsdDeletionNotificationMessage response;
+            if (this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
+                log.info("Received NSD deletion notification");
+                log.debug("Body: {}", notification);
+                response = new NsdDeletionNotificationMessage(
+                        notification.getNsdInfoId(),
+                        notification.getNsdId(),
+                        notification.getOperationId(),
+                        ScopeType.REMOTE,
+                        OperationStatus.SUCCESSFULLY_DONE,
+                        mano.getManoId()
+                );
+            } else {
+                log.info("Skipping NSD deletion notification");
+                response = new NsdDeletionNotificationMessage(
+                        notification.getNsdInfoId(),
+                        notification.getNsdId(),
+                        notification.getOperationId(),
+                        ScopeType.REMOTE,
+                        OperationStatus.RECEIVED,
+                        mano.getManoId()
+                );
+            }
             sendNotification(response);
             log.debug("NsdDeletionNotification sent to NotificationManager");
         }
@@ -101,16 +128,29 @@ public class DummyMANOPlugin extends MANOPlugin {
     @Override
     public void acceptPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
         if (notification.getScope() == ScopeType.LOCAL) {
-            log.info("Received PNFD onboarding notification");
-            log.debug("Body: {}", notification);
-            PnfdOnBoardingNotificationMessage response = new PnfdOnBoardingNotificationMessage(
-                    notification.getPnfdInfoId(),
-                    notification.getPnfdId(),
-                    notification.getOperationId(),
-                    ScopeType.REMOTE,
-                    OperationStatus.SUCCESSFULLY_DONE,
-                    mano.getManoId()
-            );
+            PnfdOnBoardingNotificationMessage response;
+            if (this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
+                log.info("Received PNFD onboarding notification");
+                log.debug("Body: {}", notification);
+                response = new PnfdOnBoardingNotificationMessage(
+                        notification.getPnfdInfoId(),
+                        notification.getPnfdId(),
+                        notification.getOperationId(),
+                        ScopeType.REMOTE,
+                        OperationStatus.SUCCESSFULLY_DONE,
+                        mano.getManoId()
+                );
+            } else {
+                log.info("Skipping PNFD onboarding notification");
+                response = new PnfdOnBoardingNotificationMessage(
+                        notification.getPnfdInfoId(),
+                        notification.getPnfdId(),
+                        notification.getOperationId(),
+                        ScopeType.REMOTE,
+                        OperationStatus.RECEIVED,
+                        mano.getManoId()
+                );
+            }
             sendNotification(response);
             log.debug("PnfdOnBoardingNotification sent to NotificationManager");
         }
@@ -119,16 +159,29 @@ public class DummyMANOPlugin extends MANOPlugin {
     @Override
     public void acceptPnfdDeletionNotification(PnfdDeletionNotificationMessage notification) throws MethodNotImplementedException {
         if (notification.getScope() == ScopeType.LOCAL) {
-            log.info("Received PNFD deletion notification");
-            log.debug("Body: {}", notification);
-            PnfdDeletionNotificationMessage response = new PnfdDeletionNotificationMessage(
-                    notification.getPnfdInfoId(),
-                    notification.getPnfdId(),
-                    notification.getOperationId(),
-                    ScopeType.REMOTE,
-                    OperationStatus.SUCCESSFULLY_DONE,
-                    mano.getManoId()
-            );
+            PnfdDeletionNotificationMessage response;
+            if (this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
+                log.info("Received PNFD deletion notification");
+                log.debug("Body: {}", notification);
+                response = new PnfdDeletionNotificationMessage(
+                        notification.getPnfdInfoId(),
+                        notification.getPnfdId(),
+                        notification.getOperationId(),
+                        ScopeType.REMOTE,
+                        OperationStatus.SUCCESSFULLY_DONE,
+                        mano.getManoId()
+                );
+            } else {
+                log.info("Skipping PNFD deletion notification");
+                response = new PnfdDeletionNotificationMessage(
+                        notification.getPnfdInfoId(),
+                        notification.getPnfdId(),
+                        notification.getOperationId(),
+                        ScopeType.REMOTE,
+                        OperationStatus.RECEIVED,
+                        mano.getManoId()
+                );
+            }
             sendNotification(response);
             log.debug("PnfdDeletionNotification sent to NotificationManager");
         }
@@ -137,16 +190,29 @@ public class DummyMANOPlugin extends MANOPlugin {
     @Override
     public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) {
         if (notification.getScope() == ScopeType.LOCAL) {
-            log.info("Received VNF Pkg onboarding notification");
-            log.debug("Body: {}", notification);
-            VnfPkgOnBoardingNotificationMessage response = new VnfPkgOnBoardingNotificationMessage(
-                    notification.getVnfPkgInfoId(),
-                    notification.getVnfdId(),
-                    notification.getOperationId(),
-                    ScopeType.REMOTE,
-                    OperationStatus.SUCCESSFULLY_DONE,
-                    mano.getManoId()
-            );
+            VnfPkgOnBoardingNotificationMessage response;
+            if (this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
+                log.info("Received VNF Pkg onboarding notification");
+                log.debug("Body: {}", notification);
+                response = new VnfPkgOnBoardingNotificationMessage(
+                        notification.getVnfPkgInfoId(),
+                        notification.getVnfdId(),
+                        notification.getOperationId(),
+                        ScopeType.REMOTE,
+                        OperationStatus.SUCCESSFULLY_DONE,
+                        mano.getManoId()
+                );
+            } else {
+                log.info("Skipped VNF Pkg onboarding notification");
+                response = new VnfPkgOnBoardingNotificationMessage(
+                        notification.getVnfPkgInfoId(),
+                        notification.getVnfdId(),
+                        notification.getOperationId(),
+                        ScopeType.REMOTE,
+                        OperationStatus.RECEIVED,
+                        mano.getManoId()
+                );
+            }
             sendNotification(response);
             log.debug("VnfPkgOnBoardingNotification sent to NotificationManager");
         }
@@ -163,16 +229,29 @@ public class DummyMANOPlugin extends MANOPlugin {
     @Override
     public void acceptVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) {
         if (notification.getScope() == ScopeType.LOCAL) {
-            log.info("Received VNF Pkg deletion notification");
-            log.debug("Body: {}", notification);
-            VnfPkgDeletionNotificationMessage response = new VnfPkgDeletionNotificationMessage(
-                    notification.getVnfPkgInfoId(),
-                    notification.getVnfdId(),
-                    notification.getOperationId(),
-                    ScopeType.REMOTE,
-                    OperationStatus.SUCCESSFULLY_DONE,
-                    mano.getManoId()
-            );
+            VnfPkgDeletionNotificationMessage response;
+            if (this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
+                log.info("Received VNF Pkg deletion notification");
+                log.debug("Body: {}", notification);
+                response = new VnfPkgDeletionNotificationMessage(
+                        notification.getVnfPkgInfoId(),
+                        notification.getVnfdId(),
+                        notification.getOperationId(),
+                        ScopeType.REMOTE,
+                        OperationStatus.SUCCESSFULLY_DONE,
+                        mano.getManoId()
+                );
+            } else {
+                log.info("Skipped VNF Pkg deletion notification");
+                response = new VnfPkgDeletionNotificationMessage(
+                        notification.getVnfPkgInfoId(),
+                        notification.getVnfdId(),
+                        notification.getOperationId(),
+                        ScopeType.REMOTE,
+                        OperationStatus.RECEIVED,
+                        mano.getManoId()
+                );
+            }
             sendNotification(response);
             log.debug("VnfPkgDeletionNotification sent to NotificationManager");
         }
