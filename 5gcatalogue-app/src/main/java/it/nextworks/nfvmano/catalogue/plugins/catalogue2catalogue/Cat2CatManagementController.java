@@ -44,6 +44,8 @@ public class Cat2CatManagementController {
             createdCatalogueId = pluginsManager.create5GCatalogue(catalogue, false);
         } catch (AlreadyExistingEntityException e) {
             return new ResponseEntity<String>("5G Catalogue already present in DB", HttpStatus.CONFLICT);
+        } catch (FailedOperationException e) {
+            return new ResponseEntity<String>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
 
         return new ResponseEntity<String>(createdCatalogueId, HttpStatus.CREATED);

@@ -195,7 +195,7 @@ function readZipFile(file, containerId, resId) {
 	}
 }
 
-function openTextFile(event, container) {
+function openTextFile(event, containerId) {
 	var file = event.target.files[0];
 	console.log("File: " + file);
 	if (!file) {
@@ -204,6 +204,8 @@ function openTextFile(event, container) {
 	}
 	//console.log("type = " + f.type);
 	var reader = new FileReader();
+
+	var container = document.getElementById(containerId);
 
 	reader.onload = function(event) {
 		console.log("File read: " + event.target.result);
