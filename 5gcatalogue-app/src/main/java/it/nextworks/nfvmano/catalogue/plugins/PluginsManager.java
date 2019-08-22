@@ -76,6 +76,9 @@ public class PluginsManager {
     @Value("${catalogue.skipMANOPluginsConfig}")
     private boolean skipMANOConfig;
 
+    @Value("${catalogue.skipDescriptorsLoad}")
+    private boolean skipDescriptorsLoad;
+
     @Value("${kafkatopic.local}")
     private String localNotificationTopic;
 
@@ -500,7 +503,8 @@ public class PluginsManager {
                 vnfPkgInfoRepository,
                 localNotificationTopic,
                 remoteNotificationTopic,
-                kafkaTemplate
+                kafkaTemplate,
+                skipDescriptorsLoad
         );
     }
 

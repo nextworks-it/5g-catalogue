@@ -66,6 +66,7 @@ public class CataloguePlugin extends Plugin
     protected KafkaTemplate<String, String> kafkaTemplate;
     private Catalogue catalogue;
     private String remoteTopic;
+    private boolean skipDescriptorsLoad;
 
     public CataloguePlugin(String pluginId, PluginType pluginType) {
         super(pluginId, pluginType);
@@ -81,7 +82,8 @@ public class CataloguePlugin extends Plugin
                            VnfPkgInfoRepository vnfPkgInfoRepository,
                            String localTopic,
                            String remoteTopic,
-                           KafkaTemplate<String, String> kafkaTemplate) {
+                           KafkaTemplate<String, String> kafkaTemplate,
+                           boolean skipDescriptorsLoad) {
         super(pluginId, pluginType);
         this.catalogue = catalogue;
         this.nsdService = nsdService;
@@ -92,6 +94,7 @@ public class CataloguePlugin extends Plugin
         this.pnfdInfoRepository = pnfdInfoRepository;
         this.vnfPkgInfoRepository = vnfPkgInfoRepository;
         this.remoteTopic = remoteTopic;
+        this.skipDescriptorsLoad = skipDescriptorsLoad;
         String connectorID = "5GCATALOGUE_" + catalogue.getCatalogueId(); // assuming it's unique among Catalogues
         Map<CatalogueMessageType, Consumer<CatalogueMessage>> functor = new HashMap<>();
         functor.put(
@@ -712,10 +715,12 @@ public class CataloguePlugin extends Plugin
         this.setPluginOperationalState(PluginOperationalState.ENABLED);
         connector.init();
 
-        try {
-            loadPublicCatalogueContent();
-        } catch (FailedOperationException e) {
-            log.error("Failure while loading contents from public 5G Catalogue " + catalogue.getCatalogueId());
+        if (!skipDescriptorsLoad) {
+            try {
+                loadPublicCatalogueContent();
+            } catch (FailedOperationException e) {
+                log.error("Failure while loading contents from public 5G Catalogue " + catalogue.getCatalogueId());
+            }
         }
     }
 
