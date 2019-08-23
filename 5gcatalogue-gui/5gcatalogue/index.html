@@ -116,14 +116,14 @@
   <script>
     var project = getCookie("PROJECT");
 
-    if (project == null) {
+    /*if (project == null) {
       refresh(false);
-    } else {
+    } else {*/
       console.log("PROJECT: " + project);
       getAllNsdInfos("count-NSD", fillNSDsCounter, "response");
       getAllVnfInfos("count-VNF", fillVNFsCounter, "response");
       getAllPnfdInfos("count-PNFD", fillPNFDsCounter, "response");
-    }
+    //}
   </script>
   
   <!--<script>getAllNsdInfos("count-NSD", fillNSDsCounter, "response");</script>
