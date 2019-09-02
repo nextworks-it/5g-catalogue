@@ -3,10 +3,14 @@ package it.nextworks.nfvmano.catalogue.auth;
 import org.apache.commons.codec.binary.Base64;
 import org.keycloak.KeycloakPrincipal;
 import org.keycloak.KeycloakSecurityContext;
+import org.keycloak.representations.AccessToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class AuthUtilities {
 
@@ -51,5 +55,23 @@ public class AuthUtilities {
         }
 
         return userName;
+    }
+
+    public static AccessToken getJWT() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        AccessToken token = null;
+
+        if (authentication.getPrincipal() instanceof KeycloakPrincipal) {
+            KeycloakPrincipal<KeycloakSecurityContext> kp = (KeycloakPrincipal<KeycloakSecurityContext>) authentication.getPrincipal();
+            // retrieving username here
+            token = kp.getKeycloakSecurityContext().getToken();
+        }
+
+        return token;
+    }
+
+    public static String parseAuthorizationHeader(String authorization) {
+        return authorization.split(" ")[1];
     }
 }

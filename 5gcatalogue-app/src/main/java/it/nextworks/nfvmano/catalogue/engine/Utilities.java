@@ -21,7 +21,7 @@ public class Utilities {
 
     private static final Logger log = LoggerFactory.getLogger(Utilities.class);
 
-    protected static boolean checkUserProjects(UserRepository userRepository, String userName, String projectId) throws NotExistingEntityException {
+    public static boolean checkUserProjects(UserRepository userRepository, String userName, String projectId) throws NotExistingEntityException {
 
         Optional<UserResource> optional = userRepository.findByUserName(userName);
 
@@ -42,7 +42,7 @@ public class Utilities {
         return false;
     }
 
-    protected static void checkZipArchive(MultipartFile vnfPkg) throws FailedOperationException {
+    public static void checkZipArchive(MultipartFile vnfPkg) throws FailedOperationException {
 
         byte[] bytes = new byte[0];
         try {
@@ -69,7 +69,7 @@ public class Utilities {
         }
     }
 
-    protected static File convertToFile(MultipartFile multipart) throws Exception {
+    public static File convertToFile(MultipartFile multipart) throws Exception {
         File convFile = new File(multipart.getOriginalFilename());
         convFile.createNewFile();
         FileOutputStream fos = new FileOutputStream(convFile);
@@ -79,7 +79,7 @@ public class Utilities {
     }
 
     @SuppressWarnings("resource")
-    protected static MultipartFile extractFile(File file) throws IOException {
+    public static MultipartFile extractFile(File file) throws IOException {
 
         MultipartFile archived = null;
 
