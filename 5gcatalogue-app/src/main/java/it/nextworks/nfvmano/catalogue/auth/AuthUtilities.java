@@ -9,9 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public class AuthUtilities {
 
     private static final Logger log = LoggerFactory.getLogger(AuthUtilities.class);

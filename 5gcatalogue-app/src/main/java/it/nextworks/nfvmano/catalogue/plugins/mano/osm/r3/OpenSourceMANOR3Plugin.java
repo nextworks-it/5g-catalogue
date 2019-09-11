@@ -356,7 +356,7 @@ public class OpenSourceMANOR3Plugin extends MANOPlugin {
                             notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
                             osm.getManoId()));
                 }
-            } else  {
+            } else {
                 if (this.getPluginOperationalState() == PluginOperationalState.DISABLED || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
                     log.debug("VNF Pkg deletion skipped");
                     sendNotification(new VnfPkgDeletionNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(),

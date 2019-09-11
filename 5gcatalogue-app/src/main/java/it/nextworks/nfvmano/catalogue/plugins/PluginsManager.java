@@ -133,6 +133,9 @@ public class PluginsManager {
     @Autowired
     private VnfPkgInfoRepository vnfPkgInfoRepository;
 
+    @Autowired
+    private  UserRepository userRepository;
+
     public PluginsManager() {
 
     }
@@ -202,7 +205,7 @@ public class PluginsManager {
                         addMANO(mano);
                         log.debug("MANO with manoId " + mano.getManoId() + " successfully instantiated");
                     } else {
-                        log.debug("Found MANO with manoId " + mano.getManoId() +  " in DELETING state: removing it");
+                        log.debug("Found MANO with manoId " + mano.getManoId() + " in DELETING state: removing it");
                         MANORepository.deleteById(mano.getId());
                         log.debug("MANO with manoId " + mano.getManoId() + " successfully deleted");
                     }
@@ -231,7 +234,7 @@ public class PluginsManager {
                         create5GCatalogue(catalogue, true);
                         log.debug("Catalogue with catalogueId " + catalogue.getCatalogueId() + " successfully instantiated");
                     } else {
-                        log.debug("Found Catalogue with catalogueId " + catalogue.getCatalogueId() +  " in DELETING state: removing it");
+                        log.debug("Found Catalogue with catalogueId " + catalogue.getCatalogueId() + " in DELETING state: removing it");
                         catalogueRepository.deleteById(catalogue.getId());
                         log.debug("Catalogue with catalogueId " + catalogue.getCatalogueId() + " successfully deleted");
                     }
@@ -411,7 +414,7 @@ public class PluginsManager {
             manoInfo = optionalMANO.get();
 
             if (manoInfo.getPluginOperationalState() == mano.getPluginOperationalState()) {
-                throw new FailedOperationException("MANO Plugin with manoId " +  manoId + " already in " + manoInfo.getPluginOperationalState() + " operational state");
+                throw new FailedOperationException("MANO Plugin with manoId " + manoId + " already in " + manoInfo.getPluginOperationalState() + " operational state");
             } else {
                 manoInfo.setPluginOperationalState(mano.getPluginOperationalState());
                 MANORepository.saveAndFlush(manoInfo);
@@ -506,6 +509,7 @@ public class PluginsManager {
                 nsdInfoRepo,
                 pnfdInfoRepo,
                 vnfPkgInfoRepository,
+                userRepository,
                 localNotificationTopic,
                 remoteNotificationTopic,
                 kafkaTemplate,
@@ -576,7 +580,7 @@ public class PluginsManager {
             catalogueInfo = optionalCatalogue.get();
 
             if (catalogueInfo.getPluginOperationalState() == catalogue.getPluginOperationalState()) {
-                throw new FailedOperationException("Catalogue Plugin with catalogueId " +  catalogueId + " already in " + catalogueInfo.getPluginOperationalState() + " operational state");
+                throw new FailedOperationException("Catalogue Plugin with catalogueId " + catalogueId + " already in " + catalogueInfo.getPluginOperationalState() + " operational state");
             } else {
                 catalogueInfo.setPluginOperationalState(catalogue.getPluginOperationalState());
                 catalogueRepository.saveAndFlush(catalogueInfo);
