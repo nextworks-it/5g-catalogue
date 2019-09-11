@@ -30,6 +30,7 @@ import javax.persistence.Id;
 @JsonSubTypes({@JsonSubTypes.Type(value = OSMMano.class, name = "OSMR3"),
         @JsonSubTypes.Type(value = OSMMano.class, name = "OSMR4"),
         @JsonSubTypes.Type(value = OSMMano.class, name = "OSMR5"),
+        @JsonSubTypes.Type(value = OSMMano.class, name = "OSMR6"),
         @JsonSubTypes.Type(value = DummyMano.class, name = "DUMMY")})
 public abstract class MANO {
 
