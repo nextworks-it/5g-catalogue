@@ -78,7 +78,7 @@ public class OpenSourceMANOR4Plugin extends MANOPlugin {
                                   MANORepository MANORepository, String localTopic, String remoteTopic,
                                   KafkaTemplate<String, String> kafkaTemplate, Path osmDirPath, Path logoPath) {
         super(manoType, mano, kafkaBootstrapServers, nsdService, vnfdService, descriptorsParser, localTopic, remoteTopic, kafkaTemplate);
-        if (MANOType.OSMR4 != manoType && MANOType.OSMR5 != manoType) {
+        if (MANOType.OSMR4 != manoType && MANOType.OSMR5 != manoType && MANOType.OSMR6 != manoType) {
             throw new IllegalArgumentException("OSM R4 plugin requires an OSM R4 type MANO");
         }
         osm = (OSMMano) mano;

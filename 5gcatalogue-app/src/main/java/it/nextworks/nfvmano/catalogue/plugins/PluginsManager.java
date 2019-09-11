@@ -307,7 +307,7 @@ public class PluginsManager {
         } else if (mano.getManoType().equals(MANOType.OSMR3)) {
             return new OpenSourceMANOR3Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, descriptorsParser,
                     localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr3Dir, logo);
-        } else if (mano.getManoType().equals(MANOType.OSMR4) || mano.getManoType().equals(MANOType.OSMR5)) {
+        } else if (mano.getManoType().equals(MANOType.OSMR4) || mano.getManoType().equals(MANOType.OSMR5) || mano.getManoType().equals(MANOType.OSMR6)) {
             return new OpenSourceMANOR4Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, descriptorsParser,
                     MANORepository, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr4Dir, logo);
         } else {
@@ -331,7 +331,7 @@ public class PluginsManager {
         MANOType type = mano.getManoType();
         log.debug("RECEIVED MANO:\nMANO ID: " + manoId + "\nMANO TYPE: " + type);
 
-        if (type == MANOType.OSMR3 || type == MANOType.OSMR4 || type == MANOType.OSMR5) {
+        if (type == MANOType.OSMR3 || type == MANOType.OSMR4 || type == MANOType.OSMR5 || type == MANOType.OSMR6) {
             log.debug("Processing request for creating " + type + "Plugin");
             OSMMano osmMano = (OSMMano) mano;
             OSMMano targetOsmMano = new OSMMano(
@@ -509,7 +509,6 @@ public class PluginsManager {
                 nsdInfoRepo,
                 pnfdInfoRepo,
                 vnfPkgInfoRepository,
-                userRepository,
                 localNotificationTopic,
                 remoteNotificationTopic,
                 kafkaTemplate,

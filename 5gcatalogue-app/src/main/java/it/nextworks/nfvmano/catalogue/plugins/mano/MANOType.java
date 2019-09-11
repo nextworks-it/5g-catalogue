@@ -16,5 +16,5 @@
 package it.nextworks.nfvmano.catalogue.plugins.mano;
 
 public enum MANOType {
-    OSMR3, OSMR4, OSMR5, TIMEO, DUMMY
+    OSMR3, OSMR4, OSMR5, OSMR6, TIMEO, DUMMY
 }
