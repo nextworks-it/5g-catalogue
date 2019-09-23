@@ -25,7 +25,7 @@ import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.api.nsd.Defaul
 import it.nextworks.nfvmano.catalogue.plugins.mano.*;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.OpenSourceMANOR3Plugin;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r4.OpenSourceMANOR4Plugin;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r4plus.OpenSourceMANOR4PlusPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.vim.VIM;
 import it.nextworks.nfvmano.catalogue.repos.*;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
@@ -48,6 +48,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 @Service
@@ -88,12 +89,13 @@ public class PluginsManager {
     @Value("${catalogue.defaultMANOType}")
     private String defaultManoType;
 
-    @Value("${catalogue.osmr3.localDir}")
-    private Path osmr3Dir;
+    @Value("${catalogue.osm.localDir}")
+    private String osmDir;
 
+    /*
     @Value("${catalogue.osmr4.localDir}")
     private Path osmr4Dir;
-
+*/
     @Value("${catalogue.logo}")
     private Path logo;
 
@@ -305,11 +307,13 @@ public class PluginsManager {
             return new DummyMANOPlugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, descriptorsParser,
                     localNotificationTopic, remoteNotificationTopic, kafkaTemplate);
         } else if (mano.getManoType().equals(MANOType.OSMR3)) {
+            Path osmr3Dir = Paths.get(osmDir, "/" + MANOType.OSMR3.toString().toLowerCase());
             return new OpenSourceMANOR3Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, descriptorsParser,
                     localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr3Dir, logo);
         } else if (mano.getManoType().equals(MANOType.OSMR4) || mano.getManoType().equals(MANOType.OSMR5) || mano.getManoType().equals(MANOType.OSMR6)) {
-            return new OpenSourceMANOR4Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, descriptorsParser,
-                    MANORepository, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr4Dir, logo);
+            Path osmr4PlusDir = Paths.get(osmDir, "/" + mano.getManoType().toString().toLowerCase());
+            return new OpenSourceMANOR4PlusPlugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, descriptorsParser,
+                    MANORepository, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr4PlusDir, logo);
         } else {
             throw new MalformattedElementException("Unsupported MANO type. Skipping");
         }

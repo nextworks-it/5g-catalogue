@@ -3,7 +3,7 @@ package it.nextworks.nfvmano.catalogue.plugins.mano.osm.common.vnfDescriptor;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.nextworks.nfvmano.libs.osmr4Client.nsdManagement.elements.KeyValuePairs;
+import it.nextworks.nfvmano.libs.osmr4PlusClient.nsdManagement.elements.KeyValuePairs;
 
 import java.util.HashMap;
 import java.util.List;
