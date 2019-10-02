@@ -9,6 +9,14 @@
 - hosts: ansible_test
   remote_user: ubuntu
   tasks:
+  - name: remove 5gcatalogue folder
+    file: 
+      path: /opt/5gcatalogue
+      state: absent
+  - name: remove nf-sol-libs folder
+    file: 
+      path: /opt/nfv-sol-libs
+      state: absent
   - name: creating 5gcatalogue folder
     file:
       path: /opt/5gcatalogue
@@ -41,28 +49,103 @@
       name: cataloguedb
       owner: postgres
     become_user: postgres
+
+  - name: remove pom
+    become: yes
+    file:
+      path: /opt/nfv-sol-libs/NFV_MANO_SOL001_LIBS_COMMON/pom.xml
+      state: absent
+  - name: Copy file with owner and permissions
+    copy:
+      src: files/pom.xml
+      dest: /opt/nfv-sol-libs/NFV_MANO_SOL001_LIBS_COMMON/pom.xml
+      owner: ubuntu
+      group: ubuntu
+      mode: '0644'
+
+#  - name: Install PIP
+#    apt: name=python-pip state=present
+#  - name: Install lxml
+#    pip: name=lxml
+#  - name: Modify pom attributes COMMON - arifactId
+#    become: yes
+#    xml:
+#      path: /opt/nfv-sol-libs/NFV_MANO_SOL001_LIBS_COMMON/pom.xml
+#      xpath:  /x:project/build/plugins/plugin/*
+#      namespaces:
+#          x: "http://maven.apache.org/POM/4.0.0"
+#      state: absent
+#  - name: Modify pom attributes COMMON - version
+#    xml:
+#      path: /opt/nfv-sol-libs/NFV_MANO_SOL001_LIBS_COMMON/pom.xml
+#      xpath:  /x:project/build/plugins/plugin
+#      namespaces:
+#          x: "http://maven.apache.org/POM/4.0.0"
+#      add_children:
+#      - artifactId: maven-jar-plugin
+#      - version: 3.0.2    
   - name: BUILDING NFV-LIB DEPENDENCIES...COMMON
     remote_user: ubuntu
     shell: /opt/apache-maven-3.6.2/bin/mvn clean install  
     args:
       chdir: /opt/nfv-sol-libs/NFV_MANO_SOL001_LIBS_COMMON
+
+
+  - name: remove pom
+    become: yes
+    file:
+      path: /opt/nfv-sol-libs/NFV_MANO_SOL001_LIBS_DESCRIPTORS/pom.xml
+      state: absent
+  - name: Copy file with owner and permissions
+    copy:
+      src: files/descriptors_pom.xml
+      dest: /opt/nfv-sol-libs/NFV_MANO_SOL001_LIBS_DESCRIPTORS/pom.xml
+      owner: ubuntu
+      group: ubuntu
+      mode: '0644'
   - name: BUILDING NFV-LIB DEPENDENCIES...DESCRIPTORS
     remote_user: ubuntu
     shell: mvn clean install
     args: 
       chdir: /opt/nfv-sol-libs/NFV_MANO_SOL001_LIBS_DESCRIPTORS
-  - name:  BUILDING OSM R4 CLIENT...
+
+#  - name: remove pom
+#    become: yes
+#    file:
+#      path: /opt/5gcatalogue/OSMr4Client/pom.xml
+#      state: absent
+#  - name: Copy file with owner and permissions
+#    copy:
+#      src: files/pom.xml
+#      dest: /opt/5gcatalogue/OSMr4Client/pom.xml
+#      owner: ubuntu
+#      group: ubuntu
+#      mode: '0644'
+  - name: BUILDING OSMR4CLIENT
     remote_user: ubuntu
-    shell: /opt/apache-maven-3.3.9/bin/mvn clean install
+    shell: /opt/apache-maven-3.6.2/bin/mvn clean install
     args: 
       chdir: /opt/5gcatalogue/OSMr4Client
+
+#  - name: remove pom
+#    become: yes
+#    file:
+#      path: /opt/5gcatalogue/5gcatalogue-app/pom.xml
+#      state: absent
+#  - name: Copy file with owner and permissions
+#    copy:
+#      src: files/pom.xml
+#      dest: /opt/5gcatalogue/5gcatalogue-app/pom.xml
+#      owner: ubuntu
+#      group: ubuntu
+#      mode: '0644'
   - name: COMPILING 5G APPs & SERVICEs CATALOGUE
     remote_user: ubuntu
-    shell:  /opt/apache-maven-3.3.9/bin/mvn clean package
+    shell:  /opt/apache-maven-3.6.2/bin/mvn clean package
     args:
       chdir: /opt/5gcatalogue/5gcatalogue-app
   - name: RUNNING 5G APPs & SERVICEs CATALOGUE
     remote_user: ubuntu
-    shell:  nohup /opt/apache-maven-3.3.9/bin/mvn spring-boot:run &
+    shell:  nohup /opt/apache-maven-3.6.2/bin/mvn spring-boot:run &
     args:
       chdir: /opt/5gcatalogue/5gcatalogue-app
