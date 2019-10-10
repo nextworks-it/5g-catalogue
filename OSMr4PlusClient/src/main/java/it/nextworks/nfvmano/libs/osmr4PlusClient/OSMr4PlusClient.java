@@ -113,7 +113,7 @@ public class OSMr4PlusClient implements OSMManagementInterface, NSDManagementInt
         TokenRequest tokenReq = new TokenRequest(user, password, project);
 
         String url = "https://" + osmIPAddress + ":9999/osm" + osmManagement + "/tokens";
-        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, tokenReq);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, tokenReq, null);
     }
 
     /* NSDManagementInterface */
@@ -135,7 +135,7 @@ public class OSMr4PlusClient implements OSMManagementInterface, NSDManagementInt
         CreateNsdInfoRequest body = new CreateNsdInfoRequest();
 
         String url = "https://" + osmIPAddress + ":9999/osm" + nsdManagement + "/ns_descriptors";
-        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.POST, headers, body);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.POST, headers, body, null);
     }
 
     /**
@@ -155,7 +155,7 @@ public class OSMr4PlusClient implements OSMManagementInterface, NSDManagementInt
         headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + nsdManagement + "/ns_descriptors/" + nsdInfoId + "/nsd_content";
-        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.PUT, headers, content);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.PUT, headers, content, null);
     }
 
     /**
@@ -173,7 +173,7 @@ public class OSMr4PlusClient implements OSMManagementInterface, NSDManagementInt
         headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + nsdManagement + "/ns_descriptors/" + nsdInfoId + "/nsd";
-        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null, null);
     }
 
     /**
@@ -191,7 +191,7 @@ public class OSMr4PlusClient implements OSMManagementInterface, NSDManagementInt
         headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + nsdManagement + "/ns_descriptors/" + nsdInfoId;
-        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.DELETE, headers, null);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.DELETE, headers, null, null);
     }
 
     /**
@@ -200,7 +200,7 @@ public class OSMr4PlusClient implements OSMManagementInterface, NSDManagementInt
      * @return OSMHttpResponse containing the local path of the downloaded zip file
      */
     @Override
-    public OSMHttpResponse getNsdContent(String nsdInfoId){
+    public OSMHttpResponse getNsdContent(String nsdInfoId, String storagePath){
 
         verifyToken();
 
@@ -210,7 +210,7 @@ public class OSMr4PlusClient implements OSMManagementInterface, NSDManagementInt
 
         String url = "https://" + osmIPAddress + ":9999/osm" + nsdManagement + "/ns_descriptors/" + nsdInfoId + "/nsd_content";
 
-        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null, storagePath);
     }
 
     /**
@@ -228,7 +228,7 @@ public class OSMr4PlusClient implements OSMManagementInterface, NSDManagementInt
         headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + nsdManagement + "/ns_descriptors/" + nsdInfoId;
-        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null, null);
     }
 
     /**
@@ -245,7 +245,7 @@ public class OSMr4PlusClient implements OSMManagementInterface, NSDManagementInt
         headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + nsdManagement + "/ns_descriptors";
-        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null, null);
     }
 
     /* VNFDManagementInterface */
@@ -267,7 +267,7 @@ public class OSMr4PlusClient implements OSMManagementInterface, NSDManagementInt
         CreateVnfPkgInfoRequest body = new CreateVnfPkgInfoRequest();
 
         String url = "https://" + osmIPAddress + ":9999/osm" + vnfdManagement + "/vnf_packages";
-        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.POST, headers, body);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.POST, headers, body, null);
     }
 
     /**
@@ -287,7 +287,7 @@ public class OSMr4PlusClient implements OSMManagementInterface, NSDManagementInt
         headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + vnfdManagement + "/vnf_packages/" + vnfPkgId + "/package_content";
-        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.PUT, headers, content);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.PUT, headers, content, null);
     }
 
     /**
@@ -305,7 +305,7 @@ public class OSMr4PlusClient implements OSMManagementInterface, NSDManagementInt
         headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + vnfdManagement + "/vnf_packages/" + vnfPkgId + "/vnfd";
-        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null, null);
     }
 
     /**
@@ -323,7 +323,7 @@ public class OSMr4PlusClient implements OSMManagementInterface, NSDManagementInt
         headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + vnfdManagement + "/vnf_packages/" + vnfPkgId;
-        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.DELETE, headers, null);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.DELETE, headers, null, null);
     }
 
     /**
@@ -332,7 +332,7 @@ public class OSMr4PlusClient implements OSMManagementInterface, NSDManagementInt
      * @return OSMHttpResponse containing the local path of the downloaded zip file
      */
     @Override
-    public OSMHttpResponse getVnfPackageContent(String vnfPkgId){
+    public OSMHttpResponse getVnfPackageContent(String vnfPkgId, String storagePath){
 
         verifyToken();
 
@@ -342,7 +342,7 @@ public class OSMr4PlusClient implements OSMManagementInterface, NSDManagementInt
 
         String url = "https://" + osmIPAddress + ":9999/osm" + vnfdManagement + "/vnf_packages/" + vnfPkgId + "/package_content";
 
-        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null, storagePath);
     }
 
     /**
@@ -360,7 +360,7 @@ public class OSMr4PlusClient implements OSMManagementInterface, NSDManagementInt
         headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + vnfdManagement + "/vnf_packages/" + vnfPkgId;
-        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null, null);
     }
 
     /**
@@ -377,7 +377,7 @@ public class OSMr4PlusClient implements OSMManagementInterface, NSDManagementInt
         headers.add(new BasicHeader("Authorization", "Bearer " + validToken.getId()));
 
         String url = "https://" + osmIPAddress + ":9999/osm" + vnfdManagement + "/vnf_packages";
-        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null);
+        return OSMHttpConnection.establishOSMHttpConnection(url, OSMHttpConnection.OSMHttpMethod.GET, headers, null, null);
     }
 }
 

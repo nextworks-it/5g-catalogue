@@ -1,8 +1,9 @@
 {
   "manoId": "NXW_OSMR6",
   "manoType": "OSMR6",
+  "manoSite": "FIVEGEVE_FRANCE",
   "pluginOperationalState": "ENABLED",
-  "ipAddress": "10.10.7.50",
+  "ipAddress": "10.20.7.25",
   "username": "admin",
   "password": "admin",
   "project": "admin",

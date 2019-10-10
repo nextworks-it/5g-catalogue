@@ -107,17 +107,22 @@
             <version>2.0.8</version>
         </dependency>
 
-        <!-- NFV SOL libs dependencies -->
         <dependency>
-            <groupId>it.nextworks.nfvmano</groupId>
-            <artifactId>NfvManoLibsSol001Common</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <groupId>it.nextworks.nfvmano.catalogue</groupId>
+            <artifactId>CatalogueNotification</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
-            <groupId>it.nextworks.nfvmano</groupId>
-            <artifactId>NfvManoLibsSol001Descriptors</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <groupId>it.nextworks.nfvmano.catalogue.plugins</groupId>
+            <artifactId>CataloguePlugin</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>it.nextworks.nfvmano.catalogue.plugins.mano</groupId>
+            <artifactId>OsmCataloguePlugin</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
 
         <!--SpringFox dependencies -->
@@ -163,6 +168,12 @@
 
         <!-- Dependencies for OSM plugin -->
         <dependency>
+            <groupId>org.rauschig</groupId>
+            <artifactId>jarchivelib</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.github.girtel</groupId>
             <artifactId>J-OSMClient</artifactId>
             <version>master-1.1-gedaa134-33</version>
@@ -171,6 +182,12 @@
         <dependency>
             <groupId>it.nextworks.nfvmano</groupId>
             <artifactId>OSMr4PlusClient</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>it.nextworks.nfvmano</groupId>
+            <artifactId>OSMr4PlusDataModel</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
 

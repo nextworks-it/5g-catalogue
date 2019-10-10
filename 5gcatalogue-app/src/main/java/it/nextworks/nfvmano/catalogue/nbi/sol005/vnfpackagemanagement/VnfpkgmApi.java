@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @javax.annotation.Generated(value = "io.swagger.codegen.languages.SpringCodegen", date = "2018-10-05T11:50:31.473+02:00")
 
@@ -147,6 +148,7 @@ public interface VnfpkgmApi {
             consumes = {"application/zip", "multipart/form-data"},
             method = RequestMethod.PUT)
     ResponseEntity<?> uploadVNFPkg(@RequestParam(required = false) String project,
+                                   @RequestParam(required = false) List<String> siteOrManoIds,
                                    @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
                                    @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
                                    @ApiParam(value = "The payload body contains a VNF Package ZIP file. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType,

@@ -19,14 +19,20 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import it.nextworks.nfvmano.catalogue.common.KafkaConnector;
-import it.nextworks.nfvmano.catalogue.messages.*;
-import it.nextworks.nfvmano.catalogue.messages.elements.CatalogueMessageType;
-import it.nextworks.nfvmano.catalogue.messages.interfaces.NsdNotificationsConsumerInterface;
-import it.nextworks.nfvmano.catalogue.messages.interfaces.NsdNotificationsProducerInterface;
-import it.nextworks.nfvmano.catalogue.messages.interfaces.VnfPkgNotificationsConsumerInterface;
-import it.nextworks.nfvmano.catalogue.messages.interfaces.VnfPkgNotificationsProducerInterface;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.*;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.CatalogueMessageType;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.PathType;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.ScopeType;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.interfaces.NsdNotificationsConsumerInterface;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.interfaces.NsdNotificationsProducerInterface;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.interfaces.VnfPkgNotificationsConsumerInterface;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.interfaces.VnfPkgNotificationsProducerInterface;
+import it.nextworks.nfvmano.catalogue.engine.elements.ContentType;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.CreateVnfPkgInfoRequest;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.VnfPkgInfo;
 import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.Cat2CatOperationService;
+import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
 import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
@@ -36,10 +42,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 @Service
@@ -550,7 +559,29 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
                 break;
             case GLOBAL:
                 log.error("Nsd GLOBAL onboarding notification not handled here, REMOTE onboarding message expected");
-                break;
+                break;/*
+            case SYNC:
+                log.debug("Uploading VNFD with ID {} retrieved from MANO with ID {}", notification.getVnfdId(), notification.getPluginId());
+                CreateVnfPkgInfoRequest request = new CreateVnfPkgInfoRequest();
+                KeyValuePairs userDefinedData = new KeyValuePairs();
+                userDefinedData.put("isRetrievedFromMano", "yes");
+                request.setUserDefinedData(userDefinedData);
+                try {
+                    VnfPkgInfo vnfPkgInfo = vnfPackageManagementService.createVnfPkgInfo(request, notification.getProject());
+                    File vnfPkg = null;
+                    if (notification.getPackagePath().getValue().equals(PathType.LOCAL.toString())){
+                        vnfPkg = new File(notification.getPackagePath().getKey());
+                    }else{
+                        throw new MethodNotImplementedException("Path Type not currently supported");
+                    }
+                    MultipartFile multipartFile = Utilities.createMultiPartFromFile(vnfPkg, "multipart/form-data");
+                    vnfPackageManagementService.uploadVnfPkg(vnfPkgInfo.getId().toString(), multipartFile, ContentType.ZIP, false, notification.getProject(), true);
+                }catch(Exception e) {
+                    log.error(e.getMessage());
+                    log.debug(null, e);
+                    //sendVnfPkgOnBoardingNotification(new VnfPkgOnBoardingNotificationMessage(null, notification.getVnfdId(), notification.getProject(), notification.getOperationId(), ScopeType.SYNC, OperationStatus.FAILED, notification.getPluginId(), null));
+                }
+                break;*/
         }
     }
 

@@ -4,10 +4,12 @@ import it.nextworks.nfvmano.catalogue.auth.usermanagement.UserResource;
 import it.nextworks.nfvmano.catalogue.repos.UserRepository;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
+import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 import java.io.*;
 import java.util.Enumeration;
@@ -113,5 +115,34 @@ public class Utilities {
         }
         zipFile.close();
         return archived;
+    }
+
+    public static MultipartFile createMultiPartFromFile(File file, String contentType) throws FailedOperationException {
+
+        /*byte[] content = null;
+        try {
+            content = Files.readAllBytes(file.toPath());
+        } catch (final IOException e) {
+        }*/
+
+        DiskFileItem fileItem = new DiskFileItem("file", contentType, false, file.getName(), (int) file.length() , file.getParentFile());
+        try {
+            fileItem.getOutputStream();
+        } catch (IOException e) {
+            throw new FailedOperationException("Unable  to create Multipart file");
+        }
+        MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
+
+        /*MultipartFile multipartFile = new MockMultipartFile("file",
+                file.getName(), contentType, content);*/
+
+        return multipartFile;
+    }
+
+    public static boolean isUUID(String id) {
+        String regex = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"; //UUID format
+        if (id.matches(regex))
+            return true;
+        return false;
     }
 }

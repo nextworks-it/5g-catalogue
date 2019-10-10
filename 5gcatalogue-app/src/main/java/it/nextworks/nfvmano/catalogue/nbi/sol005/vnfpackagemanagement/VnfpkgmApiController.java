@@ -60,7 +60,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         this.request = request;
     }
 
-    public ResponseEntity<?> createVNFPkgInfo(@RequestParam(required = false) String project,
+    public ResponseEntity<?> createVNFPkgInfo(@RequestParam(required = true) String project,
                                               @ApiParam(value = "", required = true) @Valid @RequestBody CreateVnfPkgInfoRequest body,
                                               @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         String accept = request.getHeader("Accept");
@@ -157,7 +157,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         }
     }
 
-    public ResponseEntity<?> updateVNFPkgInfo(@RequestParam(required = false) String project,
+    public ResponseEntity<?> updateVNFPkgInfo(@RequestParam(required = true) String project,
                                               @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
                                               @ApiParam(value = "", required = true) @Valid @RequestBody VnfPkgInfoModifications body,
                                               @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
@@ -194,14 +194,14 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         }
     }
 
-    public ResponseEntity<?> deleteVNFPkgInfo(@RequestParam(required = false) String project,
+    public ResponseEntity<?> deleteVNFPkgInfo(@RequestParam(required = true) String project,
                                               @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
                                               @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
 
         String accept = request.getHeader("Accept");
         log.debug("Processing REST request to delete VNF Pkg info " + vnfPkgId);
         try {
-            vnfPackageManagementInterface.deleteVnfPkgInfo(vnfPkgId, project);
+            vnfPackageManagementInterface.deleteVnfPkgInfo(vnfPkgId, project, false);
             log.debug("VNF Pkg info removed");
             return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
         } catch (NotExistingEntityException e) {
@@ -313,7 +313,8 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         }
     }
 
-    public ResponseEntity<?> uploadVNFPkg(@RequestParam(required = false) String project,
+    public ResponseEntity<?> uploadVNFPkg(@RequestParam(required = true) String project,
+                                          @RequestParam(required = false) List<String> siteOrManoIds,
                                           @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
                                           @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
                                           @ApiParam(value = "The payload body contains a VNF Package ZIP file. The request shall set the \"Content-Type\" HTTP header as defined above") @RequestHeader(value = "Content-Type", required = false) String contentType,
@@ -340,7 +341,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
                     return new ResponseEntity<String>("Unable to parse file type that is not .zip",
                             HttpStatus.NOT_IMPLEMENTED);
                 }
-                vnfPackageManagementInterface.uploadVnfPkg(vnfPkgId, body, type, false, project);
+                vnfPackageManagementInterface.uploadVnfPkg(vnfPkgId, body, type, false, project, siteOrManoIds);
                 log.debug("Upload processing done");
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
                 // TODO: check if we need to introduce the asynchronous mode
@@ -374,7 +375,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         }*/
     }
 
-    public ResponseEntity<?> uploadVNFPkgFromURI(@RequestParam(required = false) String project,
+    public ResponseEntity<?> uploadVNFPkgFromURI(@RequestParam(required = true) String project,
                                                  @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
                                                  @ApiParam(value = "", required = true) @Valid @RequestBody UploadVnfPackageFromUriRequest body,
                                                  @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {

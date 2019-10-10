@@ -50,7 +50,9 @@ public class FileSystemStorageService {
     public FileSystemStorageService() {
     }
 
-    public static String storePkg(String descriptorId, String version, MultipartFile file, boolean isVnfPkg) throws MalformattedElementException, FailedOperationException {
+    public static String storePkg(String project, String descriptorId, String version, MultipartFile file, boolean isVnfPkg) throws MalformattedElementException, FailedOperationException {
+        if(project == null)
+            project = "admin";
         String filename = StringUtils.cleanPath(file.getOriginalFilename());
         try {
             if (file.isEmpty()) {
@@ -66,11 +68,11 @@ public class FileSystemStorageService {
             Path locationRoot;
             Path locationVersion;
             if (isVnfPkg) {
-                locationRoot = Paths.get(vnfPkgsLocation + "/" + descriptorId);
-                locationVersion = Paths.get(vnfPkgsLocation + "/" + descriptorId + "/" + version);
+                locationRoot = Paths.get(vnfPkgsLocation + "/" + project + "/" + descriptorId);
+                locationVersion = Paths.get(vnfPkgsLocation + "/" + project + "/" + descriptorId + "/" + version);
             } else {
-                locationRoot = Paths.get(nsdsLocation + "/" + descriptorId);
-                locationVersion = Paths.get(nsdsLocation + "/" + descriptorId + "/" + version);
+                locationRoot = Paths.get(nsdsLocation + "/" + project + "/" + descriptorId);
+                locationVersion = Paths.get(nsdsLocation + "/" + project + "/" + descriptorId + "/" + version);
             }
             if (!Files.isDirectory(locationRoot, LinkOption.NOFOLLOW_LINKS)) {
                 if (!Files.isDirectory(locationVersion, LinkOption.NOFOLLOW_LINKS)) {
@@ -91,9 +93,10 @@ public class FileSystemStorageService {
         }
     }
 
-    public static String storePkgElement(ZipInputStream zis, ZipEntry element, String descriptorId, String version, boolean isVnfPkg) throws FailedOperationException {
-        log.debug("Received request for storing element in Pkg with descriptor Id {} and version {}", descriptorId, version);
-
+    public static String storePkgElement(ZipInputStream zis, ZipEntry element, String project, String descriptorId, String version, boolean isVnfPkg) throws FailedOperationException {
+        log.debug("Received request for storing element in Pkg with descriptor Id {} and version {} into project {}", descriptorId, version, project);
+        if(project == null)
+            project = "admin";
         String filename = StringUtils.cleanPath(element.getName());
         log.debug("Storing file with name: " + filename);
 
@@ -101,17 +104,17 @@ public class FileSystemStorageService {
 
         Path locationVersion;
         if (isVnfPkg)
-            locationVersion = Paths.get(vnfPkgsLocation + "/" + descriptorId + "/" + version);
+            locationVersion = Paths.get(vnfPkgsLocation + "/" + project + "/" + descriptorId + "/" + version);
         else
-            locationVersion = Paths.get(nsdsLocation + "/" + descriptorId + "/" + version);
+            locationVersion = Paths.get(nsdsLocation + "/" + project + "/" + descriptorId + "/" + version);
 
         if (filename.endsWith("/")) {
             log.debug("Zip entry is a directory: " + filename);
             Path newDir;
             if (isVnfPkg)
-                newDir = Paths.get(vnfPkgsLocation + "/" + descriptorId + "/" + version + "/" + filename);
+                newDir = Paths.get(vnfPkgsLocation + "/" + project + "/" + descriptorId + "/" + version + "/" + filename);
             else {
-                newDir = Paths.get(nsdsLocation + "/" + descriptorId + "/" + version + "/" + filename);
+                newDir = Paths.get(nsdsLocation + "/" + project + "/" + descriptorId + "/" + version + "/" + filename);
             }
             if (!Files.isDirectory(newDir, LinkOption.NOFOLLOW_LINKS)) {
                 try {
@@ -129,9 +132,9 @@ public class FileSystemStorageService {
             if (filename.contains("/")) {
                 log.debug("Zip entry is located in a subdirectory: " + filename);
                 if (isVnfPkg)
-                    dirPath = vnfPkgsLocation + "/" + descriptorId + "/" + version + "/" + filename.substring(0, filename.lastIndexOf("/"));
+                    dirPath = vnfPkgsLocation + "/" + project + "/" + descriptorId + "/" + version + "/" + filename.substring(0, filename.lastIndexOf("/"));
                 else
-                    dirPath = nsdsLocation + "/" + descriptorId + "/" + version + "/" + filename.substring(0, filename.lastIndexOf("/"));
+                    dirPath = nsdsLocation + "/" + project + "/" + descriptorId + "/" + version + "/" + filename.substring(0, filename.lastIndexOf("/"));
                 //create subdirectorie if doesn't exist
                 if (!Files.isDirectory(Paths.get(dirPath), LinkOption.NOFOLLOW_LINKS)) {
                     try {
@@ -176,20 +179,24 @@ public class FileSystemStorageService {
         return filename;
     }
 
-    public static Path loadFile(Path path, String id, String version, String filename) {
+    public static Path loadFile(Path path, String project, String id, String version, String filename) {
         log.debug("Loading file " + filename + " for VNFD|NSD|PNFD " + id);
-        Path location = Paths.get(path + "/" + id + "/" + version);
+        if(project == null)
+            project = "admin";
+        Path location = Paths.get(path + "/" + project + "/" + id + "/" + version);
         return location.resolve(filename);
     }
 
-    public static Resource loadFileAsResource(String id, String version, String filename, boolean isVnfPkg) throws NotExistingEntityException {
+    public static Resource loadFileAsResource(String project, String id, String version, String filename, boolean isVnfPkg) throws NotExistingEntityException {
         log.debug("Searching file " + filename);
+        if(project == null)
+            project = "admin";
         try {
             Path file = null;
             if (isVnfPkg) {
-                file = loadFile(vnfPkgsLocation, id, version, filename);
+                file = loadFile(vnfPkgsLocation, project, id, version, filename);
             } else {
-                file = loadFile(nsdsLocation, id, version, filename);
+                file = loadFile(nsdsLocation, project, id, version, filename);
             }
             Resource resource = new UrlResource(file.toUri());
             if (resource.exists() || resource.isReadable()) {
@@ -225,20 +232,22 @@ public class FileSystemStorageService {
         }
     }
 
-    public static void deleteNsd(String nsdId, String version) {
-        log.debug("Removing NSD with nsdId {} and version {}", nsdId, version);
-        Path locationVersion = Paths.get(nsdsLocation + "/" + nsdId + "/" + version);
-
+    public static void deleteNsd(String project, String nsdId, String version) {
+        log.debug("Removing NSD with nsdId {} and version {} from project {}", nsdId, version, project);
+        if(project == null)
+            project = "admin";
+        Path locationVersion = Paths.get(nsdsLocation + "/" + project + "/" + nsdId + "/" + version);
         FileSystemUtils.deleteRecursively(locationVersion.toFile());
-        log.debug("NSD with nsdId {} and version {} successfully removed", nsdId, version);
+        log.debug("NSD with nsdId {} and version {} successfully removed from project {}", nsdId, version, project);
     }
 
-    public static void deleteVnfPkg(String vnfdId, String version) {
-        log.debug("Removing VNF Pkg  with vnfdId {} and version {}", vnfdId, version);
-        Path locationVersion = Paths.get(vnfPkgsLocation + "/" + vnfdId + "/" + version);
-
+    public static void deleteVnfPkg(String project, String vnfdId, String version) {
+        log.debug("Removing VNF Pkg  with vnfdId {} and version {} from project {}", vnfdId, version, project);
+        if(project == null)
+            project = "admin";
+        Path locationVersion = Paths.get(vnfPkgsLocation + "/" + project + "/" + vnfdId + "/" + version);
         FileSystemUtils.deleteRecursively(locationVersion.toFile());
-        log.debug("VNF Pkg with vnfdId {} and version {} successfully removed", vnfdId, version);
+        log.debug("VNF Pkg with vnfdId {} and version {} successfully removed from project {}", vnfdId, version, project);
     }
 
     public static void deleteAll() {

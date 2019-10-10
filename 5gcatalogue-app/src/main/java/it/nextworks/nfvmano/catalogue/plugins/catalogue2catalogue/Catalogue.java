@@ -1,7 +1,7 @@
 package it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.nextworks.nfvmano.catalogue.plugins.PluginOperationalState;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginOperationalState;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

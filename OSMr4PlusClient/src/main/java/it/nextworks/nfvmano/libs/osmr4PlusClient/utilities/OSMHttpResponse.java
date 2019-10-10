@@ -70,7 +70,7 @@ public class OSMHttpResponse {
      * @param conn HTTP Connection to process
      * @return HTTP Response
      */
-    public static OSMHttpResponse getResponseFromOSMHttpConnection(HttpURLConnection conn) {
+    public static OSMHttpResponse getResponseFromOSMHttpConnection(HttpURLConnection conn, String storagePath) {
 
         int code = 0;
         String message = "";
@@ -86,7 +86,9 @@ public class OSMHttpResponse {
             if(code < HTTP_BAD_REQUEST) {
                 if(conn.getContentType().equals("application/zip")){
                     String [] url = conn.getURL().toString().split("/");
-                    filePath = Paths.get("/tmp/" + url[url.length - 2] + ".tar.gz");
+                    if(storagePath == null)
+						storagePath = "/tmp/";
+                    filePath = Paths.get(storagePath + "/" + url[url.length - 2] + ".tar.gz");
                     Files.copy(conn.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
                 }
                 else {

@@ -20,12 +20,15 @@ import com.google.common.io.CharStreams;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementService;
 import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
 import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.Catalogue;
-import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.CataloguePlugin;
+import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.Catalogue2CataloguePlugin;
 import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.api.nsd.DefaultApi;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginOperationalState;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginType;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.*;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.repos.MANORepository;
 import it.nextworks.nfvmano.catalogue.plugins.mano.*;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.OSMMano;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r3.OpenSourceMANOR3Plugin;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osm.r4plus.OpenSourceMANOR4PlusPlugin;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.r4plus.OpenSourceMANOR4PlusPlugin;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.repos.OsmInfoObjectRepository;
 import it.nextworks.nfvmano.catalogue.plugins.vim.VIM;
 import it.nextworks.nfvmano.catalogue.repos.*;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
@@ -58,7 +61,7 @@ public class PluginsManager {
 
     public Map<String, MANOPlugin> manoDrivers = new HashMap<>();
 
-    public Map<String, CataloguePlugin> catalogueDrivers = new HashMap<>();
+    public Map<String, Catalogue2CataloguePlugin> catalogueDrivers = new HashMap<>();
 
     private Resource[] resources;
 
@@ -105,6 +108,15 @@ public class PluginsManager {
     @Value("${catalogue.catalogueConfiguration}")
     private String catalogueConfigurationsDir;
 
+    @Value("${mano.startup.sync}")
+    private boolean startupSync;
+
+    @Value("${mano.runtime.sync}")
+    private boolean runtimeSync;
+
+    @Value("${mano.osm.runtime.sync.period.in.seconds}")
+    private long osmSyncPeriod;
+
     @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
 
@@ -137,6 +149,9 @@ public class PluginsManager {
 
     @Autowired
     private  UserRepository userRepository;
+
+    @Autowired
+    private OsmInfoObjectRepository osmInfoObjectRepository;
 
     public PluginsManager() {
 
@@ -176,7 +191,7 @@ public class PluginsManager {
                                 try {
                                     log.debug("Creating MANO Plugin with manoId " + newMano.getManoId()
                                             + " from configuration file");
-                                    createMANOPlugin(newMano);
+                                    createMANOPlugin(newMano, true);
                                 } catch (AlreadyExistingEntityException e) {
                                     log.error("MANO with manoId " + newMano.getManoId() + " already present in DB");
                                 } catch (MethodNotImplementedException e) {
@@ -187,6 +202,7 @@ public class PluginsManager {
                                 }
                             } catch (IOException e) {
                                 log.error("Unable to retrieve MANO configuration file: " + e.getMessage());
+                                e.printStackTrace();
                             }
                         }
                     }
@@ -294,6 +310,11 @@ public class PluginsManager {
 
             manoDrivers.put(mano.getManoId(), manoPlugin);
 
+            if(startupSync){
+                vnfdService.startupSync(manoPlugin);
+                //nsdService.startupSync(manoPlugin);
+            }
+
             log.debug("Loaded plugin for MANO " + mano.getManoId());
 
             // TODO: notify MANO plugin creation
@@ -305,21 +326,22 @@ public class PluginsManager {
     private MANOPlugin buildMANOPlugin(MANO mano) throws MalformattedElementException {
         if (mano.getManoType().equals(MANOType.DUMMY)) {
             return new DummyMANOPlugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, descriptorsParser,
-                    localNotificationTopic, remoteNotificationTopic, kafkaTemplate);
+                    localNotificationTopic, remoteNotificationTopic, kafkaTemplate, runtimeSync);
         } else if (mano.getManoType().equals(MANOType.OSMR3)) {
             Path osmr3Dir = Paths.get(osmDir, "/" + MANOType.OSMR3.toString().toLowerCase());
-            return new OpenSourceMANOR3Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, descriptorsParser,
-                    localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr3Dir, logo);
+            return null;
+            //TODO activate R3
+            /*return new OpenSourceMANOR3Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, descriptorsParser,
+                    localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr3Dir, logo);*/
         } else if (mano.getManoType().equals(MANOType.OSMR4) || mano.getManoType().equals(MANOType.OSMR5) || mano.getManoType().equals(MANOType.OSMR6)) {
             Path osmr4PlusDir = Paths.get(osmDir, "/" + mano.getManoType().toString().toLowerCase());
-            return new OpenSourceMANOR4PlusPlugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, descriptorsParser,
-                    MANORepository, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr4PlusDir, logo);
+            return new OpenSourceMANOR4PlusPlugin(mano.getManoType(), mano, bootstrapServers, MANORepository, osmInfoObjectRepository, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr4PlusDir, logo, runtimeSync, osmSyncPeriod);
         } else {
             throw new MalformattedElementException("Unsupported MANO type. Skipping");
         }
     }
 
-    public String createMANOPlugin(MANO mano)
+    public String createMANOPlugin(MANO mano, boolean isStartingPhase)
             throws AlreadyExistingEntityException, MethodNotImplementedException, MalformattedElementException {
         String manoId = mano.getManoId();
         if (MANORepository.findByManoId(manoId).isPresent()) {
@@ -345,6 +367,7 @@ public class PluginsManager {
                     osmMano.getPassword(),
                     osmMano.getProject(),
                     type,
+                    osmMano.getManoSite(),
                     osmMano.getVimAccounts()
             );
             targetOsmMano.setPluginOperationalState(PluginOperationalState.ENABLED);
@@ -352,13 +375,15 @@ public class PluginsManager {
             log.debug("Persisting OSM MANO with manoId: " + manoId);
             OSMMano createdMano = MANORepository.saveAndFlush(targetOsmMano);
             log.debug("OSM MANO with manoId " + manoId + " successfully persisted");
-            log.debug("Instantiating OSM MANO with manoId: " + manoId);
-            try {
-                addMANO(createdMano);
-            } catch (MalformattedElementException e) {
-                log.error("Unsupported MANO type");
+            if(!isStartingPhase) {
+                log.debug("Instantiating OSM MANO with manoId: " + manoId);
+                try {
+                    addMANO(createdMano);
+                } catch (MalformattedElementException e) {
+                    log.error("Unsupported MANO type");
+                }
+                log.debug("OSM MANO with manoId " + manoId + " successfully instantiated");
             }
-            log.debug("OSM MANO with manoId " + manoId + " successfully instantiated");
             return String.valueOf(createdMano.getId());
         } else if (type == MANOType.DUMMY) {
             log.debug("Processing request for creating " + type + "Plugin");
@@ -483,12 +508,12 @@ public class PluginsManager {
 
     public void addCatalogue(Catalogue catalogue) throws FailedOperationException {
         try {
-            CataloguePlugin cataloguePlugin = buildCataloguePlugin(catalogue);
+            Catalogue2CataloguePlugin catalogue2CataloguePlugin = buildCataloguePlugin(catalogue);
 
             // Init kafka consumer
-            cataloguePlugin.init();
+            catalogue2CataloguePlugin.init();
 
-            catalogueDrivers.put(catalogue.getCatalogueId(), cataloguePlugin);
+            catalogueDrivers.put(catalogue.getCatalogueId(), catalogue2CataloguePlugin);
 
             log.debug("Loaded plugin for 5G Catalogue " + catalogue.getCatalogueId());
 
@@ -500,8 +525,8 @@ public class PluginsManager {
         }
     }
 
-    private CataloguePlugin buildCataloguePlugin(Catalogue catalogue) {
-        return new CataloguePlugin(
+    private Catalogue2CataloguePlugin buildCataloguePlugin(Catalogue catalogue) {
+        return new Catalogue2CataloguePlugin(
                 catalogue.getCatalogueId(),
                 PluginType.C2C,
                 catalogue,
@@ -588,9 +613,9 @@ public class PluginsManager {
                 catalogueInfo.setPluginOperationalState(catalogue.getPluginOperationalState());
                 catalogueRepository.saveAndFlush(catalogueInfo);
 
-                CataloguePlugin cataloguePlugin = catalogueDrivers.get(catalogueInfo.getCatalogueId());
-                cataloguePlugin.setPluginOperationalState(catalogueInfo.getPluginOperationalState());
-                catalogueDrivers.replace(catalogueInfo.getCatalogueId(), cataloguePlugin);
+                Catalogue2CataloguePlugin catalogue2CataloguePlugin = catalogueDrivers.get(catalogueInfo.getCatalogueId());
+                catalogue2CataloguePlugin.setPluginOperationalState(catalogueInfo.getPluginOperationalState());
+                catalogueDrivers.replace(catalogueInfo.getCatalogueId(), catalogue2CataloguePlugin);
             }
         } else {
             throw new NotExistingEntityException("Catalogue Plugin with catalogueId " + catalogueId + " not present in DB");

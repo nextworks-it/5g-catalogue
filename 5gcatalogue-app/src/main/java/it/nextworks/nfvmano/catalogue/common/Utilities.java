@@ -16,6 +16,13 @@
 package it.nextworks.nfvmano.catalogue.common;
 
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.ProblemDetails;
+import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
+import org.apache.commons.fileupload.disk.DiskFileItem;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
+
+import java.io.File;
+import java.io.IOException;
 
 public class Utilities {
 
@@ -29,12 +36,4 @@ public class Utilities {
         pd.setStatus(status);
         return pd;
     }
-
-    public static boolean isUUID(String id) {
-        String regex = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"; //UUID format
-        if (id.matches(regex))
-            return true;
-        return false;
-    }
-
 }

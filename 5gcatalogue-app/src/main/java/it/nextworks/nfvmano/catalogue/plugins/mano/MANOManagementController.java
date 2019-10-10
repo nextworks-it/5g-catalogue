@@ -17,6 +17,7 @@ package it.nextworks.nfvmano.catalogue.plugins.mano;
 
 import io.swagger.annotations.ApiParam;
 import it.nextworks.nfvmano.catalogue.plugins.PluginsManager;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANO;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +60,7 @@ public class MANOManagementController {
         String createdManoId;
 
         try {
-            createdManoId = pluginsManager.createMANOPlugin(mano);
+            createdManoId = pluginsManager.createMANOPlugin(mano, false);
         } catch (AlreadyExistingEntityException e) {
             return new ResponseEntity<String>("MANO already present in DB", HttpStatus.CONFLICT);
         } catch (MethodNotImplementedException e) {

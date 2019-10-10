@@ -18,12 +18,12 @@ package it.nextworks.nfvmano;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
-import it.nextworks.nfvmano.catalogue.messages.elements.ScopeType;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.NsdOnBoardingNotificationMessage;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.ScopeType;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.DummyMano;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANO;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANOType;
 import it.nextworks.nfvmano.catalogue.plugins.mano.DummyMANOPlugin;
-import it.nextworks.nfvmano.catalogue.plugins.mano.DummyMano;
-import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
-import it.nextworks.nfvmano.catalogue.plugins.mano.MANOType;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -76,7 +76,8 @@ public class CatalogueApplicationTests {
                 null,
                 localNotificationTopic,
                 remoteNotificationTopic,
-                kafkaTemplate
+                kafkaTemplate,
+                false
         );
         plugin.init();
 
@@ -87,9 +88,11 @@ public class CatalogueApplicationTests {
                 new NsdOnBoardingNotificationMessage(
                         UUID.randomUUID().toString(),
                         UUID.randomUUID().toString(),
+                        null,
                         UUID.randomUUID(),
                         ScopeType.LOCAL,
-                        OperationStatus.SENT
+                        OperationStatus.SENT,
+                        null
                 );
 
         ObjectMapper mapper = new ObjectMapper();
@@ -125,7 +128,8 @@ public class CatalogueApplicationTests {
                 null,
                 localNotificationTopic,
                 remoteNotificationTopic,
-                kafkaTemplate
+                kafkaTemplate,
+                false
         );
         plugin1.init();
 
@@ -142,7 +146,8 @@ public class CatalogueApplicationTests {
                 null,
                 localNotificationTopic,
                 remoteNotificationTopic,
-                kafkaTemplate
+                kafkaTemplate,
+                false
         );
         plugin2.init();
 
@@ -153,9 +158,11 @@ public class CatalogueApplicationTests {
                 new NsdOnBoardingNotificationMessage(
                         UUID.randomUUID().toString(),
                         UUID.randomUUID().toString(),
+                        null,
                         UUID.randomUUID(),
                         ScopeType.LOCAL,
-                        OperationStatus.SENT
+                        OperationStatus.SENT,
+                        null
                 );
 
 
