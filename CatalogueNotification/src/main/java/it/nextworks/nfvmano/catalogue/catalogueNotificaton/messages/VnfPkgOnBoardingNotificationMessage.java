@@ -32,9 +32,11 @@ public class VnfPkgOnBoardingNotificationMessage extends CatalogueMessage {
 
     private final String vnfPkgInfoId;
     private final String vnfdId;
+    private final String vnfdVersion;
     private final KeyValuePair packagePath;
     private final String project;
 
+    @JsonInclude(Include.NON_EMPTY)
     private final List<String> siteOrManoIds = new ArrayList<>();
 
     @JsonInclude(Include.NON_NULL)
@@ -44,24 +46,30 @@ public class VnfPkgOnBoardingNotificationMessage extends CatalogueMessage {
     public VnfPkgOnBoardingNotificationMessage(
             @JsonProperty("vnfPkgInfoId") String vnfPkgInfoId,
             @JsonProperty("vnfdId") String vnfdId,
+            @JsonProperty("vnfdVersion") String vnfdVersion,
             @JsonProperty("project") String project,
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus,
             @JsonProperty("notifierId") String pluginId,
+            @JsonProperty("siteOrManoIds") List<String> siteOrManoIds,
             @JsonProperty("packagePath") KeyValuePair packagePath
     ) {
         super(CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION, operationId, scope, opStatus);
         this.vnfPkgInfoId = vnfPkgInfoId;
         this.vnfdId = vnfdId;
+        this.vnfdVersion = vnfdVersion;
         this.pluginId = pluginId;
         this.packagePath = packagePath;
         this.project = project;
+        if(siteOrManoIds != null)
+         this.siteOrManoIds.addAll(siteOrManoIds);
     }
 
     public VnfPkgOnBoardingNotificationMessage(
             @JsonProperty("vnfPkgInfoId") String vnfPkgInfoId,
             @JsonProperty("vnfdId") String vnfdId,
+            @JsonProperty("vnfdVersion") String vnfdVersion,
             @JsonProperty("project") String project,
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
@@ -72,10 +80,12 @@ public class VnfPkgOnBoardingNotificationMessage extends CatalogueMessage {
         super(CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION, operationId, scope, opStatus);
         this.vnfPkgInfoId = vnfPkgInfoId;
         this.vnfdId = vnfdId;
+        this.vnfdVersion = vnfdVersion;
         this.pluginId = null;
         this.packagePath = packagePath;
         this.project = project;
-        this.siteOrManoIds.addAll(siteOrManoIds);
+        if(siteOrManoIds != null)
+            this.siteOrManoIds.addAll(siteOrManoIds);
     }
 
     @JsonProperty("vnfPkgInfoId")
@@ -86,6 +96,11 @@ public class VnfPkgOnBoardingNotificationMessage extends CatalogueMessage {
     @JsonProperty("vnfdId")
     public String getVnfdId() {
         return vnfdId;
+    }
+
+    @JsonProperty("vnfdVersion")
+    public String getVnfdVersion() {
+        return vnfdVersion;
     }
 
     @JsonProperty("notifierId")

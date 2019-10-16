@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Optional;
@@ -117,20 +118,30 @@ public class Utilities {
         return archived;
     }
 
-    public static MultipartFile createMultiPartFromFile(File file, String contentType) throws FailedOperationException {
+    public static MultipartFile createMultiPartFromFile(File file) throws FailedOperationException {
 
         /*byte[] content = null;
         try {
             content = Files.readAllBytes(file.toPath());
         } catch (final IOException e) {
         }*/
-
-        DiskFileItem fileItem = new DiskFileItem("file", contentType, false, file.getName(), (int) file.length() , file.getParentFile());
+        DiskFileItem fileItem;
         try {
-            fileItem.getOutputStream();
-        } catch (IOException e) {
+            fileItem = new DiskFileItem("file",  Files.probeContentType(file.toPath()), false, file.getName(), (int) file.length() , file.getParentFile());
+            InputStream input =  new FileInputStream(file);
+            OutputStream os = fileItem.getOutputStream();
+            int ret = input.read();
+            while ( ret != -1 )
+            {
+                os.write(ret);
+                ret = input.read();
+            }
+            os.flush();
+        } catch (Exception e) {
             throw new FailedOperationException("Unable  to create Multipart file");
         }
+
+
         MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
 
         /*MultipartFile multipartFile = new MockMultipartFile("file",

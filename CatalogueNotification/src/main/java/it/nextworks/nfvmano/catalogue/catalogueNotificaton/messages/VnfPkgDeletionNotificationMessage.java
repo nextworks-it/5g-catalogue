@@ -29,6 +29,8 @@ public class VnfPkgDeletionNotificationMessage extends CatalogueMessage {
 
     private final String vnfPkgInfoId;
     private final String vnfdId;
+    private final String vnfdVersion;
+    private final String project;
 
     private String vnfName;
 
@@ -39,6 +41,8 @@ public class VnfPkgDeletionNotificationMessage extends CatalogueMessage {
     public VnfPkgDeletionNotificationMessage(
             @JsonProperty("vnfPkgInfoId") String vnfPkgInfoId,
             @JsonProperty("vnfdId") String vnfdId,
+            @JsonProperty("vnfdVersion") String vnfdVersion,
+            @JsonProperty("project") String project,
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus,
@@ -47,12 +51,16 @@ public class VnfPkgDeletionNotificationMessage extends CatalogueMessage {
         super(CatalogueMessageType.VNFPKG_DELETION_NOTIFICATION, operationId, scope, opStatus);
         this.vnfPkgInfoId = vnfPkgInfoId;
         this.vnfdId = vnfdId;
+        this.vnfdVersion = vnfdVersion;
         this.pluginId = pluginId;
+        this.project = project;
     }
 
     public VnfPkgDeletionNotificationMessage(
             @JsonProperty("vnfPkgInfoId") String vnfPkgInfoId,
             @JsonProperty("vnfdId") String vnfdId,
+            @JsonProperty("vnfdVersion") String vnfdVersion,
+            @JsonProperty("project") String project,
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus
@@ -60,6 +68,8 @@ public class VnfPkgDeletionNotificationMessage extends CatalogueMessage {
         super(CatalogueMessageType.VNFPKG_DELETION_NOTIFICATION, operationId, scope, opStatus);
         this.vnfPkgInfoId = vnfPkgInfoId;
         this.vnfdId = vnfdId;
+        this.vnfdVersion = vnfdVersion;
+        this.project = project;
     }
 
     @JsonProperty("vnfPkgInfoId")
@@ -70,6 +80,11 @@ public class VnfPkgDeletionNotificationMessage extends CatalogueMessage {
     @JsonProperty("vnfdId")
     public String getVnfdId() {
         return vnfdId;
+    }
+
+    @JsonProperty("vnfdVersion")
+    public String getVnfdVersion() {
+        return vnfdVersion;
     }
 
     @JsonProperty("notifierId")
@@ -84,5 +99,10 @@ public class VnfPkgDeletionNotificationMessage extends CatalogueMessage {
 
     public void setVnfName(String vnfName) {
         this.vnfName = vnfName;
+    }
+
+    @JsonProperty("project")
+    public String getProject() {
+        return project;
     }
 }

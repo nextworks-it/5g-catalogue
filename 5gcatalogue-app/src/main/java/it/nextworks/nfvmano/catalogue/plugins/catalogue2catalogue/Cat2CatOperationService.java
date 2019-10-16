@@ -85,8 +85,8 @@ public class Cat2CatOperationService {
         UUID operationId = insertOperationInfoInConsumersMap(nsdInfoId,
                 CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION, OperationStatus.SENT);
 
-        NsdOnBoardingNotificationMessage msg = new NsdOnBoardingNotificationMessage(nsdInfoId, null, null,
-                operationId, ScopeType.C2C, OperationStatus.SENT, null);
+        NsdOnBoardingNotificationMessage msg = new NsdOnBoardingNotificationMessage(nsdInfoId, null, null, null,
+                operationId, ScopeType.C2C, OperationStatus.SENT, null, null,null);
 
         try {
             notificationManager.sendNsdOnBoardingNotification(msg);
@@ -101,8 +101,8 @@ public class Cat2CatOperationService {
         UUID operationId = insertOperationInfoInConsumersMap(pnfdInfoId,
                 CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION, OperationStatus.SENT);
 
-        PnfdOnBoardingNotificationMessage msg = new PnfdOnBoardingNotificationMessage(pnfdInfoId, null,
-                operationId, ScopeType.C2C, OperationStatus.SENT, null);
+        PnfdOnBoardingNotificationMessage msg = new PnfdOnBoardingNotificationMessage(pnfdInfoId, null, null, null,
+                operationId, ScopeType.C2C, OperationStatus.SENT, null, null);
 
         try {
             notificationManager.sendPnfdOnBoardingNotification(msg);
@@ -117,8 +117,8 @@ public class Cat2CatOperationService {
         UUID operationId = insertOperationInfoInConsumersMap(vnfPkgInfoId,
                 CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION, OperationStatus.SENT);
 
-        VnfPkgOnBoardingNotificationMessage msg = new VnfPkgOnBoardingNotificationMessage(vnfPkgInfoId, null, null,
-                operationId, ScopeType.C2C, OperationStatus.SENT, (String) null, null);
+        VnfPkgOnBoardingNotificationMessage msg = new VnfPkgOnBoardingNotificationMessage(vnfPkgInfoId, null, null, null,
+                operationId, ScopeType.C2C, OperationStatus.SENT,  null, null,null);
 
         try {
             notificationManager.sendVnfPkgOnBoardingNotification(msg);

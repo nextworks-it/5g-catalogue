@@ -15,17 +15,14 @@
  */
 package it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginOperationalState;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.manos.DummyMano;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.manos.OSMMano;
 
 import javax.persistence.*;
-import java.util.HashMap;
-import java.util.Map;
 
 @Entity
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "manoType", visible = true)

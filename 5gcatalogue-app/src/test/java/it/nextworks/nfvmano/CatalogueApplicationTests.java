@@ -20,9 +20,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.NsdOnBoardingNotificationMessage;
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.ScopeType;
-import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.DummyMano;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANOType;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.manos.DummyMano;
 import it.nextworks.nfvmano.catalogue.plugins.mano.DummyMANOPlugin;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import org.junit.Ignore;
@@ -88,10 +88,13 @@ public class CatalogueApplicationTests {
                 new NsdOnBoardingNotificationMessage(
                         UUID.randomUUID().toString(),
                         UUID.randomUUID().toString(),
+                        "1.0",
                         null,
                         UUID.randomUUID(),
                         ScopeType.LOCAL,
                         OperationStatus.SENT,
+                        null,
+                        null,
                         null
                 );
 
@@ -158,10 +161,13 @@ public class CatalogueApplicationTests {
                 new NsdOnBoardingNotificationMessage(
                         UUID.randomUUID().toString(),
                         UUID.randomUUID().toString(),
+                        "1.0",
                         null,
                         UUID.randomUUID(),
                         ScopeType.LOCAL,
                         OperationStatus.SENT,
+                         null,
+                        null,
                         null
                 );
 

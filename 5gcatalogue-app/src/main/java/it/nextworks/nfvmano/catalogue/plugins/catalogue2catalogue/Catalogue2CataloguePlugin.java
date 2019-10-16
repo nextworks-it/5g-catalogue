@@ -242,25 +242,25 @@ public class Catalogue2CataloguePlugin extends Plugin
                         nsdInfoRepository.saveAndFlush(nsdInfoResource1);
                     }
 
-                    sendNotification(new NsdOnBoardingNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(), null,
+                    sendNotification(new NsdOnBoardingNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(), notification.getNsdVersion(), null,
                             notification.getOperationId(), ScopeType.C2C, OperationStatus.SUCCESSFULLY_DONE,
-                            catalogue.getCatalogueId(), null));
+                            catalogue.getCatalogueId(), null,null));
                 }
 
             } catch (Exception e) {
                 log.error("Could not onboard Nsd: {}", e.getMessage());
                 log.debug("Error details: ", e);
-                sendNotification(new NsdOnBoardingNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(), null,
+                sendNotification(new NsdOnBoardingNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(), notification.getNsdVersion(), null,
                         notification.getOperationId(), ScopeType.C2C, OperationStatus.FAILED,
-                        catalogue.getCatalogueId(), null));
+                        catalogue.getCatalogueId(), null,null));
             }
         }
 
         if (this.getPluginOperationalState() == PluginOperationalState.DISABLED || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
             log.debug("NSD onboarding skipped");
-            sendNotification(new NsdOnBoardingNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(), null,
+            sendNotification(new NsdOnBoardingNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(), notification.getNsdVersion(),  null,
                     notification.getOperationId(), ScopeType.C2C, OperationStatus.RECEIVED,
-                    catalogue.getCatalogueId(), null));
+                    catalogue.getCatalogueId(), null,null));
         }
     }
 
@@ -326,25 +326,25 @@ public class Catalogue2CataloguePlugin extends Plugin
                         pnfdInfoRepository.saveAndFlush(pnfdInfoResource1);
                     }
 
-                    sendNotification(new PnfdOnBoardingNotificationMessage(notification.getPnfdInfoId(), notification.getPnfdId(),
+                    sendNotification(new PnfdOnBoardingNotificationMessage(notification.getPnfdInfoId(), notification.getPnfdId(), notification.getPnfdVersion(), notification.getProject(),
                             notification.getOperationId(), ScopeType.C2C, OperationStatus.SUCCESSFULLY_DONE,
-                            catalogue.getCatalogueId(), null));
+                            catalogue.getCatalogueId(), null,null));
                 }
 
             } catch (Exception e) {
                 log.error("Could not onboard Pnfd: {}", e.getMessage());
                 log.debug("Error details: ", e);
-                sendNotification(new PnfdOnBoardingNotificationMessage(notification.getPnfdInfoId(), notification.getPnfdId(),
+                sendNotification(new PnfdOnBoardingNotificationMessage(notification.getPnfdInfoId(), notification.getPnfdId(), notification.getPnfdVersion(), notification.getProject(),
                         notification.getOperationId(), ScopeType.C2C, OperationStatus.FAILED,
-                        catalogue.getCatalogueId(), null));
+                        catalogue.getCatalogueId(), null, null));
             }
         }
 
         if (this.getPluginOperationalState() == PluginOperationalState.DISABLED || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
             log.debug("PNFD onboarding skipped");
-            sendNotification(new PnfdOnBoardingNotificationMessage(notification.getPnfdInfoId(), notification.getPnfdId(),
+            sendNotification(new PnfdOnBoardingNotificationMessage(notification.getPnfdInfoId(), notification.getPnfdId(), notification.getPnfdVersion(), notification.getProject(),
                     notification.getOperationId(), ScopeType.C2C, OperationStatus.RECEIVED,
-                    catalogue.getCatalogueId(), null));
+                    catalogue.getCatalogueId(), null, null));
         }
     }
 
@@ -404,25 +404,25 @@ public class Catalogue2CataloguePlugin extends Plugin
                         vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource1);
                     }
 
-                    sendNotification(new VnfPkgOnBoardingNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(), null,
+                    sendNotification(new VnfPkgOnBoardingNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(), notification.getVnfdVersion(), null,
                             notification.getOperationId(), ScopeType.C2C, OperationStatus.SUCCESSFULLY_DONE,
-                            catalogue.getCatalogueId(), null));
+                            catalogue.getCatalogueId(), null, null));
                 }
 
             } catch (Exception e) {
                 log.error("Could not onboard Vnf Pkg: {}", e.getMessage());
                 log.debug("Error details: ", e);
-                sendNotification(new VnfPkgOnBoardingNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(), null,
+                sendNotification(new VnfPkgOnBoardingNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(), notification.getVnfdVersion(), null,
                         notification.getOperationId(), ScopeType.C2C, OperationStatus.FAILED,
-                        catalogue.getCatalogueId(), null));
+                        catalogue.getCatalogueId(), null,null));
             }
         }
 
         if (this.getPluginOperationalState() == PluginOperationalState.DISABLED || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
             log.debug("VNF Package onboarding skipped");
-            sendNotification(new VnfPkgOnBoardingNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(), null,
+            sendNotification(new VnfPkgOnBoardingNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(), notification.getVnfdVersion(), null,
                     notification.getOperationId(), ScopeType.C2C, OperationStatus.RECEIVED,
-                    catalogue.getCatalogueId(), null));
+                    catalogue.getCatalogueId(), null,null));
         }
     }
 
@@ -497,7 +497,7 @@ public class Catalogue2CataloguePlugin extends Plugin
 
                 MultipartFile multipartFile = createMultiPartFromFile(targetFile, "multipart/form-data");
                 try {
-                    vnfdService.uploadVnfPkg(vnfPkgTargetResource.getId().toString(), multipartFile, ContentType.ZIP, true, "admin", null);
+                    vnfdService.uploadVnfPkg(vnfPkgTargetResource.getId().toString(), multipartFile, ContentType.ZIP, true, "admin");
                 } catch (Exception e) {
                     log.error("Error while uploading VNF Pkg with vnfPkgInfoId " + vnfPkgTargetResource.getId().toString() + ": " + e.getMessage());
                     throw new FailedOperationException("Error while uploading VNF Pkg with vnfPkgInfoId " + vnfPkgTargetResource.getId().toString() + ": " + e.getMessage());

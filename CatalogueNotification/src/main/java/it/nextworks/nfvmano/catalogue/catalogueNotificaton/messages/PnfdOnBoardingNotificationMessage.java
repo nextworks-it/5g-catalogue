@@ -26,13 +26,20 @@ import it.nextworks.nfvmano.libs.common.elements.KeyValuePair;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import javafx.util.Pair;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class PnfdOnBoardingNotificationMessage extends CatalogueMessage {
 
     private final String pnfdInfoId;
     private final String pnfdId;
+    private final String pnfdVersion;
     private final KeyValuePair packagePath;
+    private final String project;
+
+    @JsonInclude(Include.NON_EMPTY)
+    private final List<String> siteOrManoIds = new ArrayList<>();
 
     @JsonInclude(Include.NON_NULL)
     private String pluginId;
@@ -41,32 +48,46 @@ public class PnfdOnBoardingNotificationMessage extends CatalogueMessage {
     public PnfdOnBoardingNotificationMessage(
             @JsonProperty("pnfdInfoId") String pnfdInfoId,
             @JsonProperty("pnfdId") String pnfdId,
+            @JsonProperty("pnfdVersion") String pnfdVersion,
+            @JsonProperty("project") String project,
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus,
             @JsonProperty("notifierId") String pluginId,
+            @JsonProperty("siteOrManoIds") List<String> siteOrManoIds,
             @JsonProperty("packagePath") KeyValuePair packagePath
     ) {
         super(CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION, operationId, scope, opStatus);
         this.pnfdInfoId = pnfdInfoId;
         this.pnfdId = pnfdId;
+        this.pnfdVersion = pnfdVersion;
         this.pluginId = pluginId;
         this.packagePath = packagePath;
+        this.project = project;
+        if(siteOrManoIds != null)
+            this.siteOrManoIds.addAll(siteOrManoIds);
     }
 
     public PnfdOnBoardingNotificationMessage(
             @JsonProperty("pnfdInfoId") String pnfdInfoId,
             @JsonProperty("pnfdId") String pnfdId,
+            @JsonProperty("pnfdVersion") String pnfdVersion,
+            @JsonProperty("project") String project,
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus,
+            @JsonProperty("siteOrManoIds") List<String> siteOrManoIds,
             @JsonProperty("packagePath") KeyValuePair packagePath
     ) {
         super(CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION, operationId, scope, opStatus);
         this.pnfdInfoId = pnfdInfoId;
         this.pnfdId = pnfdId;
+        this.pnfdVersion = pnfdVersion;
         this.pluginId = null;
         this.packagePath = packagePath;
+        this.project = project;
+        if(siteOrManoIds != null)
+            this.siteOrManoIds.addAll(siteOrManoIds);
     }
 
     @JsonProperty("pnfdInfoId")
@@ -87,5 +108,20 @@ public class PnfdOnBoardingNotificationMessage extends CatalogueMessage {
     @JsonProperty("packagePath")
     public KeyValuePair getPackagePath() {
         return packagePath;
+    }
+
+    @JsonProperty("pnfdVersion")
+    public String getPnfdVersion() {
+        return pnfdVersion;
+    }
+
+    @JsonProperty("project")
+    public String getProject() {
+        return project;
+    }
+
+    @JsonProperty("siteOrManoIds")
+    public List<String> getSiteOrManoIds() {
+        return siteOrManoIds;
     }
 }

@@ -37,8 +37,8 @@ public class OsmInfoObject {
     private String description;
 
     private Long epoch;
-
     private String osmId;
+    private OsmObjectType type;
 
     @Transient
     private Map<String, Object> otherProperties = new HashMap<String, Object>();
@@ -92,6 +92,14 @@ public class OsmInfoObject {
         this.osmId = osmId;
     }
 
+    public OsmObjectType getType() {
+        return type;
+    }
+
+    public void setType(OsmObjectType type) {
+        this.type = type;
+    }
+
     @JsonAnyGetter
     public Map<String, Object> any() {
         return otherProperties;
@@ -113,6 +121,8 @@ public class OsmInfoObject {
                 ", version='" + version + '\'' +
                 ", description='" + description + '\'' +
                 ", epoch=" + epoch +
+                ", osmId='" + osmId + '\'' +
+                ", type=" + type +
                 ", otherProperties=" + otherProperties +
                 '}';
     }

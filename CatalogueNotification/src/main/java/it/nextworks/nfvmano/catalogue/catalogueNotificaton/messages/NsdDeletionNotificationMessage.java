@@ -29,6 +29,8 @@ public class NsdDeletionNotificationMessage extends CatalogueMessage {
 
     private final String nsdInfoId;
     private final String nsdId;
+    private final String nsdVersion;
+    private final String project;
 
     @JsonInclude(Include.NON_NULL)
     private String pluginId;
@@ -37,6 +39,8 @@ public class NsdDeletionNotificationMessage extends CatalogueMessage {
     public NsdDeletionNotificationMessage(
             @JsonProperty("nsdInfoId") String nsdInfoId,
             @JsonProperty("nsdId") String nsdId,
+            @JsonProperty("nsdVersion") String nsdVersion,
+            @JsonProperty("project") String project,
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus,
@@ -45,12 +49,16 @@ public class NsdDeletionNotificationMessage extends CatalogueMessage {
         super(CatalogueMessageType.NSD_DELETION_NOTIFICATION, operationId, scope, opStatus);
         this.nsdInfoId = nsdInfoId;
         this.nsdId = nsdId;
+        this.nsdVersion = nsdVersion;
         this.pluginId = pluginId;
+        this.project = project;
     }
 
     public NsdDeletionNotificationMessage(
             @JsonProperty("nsdInfoId") String nsdInfoId,
             @JsonProperty("nsdId") String nsdId,
+            @JsonProperty("nsdVersion") String nsdVersion,
+            @JsonProperty("project") String project,
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus
@@ -58,6 +66,8 @@ public class NsdDeletionNotificationMessage extends CatalogueMessage {
         super(CatalogueMessageType.NSD_DELETION_NOTIFICATION, operationId, scope, opStatus);
         this.nsdInfoId = nsdInfoId;
         this.nsdId = nsdId;
+        this.nsdVersion = nsdVersion;
+        this.project = project;
     }
 
     @JsonProperty("nsdInfoId")
@@ -70,8 +80,18 @@ public class NsdDeletionNotificationMessage extends CatalogueMessage {
         return nsdId;
     }
 
+    @JsonProperty("nsdVersion")
+    public String getNsdVersion() {
+        return nsdVersion;
+    }
+
     @JsonProperty("notifierId")
     public String getPluginId() {
         return pluginId;
+    }
+
+    @JsonProperty("project")
+    public String getProject() {
+        return project;
     }
 }

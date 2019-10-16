@@ -32,8 +32,12 @@ public class NsdOnBoardingNotificationMessage extends CatalogueMessage {
 
     private final String nsdInfoId;
     private final String nsdId;
+    private final String nsdVersion;
     private final KeyValuePair packagePath;
     private final String project;
+
+    @JsonInclude(Include.NON_EMPTY)
+    private final List<String> siteOrManoIds = new ArrayList<>();
 
     @JsonInclude(Include.NON_NULL)
     private String pluginId;
@@ -48,36 +52,46 @@ public class NsdOnBoardingNotificationMessage extends CatalogueMessage {
     public NsdOnBoardingNotificationMessage(
             @JsonProperty("nsdInfoId") String nsdInfoId,
             @JsonProperty("nsdId") String nsdId,
+            @JsonProperty("nsdVersion") String nsdVersion,
             @JsonProperty("project") String project,
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus,
             @JsonProperty("notifierId") String pluginId,
+            @JsonProperty("siteOrManoIds") List<String> siteOrManoIds,
             @JsonProperty("packagePath") KeyValuePair packagePath
     ) {
         super(CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION, operationId, scope, opStatus);
         this.nsdInfoId = nsdInfoId;
         this.nsdId = nsdId;
+        this.nsdVersion = nsdVersion;
         this.pluginId = pluginId;
         this.packagePath = packagePath;
         this.project = project;
+        if(siteOrManoIds != null)
+            this.siteOrManoIds.addAll(siteOrManoIds);
     }
 
     public NsdOnBoardingNotificationMessage(
             @JsonProperty("nsdInfoId") String nsdInfoId,
             @JsonProperty("nsdId") String nsdId,
+            @JsonProperty("nsdVersion") String nsdVersion,
             @JsonProperty("project") String project,
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus,
+            @JsonProperty("siteOrManoIds") List<String> siteOrManoIds,
             @JsonProperty("packagePath") KeyValuePair packagePath
     ) {
         super(CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION, operationId, scope, opStatus);
         this.nsdInfoId = nsdInfoId;
         this.nsdId = nsdId;
+        this.nsdVersion = nsdVersion;
         this.pluginId = null;
         this.packagePath = packagePath;
         this.project = project;
+        if(siteOrManoIds != null)
+            this.siteOrManoIds.addAll(siteOrManoIds);
     }
 
     @JsonProperty("nsdInfoId")
@@ -88,6 +102,11 @@ public class NsdOnBoardingNotificationMessage extends CatalogueMessage {
     @JsonProperty("nsdId")
     public String getNsdId() {
         return nsdId;
+    }
+
+    @JsonProperty("nsdVersion")
+    public String getNsdVersion() {
+        return nsdVersion;
     }
 
     @JsonProperty("notifierId")
@@ -116,7 +135,13 @@ public class NsdOnBoardingNotificationMessage extends CatalogueMessage {
         return packagePath;
     }
 
+    @JsonProperty("project")
     public String getProject() {
         return project;
+    }
+
+    @JsonProperty("siteOrManoIds")
+    public List<String> getSiteOrManoIds() {
+        return siteOrManoIds;
     }
 }

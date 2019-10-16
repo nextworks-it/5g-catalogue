@@ -93,8 +93,6 @@ public class Utilities {
     }
 
     public static boolean isTargetMano (List<String> siteOrManoIds, MANO mano){
-        if(siteOrManoIds == null)
-            return true;
         if(siteOrManoIds.contains(mano.getManoId()) || siteOrManoIds.contains(mano.getManoSite()))
             return true;
         return false;

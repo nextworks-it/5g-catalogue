@@ -25,8 +25,7 @@ public class ToscaArchiveBuilder {
 
     private static final Logger log = LoggerFactory.getLogger(ArchiveBuilder.class);
 
-    public static String createVNFCSAR(DescriptorTemplate template, File cloudInit) throws IllegalStateException{
-
+    public static String createVNFCSAR(String vnfPackageInfoId, DescriptorTemplate template, File cloudInit) throws IllegalStateException{
         String vnfName = "descriptor";
         String vnfId = "1";
         String vnfPackagePath;
@@ -42,10 +41,9 @@ public class ToscaArchiveBuilder {
 
             VNFNode vnfd = template.getTopologyTemplate().getVNFNodes().values().iterator().next();
             vnfName = template.getTopologyTemplate().getVNFNodes().keySet().iterator().next();
-            vnfId = vnfd.getProperties().getDescriptorId();
 
             //Create directories
-            File root = makeFolder(vnfName + "_" + vnfId);
+            File root = makeFolder(vnfName + "_" + vnfPackageInfoId);
             File definitions = makeSubFolder(root, "Definitions");
             File files = makeSubFolder(root, "Files");
             File licenses = makeSubFolder(files, "Licences");
@@ -98,6 +96,10 @@ public class ToscaArchiveBuilder {
         }
 
         return vnfPackagePath;
+    }
+
+    public static String createNSCSAR(String nsPackageInfoId, DescriptorTemplate template) throws IllegalStateException{
+        return null;
     }
 
     public static File makeFolder(String name) {

@@ -25,6 +25,8 @@ import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.api.nsd.Defaul
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginOperationalState;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginType;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.*;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.manos.DummyMano;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.manos.OSMMano;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.repos.MANORepository;
 import it.nextworks.nfvmano.catalogue.plugins.mano.*;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.r4plus.OpenSourceMANOR4PlusPlugin;
@@ -108,13 +110,10 @@ public class PluginsManager {
     @Value("${catalogue.catalogueConfiguration}")
     private String catalogueConfigurationsDir;
 
-    @Value("${mano.startup.sync}")
-    private boolean startupSync;
-
     @Value("${mano.runtime.sync}")
     private boolean runtimeSync;
 
-    @Value("${mano.osm.runtime.sync.period.in.seconds}")
+    @Value("${mano.osm.runtime.sync.period.in.minute}")
     private long osmSyncPeriod;
 
     @Autowired
@@ -307,13 +306,7 @@ public class PluginsManager {
 
             // Init kafka consumer and enable plugin
             manoPlugin.init();
-
             manoDrivers.put(mano.getManoId(), manoPlugin);
-
-            if(startupSync){
-                vnfdService.startupSync(manoPlugin);
-                //nsdService.startupSync(manoPlugin);
-            }
 
             log.debug("Loaded plugin for MANO " + mano.getManoId());
 

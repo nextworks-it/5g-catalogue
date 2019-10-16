@@ -66,12 +66,21 @@ public class DummyMANOPlugin extends MANOPlugin {
     }
 
     @Override
-    public KeyValuePair getTranslatedVnfPkgPath(String vnfdId, String vnfdVersion, String project){
+    public Map<String, String> getAllNs(String project){
         return null;
     }
 
     @Override
-    public void notifyVnfOnboarding(String vnfInfoId, String vnfdId, String vnfdVersion, String project, OperationStatus opStatus){
+    public KeyValuePair getTranslatedPkgPath(String descriptorId, String descriptorVersion, String project){
+        return null;
+    }
+
+    @Override
+    public void notifyOnboarding(String infoId, String descriptorId, String descriptorVersion, String project, OperationStatus opStatus){
+    }
+
+    @Override
+    public void notifyDelete(String infoId, String descriptorId, String descriptorVersion, String project, OperationStatus opStatus){
     }
 
     @Override
@@ -84,11 +93,13 @@ public class DummyMANOPlugin extends MANOPlugin {
                 response = new NsdOnBoardingNotificationMessage(
                         notification.getNsdInfoId(),
                         notification.getNsdId(),
-                        null,
+                        notification.getNsdVersion(),
+                        notification.getProject(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.SUCCESSFULLY_DONE,
                         mano.getManoId(),
+                        null,
                         null
                 );
             } else {
@@ -96,11 +107,13 @@ public class DummyMANOPlugin extends MANOPlugin {
                 response = new NsdOnBoardingNotificationMessage(
                         notification.getNsdInfoId(),
                         notification.getNsdId(),
-                        null,
+                        notification.getNsdVersion(),
+                        notification.getProject(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.RECEIVED,
                         mano.getManoId(),
+                        null,
                         null
                 );
             }
@@ -127,6 +140,8 @@ public class DummyMANOPlugin extends MANOPlugin {
                 response = new NsdDeletionNotificationMessage(
                         notification.getNsdInfoId(),
                         notification.getNsdId(),
+                        notification.getNsdVersion(),
+                        notification.getProject(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.SUCCESSFULLY_DONE,
@@ -137,6 +152,8 @@ public class DummyMANOPlugin extends MANOPlugin {
                 response = new NsdDeletionNotificationMessage(
                         notification.getNsdInfoId(),
                         notification.getNsdId(),
+                        notification.getNsdVersion(),
+                        notification.getProject(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.RECEIVED,
@@ -158,10 +175,13 @@ public class DummyMANOPlugin extends MANOPlugin {
                 response = new PnfdOnBoardingNotificationMessage(
                         notification.getPnfdInfoId(),
                         notification.getPnfdId(),
+                        notification.getPnfdVersion(),
+                        notification.getProject(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.SUCCESSFULLY_DONE,
                         mano.getManoId(),
+                        null,
                         null
                 );
             } else {
@@ -169,10 +189,13 @@ public class DummyMANOPlugin extends MANOPlugin {
                 response = new PnfdOnBoardingNotificationMessage(
                         notification.getPnfdInfoId(),
                         notification.getPnfdId(),
+                        notification.getPnfdVersion(),
+                        notification.getProject(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.RECEIVED,
                         mano.getManoId(),
+                        null,
                         null
                 );
             }
@@ -191,6 +214,8 @@ public class DummyMANOPlugin extends MANOPlugin {
                 response = new PnfdDeletionNotificationMessage(
                         notification.getPnfdInfoId(),
                         notification.getPnfdId(),
+                        notification.getPnfdVersion(),
+                        notification.getProject(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.SUCCESSFULLY_DONE,
@@ -201,6 +226,8 @@ public class DummyMANOPlugin extends MANOPlugin {
                 response = new PnfdDeletionNotificationMessage(
                         notification.getPnfdInfoId(),
                         notification.getPnfdId(),
+                        notification.getPnfdVersion(),
+                        notification.getProject(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.RECEIVED,
@@ -222,11 +249,13 @@ public class DummyMANOPlugin extends MANOPlugin {
                 response = new VnfPkgOnBoardingNotificationMessage(
                         notification.getVnfPkgInfoId(),
                         notification.getVnfdId(),
-                        null,
+                        notification.getVnfdVersion(),
+                        notification.getProject(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.SUCCESSFULLY_DONE,
                         mano.getManoId(),
+                        null,
                         null
                 );
             } else {
@@ -234,11 +263,13 @@ public class DummyMANOPlugin extends MANOPlugin {
                 response = new VnfPkgOnBoardingNotificationMessage(
                         notification.getVnfPkgInfoId(),
                         notification.getVnfdId(),
-                        null,
+                        notification.getVnfdId(),
+                        notification.getVnfdVersion(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.RECEIVED,
                         mano.getManoId(),
+                        null,
                         null
                 );
             }
@@ -265,6 +296,8 @@ public class DummyMANOPlugin extends MANOPlugin {
                 response = new VnfPkgDeletionNotificationMessage(
                         notification.getVnfPkgInfoId(),
                         notification.getVnfdId(),
+                        notification.getVnfdVersion(),
+                        notification.getProject(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.SUCCESSFULLY_DONE,
@@ -275,6 +308,8 @@ public class DummyMANOPlugin extends MANOPlugin {
                 response = new VnfPkgDeletionNotificationMessage(
                         notification.getVnfPkgInfoId(),
                         notification.getVnfdId(),
+                        notification.getVnfdVersion(),
+                        notification.getProject(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.RECEIVED,
