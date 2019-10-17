@@ -24,7 +24,7 @@ public class VnfImgUploadingNotificationMessage extends CatalogueMessage {
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus,
-            @JsonProperty("notifierId") String pluginId
+            @JsonProperty("pluginId") String pluginId
     ) {
         super(CatalogueMessageType.VNFIMG_UPLOADING_NOTIFICATION, operationId, scope, opStatus);
         this.vnfPkgInfoId = vnfPkgInfoId;

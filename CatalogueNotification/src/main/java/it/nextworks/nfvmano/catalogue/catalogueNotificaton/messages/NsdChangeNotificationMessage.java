@@ -47,7 +47,7 @@ public class NsdChangeNotificationMessage extends CatalogueMessage {
             @JsonProperty("operationalState") String operationalState,
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus,
-            @JsonProperty("notifierId") String pluginId,
+            @JsonProperty("pluginId") String pluginId,
             @JsonProperty("packagePath") KeyValuePair packagePath
     ) {
         super(CatalogueMessageType.NSD_CHANGE_NOTIFICATION, operationId, scope, opStatus);
@@ -73,7 +73,7 @@ public class NsdChangeNotificationMessage extends CatalogueMessage {
         return operationalState;
     }
 
-    @JsonProperty("notifierId")
+    @JsonProperty("pluginId")
     public String getPluginId() {
         return pluginId;
     }

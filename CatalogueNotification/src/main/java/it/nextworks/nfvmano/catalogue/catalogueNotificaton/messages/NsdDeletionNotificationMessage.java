@@ -44,7 +44,7 @@ public class NsdDeletionNotificationMessage extends CatalogueMessage {
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus,
-            @JsonProperty("notifierId") String pluginId
+            @JsonProperty("pluginId") String pluginId
     ) {
         super(CatalogueMessageType.NSD_DELETION_NOTIFICATION, operationId, scope, opStatus);
         this.nsdInfoId = nsdInfoId;
@@ -85,7 +85,7 @@ public class NsdDeletionNotificationMessage extends CatalogueMessage {
         return nsdVersion;
     }
 
-    @JsonProperty("notifierId")
+    @JsonProperty("pluginId")
     public String getPluginId() {
         return pluginId;
     }

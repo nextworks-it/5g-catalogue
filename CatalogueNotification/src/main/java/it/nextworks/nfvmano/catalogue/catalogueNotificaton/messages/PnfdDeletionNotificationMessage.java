@@ -44,7 +44,7 @@ public class PnfdDeletionNotificationMessage extends CatalogueMessage {
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus,
-            @JsonProperty("notifierId") String pluginId
+            @JsonProperty("pluginId") String pluginId
     ) {
         super(CatalogueMessageType.PNFD_DELETION_NOTIFICATION, operationId, scope, opStatus);
         this.pnfdInfoId = pnfdInfoId;
@@ -80,7 +80,7 @@ public class PnfdDeletionNotificationMessage extends CatalogueMessage {
         return pnfdId;
     }
 
-    @JsonProperty("notifierId")
+    @JsonProperty("pluginId")
     public String getPluginId() {
         return pluginId;
     }

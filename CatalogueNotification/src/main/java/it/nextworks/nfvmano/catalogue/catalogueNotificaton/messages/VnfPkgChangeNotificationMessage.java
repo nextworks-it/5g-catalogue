@@ -50,7 +50,7 @@ public class VnfPkgChangeNotificationMessage extends CatalogueMessage {
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus,
             @JsonProperty("changeType") PackageChangeType changeType,
-            @JsonProperty("notifierId") String pluginId,
+            @JsonProperty("pluginId") String pluginId,
             @JsonProperty("packagePath") KeyValuePair packagePath
     ) {
         super(CatalogueMessageType.VNFPKG_CHANGE_NOTIFICATION, operationId, scope, opStatus);
@@ -82,7 +82,7 @@ public class VnfPkgChangeNotificationMessage extends CatalogueMessage {
         return changeType;
     }
 
-    @JsonProperty("notifierId")
+    @JsonProperty("pluginId")
     public String getPluginId() {
         return pluginId;
     }

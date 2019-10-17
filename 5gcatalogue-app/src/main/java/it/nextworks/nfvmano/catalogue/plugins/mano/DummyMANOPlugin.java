@@ -61,12 +61,12 @@ public class DummyMANOPlugin extends MANOPlugin {
     }
 
     @Override
-    public Map<String, String> getAllVnf(String project){
+    public Map<String, String> getAllVnfd(String project){
         return null;
     }
 
     @Override
-    public Map<String, String> getAllNs(String project){
+    public Map<String, String> getAllNsd(String project){
         return null;
     }
 

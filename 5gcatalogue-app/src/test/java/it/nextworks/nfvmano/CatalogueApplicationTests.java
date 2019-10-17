@@ -22,7 +22,7 @@ import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.NsdOnBoardin
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.ScopeType;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANOType;
-import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.manos.DummyMano;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.manoClass.DummyMano;
 import it.nextworks.nfvmano.catalogue.plugins.mano.DummyMANOPlugin;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import org.junit.Ignore;

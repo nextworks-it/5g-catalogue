@@ -25,8 +25,8 @@ import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.api.nsd.Defaul
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginOperationalState;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginType;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.*;
-import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.manos.DummyMano;
-import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.manos.OSMMano;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.manoClass.DummyMano;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.manoClass.OSMMano;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.repos.MANORepository;
 import it.nextworks.nfvmano.catalogue.plugins.mano.*;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.r4plus.OpenSourceMANOR4PlusPlugin;

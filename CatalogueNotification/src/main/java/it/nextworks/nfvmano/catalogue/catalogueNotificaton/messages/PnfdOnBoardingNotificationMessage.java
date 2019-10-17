@@ -53,7 +53,7 @@ public class PnfdOnBoardingNotificationMessage extends CatalogueMessage {
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus,
-            @JsonProperty("notifierId") String pluginId,
+            @JsonProperty("pluginId") String pluginId,
             @JsonProperty("siteOrManoIds") List<String> siteOrManoIds,
             @JsonProperty("packagePath") KeyValuePair packagePath
     ) {
@@ -100,7 +100,7 @@ public class PnfdOnBoardingNotificationMessage extends CatalogueMessage {
         return pnfdId;
     }
 
-    @JsonProperty("notifierId")
+    @JsonProperty("pluginId")
     public String getPluginId() {
         return pluginId;
     }

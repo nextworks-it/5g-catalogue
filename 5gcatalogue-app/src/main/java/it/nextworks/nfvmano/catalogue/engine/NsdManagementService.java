@@ -906,11 +906,21 @@ public class NsdManagementService implements NsdManagementInterface {
 
         List<String> manoIds = checkWhereOnboardNS(nsdInfo);
 
-        // TODO: request to Policy Manager for retrieving the MANO Plugins list,
-        // now all plugins are expected to be consumers
+        List<String> siteOrManoIds = new ArrayList<>();
+        Map<String, String> userDefinedData = nsdInfo.getUserDefinedData();
+        if(userDefinedData == null || userDefinedData.size() == 0)
+            siteOrManoIds.addAll(pluginManger.manoDrivers.keySet());
+        else
+            for(MANOPlugin mano : pluginManger.manoDrivers.values())
+                if((userDefinedData.containsKey(mano.getPluginId()) && userDefinedData.get(mano.getPluginId()).equals("yes"))
+                        || (userDefinedData.containsKey(mano.getMano().getManoSite()) && userDefinedData.get(mano.getMano().getManoSite()).equals("yes")))
+                    siteOrManoIds.add(mano.getPluginId());
+
+        siteOrManoIds.removeIf(id -> !manoIds.contains(id));
+
         // send notification over kafka bus
         UUID operationId = insertOperationInfoInConsumersMap(nsdInfoId,
-                CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION, OperationStatus.SENT, manoIds);
+                CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION, OperationStatus.SENT, siteOrManoIds);
         nsdInfo.setAcknowledgedOnboardOpConsumers(operationIdToConsumersAck.get(operationId.toString()));
 
         if (isInternalRequest)
@@ -922,7 +932,7 @@ public class NsdManagementService implements NsdManagementInterface {
         log.debug("NSD info updated");
 
         NsdOnBoardingNotificationMessage msg = new NsdOnBoardingNotificationMessage(nsdInfo.getId().toString(), nsdId.toString(), nsdInfo.getNsdVersion(), project,
-                operationId, ScopeType.LOCAL, OperationStatus.SENT, manoIds, new KeyValuePair(rootDir + ConfigurationParameters.storageNsdsSubfolder + "/" + project + "/" + nsdId.toString() + "/" + nsdInfo.getNsdVersion(), PathType.LOCAL.toString()));
+                operationId, ScopeType.LOCAL, OperationStatus.SENT, siteOrManoIds, new KeyValuePair(rootDir + ConfigurationParameters.storageNsdsSubfolder + "/" + project + "/" + nsdId.toString() + "/" + nsdInfo.getNsdVersion(), PathType.LOCAL.toString()));
         msg.setIncludedVnfds(includedVnfds);
         msg.setIncludedPnfds(includedPnfds);
         // send notification over kafka bus

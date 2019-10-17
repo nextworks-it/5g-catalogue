@@ -35,6 +35,7 @@ import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
+import org.junit.internal.runners.statements.Fail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -108,7 +109,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         for (MANOPlugin manoPlugin : pluginManger.manoDrivers.values()) {
             List<ProjectResource> projectResourceList = projectRepository.findAll();
             for (ProjectResource project : projectResourceList) {
-                Map<String, String> vnfFromManoList = manoPlugin.getAllVnf(project.getProjectId());
+                Map<String, String> vnfFromManoList = manoPlugin.getAllVnfd(project.getProjectId());
                 if (vnfFromManoList == null) {
                     log.error("Project " + project.getProjectId() + " - Cannot retrieve VNFDs list from MANO with ID " + manoPlugin.getPluginId());
                     continue;
@@ -198,6 +199,19 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                                 }else{
                                     manoPlugin.notifyDelete(vnfPkgInfoResource.getId().toString(), vnfPkgInfoResource.getVnfdId().toString(), vnfPkgInfoResource.getVnfdVersion(), project.getProjectId(), OperationStatus.SUCCESSFULLY_DONE);
                                 }
+                            }catch (NotPermittedOperationException e){
+                                log.error("Project {} - Failed to delete VNFD with ID {} and version {}, it is not deletable", project.getProjectId(), vnfPkgInfoResource.getVnfdId(), vnfPkgInfoResource.getVnfdVersion());
+                                manoPlugin.notifyDelete(vnfPkgInfoResource.getId().toString(), vnfPkgInfoResource.getVnfdId().toString(), vnfPkgInfoResource.getVnfdVersion(), project.getProjectId(), OperationStatus.FAILED);
+                                List<String> siteOrManoIds = new ArrayList<>();
+                                siteOrManoIds.add(manoPlugin.getPluginId());
+                                VnfPkgOnBoardingNotificationMessage msg =
+                                        new VnfPkgOnBoardingNotificationMessage(vnfPkgInfoResource.getId().toString(), vnfPkgInfoResource.getVnfdId().toString(), vnfPkgInfoResource.getVnfdVersion(), project.getProjectId(), UUID.randomUUID(), ScopeType.LOCAL, OperationStatus.SENT, siteOrManoIds, new KeyValuePair(rootDir + ConfigurationParameters.storageVnfpkgsSubfolder + "/" + project.getProjectId() + "/" + vnfPkgInfoResource.getVnfdId() + "/" + vnfPkgInfoResource.getVnfdVersion(), PathType.LOCAL.toString()));
+                                try {
+                                    notificationManager.sendVnfPkgOnBoardingNotification(msg);
+                                } catch (FailedOperationException e1) {
+                                    log.error(e1.getMessage());
+                                    log.debug(null, e1);
+                                }
                             } catch (Exception e) {
                                 log.error("Project {} - Failed to delete VNFD with ID {} and version {}", project.getProjectId(), vnfPkgInfoResource.getVnfdId(), vnfPkgInfoResource.getVnfdVersion());
                                 log.debug(null, e);
@@ -230,7 +244,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
 
     public void runtimeVnfOnBoarding(VnfPkgOnBoardingNotificationMessage notification){
         List<String> projects = new ArrayList<>();
-        if(notification.getProject() == null){
+        if(notification.getProject() == null || notification.getProject().equals("all")){
             List<ProjectResource> projectResourceList = projectRepository.findAll();
             for(ProjectResource projectResource : projectResourceList)
                 projects.add(projectResource.getProjectId());
@@ -291,7 +305,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
 
     public void runtimeVnfDeletion(VnfPkgDeletionNotificationMessage notification){
         List<String> projects = new ArrayList<>();
-        if(notification.getProject() == null){
+        if(notification.getProject() == null || notification.getProject().equals("all")){
             List<ProjectResource> projectResourceList = projectRepository.findAll();
             for(ProjectResource projectResource : projectResourceList)
                 projects.add(projectResource.getProjectId());
@@ -316,6 +330,19 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                             notificationManager.sendVnfPkgDeletionNotification(new VnfPkgDeletionNotificationMessage(vnfPkgInfoResource.getId().toString(), notification.getVnfdId(), notification.getVnfdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.SUCCESSFULLY_DONE, notification.getPluginId()));
                         } else {
                             notificationManager.sendVnfPkgDeletionNotification(new VnfPkgDeletionNotificationMessage(vnfPkgInfoResource.getId().toString(), notification.getVnfdId(), notification.getVnfdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.SUCCESSFULLY_DONE, notification.getPluginId()));
+                        }
+                    }catch (NotPermittedOperationException e){
+                        log.error("Project {} - Failed to delete VNFD with ID {} and version {}, it is not deletable", project, vnfPkgInfoResource.getVnfdId(), vnfPkgInfoResource.getVnfdVersion());
+                        VnfPkgDeletionNotificationMessage msg = new VnfPkgDeletionNotificationMessage(vnfPkgInfoResource.getId().toString(), notification.getVnfdId(), notification.getVnfdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.FAILED, notification.getPluginId());
+                        List<String> siteOrManoIds = new ArrayList<>();
+                        siteOrManoIds.add(notification.getPluginId());
+                        VnfPkgOnBoardingNotificationMessage msg1 = new VnfPkgOnBoardingNotificationMessage(vnfPkgInfoResource.getId().toString(), vnfPkgInfoResource.getVnfdId().toString(), vnfPkgInfoResource.getVnfdVersion(), project, UUID.randomUUID(), ScopeType.LOCAL, OperationStatus.SENT, siteOrManoIds, new KeyValuePair(rootDir + ConfigurationParameters.storageVnfpkgsSubfolder + "/" + project + "/" + vnfPkgInfoResource.getVnfdId() + "/" + vnfPkgInfoResource.getVnfdVersion(), PathType.LOCAL.toString()));
+                        try {
+                            notificationManager.sendVnfPkgDeletionNotification(msg);
+                            notificationManager.sendVnfPkgOnBoardingNotification(msg1);
+                        } catch (FailedOperationException e1) {
+                            log.error(e1.getMessage());
+                            log.debug(null, e1);
                         }
                     } catch (Exception e) {
                         log.error("Project {} - Failed to delete VNFD with ID {} and version {}", project, vnfPkgInfoResource.getVnfdId(), vnfPkgInfoResource.getVnfdVersion());
@@ -454,7 +481,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                 vnfPkgInfoResource.isDeletable();
 
                 if(!isInternalRequest && vnfPkgInfoResource.isRetrievedFromMANO()){
-                    throw new NotAuthorizedOperationException("Cannot remove VNF Pkg info, it has been retrieved from MANO");
+                    throw new FailedOperationException("Cannot remove VNF Pkg info, it has been retrieved from MANO");
                 }
 
                 log.debug("The VNF Pkg info can be removed");
@@ -521,7 +548,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         }
 
         if(!isInternalRequest && vnfPkgInfoResource.isRetrievedFromMANO()){
-            throw new NotAuthorizedOperationException("Cannot update VNF Pkg info, it has been retrieved from MANO");
+            throw new FailedOperationException("Cannot update VNF Pkg info, it has been retrieved from MANO");
         }
 
         //TODO add possibility to update onboarding on manos
