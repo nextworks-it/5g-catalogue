@@ -34,7 +34,7 @@ public class OSMHttpConnection {
      * @param body HTTP body
      * @return HttpResponse message
      */
-    public static OSMHttpResponse establishOSMHttpConnection(String url, OSMHttpMethod method, List<Header> headers, Object body) {
+    public static OSMHttpResponse establishOSMHttpConnection(String url, OSMHttpMethod method, List<Header> headers, Object body, String storagePath) {
 
         URL url_;
         HttpURLConnection conn = null;
@@ -79,7 +79,7 @@ public class OSMHttpConnection {
             e.printStackTrace();
         }
 
-        response = OSMHttpResponse.getResponseFromOSMHttpConnection(conn);
+        response = OSMHttpResponse.getResponseFromOSMHttpConnection(conn, storagePath);
         return response;
     }
 

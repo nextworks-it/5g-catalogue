@@ -65,7 +65,7 @@ public class ArchiveParser {
         admittedFolders.add("Files/Monitoring/");
     }
 
-    public CSARInfo archiveToCSARInfo(MultipartFile file, boolean isVnfPkg, boolean store)
+    public CSARInfo archiveToCSARInfo(String project, MultipartFile file, boolean isVnfPkg, boolean store)
             throws IOException, MalformattedElementException, FailedOperationException {
 
         CSARInfo csarInfo = new CSARInfo();
@@ -158,7 +158,7 @@ public class ArchiveParser {
 
             if (store) {
                 try {
-                    String packageFilename = storageService.storePkg(dt.getMetadata().getDescriptorId(), dt.getMetadata().getVersion(), file, isVnfPkg);
+                    String packageFilename = storageService.storePkg(project, dt.getMetadata().getDescriptorId(), dt.getMetadata().getVersion(), file, isVnfPkg);
                     csarInfo.setPackageFilename(packageFilename);
                     log.debug("Stored Pkg: " + packageFilename);
                 } catch (FailedOperationException e) {
@@ -167,7 +167,7 @@ public class ArchiveParser {
                 }
 
                 try {
-                    unzip(new ByteArrayInputStream(bytes), dt, isVnfPkg);
+                    unzip(new ByteArrayInputStream(bytes), project, dt, isVnfPkg);
                 } catch (FailedOperationException e) {
                     log.error("Failure while unzipping Pkg with descriptor Id " + dt.getMetadata().getDescriptorId() + ": " + e.getMessage());
                     throw new FailedOperationException("Failure while unzipping Pkg with descriptor Id " + dt.getMetadata().getDescriptorId() + ": " + e.getMessage());
@@ -217,13 +217,13 @@ public class ArchiveParser {
         return mst_name;
     }
 
-    public void unzip(InputStream archive, DescriptorTemplate dt, boolean isVnfPkg) throws IOException, FailedOperationException, MalformattedElementException {
+    public void unzip(InputStream archive, String project, DescriptorTemplate dt, boolean isVnfPkg) throws IOException, FailedOperationException, MalformattedElementException {
         ZipInputStream zis = new ZipInputStream(archive);
         ZipEntry zipEntry = zis.getNextEntry();
         String element_filename;
         while (zipEntry != null) {
             log.debug("Storing CSAR element: " + zipEntry.getName());
-            element_filename = storageService.storePkgElement(zis, zipEntry, dt.getMetadata().getDescriptorId(), dt.getMetadata().getVersion(), isVnfPkg);
+            element_filename = storageService.storePkgElement(zis, zipEntry, project, dt.getMetadata().getDescriptorId(), dt.getMetadata().getVersion(), isVnfPkg);
             log.debug("Stored Pkg element: " + element_filename);
             zipEntry = zis.getNextEntry();
         }

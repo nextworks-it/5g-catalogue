@@ -61,6 +61,8 @@ public class VnfPkgInfoResource {
 
     private boolean isPublished;
 
+    private boolean isRetrievedFromMANO;
+
     public VnfPkgInfoResource() {
     }
 
@@ -252,6 +254,14 @@ public class VnfPkgInfoResource {
 
     public void setPublished(boolean published) {
         isPublished = published;
+    }
+
+    public boolean isRetrievedFromMANO() {
+        return isRetrievedFromMANO;
+    }
+
+    public void setRetrievedFromMANO(boolean retrievedFromMANO) {
+        isRetrievedFromMANO = retrievedFromMANO;
     }
 
     public void isDeletable() throws NotPermittedOperationException {

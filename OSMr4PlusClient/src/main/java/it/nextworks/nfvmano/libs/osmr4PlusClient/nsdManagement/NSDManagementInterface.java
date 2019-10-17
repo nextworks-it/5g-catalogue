@@ -11,6 +11,6 @@ public interface NSDManagementInterface {
     OSMHttpResponse getNsd(String nsdInfoId);
     OSMHttpResponse getNsdInfo(String nsdInfoId);
     OSMHttpResponse deleteNsd(String nsdInfoId);
-    OSMHttpResponse getNsdContent(String nsdInfoId);
+    OSMHttpResponse getNsdContent(String nsdInfoId, String storagePath);
     OSMHttpResponse getNsdInfoList();
 }

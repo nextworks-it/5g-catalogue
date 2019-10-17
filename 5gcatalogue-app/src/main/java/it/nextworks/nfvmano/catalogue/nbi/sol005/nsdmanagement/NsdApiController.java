@@ -60,7 +60,7 @@ public class NsdApiController implements NsdApi {
     }
 
     public ResponseEntity<?> createNsdInfo(
-            @RequestParam(required = false) String project,
+            @RequestParam(required = true) String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "", required = true) @Valid @RequestBody CreateNsdInfoRequest body) {
 
@@ -157,7 +157,7 @@ public class NsdApiController implements NsdApi {
     }
 
     public ResponseEntity<?> updateNSDInfo(
-            @RequestParam(required = false) String project,
+            @RequestParam(required = true) String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
             @ApiParam(value = "", required = true) @Valid @RequestBody NsdInfoModifications body) {
@@ -195,7 +195,7 @@ public class NsdApiController implements NsdApi {
     }
 
     public ResponseEntity<?> deleteNSDInfo(
-            @RequestParam(required = false) String project,
+            @RequestParam(required = true) String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId) {
 
@@ -285,7 +285,7 @@ public class NsdApiController implements NsdApi {
     }
 
     public ResponseEntity<?> uploadNSD(
-            @RequestParam(required = false) String project,
+            @RequestParam(required = true) String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
             @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
@@ -352,7 +352,7 @@ public class NsdApiController implements NsdApi {
     }
 
     public ResponseEntity<?> createPNFDInfo(
-            @RequestParam(required = false) String project,
+            @RequestParam(required = true) String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "", required = true) @Valid @RequestBody CreatePnfdInfoRequest body) {
 
@@ -498,7 +498,7 @@ public class NsdApiController implements NsdApi {
     }
 
     public ResponseEntity<?> updatePNFDInfo(
-            @RequestParam(required = false) String project,
+            @RequestParam(required = true) String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId,
             @ApiParam(value = "", required = true) @Valid @RequestBody PnfdInfoModifications body) {
@@ -519,7 +519,7 @@ public class NsdApiController implements NsdApi {
     }
 
     public ResponseEntity<?> deletePNFDInfo(
-            @RequestParam(required = false) String project,
+            @RequestParam(required = true) String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "", required = true) @PathVariable("pnfdInfoId") String pnfdInfoId) {
 
@@ -620,7 +620,7 @@ public class NsdApiController implements NsdApi {
             @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
             @ApiParam(value = "The request shall set the \"Content-Type\" HTTP header to \"text/plain\"")
             @RequestHeader(value = "Content-Type", required = false) String contentType,
-            @RequestParam(required = false) String project,
+            @RequestParam(required = true) String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         log.debug("Processing REST request for Uploading PNFD content in PNFD info " + pnfdInfoId);
 

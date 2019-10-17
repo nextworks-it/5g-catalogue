@@ -1,19 +1,19 @@
 package it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue;
 
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.NsdOnBoardingNotificationMessage;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.PnfdOnBoardingNotificationMessage;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.VnfPkgOnBoardingNotificationMessage;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.CatalogueMessageType;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.ScopeType;
 import it.nextworks.nfvmano.catalogue.engine.NotificationManager;
 import it.nextworks.nfvmano.catalogue.engine.resources.NotificationResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.PnfdInfoResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
-import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
-import it.nextworks.nfvmano.catalogue.messages.PnfdOnBoardingNotificationMessage;
-import it.nextworks.nfvmano.catalogue.messages.VnfPkgOnBoardingNotificationMessage;
-import it.nextworks.nfvmano.catalogue.messages.elements.CatalogueMessageType;
-import it.nextworks.nfvmano.catalogue.messages.elements.ScopeType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboardingStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdOnboardingStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.PackageOnboardingStateType;
-import it.nextworks.nfvmano.catalogue.plugins.PluginType;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginType;
 import it.nextworks.nfvmano.catalogue.repos.CatalogueRepository;
 import it.nextworks.nfvmano.catalogue.repos.NsdInfoRepository;
 import it.nextworks.nfvmano.catalogue.repos.PnfdInfoRepository;
@@ -85,8 +85,8 @@ public class Cat2CatOperationService {
         UUID operationId = insertOperationInfoInConsumersMap(nsdInfoId,
                 CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION, OperationStatus.SENT);
 
-        NsdOnBoardingNotificationMessage msg = new NsdOnBoardingNotificationMessage(nsdInfoId, null,
-                operationId, ScopeType.C2C, OperationStatus.SENT);
+        NsdOnBoardingNotificationMessage msg = new NsdOnBoardingNotificationMessage(nsdInfoId, null, null, null,
+                operationId, ScopeType.C2C, OperationStatus.SENT, null, null,null);
 
         try {
             notificationManager.sendNsdOnBoardingNotification(msg);
@@ -101,8 +101,8 @@ public class Cat2CatOperationService {
         UUID operationId = insertOperationInfoInConsumersMap(pnfdInfoId,
                 CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION, OperationStatus.SENT);
 
-        PnfdOnBoardingNotificationMessage msg = new PnfdOnBoardingNotificationMessage(pnfdInfoId, null,
-                operationId, ScopeType.C2C, OperationStatus.SENT);
+        PnfdOnBoardingNotificationMessage msg = new PnfdOnBoardingNotificationMessage(pnfdInfoId, null, null, null,
+                operationId, ScopeType.C2C, OperationStatus.SENT, null, null);
 
         try {
             notificationManager.sendPnfdOnBoardingNotification(msg);
@@ -117,8 +117,8 @@ public class Cat2CatOperationService {
         UUID operationId = insertOperationInfoInConsumersMap(vnfPkgInfoId,
                 CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION, OperationStatus.SENT);
 
-        VnfPkgOnBoardingNotificationMessage msg = new VnfPkgOnBoardingNotificationMessage(vnfPkgInfoId, null,
-                operationId, ScopeType.C2C, OperationStatus.SENT);
+        VnfPkgOnBoardingNotificationMessage msg = new VnfPkgOnBoardingNotificationMessage(vnfPkgInfoId, null, null, null,
+                operationId, ScopeType.C2C, OperationStatus.SENT,  null, null,null);
 
         try {
             notificationManager.sendVnfPkgOnBoardingNotification(msg);

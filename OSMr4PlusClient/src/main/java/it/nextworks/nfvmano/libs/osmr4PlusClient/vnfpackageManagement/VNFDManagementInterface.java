@@ -11,6 +11,6 @@ public interface VNFDManagementInterface {
     OSMHttpResponse getVnfd(String vnfPkgId);
     OSMHttpResponse getVnfPackageInfo(String vnfPkgId);
     OSMHttpResponse deleteVnfPackage(String vnfPkgId);
-    OSMHttpResponse getVnfPackageContent(String vnfPkgId);
+    OSMHttpResponse getVnfPackageContent(String vnfPkgId, String storagePath);
     OSMHttpResponse getVnfPackageList();
 }

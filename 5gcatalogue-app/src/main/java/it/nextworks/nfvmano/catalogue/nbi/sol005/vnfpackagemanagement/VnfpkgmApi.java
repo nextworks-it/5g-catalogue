@@ -29,6 +29,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.util.List;
+import java.util.UUID;
 
 @javax.annotation.Generated(value = "io.swagger.codegen.languages.SpringCodegen", date = "2018-10-05T11:50:31.473+02:00")
 
@@ -57,6 +59,7 @@ public interface VnfpkgmApi {
             produces = {"application/json"},
             method = RequestMethod.GET)
     ResponseEntity<?> getVNFPkgsInfo(@RequestParam(required = false) String project,
+                                     @RequestParam(required = false) UUID vnfdId,
                                      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization);
 
     @ApiOperation(value = "Query VNF Package Info", nickname = "queryVNFPkgInfo", notes = "", response = VnfPkgInfo.class, tags = {})

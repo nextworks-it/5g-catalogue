@@ -95,7 +95,7 @@ public class ToscaTranslatorTests {
         MultipartFile mp_file = new MockMultipartFile(archive.getName(), input);
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
-        DescriptorTemplate dt = archiveParser.archiveToCSARInfo(mp_file, true, false).getMst();
+        DescriptorTemplate dt = archiveParser.archiveToCSARInfo("admin", mp_file, true, false).getMst();
 
         assertNotNull(dt);
 

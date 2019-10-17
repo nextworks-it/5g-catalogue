@@ -15,6 +15,10 @@
  */
 package it.nextworks.nfvmano.catalogue.engine;
 
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.NsdDeletionNotificationMessage;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.NsdOnBoardingNotificationMessage;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.VnfPkgDeletionNotificationMessage;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.VnfPkgOnBoardingNotificationMessage;
 import it.nextworks.nfvmano.catalogue.engine.elements.ContentType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.*;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
@@ -23,6 +27,13 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface NsdManagementInterface {
+
+    void startupSync();
+
+    void runtimeNsDeletion(NsdDeletionNotificationMessage notification);
+
+    void runtimeNsOnBoarding(NsdOnBoardingNotificationMessage notification);
+
     NsdInfo createNsdInfo(CreateNsdInfoRequest request, String project) throws FailedOperationException, MalformattedElementException, MethodNotImplementedException, NotPermittedOperationException, NotAuthorizedOperationException;
 
     void deleteNsdInfo(String nsdInfoId, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException, NotAuthorizedOperationException;

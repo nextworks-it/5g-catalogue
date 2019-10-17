@@ -18,6 +18,7 @@ package it.nextworks.nfvmano.catalogue.repos;
 import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,8 +26,11 @@ public interface VnfPkgInfoRepository extends JpaRepository<VnfPkgInfoResource, 
 
     Optional<VnfPkgInfoResource> findById(UUID id);
 
-    Optional<VnfPkgInfoResource> findByVnfdId(UUID vnfdId);
+    List<VnfPkgInfoResource> findByVnfdId(UUID vnfdId);
 
-    Optional<VnfPkgInfoResource> findByVnfdIdAndVnfdVersion(UUID vnfdId, String vnfdVersion);
+    List<VnfPkgInfoResource> findByVnfdIdAndVnfdVersion(UUID vnfdId, String vnfdVersion);
 
+    Optional<VnfPkgInfoResource> findByVnfdIdAndVnfdVersionAndProjectId(UUID vnfdId, String vnfdVersion, String projectId);
+
+    List<VnfPkgInfoResource> findByProjectId(String projectId);
 }

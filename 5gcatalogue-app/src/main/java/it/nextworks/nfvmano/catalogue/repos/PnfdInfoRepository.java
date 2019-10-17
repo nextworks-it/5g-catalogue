@@ -28,4 +28,6 @@ public interface PnfdInfoRepository extends JpaRepository<PnfdInfoResource, UUID
     Optional<PnfdInfoResource> findByPnfdId(UUID pnfdId);
 
     Optional<PnfdInfoResource> findByPnfdIdAndPnfdVersion(UUID pnfdId, String pnfdVersion);
+
+    Optional<PnfdInfoResource> findByPnfdIdAndPnfdVersionAndProjectId(UUID pnfdId, String pnfdVersion, String projectId);
 }

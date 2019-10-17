@@ -21,27 +21,32 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import it.nextworks.nfvmano.catalogue.auth.AuthUtilities;
 import it.nextworks.nfvmano.catalogue.auth.projectmanagement.ProjectResource;
-import it.nextworks.nfvmano.catalogue.common.Utilities;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.NsdDeletionNotificationMessage;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.NsdOnBoardingNotificationMessage;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.PnfdDeletionNotificationMessage;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.PnfdOnBoardingNotificationMessage;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.CatalogueMessageType;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.PathType;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.ScopeType;
+import it.nextworks.nfvmano.catalogue.common.ConfigurationParameters;
 import it.nextworks.nfvmano.catalogue.engine.elements.ContentType;
 import it.nextworks.nfvmano.catalogue.engine.resources.NotificationResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.PnfdInfoResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
-import it.nextworks.nfvmano.catalogue.messages.NsdDeletionNotificationMessage;
-import it.nextworks.nfvmano.catalogue.messages.NsdOnBoardingNotificationMessage;
-import it.nextworks.nfvmano.catalogue.messages.PnfdDeletionNotificationMessage;
-import it.nextworks.nfvmano.catalogue.messages.PnfdOnBoardingNotificationMessage;
-import it.nextworks.nfvmano.catalogue.messages.elements.CatalogueMessageType;
-import it.nextworks.nfvmano.catalogue.messages.elements.ScopeType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.*;
-import it.nextworks.nfvmano.catalogue.plugins.PluginType;
+import it.nextworks.nfvmano.catalogue.plugins.PluginsManager;
 import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.C2COnboardingStateType;
-import it.nextworks.nfvmano.catalogue.plugins.mano.MANO;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginType;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANO;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANOPlugin;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.repos.MANORepository;
 import it.nextworks.nfvmano.catalogue.repos.*;
 import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
 import it.nextworks.nfvmano.catalogue.translators.tosca.ArchiveParser;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.catalogue.translators.tosca.elements.CSARInfo;
+import it.nextworks.nfvmano.libs.common.elements.KeyValuePair;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
@@ -84,6 +89,12 @@ public class NsdManagementService implements NsdManagementInterface {
     private MANORepository MANORepository;
 
     @Autowired
+    private PluginsManager pluginManger;
+
+    @Autowired
+    private VnfPackageManagementService vnfPackageManagementService;
+
+    @Autowired
     private VnfPkgInfoRepository vnfPkgInfoRepository;
 
     @Autowired
@@ -98,12 +109,28 @@ public class NsdManagementService implements NsdManagementInterface {
     @Autowired
     private ProjectRepository projectRepository;
 
+    @Value("${catalogue.storageRootDir}")
+    private String rootDir;
+
     @Value("${keycloak.enabled:true}")
     private boolean keycloakEnabled;
 
     private Map<String, Map<String, NotificationResource>> operationIdToConsumersAck = new HashMap<>();
 
     public NsdManagementService() {
+    }
+
+    @Override
+    public void startupSync(){
+
+    }
+
+    public void runtimeNsOnBoarding(NsdOnBoardingNotificationMessage notification){
+
+    }
+
+    public void runtimeNsDeletion(NsdDeletionNotificationMessage notification){
+
     }
 
     protected void updateOperationInfoInConsumersMap(UUID operationId, OperationStatus opStatus, String manoId,
@@ -119,10 +146,12 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     private UUID insertOperationInfoInConsumersMap(String nsdInfoId, CatalogueMessageType messageType,
-                                                   OperationStatus opStatus) {
+                                                   OperationStatus opStatus, List<String> siteOrManoIds) {
         UUID operationId = UUID.randomUUID();
         log.debug("Updating consumers internal mapping for operationId {}", operationId);
         List<MANO> manos = MANORepository.findAll();
+        if(siteOrManoIds != null)
+            manos.removeIf(mano -> !siteOrManoIds.contains(mano.getManoId()) && !siteOrManoIds.contains(mano.getManoSite()));
         Map<String, NotificationResource> pluginToOperationState = new HashMap<>();
         for (MANO mano : manos) {
             pluginToOperationState.put(mano.getManoId(), new NotificationResource(nsdInfoId, messageType, opStatus, PluginType.MANO));
@@ -130,6 +159,50 @@ public class NsdManagementService implements NsdManagementInterface {
         }
         operationIdToConsumersAck.put(operationId.toString(), pluginToOperationState);
         return operationId;
+    }
+
+    private List<String> checkWhereOnboardNS(NsdInfoResource nsdInfoResource){
+        List<String> availableManos = new ArrayList<>(pluginManger.manoDrivers.keySet());
+        Map<String, NotificationResource> onBoardingMap;
+
+        String mano;
+        Iterator<String> manosIterator = availableManos.iterator();
+        for(UUID vnfInfoId : nsdInfoResource.getVnfPkgIds()){
+            Optional<VnfPkgInfoResource> vnfPkgInfoResource = vnfPkgInfoRepository.findById(vnfInfoId);
+            if(vnfPkgInfoResource.isPresent()) {
+                onBoardingMap = vnfPkgInfoResource.get().getAcknowledgedOnboardOpConsumers();
+                while(manosIterator.hasNext()) {
+                    mano = manosIterator.next();
+                    if (!onBoardingMap.containsKey(mano) || !onBoardingMap.get(mano).getOpStatus().equals(OperationStatus.SUCCESSFULLY_DONE))
+                        manosIterator.remove();
+                }
+            }
+        }
+        manosIterator = availableManos.iterator();
+        for(UUID pnfInfoId : nsdInfoResource.getPnfdInfoIds()){
+            Optional<PnfdInfoResource> pnfdInfoResource = pnfdInfoRepo.findById(pnfInfoId);
+            if(pnfdInfoResource.isPresent()){
+                onBoardingMap = pnfdInfoResource.get().getAcknowledgedOnboardOpConsumers();
+                while(manosIterator.hasNext()) {
+                    mano = manosIterator.next();
+                    if (!onBoardingMap.containsKey(mano) || !onBoardingMap.get(mano).getOpStatus().equals(OperationStatus.SUCCESSFULLY_DONE))
+                        manosIterator.remove();
+                }
+            }
+        }
+        manosIterator = availableManos.iterator();
+        for(UUID nestedNsdInfoId : nsdInfoResource.getNestedNsdInfoIds()){
+            Optional<NsdInfoResource> nestedNsInfoResource = nsdInfoRepo.findById(nestedNsdInfoId);
+            if(nestedNsInfoResource.isPresent()){
+                onBoardingMap = nestedNsInfoResource.get().getAcknowledgedOnboardOpConsumers();
+                while(manosIterator.hasNext()) {
+                    mano = manosIterator.next();
+                    if (!onBoardingMap.containsKey(mano) || !onBoardingMap.get(mano).getOpStatus().equals(OperationStatus.SUCCESSFULLY_DONE))
+                        manosIterator.remove();
+                }
+            }
+        }
+        return availableManos;
     }
 
     @Override
@@ -256,18 +329,18 @@ public class NsdManagementService implements NsdManagementInterface {
                     // dbWrapper.deleteNsd(nsdId);
 
                     try {
-                        storageService.deleteNsd(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion());
+                        storageService.deleteNsd(project, nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion());
                     } catch (Exception e) {
                         log.error("Unable to delete NSD with nsdId {} from fylesystem", nsdInfo.getNsdId().toString());
                         log.error("Details: ", e);
                     }
 
                     UUID operationId = insertOperationInfoInConsumersMap(nsdInfoId,
-                            CatalogueMessageType.NSD_DELETION_NOTIFICATION, OperationStatus.SENT);
+                            CatalogueMessageType.NSD_DELETION_NOTIFICATION, OperationStatus.SENT, null);
 
                     log.debug("NSD {} locally removed. Sending nsdDeletionNotificationMessage to bus", nsdId);
-                    NsdDeletionNotificationMessage msg = new NsdDeletionNotificationMessage(nsdInfoId, nsdId.toString(),
-                            operationId, ScopeType.LOCAL, OperationStatus.SENT, null);
+                    NsdDeletionNotificationMessage msg = new NsdDeletionNotificationMessage(nsdInfoId, nsdId.toString(), nsdInfo.getNsdVersion(), project,
+                            operationId, ScopeType.LOCAL, OperationStatus.SENT);
                     notificationManager.sendNsdDeletionNotification(msg);
                 }
 
@@ -322,7 +395,7 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new FailedOperationException("Found more than one file for NSD in YAML format. Error");
         }
         String nsdFilename = nsdFilenames.get(0);
-        return storageService.loadFileAsResource(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdFilename, false);
+        return storageService.loadFileAsResource(project, nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdFilename, false);
     }
 
     @Override
@@ -375,7 +448,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     throw new FailedOperationException("Found more than one file for NSD in YAML format");
                 }
                 String nsdFilename = nsdFilenames.get(0);
-                return storageService.loadFileAsResource(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdFilename, false);
+                return storageService.loadFileAsResource(project, nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdFilename, false);
 
                 /*
                  * //String nsdString = DescriptorsParser.descriptorTemplateToString(nsd);
@@ -393,7 +466,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     throw new FailedOperationException("Found more than one file for NSD in YAML format. Error");
                 }
                 String nsdFilename = nsdFilenames.get(0);
-                return storageService.loadFileAsResource(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdFilename, false);
+                return storageService.loadFileAsResource(project, nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdFilename, false);
             }
             default: {
                 log.error("Content type not yet supported");
@@ -606,8 +679,8 @@ public class NsdManagementService implements NsdManagementInterface {
         // pre-set nsdinfo attributes to properly store NSDs
         // UUID nsdId = UUID.randomUUID();
 
-        List<String> includedVnfds;
-        List<String> includedPnfds;
+        Map<String, KeyValuePair> includedVnfds;
+        Map<String, KeyValuePair> includedPnfds;
         NsdOnboardingStateType onboardingStateType = NsdOnboardingStateType.UPLOADING;
 
         CSARInfo csarInfo = null;
@@ -625,7 +698,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     //File nsdFile = convertToFile(nsdMpFile);
                     //dt = DescriptorsParser.fileToDescriptorTemplate(nsdFile);
 
-                    csarInfo = archiveParser.archiveToCSARInfo(nsd, false, true);
+                    csarInfo = archiveParser.archiveToCSARInfo(project, nsd, false, true);
                     dt = csarInfo.getMst();
                     nsdFilename = csarInfo.getPackageFilename();
 
@@ -640,9 +713,9 @@ public class NsdManagementService implements NsdManagementInterface {
 
                     nsdId = UUID.fromString(nsdId_string);
 
-                    Optional<NsdInfoResource> optionalNsdInfoResource = nsdInfoRepo.findByNsdIdAndNsdVersion(nsdId, dt.getMetadata().getVersion());
+                    Optional<NsdInfoResource> optionalNsdInfoResource = nsdInfoRepo.findByNsdIdAndNsdVersionAndProjectId(nsdId, dt.getMetadata().getVersion(), project);
                     if (optionalNsdInfoResource.isPresent()) {
-                        throw new AlreadyExistingEntityException("An NSD with the same id and version already exists in the Catalogue DB");
+                        throw new AlreadyExistingEntityException("An NSD with the same id and version already exists in the project");
                     }
 
                     nsdInfo.setNsdId(nsdId);
@@ -715,9 +788,9 @@ public class NsdManagementService implements NsdManagementInterface {
 
                     nsdId = UUID.fromString(nsdId_string);
 
-                    Optional<NsdInfoResource> optionalNsdInfoResource = nsdInfoRepo.findByNsdIdAndNsdVersion(nsdId, dt.getMetadata().getVersion());
+                    Optional<NsdInfoResource> optionalNsdInfoResource = nsdInfoRepo.findByNsdIdAndNsdVersionAndProjectId(nsdId, dt.getMetadata().getVersion(), project);
                     if (optionalNsdInfoResource.isPresent()) {
-                        throw new AlreadyExistingEntityException("An NSD with the same id and version already exists in the Catalogue DB");
+                        throw new AlreadyExistingEntityException("An NSD with the same id and version already exists in the project");
                     }
 
                     nsdInfo.setNsdId(nsdId);
@@ -727,7 +800,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     // pre-set nsdinfo attributes to properly store NSDs
                     nsdInfo.setNsdVersion(dt.getMetadata().getVersion());
 
-                    nsdFilename = storageService.storePkg(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsd, false);
+                    nsdFilename = storageService.storePkg(project, nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsd, false);
 
                     log.debug("NSD file successfully stored");
 
@@ -779,7 +852,6 @@ public class NsdManagementService implements NsdManagementInterface {
 
         log.debug("Updating NSD info");
         // nsdInfo.setNsdId(nsdId);
-        // TODO: here it is actually onboarded only locally and just in the DB. To be
         // updated when we will implement also the package uploading
         nsdInfo.setNsdOnboardingState(NsdOnboardingStateType.LOCAL_ONBOARDED);
         nsdInfo.setNsdOperationalState(NsdOperationalStateType.ENABLED);
@@ -812,7 +884,7 @@ public class NsdManagementService implements NsdManagementInterface {
         }
 
         List<UUID> vnfPkgIds = new ArrayList<>();
-        for (String vnfdInfoId : includedVnfds) {
+        for (String vnfdInfoId : includedVnfds.keySet()) {
             log.debug("Adding vnfPkgInfo Id {} to vnfPkgs list in nsdInfo", vnfdInfoId);
             log.debug("Adding vnfPkgInfo Id {} to vnfPkgs list in nsdInfo", vnfdInfoId);
             vnfPkgIds.add(UUID.fromString(vnfdInfoId));
@@ -820,7 +892,7 @@ public class NsdManagementService implements NsdManagementInterface {
         nsdInfo.setVnfPkgIds(vnfPkgIds);
 
         List<UUID> pnfdIds = new ArrayList<>();
-        for (String pnfdInfoId : includedPnfds) {
+        for (String pnfdInfoId : includedPnfds.keySet()) {
             log.debug("Adding pnfdInfo Id {} to pnfs list in nsdInfo", pnfdInfoId);
             log.debug("Adding pnfdInfo Id {} to pnfs list in nsdInfo", pnfdInfoId);
             pnfdIds.add(UUID.fromString(pnfdInfoId));
@@ -832,11 +904,23 @@ public class NsdManagementService implements NsdManagementInterface {
             log.warn("Could not delete temporary NSD content file");
         }
 
-        // TODO: request to Policy Manager for retrieving the MANO Plugins list,
-        // now all plugins are expected to be consumers
+        List<String> manoIds = checkWhereOnboardNS(nsdInfo);
 
+        List<String> siteOrManoIds = new ArrayList<>();
+        Map<String, String> userDefinedData = nsdInfo.getUserDefinedData();
+        if(userDefinedData == null || userDefinedData.size() == 0)
+            siteOrManoIds.addAll(pluginManger.manoDrivers.keySet());
+        else
+            for(MANOPlugin mano : pluginManger.manoDrivers.values())
+                if((userDefinedData.containsKey(mano.getPluginId()) && userDefinedData.get(mano.getPluginId()).equals("yes"))
+                        || (userDefinedData.containsKey(mano.getMano().getManoSite()) && userDefinedData.get(mano.getMano().getManoSite()).equals("yes")))
+                    siteOrManoIds.add(mano.getPluginId());
+
+        siteOrManoIds.removeIf(id -> !manoIds.contains(id));
+
+        // send notification over kafka bus
         UUID operationId = insertOperationInfoInConsumersMap(nsdInfoId,
-                CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION, OperationStatus.SENT);
+                CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION, OperationStatus.SENT, siteOrManoIds);
         nsdInfo.setAcknowledgedOnboardOpConsumers(operationIdToConsumersAck.get(operationId.toString()));
 
         if (isInternalRequest)
@@ -847,11 +931,10 @@ public class NsdManagementService implements NsdManagementInterface {
         nsdInfoRepo.saveAndFlush(nsdInfo);
         log.debug("NSD info updated");
 
-        NsdOnBoardingNotificationMessage msg = new NsdOnBoardingNotificationMessage(nsdInfo.getId().toString(), nsdId.toString(),
-                operationId, ScopeType.LOCAL, OperationStatus.SENT);
+        NsdOnBoardingNotificationMessage msg = new NsdOnBoardingNotificationMessage(nsdInfo.getId().toString(), nsdId.toString(), nsdInfo.getNsdVersion(), project,
+                operationId, ScopeType.LOCAL, OperationStatus.SENT, siteOrManoIds, new KeyValuePair(rootDir + ConfigurationParameters.storageNsdsSubfolder + "/" + project + "/" + nsdId.toString() + "/" + nsdInfo.getNsdVersion(), PathType.LOCAL.toString()));
         msg.setIncludedVnfds(includedVnfds);
         msg.setIncludedPnfds(includedPnfds);
-        msg.setCsarInfo(csarInfo);
         // send notification over kafka bus
         notificationManager.sendNsdOnBoardingNotification(msg);
 
@@ -937,18 +1020,17 @@ public class NsdManagementService implements NsdManagementInterface {
                     UUID pnfdId = pnfdInfo.getPnfdId();
 
                     try {
-                        storageService.deleteNsd(pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion());
+                        storageService.deleteNsd(project, pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion());
                     } catch (Exception e) {
                         log.error("Unable to delete PNFD with nsdId {} from fylesystem", pnfdInfo.getPnfdId().toString());
                         log.error("Details: ", e);
                     }
 
                     UUID operationId = insertOperationInfoInConsumersMap(pnfdInfoId,
-                            CatalogueMessageType.PNFD_DELETION_NOTIFICATION, OperationStatus.SENT);
-
+                            CatalogueMessageType.PNFD_DELETION_NOTIFICATION, OperationStatus.SENT, null);
                     log.debug("PNFD {} locally removed. Sending nsdDeletionNotificationMessage to bus", pnfdId);
-                    PnfdDeletionNotificationMessage msg = new PnfdDeletionNotificationMessage(pnfdInfoId, pnfdId.toString(),
-                            operationId, ScopeType.LOCAL, OperationStatus.SENT, null);
+                    PnfdDeletionNotificationMessage msg = new PnfdDeletionNotificationMessage(pnfdInfoId, pnfdId.toString(), pnfdInfo.getPnfdVersion(), project,
+                            operationId, ScopeType.LOCAL, OperationStatus.SENT);
                     notificationManager.sendPnfdDeletionNotification(msg);
                 }
 
@@ -1012,7 +1094,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     throw new FailedOperationException("Found more than one file for PNFD in YAML format. Error");
                 }
                 String pnfdFilename = pnfdFilenames.get(0);
-                Resource pnfd = storageService.loadFileAsResource(pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfdFilename, false);
+                Resource pnfd = storageService.loadFileAsResource(project, pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfdFilename, false);
 
                 return pnfd;
             }
@@ -1161,9 +1243,9 @@ public class NsdManagementService implements NsdManagementInterface {
 
                     pnfdId = UUID.fromString(pnfdId_string);
 
-                    Optional<PnfdInfoResource> optionalPnfdInfoResource = pnfdInfoRepo.findByPnfdIdAndPnfdVersion(pnfdId, dt.getMetadata().getVersion());
+                    Optional<PnfdInfoResource> optionalPnfdInfoResource = pnfdInfoRepo.findByPnfdIdAndPnfdVersionAndProjectId(pnfdId, dt.getMetadata().getVersion(), project);
                     if (optionalPnfdInfoResource.isPresent()) {
-                        throw new AlreadyExistingEntityException("A PNFD with the same id and version already exists in the Catalogue DB");
+                        throw new AlreadyExistingEntityException("A PNFD with the same id and version already exists in the project");
                     }
 
                     pnfdInfo.setPnfdId(pnfdId);
@@ -1174,7 +1256,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     // pre-set pnfdInfo attributes to properly store PNFDs
                     pnfdInfo.setPnfdVersion(dt.getMetadata().getVersion());
 
-                    pnfdFilename = storageService.storePkg(pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfdMpFile, false);
+                    pnfdFilename = storageService.storePkg(project, pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfdMpFile, false);
 
                     // change contentType to YAML as nsd file is no more zip from now on
                     contentType = ContentType.YAML;
@@ -1230,9 +1312,9 @@ public class NsdManagementService implements NsdManagementInterface {
 
                     pnfdId = UUID.fromString(pnfdId_string);
 
-                    Optional<PnfdInfoResource> optionalPnfdInfoResource = pnfdInfoRepo.findByPnfdIdAndPnfdVersion(pnfdId, dt.getMetadata().getVersion());
+                    Optional<PnfdInfoResource> optionalPnfdInfoResource = pnfdInfoRepo.findByPnfdIdAndPnfdVersionAndProjectId(pnfdId, dt.getMetadata().getVersion(), project);
                     if (optionalPnfdInfoResource.isPresent()) {
-                        throw new AlreadyExistingEntityException("A PNFD with the same id and version already exists in the Catalogue DB");
+                        throw new AlreadyExistingEntityException("A PNFD with the same id and version already exists in project");
                     }
 
                     pnfdInfo.setPnfdId(pnfdId);
@@ -1242,7 +1324,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     // pre-set pnfdInfo attributes to properly store PNFDs
                     pnfdInfo.setPnfdVersion(dt.getMetadata().getVersion());
 
-                    pnfdFilename = storageService.storePkg(pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfd, false);
+                    pnfdFilename = storageService.storePkg(project, pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfd, false);
 
                     log.debug("PNFD file successfully stored");
 
@@ -1312,11 +1394,18 @@ public class NsdManagementService implements NsdManagementInterface {
             log.warn("Could not delete temporary PNFD content file");
         }
 
-        // TODO: request to Policy Manager for retrieving the MANO Plugins list,
-        // now all plugins are expected to be consumers
+        List<String> siteOrManoIds = new ArrayList<>();
+        Map<String, String> userDefinedData = pnfdInfo.getUserDefinedData();
+        if(userDefinedData == null || userDefinedData.size() == 0)
+            siteOrManoIds.addAll(pluginManger.manoDrivers.keySet());
+        else
+            for(MANOPlugin mano : pluginManger.manoDrivers.values())
+                if((userDefinedData.containsKey(mano.getPluginId()) && userDefinedData.get(mano.getPluginId()).equals("yes"))
+                        || (userDefinedData.containsKey(mano.getMano().getManoSite()) && userDefinedData.get(mano.getMano().getManoSite()).equals("yes")))
+                    siteOrManoIds.add(mano.getPluginId());
 
         UUID operationId = insertOperationInfoInConsumersMap(pnfdInfoId,
-                CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION, OperationStatus.SENT);
+                CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION, OperationStatus.SENT, siteOrManoIds);
         pnfdInfo.setAcknowledgedOnboardOpConsumers(operationIdToConsumersAck.get(operationId.toString()));
 
         if (isInternalRequest)
@@ -1327,8 +1416,9 @@ public class NsdManagementService implements NsdManagementInterface {
         pnfdInfoRepo.saveAndFlush(pnfdInfo);
         log.debug("PNFD info updated");
 
-        PnfdOnBoardingNotificationMessage msg = new PnfdOnBoardingNotificationMessage(pnfdInfo.getId().toString(), pnfdId.toString(),
-                operationId, ScopeType.LOCAL, OperationStatus.SENT);
+        //TODO modify
+        PnfdOnBoardingNotificationMessage msg = new PnfdOnBoardingNotificationMessage(pnfdInfo.getId().toString(), pnfdId.toString(), dt.getMetadata().getVersion(), project,
+                operationId, ScopeType.LOCAL, OperationStatus.SENT, siteOrManoIds, new KeyValuePair(rootDir + ConfigurationParameters.storageNsdsSubfolder + "/" + project + "/" + pnfdInfo.getPnfdId().toString() + "/" + pnfdInfo.getPnfdVersion(), PathType.LOCAL.toString()));
 
         // send notification over kafka bus
         notificationManager.sendPnfdOnBoardingNotification(msg);
@@ -1358,7 +1448,7 @@ public class NsdManagementService implements NsdManagementInterface {
         }
     }
 
-    public List<String> checkVNFPkgs(DescriptorTemplate nsd, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, IOException, NotPermittedOperationException, NotAuthorizedOperationException {
+    public Map<String, KeyValuePair> checkVNFPkgs(DescriptorTemplate nsd, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, IOException, NotPermittedOperationException, NotAuthorizedOperationException {
 
         log.debug("Checking VNF Pkgs availability for NSD " + nsd.getMetadata().getDescriptorId() + " with version " + nsd.getMetadata().getVersion());
         if (project != null) {
@@ -1370,7 +1460,7 @@ public class NsdManagementService implements NsdManagementInterface {
         }
         Map<String, VNFNode> vnfNodes = nsd.getTopologyTemplate().getVNFNodes();
         //Map<String, DescriptorTemplate> vnfds = new HashMap<>();
-        List<String> includedVnfds = new ArrayList<>();
+        Map<String, KeyValuePair> includedVnfds = new HashMap<>();
 
         List<VnfPkgInfoResource> vnfPkgInfoResources = new ArrayList<>();
 
@@ -1379,26 +1469,23 @@ public class NsdManagementService implements NsdManagementInterface {
             String vnfdId = vnfNodeEntry.getValue().getProperties().getDescriptorId();
             String version = vnfNodeEntry.getValue().getProperties().getDescriptorVersion();
 
-            Optional<VnfPkgInfoResource> optional = vnfPkgInfoRepository.findByVnfdId(UUID.fromString(vnfdId));
-            VnfPkgInfoResource vnfPkgInfoResource;
-            if (optional.isPresent()) {
-                vnfPkgInfoResource = optional.get();
-                if (project != null && !vnfPkgInfoResource.getProjectId().equals(project))
-                    throw new NotAuthorizedOperationException("Referred VNFD with vnfdId " + vnfdId + " belongs to a different project");
-            } else {
-                throw new NotExistingEntityException("VNFD filename for vnfdId " + vnfdId + " not find in DB");
+            Optional<VnfPkgInfoResource> optional = vnfPkgInfoRepository.findByVnfdIdAndVnfdVersionAndProjectId(UUID.fromString(vnfdId), version, project);
+            if (!optional.isPresent()) {
+                throw new NotExistingEntityException("VNFD filename for vnfdId " + vnfdId + "a nd version " + version + " not find project " + project);
             }
+
+            VnfPkgInfoResource vnfPkgInfoResource = optional.get();
             String fileName = vnfPkgInfoResource.getVnfdFilename();
 
-            log.debug("Searching VNFD {} with vnfdId {} and version {}", fileName, vnfdId, version);
-            File vnfd_file = storageService.loadFileAsResource(vnfdId, version, fileName, true).getFile();
+            log.debug("Searching VNFD {} with vnfdId {} and version {} in project {}", fileName, vnfdId, version, project);
+            File vnfd_file = storageService.loadFileAsResource(project, vnfdId, version, fileName, true).getFile();
             DescriptorTemplate vnfd = descriptorsParser.fileToDescriptorTemplate(vnfd_file);
 
             log.debug("VNFD successfully parsed - its content is: \n"
                     + DescriptorsParser.descriptorTemplateToString(vnfd));
 
-            if (!includedVnfds.contains(vnfPkgInfoResource.getId().toString())) {
-                includedVnfds.add(vnfPkgInfoResource.getId().toString());
+            if (!includedVnfds.containsKey(vnfPkgInfoResource.getId().toString())) {
+                includedVnfds.put(vnfPkgInfoResource.getId().toString(), new KeyValuePair(rootDir + ConfigurationParameters.storageVnfpkgsSubfolder + "/" + project + "/" + vnfdId + "/" + version, PathType.LOCAL.toString()));
                 vnfPkgInfoResources.add(vnfPkgInfoResource);
             }
 
@@ -1417,7 +1504,7 @@ public class NsdManagementService implements NsdManagementInterface {
         return includedVnfds;
     }
 
-    public List<String> checkPNFDs(DescriptorTemplate nsd, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, IOException, NotPermittedOperationException, NotAuthorizedOperationException {
+    public Map<String, KeyValuePair> checkPNFDs(DescriptorTemplate nsd, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, IOException, NotPermittedOperationException, NotAuthorizedOperationException {
 
         log.debug("Checking PNFDs availability for NSD " + nsd.getMetadata().getDescriptorId() + " with version " + nsd.getMetadata().getVersion());
 
@@ -1430,7 +1517,7 @@ public class NsdManagementService implements NsdManagementInterface {
         }
 
         Map<String, PNFNode> pnfNodes = nsd.getTopologyTemplate().getPNFNodes();
-        List<String> includedPnfds = new ArrayList<>();
+        Map<String, KeyValuePair> includedPnfds = new HashMap<>();
 
         List<PnfdInfoResource> pnfdInfoResources = new ArrayList<>();
 
@@ -1439,27 +1526,22 @@ public class NsdManagementService implements NsdManagementInterface {
             String pnfdId = pnfNodeEntry.getValue().getProperties().getDescriptorId();
             String version = pnfNodeEntry.getValue().getProperties().getVersion();
 
-            Optional<PnfdInfoResource> optional = pnfdInfoRepo.findByPnfdId(UUID.fromString(pnfdId));
-            PnfdInfoResource pnfdInfoResource;
-            if (optional.isPresent()) {
-                pnfdInfoResource = optional.get();
-                if (project != null && !pnfdInfoResource.getProjectId().equals(project))
-                    throw new NotAuthorizedOperationException("Referred PNFD with pnfdId " + pnfdId + " belongs to a different project");
-
-            } else {
-                throw new NotExistingEntityException("PNFD filename for pnfdId " + pnfdId + " not find in DB");
+            Optional<PnfdInfoResource> optional = pnfdInfoRepo.findByPnfdIdAndPnfdVersionAndProjectId(UUID.fromString(pnfdId), version, project);
+            if (!optional.isPresent()) {
+                throw new NotExistingEntityException("PNFD filename for pnfdId " + pnfdId + " and version " + version + " not find in project " + project);
             }
+            PnfdInfoResource pnfdInfoResource = optional.get();
             String fileName = pnfdInfoResource.getPnfdFilename().get(0);
 
             log.debug("Searching PNFD {} with pnfdId {} and version {}", fileName, pnfdId, version);
-            File pnfd_file = storageService.loadFileAsResource(pnfdId, version, fileName, false).getFile();
+            File pnfd_file = storageService.loadFileAsResource(project, pnfdId, version, fileName, false).getFile();
             DescriptorTemplate pnfd = descriptorsParser.fileToDescriptorTemplate(pnfd_file);
 
             log.debug("PNFD successfully parsed - its content is: \n"
                     + DescriptorsParser.descriptorTemplateToString(pnfd));
 
-            if (!includedPnfds.contains(pnfdInfoResource.getId().toString())) {
-                includedPnfds.add(pnfdInfoResource.getId().toString());
+            if (!includedPnfds.containsKey(pnfdInfoResource.getId().toString())) {
+                includedPnfds.put(pnfdInfoResource.getId().toString(), new KeyValuePair(rootDir + ConfigurationParameters.storageNsdsSubfolder + "/" + pnfdId + "/" + version, PathType.LOCAL.toString()));
                 pnfdInfoResources.add(pnfdInfoResource);
             }
 
@@ -1517,10 +1599,11 @@ public class NsdManagementService implements NsdManagementInterface {
 
         for (Entry<String, NotificationResource> entry : ackMap.entrySet()) {
             if (entry.getValue().getOperation() == CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION && entry.getValue().getPluginType() == PluginType.MANO) {
-                if (entry.getValue().getOpStatus() == OperationStatus.FAILED) {
-                    log.error("NSD with nsdInfoId {} onboarding failed for mano with manoId {}", nsdInfoId,
-                            entry.getKey());
-
+                if (entry.getValue().getOpStatus() == OperationStatus.SUCCESSFULLY_DONE) {
+                    log.error("NSD with nsdInfoId {} is onboarded in at least one MANO", nsdInfoId);
+                    return NsdOnboardingStateType.ONBOARDED;
+                }
+                /*
                     // TODO: Decide how to handle MANO onboarding failures.
                     return NsdOnboardingStateType.LOCAL_ONBOARDED;
                 } else if (entry.getValue().getOpStatus() == OperationStatus.SENT
@@ -1528,11 +1611,11 @@ public class NsdManagementService implements NsdManagementInterface {
                         || entry.getValue().getOpStatus() == OperationStatus.PROCESSING) {
                     log.debug("NSD with nsdInfoId {} onboarding still in progress for mano with manoId {}");
                     return NsdOnboardingStateType.LOCAL_ONBOARDED;
-                }
+                } */
             }
         }
-        log.debug("NSD with nsdInfoId " + nsdInfoId + " successfully onboarded by all expected consumers");
-        return NsdOnboardingStateType.ONBOARDED;
+        log.debug("NSD with nsdInfoId " + nsdInfoId + " is not onboarded in any MANO");
+        return NsdOnboardingStateType.LOCAL_ONBOARDED;
     }
 
     private NsdInfo buildNsdInfo(NsdInfoResource nsdInfoResource) {
@@ -1639,22 +1722,19 @@ public class NsdManagementService implements NsdManagementInterface {
         for (Entry<String, NotificationResource> entry : ackMap.entrySet()) {
             if (entry.getValue().getOperation() == CatalogueMessageType.PNFD_ONBOARDING_NOTIFICATION
                     && entry.getValue().getPluginType() == PluginType.MANO) {
-                if (entry.getValue().getOpStatus() == OperationStatus.FAILED) {
-                    log.error("PNFD with pnfdInfoId {} onboarding failed for mano with manoId {}", pnfdInfoId,
-                            entry.getKey());
-
-                    // TODO: Decide how to handle MANO onboarding failures.
-                    return PnfdOnboardingStateType.LOCAL_ONBOARDED;
-                } else if (entry.getValue().getOpStatus() == OperationStatus.SENT
+                if (entry.getValue().getOpStatus() == OperationStatus.SUCCESSFULLY_DONE) {
+                    log.error("PNFD with pnfdInfoId {} is onboarded in at least one MANO", pnfdInfoId);
+                    return PnfdOnboardingStateType.ONBOARDED;
+                } /*else if (entry.getValue().getOpStatus() == OperationStatus.SENT
                         || entry.getValue().getOpStatus() == OperationStatus.RECEIVED
                         || entry.getValue().getOpStatus() == OperationStatus.PROCESSING) {
                     log.debug("PNFD with pnfdInfoId {} onboarding still in progress for mano with manoId {}");
                     return PnfdOnboardingStateType.LOCAL_ONBOARDED;
-                }
+                }*/
             }
         }
-        log.debug("PNFD with pnfdInfoId " + pnfdInfoId + " successfully onboarded by all expected consumers");
-        return PnfdOnboardingStateType.ONBOARDED;
+        log.debug("PNFD with pnfdInfoId " + pnfdInfoId + " is not onboarded in any MANO");
+        return PnfdOnboardingStateType.LOCAL_ONBOARDED;
     }
 
     private PnfdInfo buildPnfdInfo(PnfdInfoResource pnfdInfoResource) {

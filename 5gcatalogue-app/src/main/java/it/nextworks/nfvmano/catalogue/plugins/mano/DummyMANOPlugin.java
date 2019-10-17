@@ -15,17 +15,23 @@
  */
 package it.nextworks.nfvmano.catalogue.plugins.mano;
 
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.*;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.ScopeType;
 import it.nextworks.nfvmano.catalogue.engine.NsdManagementInterface;
 import it.nextworks.nfvmano.catalogue.engine.VnfPackageManagementInterface;
-import it.nextworks.nfvmano.catalogue.messages.*;
-import it.nextworks.nfvmano.catalogue.messages.elements.ScopeType;
-import it.nextworks.nfvmano.catalogue.plugins.PluginOperationalState;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginOperationalState;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANO;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANOPlugin;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANOType;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
+import it.nextworks.nfvmano.libs.common.elements.KeyValuePair;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
+
+import java.util.Map;
 
 public class DummyMANOPlugin extends MANOPlugin {
 
@@ -40,19 +46,41 @@ public class DummyMANOPlugin extends MANOPlugin {
             DescriptorsParser descriptorsParser,
             String localTopic,
             String remoteTopic,
-            KafkaTemplate<String, String> kafkaTemplate
+            KafkaTemplate<String, String> kafkaTemplate,
+            boolean manoSync
     ) {
         super(
                 manoType,
                 mano,
                 kafkaBootstrapServers,
-                nsdService,
-                vnfdService,
-                descriptorsParser,
                 localTopic,
                 remoteTopic,
-                kafkaTemplate
+                kafkaTemplate,
+                manoSync
         );
+    }
+
+    @Override
+    public Map<String, String> getAllVnfd(String project){
+        return null;
+    }
+
+    @Override
+    public Map<String, String> getAllNsd(String project){
+        return null;
+    }
+
+    @Override
+    public KeyValuePair getTranslatedPkgPath(String descriptorId, String descriptorVersion, String project){
+        return null;
+    }
+
+    @Override
+    public void notifyOnboarding(String infoId, String descriptorId, String descriptorVersion, String project, OperationStatus opStatus){
+    }
+
+    @Override
+    public void notifyDelete(String infoId, String descriptorId, String descriptorVersion, String project, OperationStatus opStatus){
     }
 
     @Override
@@ -65,20 +93,28 @@ public class DummyMANOPlugin extends MANOPlugin {
                 response = new NsdOnBoardingNotificationMessage(
                         notification.getNsdInfoId(),
                         notification.getNsdId(),
+                        notification.getNsdVersion(),
+                        notification.getProject(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.SUCCESSFULLY_DONE,
-                        mano.getManoId()
+                        mano.getManoId(),
+                        null,
+                        null
                 );
             } else {
                 log.info("Skipping NSD onboarding notification");
                 response = new NsdOnBoardingNotificationMessage(
                         notification.getNsdInfoId(),
                         notification.getNsdId(),
+                        notification.getNsdVersion(),
+                        notification.getProject(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.RECEIVED,
-                        mano.getManoId()
+                        mano.getManoId(),
+                        null,
+                        null
                 );
             }
             sendNotification(response);
@@ -104,6 +140,8 @@ public class DummyMANOPlugin extends MANOPlugin {
                 response = new NsdDeletionNotificationMessage(
                         notification.getNsdInfoId(),
                         notification.getNsdId(),
+                        notification.getNsdVersion(),
+                        notification.getProject(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.SUCCESSFULLY_DONE,
@@ -114,6 +152,8 @@ public class DummyMANOPlugin extends MANOPlugin {
                 response = new NsdDeletionNotificationMessage(
                         notification.getNsdInfoId(),
                         notification.getNsdId(),
+                        notification.getNsdVersion(),
+                        notification.getProject(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.RECEIVED,
@@ -135,20 +175,28 @@ public class DummyMANOPlugin extends MANOPlugin {
                 response = new PnfdOnBoardingNotificationMessage(
                         notification.getPnfdInfoId(),
                         notification.getPnfdId(),
+                        notification.getPnfdVersion(),
+                        notification.getProject(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.SUCCESSFULLY_DONE,
-                        mano.getManoId()
+                        mano.getManoId(),
+                        null,
+                        null
                 );
             } else {
                 log.info("Skipping PNFD onboarding notification");
                 response = new PnfdOnBoardingNotificationMessage(
                         notification.getPnfdInfoId(),
                         notification.getPnfdId(),
+                        notification.getPnfdVersion(),
+                        notification.getProject(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.RECEIVED,
-                        mano.getManoId()
+                        mano.getManoId(),
+                        null,
+                        null
                 );
             }
             sendNotification(response);
@@ -166,6 +214,8 @@ public class DummyMANOPlugin extends MANOPlugin {
                 response = new PnfdDeletionNotificationMessage(
                         notification.getPnfdInfoId(),
                         notification.getPnfdId(),
+                        notification.getPnfdVersion(),
+                        notification.getProject(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.SUCCESSFULLY_DONE,
@@ -176,6 +226,8 @@ public class DummyMANOPlugin extends MANOPlugin {
                 response = new PnfdDeletionNotificationMessage(
                         notification.getPnfdInfoId(),
                         notification.getPnfdId(),
+                        notification.getPnfdVersion(),
+                        notification.getProject(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.RECEIVED,
@@ -197,20 +249,28 @@ public class DummyMANOPlugin extends MANOPlugin {
                 response = new VnfPkgOnBoardingNotificationMessage(
                         notification.getVnfPkgInfoId(),
                         notification.getVnfdId(),
+                        notification.getVnfdVersion(),
+                        notification.getProject(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.SUCCESSFULLY_DONE,
-                        mano.getManoId()
+                        mano.getManoId(),
+                        null,
+                        null
                 );
             } else {
                 log.info("Skipped VNF Pkg onboarding notification");
                 response = new VnfPkgOnBoardingNotificationMessage(
                         notification.getVnfPkgInfoId(),
                         notification.getVnfdId(),
+                        notification.getVnfdId(),
+                        notification.getVnfdVersion(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.RECEIVED,
-                        mano.getManoId()
+                        mano.getManoId(),
+                        null,
+                        null
                 );
             }
             sendNotification(response);
@@ -236,6 +296,8 @@ public class DummyMANOPlugin extends MANOPlugin {
                 response = new VnfPkgDeletionNotificationMessage(
                         notification.getVnfPkgInfoId(),
                         notification.getVnfdId(),
+                        notification.getVnfdVersion(),
+                        notification.getProject(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.SUCCESSFULLY_DONE,
@@ -246,6 +308,8 @@ public class DummyMANOPlugin extends MANOPlugin {
                 response = new VnfPkgDeletionNotificationMessage(
                         notification.getVnfPkgInfoId(),
                         notification.getVnfdId(),
+                        notification.getVnfdVersion(),
+                        notification.getProject(),
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.RECEIVED,

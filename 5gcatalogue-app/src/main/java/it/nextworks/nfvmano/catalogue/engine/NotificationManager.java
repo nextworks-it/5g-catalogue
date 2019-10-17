@@ -19,13 +19,12 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import it.nextworks.nfvmano.catalogue.common.KafkaConnector;
-import it.nextworks.nfvmano.catalogue.messages.*;
-import it.nextworks.nfvmano.catalogue.messages.elements.CatalogueMessageType;
-import it.nextworks.nfvmano.catalogue.messages.interfaces.NsdNotificationsConsumerInterface;
-import it.nextworks.nfvmano.catalogue.messages.interfaces.NsdNotificationsProducerInterface;
-import it.nextworks.nfvmano.catalogue.messages.interfaces.VnfPkgNotificationsConsumerInterface;
-import it.nextworks.nfvmano.catalogue.messages.interfaces.VnfPkgNotificationsProducerInterface;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.*;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.CatalogueMessageType;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.interfaces.NsdNotificationsConsumerInterface;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.interfaces.NsdNotificationsProducerInterface;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.interfaces.VnfPkgNotificationsConsumerInterface;
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.interfaces.VnfPkgNotificationsProducerInterface;
 import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.Cat2CatOperationService;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
@@ -38,8 +37,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 
 @Service
@@ -320,6 +318,10 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
             case GLOBAL:
                 log.error("Nsd GLOBAL onboarding notification not handled here, REMOTE onboarding message expected");
                 break;
+            case SYNC:
+                log.info("Project {} - Received request for Onboarding NSD with ID {} and version {} from MANO with ID {}", notification.getProject(), notification.getNsdId(), notification.getNsdVersion(), notification.getPluginId());
+                nsdMgmtService.runtimeNsOnBoarding(notification);
+                break;
         }
     }
 
@@ -371,6 +373,10 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
                 break;
             case GLOBAL:
                 log.error("Nsd GLOBAL deletion notification not handled here, REMOTE onboarding message expected");
+                break;
+            case SYNC:
+                log.info("Project {} - Received request for deleting VNFD with ID {} and version {} from MANO with ID {}", notification.getProject(), notification.getNsdId(), notification.getNsdVersion(), notification.getPluginId());
+                nsdMgmtService.runtimeNsDeletion(notification);
                 break;
         }
     }
@@ -551,6 +557,10 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
             case GLOBAL:
                 log.error("Nsd GLOBAL onboarding notification not handled here, REMOTE onboarding message expected");
                 break;
+            case SYNC:
+                log.info("Project {} - Received request for Onboarding VNFD with ID {} and version {} from MANO with ID {}", notification.getProject(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getPluginId());
+                vnfPackageManagementService.runtimeVnfOnBoarding(notification);
+                break;
         }
     }
 
@@ -602,6 +612,10 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
             case GLOBAL:
                 log.error("VNF Pkg GLOBAL deletion notification not handled here, REMOTE onboarding message expected");
                 break;
+            case SYNC:
+                log.info("Project {} - Received request for deleting VNFD with ID {} and version {} from MANO with ID {}", notification.getProject(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getPluginId());
+                vnfPackageManagementService.runtimeVnfDeletion(notification);
+                break;
         }
     }
 
@@ -637,7 +651,7 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
     }
 
     @Override
-    public void sendVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) throws MethodNotImplementedException, FailedOperationException {
+    public void sendVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) throws FailedOperationException {
         try {
             log.info("Sending vnfPkgDeletionNotification for VNF Pkg with info Id: " + notification.getVnfPkgInfoId());
 

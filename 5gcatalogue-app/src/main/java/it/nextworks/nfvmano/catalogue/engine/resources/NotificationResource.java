@@ -15,8 +15,9 @@
  */
 package it.nextworks.nfvmano.catalogue.engine.resources;
 
-import it.nextworks.nfvmano.catalogue.messages.elements.CatalogueMessageType;
-import it.nextworks.nfvmano.catalogue.plugins.PluginType;
+
+import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.CatalogueMessageType;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginType;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 
 import javax.persistence.Embeddable;
