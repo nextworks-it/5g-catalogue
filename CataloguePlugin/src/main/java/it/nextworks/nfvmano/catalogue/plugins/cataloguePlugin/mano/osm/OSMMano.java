@@ -13,23 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.manoClass;
+package it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.osm;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANOType;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.*;
 
-import javax.persistence.ElementCollection;
+import javax.persistence.*;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Entity
 public class OSMMano extends MANO {
@@ -44,11 +39,6 @@ public class OSMMano extends MANO {
     @Fetch(FetchMode.SELECT)
     private List<String> vimAccounts = new ArrayList<>();
 
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    @ElementCollection(fetch = FetchType.EAGER)
-    @Fetch(FetchMode.SELECT)
-    private Map<String, String> osmIdTranslation;
-
     public OSMMano() {
         // JPA only
     }
@@ -60,7 +50,6 @@ public class OSMMano extends MANO {
         this.password = password;
         this.project = project;
         this.vimAccounts = vimAccounts;
-        this.osmIdTranslation = new HashMap<>();
     }
 
     @JsonProperty("ipAddress")
@@ -90,14 +79,6 @@ public class OSMMano extends MANO {
 
     public void setVimAccounts(List<String> vimAccounts) {
         this.vimAccounts = vimAccounts;
-    }
-
-    public Map<String, String> getOsmIdTranslation() {
-        return osmIdTranslation;
-    }
-
-    public void setOsmIdTranslation(Map<String, String> osmIdTranslation) {
-        this.osmIdTranslation = osmIdTranslation;
     }
 
     //TODO add NFVLiB dep

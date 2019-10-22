@@ -1471,7 +1471,7 @@ public class NsdManagementService implements NsdManagementInterface {
 
             Optional<VnfPkgInfoResource> optional = vnfPkgInfoRepository.findByVnfdIdAndVnfdVersionAndProjectId(UUID.fromString(vnfdId), version, project);
             if (!optional.isPresent()) {
-                throw new NotExistingEntityException("VNFD filename for vnfdId " + vnfdId + "a nd version " + version + " not find project " + project);
+                throw new NotExistingEntityException("VNFD filename for vnfdId " + vnfdId + "and version " + version + " not find in project " + project);
             }
 
             VnfPkgInfoResource vnfPkgInfoResource = optional.get();

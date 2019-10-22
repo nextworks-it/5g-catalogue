@@ -25,12 +25,13 @@ import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.api.nsd.Defaul
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginOperationalState;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginType;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.*;
-import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.manoClass.DummyMano;
-import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.manoClass.OSMMano;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.dummy.DummyMano;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.osm.OSMMano;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.repos.MANORepository;
 import it.nextworks.nfvmano.catalogue.plugins.mano.*;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.r4plus.OpenSourceMANOR4PlusPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.repos.OsmInfoObjectRepository;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.repos.TranslationInformationRepository;
 import it.nextworks.nfvmano.catalogue.plugins.vim.VIM;
 import it.nextworks.nfvmano.catalogue.repos.*;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
@@ -151,6 +152,9 @@ public class PluginsManager {
 
     @Autowired
     private OsmInfoObjectRepository osmInfoObjectRepository;
+
+    @Autowired
+    private TranslationInformationRepository translationInformationRepository;
 
     public PluginsManager() {
 
@@ -328,7 +332,7 @@ public class PluginsManager {
                     localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr3Dir, logo);*/
         } else if (mano.getManoType().equals(MANOType.OSMR4) || mano.getManoType().equals(MANOType.OSMR5) || mano.getManoType().equals(MANOType.OSMR6)) {
             Path osmr4PlusDir = Paths.get(osmDir, "/" + mano.getManoType().toString().toLowerCase());
-            return new OpenSourceMANOR4PlusPlugin(mano.getManoType(), mano, bootstrapServers, MANORepository, osmInfoObjectRepository, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr4PlusDir, logo, runtimeSync, osmSyncPeriod);
+            return new OpenSourceMANOR4PlusPlugin(mano.getManoType(), mano, bootstrapServers, osmInfoObjectRepository, translationInformationRepository, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr4PlusDir, logo, runtimeSync, osmSyncPeriod);
         } else {
             throw new MalformattedElementException("Unsupported MANO type. Skipping");
         }

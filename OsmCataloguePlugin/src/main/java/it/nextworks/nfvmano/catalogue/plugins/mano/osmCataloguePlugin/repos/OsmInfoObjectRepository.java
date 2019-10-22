@@ -13,4 +13,5 @@ public interface OsmInfoObjectRepository extends JpaRepository<OsmInfoObject, St
     List<OsmInfoObject> findByOsmId(String osmId);
     List<OsmInfoObject> findByOsmIdAndType(String osmId, OsmObjectType type);
     Optional<OsmInfoObject> findByDescriptorIdAndVersionAndOsmId(String descriptorId, String version, String osmId);
+    Optional<OsmInfoObject> findByDescriptorIdAndOsmId(String descriptorId, String osmId);
 }
