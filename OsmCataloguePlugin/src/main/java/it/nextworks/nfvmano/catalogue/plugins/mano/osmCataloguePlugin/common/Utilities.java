@@ -77,6 +77,37 @@ public class Utilities {
         return cloudInitFilename;
     }
 
+    public static String getMonitoringFromManifest(File mf) throws IOException{
+        String monitoringParametersFilename = null;
+        BufferedReader br = new BufferedReader(new FileReader(mf));
+        try {
+            String line;
+            String regexRoot = "main_monitoring_descriptor:";
+            String regex = "^Source: (Files\\/Monitoring\\/[\\s\\S]*)$";
+            while ((line = br.readLine()) != null) {
+                line = line.trim();
+                if (line.matches(regexRoot)) {
+                    line = br.readLine();
+
+                    if (line != null) {
+                        line = line.trim();
+                        if (line.matches(regex)) {
+                            Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+                            Matcher matcher = pattern.matcher(line.trim());
+                            if (matcher.find()) {
+                                monitoringParametersFilename = matcher.group(1);
+                            }
+                        }
+                    }
+                }
+            }
+        } finally {
+            br.close();
+        }
+
+        return monitoringParametersFilename;
+    }
+
     public static Set<String> listFiles(String dir) throws IOException {
         Set<String> fileList = new HashSet<>();
         Files.walkFileTree(Paths.get(dir), new SimpleFileVisitor<Path>() {

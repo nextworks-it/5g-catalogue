@@ -68,7 +68,7 @@ public class NsdApiController implements NsdApi {
         if (accept != null && accept.contains("application/json")) {
             log.debug("Processing REST request to create an NSD info");
             try {
-                NsdInfo nsdInfo = nsdManagementService.createNsdInfo(body, project);
+                NsdInfo nsdInfo = nsdManagementService.createNsdInfo(body, project, false);
                 return new ResponseEntity<NsdInfo>(nsdInfo, HttpStatus.CREATED);
             } catch (MalformattedElementException | FailedOperationException e) {
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
@@ -170,7 +170,7 @@ public class NsdApiController implements NsdApi {
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
-                NsdInfoModifications nsdInfoMods = nsdManagementService.updateNsdInfo(body, nsdInfoId, project);
+                NsdInfoModifications nsdInfoMods = nsdManagementService.updateNsdInfo(body, nsdInfoId, project, false);
                 return new ResponseEntity<NsdInfoModifications>(nsdInfoMods, HttpStatus.OK);
             } catch (NotExistingEntityException e) {
                 log.error("Impossible to update NSD info: " + e.getMessage());
@@ -202,7 +202,7 @@ public class NsdApiController implements NsdApi {
         String accept = request.getHeader("Accept");
         log.debug("Processing REST request to delete NSD info " + nsdInfoId);
         try {
-            nsdManagementService.deleteNsdInfo(nsdInfoId, project);
+            nsdManagementService.deleteNsdInfo(nsdInfoId, project, false);
             log.debug("NSD info removed");
             return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
         } catch (NotExistingEntityException e) {

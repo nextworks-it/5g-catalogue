@@ -19,8 +19,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginOperationalState;
-import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.manoClass.DummyMano;
-import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.manoClass.OSMMano;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.dummy.DummyMano;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.osm.OSMMano;
 
 import javax.persistence.*;
 

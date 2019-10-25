@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 
+import java.util.List;
 import java.util.Map;
 
 public class DummyMANOPlugin extends MANOPlugin {
@@ -61,12 +62,12 @@ public class DummyMANOPlugin extends MANOPlugin {
     }
 
     @Override
-    public Map<String, String> getAllVnfd(String project){
+    public Map<String, List<String>> getAllVnfd(String project){
         return null;
     }
 
     @Override
-    public Map<String, String> getAllNsd(String project){
+    public Map<String, List<String>> getAllNsd(String project){
         return null;
     }
 

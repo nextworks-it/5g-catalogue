@@ -20,6 +20,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import it.nextworks.nfvmano.catalogue.translators.tosca.ArchiveParser;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.multipart.MultipartFile;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -54,6 +56,7 @@ public class ToscaTranslatorTests {
     }
 
     @Test
+    @Ignore
     public void parseStringDescriptor() throws Exception {
         ClassLoader classLoader = getClass().getClassLoader();
         File nsd = new File(classLoader.getResource("Descriptors/two_cirros_example_tosca.yaml").getFile());
@@ -72,6 +75,7 @@ public class ToscaTranslatorTests {
     }
 
     @Test
+    @Ignore
     public void parseFileDescriptor() throws Exception {
         ClassLoader classLoader = getClass().getClassLoader();
         File nsd = new File(classLoader.getResource("Descriptors/two_cirros_example_tosca.yaml").getFile());
@@ -88,6 +92,7 @@ public class ToscaTranslatorTests {
     }
 
     @Test
+    @Ignore
     public void parseArchive() throws Exception {
         ClassLoader classLoader = getClass().getClassLoader();
         File archive = new File(classLoader.getResource("Descriptors/cirros_vnf/cirros_vnf.zip").getFile());

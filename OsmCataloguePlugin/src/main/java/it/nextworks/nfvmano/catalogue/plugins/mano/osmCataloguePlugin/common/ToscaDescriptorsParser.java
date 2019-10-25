@@ -5,30 +5,40 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import it.nextworks.nfvmano.libs.common.enums.CpRole;
+import it.nextworks.nfvmano.libs.common.enums.FlowPattern;
 import it.nextworks.nfvmano.libs.common.enums.LayerProtocol;
 import it.nextworks.nfvmano.libs.descriptors.capabilities.VirtualComputeCapability;
 import it.nextworks.nfvmano.libs.descriptors.capabilities.VirtualComputeCapabilityProperties;
 import it.nextworks.nfvmano.libs.descriptors.elements.*;
 import it.nextworks.nfvmano.libs.descriptors.interfaces.LcmOperation;
 import it.nextworks.nfvmano.libs.descriptors.interfaces.Vnflcm;
+import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
+import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSProperties;
+import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSRequirements;
+import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NsVirtualLink.NsVirtualLinkNode;
+import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NsVirtualLink.NsVirtualLinkProperties;
 import it.nextworks.nfvmano.libs.descriptors.templates.*;
 import it.nextworks.nfvmano.libs.descriptors.templates.Node;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VDU.*;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFInterfaces;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFProperties;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFRequirements;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VnfExtCp.VnfExtCpNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VnfExtCp.VnfExtCpProperties;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VnfExtCp.VnfExtCpRequirements;
+import it.nextworks.nfvmano.libs.osmr4PlusDataModel.nsDescriptor.*;
+import it.nextworks.nfvmano.libs.osmr4PlusDataModel.osmManagement.OsmInfoObject;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.vnfDescriptor.*;
+import it.nextworks.nfvmano.libs.osmr4PlusDataModel.vnfDescriptor.ConnectionPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ToscaDescriptorsParser {
 
@@ -67,7 +77,7 @@ public class ToscaDescriptorsParser {
             protocolData.add(new CpProtocolData(LayerProtocol.IPV4, null));
             VnfExtCpProperties cpProperties = new VnfExtCpProperties(null, layerProtocols, CpRole.LEAF, cp.getName(), protocolData, false, null);
             List<String> externalVirtualLink = new ArrayList<>();
-            externalVirtualLink.add(cp.getName() + "_net");
+            externalVirtualLink.add(cp.getName());
             VnfExtCpRequirements cpRequirements = new  VnfExtCpRequirements(externalVirtualLink, null);
             nodeTemplates.put(cp.getName(), new VnfExtCpNode("tosca.nodes.nfv.VnfExtCp", cpProperties, cpRequirements));
         }
@@ -87,9 +97,12 @@ public class ToscaDescriptorsParser {
             throw new IllegalArgumentException("No Image Data defined");
         SwImageData swImageData = new SwImageData(vdu.getImage(), "1.0", null, null, null, null, null, null, null, null);
         VDUVirtualBlockStorageProperties bsProperties = new VDUVirtualBlockStorageProperties(virtualBlockStorageData, swImageData);
-        if(osmVnfDescriptor.getName() == null)
+        if(osmVnfDescriptor.getName() == null && osmVnfDescriptor.getShortName() == null)
             throw new IllegalArgumentException("No VNFD name defined");
-        nodeTemplates.put(osmVnfDescriptor.getName() + "_storage", new VDUVirtualBlockStorageNode("tosca.nodes.nfv.Vdu.VirtualBlockStorage", bsProperties));
+        String vnfNodeName = osmVnfDescriptor.getName();
+        if(vnfNodeName == null)
+            vnfNodeName = osmVnfDescriptor.getShortName();
+        nodeTemplates.put(vnfNodeName + "_storage", new VDUVirtualBlockStorageNode("tosca.nodes.nfv.Vdu.VirtualBlockStorage", bsProperties));
 
         log.debug("Creating VDUComputeNode");
         //Creating VDUComputeNode
@@ -106,7 +119,7 @@ public class ToscaDescriptorsParser {
         VirtualComputeCapability virtualComputeCapability = new VirtualComputeCapability(vccProperties);
         VDUComputeCapabilities vduCapabilities = new VDUComputeCapabilities(virtualComputeCapability);
         List<String> storages = new ArrayList<>();
-        storages.add(osmVnfDescriptor.getName() + "_storage");
+        storages.add(vnfNodeName + "_storage");
         VDUComputeRequirements vduRequirements = new VDUComputeRequirements(null, storages);
         nodeTemplates.put(vdu.getName(), new VDUComputeNode("tosca.nodes.nfv.Vdu.Compute", vduProperties, vduCapabilities, vduRequirements));
 
@@ -114,15 +127,17 @@ public class ToscaDescriptorsParser {
         //Creating VNFNode
         if(osmVnfDescriptor.getId() == null)
             throw new IllegalArgumentException("No VNFD ID defined");
-        if(osmVnfDescriptor.getVersion() == null)
-            throw new IllegalArgumentException("No VNFD version defined");
-        if(osmVnfDescriptor.getVendor() == null)
-            throw new IllegalArgumentException("No VNFD vendor defined");
-        VNFProperties vnfProperties = new VNFProperties(osmVnfDescriptor.getId(), osmVnfDescriptor.getVersion(), osmVnfDescriptor.getVendor(), osmVnfDescriptor.getName(), "1.0", osmVnfDescriptor.getName(), osmVnfDescriptor.getDescription(), null, null, null, null, null, null, null, osmVnfDescriptor.getName() + "_flavor", osmVnfDescriptor.getName() + " flavor", null);
+        String vnfVersion = osmVnfDescriptor.getVersion();
+        if(vnfVersion == null)
+            vnfVersion = "1.0";
+        String vnfVendor = osmVnfDescriptor.getVendor();
+        if(vnfVendor == null)
+            vnfVendor = "Undefined";
+        VNFProperties vnfProperties = new VNFProperties(osmVnfDescriptor.getId(), vnfVersion, vnfVendor, vnfNodeName, "1.0", vnfNodeName, osmVnfDescriptor.getDescription(), null, null, null, null, null, null, null, vnfNodeName + "_flavor", vnfNodeName + " flavor", null);
         VNFInterfaces vnfInterfaces = null;
         if(vdu.getCloudInitFile() != null)
             vnfInterfaces = new VNFInterfaces(null, new Vnflcm(new LcmOperation(vdu.getCloudInitFile()), null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null));
-        nodeTemplates.put(osmVnfDescriptor.getName() + "_VNF", new VNFNode("tosca.nodes.nfv.VNF", osmVnfDescriptor.getName(), vnfProperties, null, null, vnfInterfaces));
+        nodeTemplates.put(vnfNodeName + "_VNF", new VNFNode("tosca.nodes.nfv.VNF", vnfNodeName, vnfProperties, null, null, vnfInterfaces));
 
         //Creating SubstitutionMappings
         SubstitutionMappingsRequirements requirements = new SubstitutionMappingsRequirements(null, virtualLink);
@@ -132,7 +147,7 @@ public class ToscaDescriptorsParser {
         TopologyTemplate topologyTemplate = new TopologyTemplate(null, substitutionMappings, null, nodeTemplates, null, null);
 
         //Creating Metadata
-        Metadata metadata = new Metadata(osmVnfDescriptor.getId(), osmVnfDescriptor.getVendor(), osmVnfDescriptor.getVersion());
+        Metadata metadata = new Metadata(osmVnfDescriptor.getId(), vnfVendor, vnfVersion);
 
         //Creating DescriptorTemplate
         DescriptorTemplate vnfd = new DescriptorTemplate("tosca_simple_yaml", null, "Descriptor generated by 5G Apps & Services Catalogue", metadata, null, null, null, topologyTemplate);
@@ -140,7 +155,112 @@ public class ToscaDescriptorsParser {
         return vnfd;
     }
 
-    public static DescriptorTemplate generateNsDescriptor(String osmNsDescriptorPath) throws IOException, IllegalArgumentException {
-        return null;
+    public static DescriptorTemplate generateNsDescriptor(String osmNsDescriptorPath, List<OsmInfoObject> vnfInfoList, List<TranslationInformation> translationInformationList, Path rootDir) throws IOException, IllegalArgumentException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
+        mapper.enable(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT);
+        mapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+
+        OsmNSPackage osmNsPkg = mapper.readValue(new File(osmNsDescriptorPath), OsmNSPackage.class);
+
+        if(osmNsPkg.getNsdCatalog().getNsds() == null || osmNsPkg.getNsdCatalog().getNsds().size() == 0)
+            throw new IllegalArgumentException("No NS defined");
+        if(osmNsPkg.getNsdCatalog().getNsds().size() != 1)
+            throw new IllegalArgumentException("Too many NS defined");
+
+        NSDescriptor osmNsDescriptor = osmNsPkg.getNsdCatalog().getNsds().get(0);
+
+        LinkedHashMap<String, Node> nodeTemplates = new LinkedHashMap<>();
+
+        log.debug("Creating NsVirtualLinkNodes");
+        List<ConstituentVNFD> vnfdList = osmNsDescriptor.getConstituentVNFDs();
+        List<VLD> vlds = osmNsDescriptor.getVldList();
+        List<String> virtualLinkNames = new ArrayList<>();
+        Map<String, Map<String, String>> virtualLinkRequirements = new HashMap<>();
+        for(ConstituentVNFD vnfd : vnfdList)
+            virtualLinkRequirements.put(vnfd.getVnfdIdentifierReference(), new HashMap<>());
+        for(VLD vld : vlds) {
+            if(vld.getId() == null)
+                throw new IllegalArgumentException("No VLD ID defined");
+            String vLinkName;
+            if(vld.getVimNetworkName() != null)
+                vLinkName = vld.getVimNetworkName();
+            else {
+                if(vld.isMgmtNetwork())
+                    vLinkName = vld.getId() + "_mgmt";
+                else
+                    vLinkName = vld.getId();
+            }
+            List<LayerProtocol> layerProtocols = new ArrayList<>();
+            layerProtocols.add(LayerProtocol.IPV4);
+            ConnectivityType connectivityType = new ConnectivityType(layerProtocols, FlowPattern.LINE);
+            VlProfile vlProfile = new VlProfile(new LinkBitrateRequirements(1000000, 10000), new LinkBitrateRequirements(100000, 10000), null, null);
+            NsVirtualLinkProperties vLinkProperties = new NsVirtualLinkProperties(null, vLinkName, vlProfile, connectivityType, null);
+            nodeTemplates.put(vLinkName, new NsVirtualLinkNode("tosca.nodes.nfv.NsVirtualLink", vLinkProperties, null));
+            virtualLinkNames.add(vLinkName);
+            List<VNFDConnectionPointReference> vnfdConnectionPointReferenceList = vld.getVnfdConnectionPointReferences();
+            for(VNFDConnectionPointReference vnfdConnectionPointReference : vnfdConnectionPointReferenceList){
+                virtualLinkRequirements.get(vnfdConnectionPointReference.getVnfdIdReference()).put(vnfdConnectionPointReference.getVnfdConnectionPointReference(), vLinkName);//Assume TOSCA VNFD has virtual link requirements {cp: cp_name, vl: cp_name}
+            }
+        }
+
+        log.debug("Creating VNFNodes");
+        for(ConstituentVNFD vnfd : vnfdList){
+            String osmVnfDescriptorPath = rootDir.toString();
+            for(OsmInfoObject vnfObject : vnfInfoList){
+                if(vnfObject.getDescriptorId().equals(vnfd.getVnfdIdentifierReference())) {
+                    osmVnfDescriptorPath = osmVnfDescriptorPath.concat("/" + vnfObject.getAdmin().getStorage().getDescriptor());
+                    break;
+                }
+            }
+            OsmVNFPackage osmVnfPkg = mapper.readValue(new File(osmVnfDescriptorPath), OsmVNFPackage.class);
+            VNFDescriptor osmVnfDescriptor = osmVnfPkg.getVnfdCatalog().getVnfd().get(0);//For the moment consider only one VNF present
+            List<TranslationInformation> filteredTranslationInformationList = translationInformationList.stream().filter(t -> t.getOsmDescriptorId().equals(osmVnfDescriptor.getId()) && t.getDescriptorVersion().equals(osmVnfDescriptor.getVersion())).collect(Collectors.toList());
+            String catVnfDescriptorId = osmVnfDescriptor.getId();
+            if(filteredTranslationInformationList.size() != 0)
+                catVnfDescriptorId = filteredTranslationInformationList.get(0).getCatDescriptorId();
+            String vnfNodeName = osmVnfDescriptor.getName();
+            if(vnfNodeName == null)
+                vnfNodeName = osmVnfDescriptor.getShortName();
+            VNFProperties vnfProperties = new VNFProperties(catVnfDescriptorId, osmVnfDescriptor.getVersion(), osmVnfDescriptor.getVendor(), vnfNodeName, "1.0", vnfNodeName, osmVnfDescriptor.getDescription(), null, null, null, null, null, null, null, vnfNodeName + "_flavor", vnfNodeName + " flavor", null);
+            VNFRequirements vnfRequirements = new VNFRequirements(virtualLinkRequirements.get(vnfd.getVnfdIdentifierReference()));
+            nodeTemplates.put(vnfNodeName, new VNFNode("tosca.nodes.nfv.VNF", vnfNodeName, vnfProperties, vnfRequirements, null, null));
+        }
+
+        log.debug("Creating NSNode");
+        //Creating NSNode
+        if(osmNsDescriptor.getName() == null && osmNsDescriptor.getShortName() == null)
+            throw new IllegalArgumentException("No NSD name defined");
+        if(osmNsDescriptor.getId() == null)
+            throw new IllegalArgumentException("No NSD ID defined");
+        String nsdVersion = osmNsDescriptor.getVersion();
+        if(nsdVersion == null)
+            nsdVersion = "1.0";
+        String nsdVendor = osmNsDescriptor.getVendor();
+        if(nsdVendor == null)
+            nsdVendor = "Undefined";
+        NSRequirements nsRequirements = new NSRequirements(virtualLinkNames);
+        String nsNodeName = osmNsDescriptor.getName();
+        if(nsNodeName == null)
+            nsNodeName = osmNsDescriptor.getShortName();
+        NSProperties nsProperties = new NSProperties(osmNsDescriptor.getId(), nsdVendor, nsdVersion, nsNodeName, osmNsDescriptor.getId());
+        nodeTemplates.put(nsNodeName + "_NS", new NSNode("tosca.nodes.nfv.NS", nsProperties, nsRequirements));
+
+        //Creating SubstitutionMappings
+        List<VirtualLinkPair> virtualLinkPairs = new ArrayList<>();
+        SubstitutionMappingsRequirements requirements = new SubstitutionMappingsRequirements(null, virtualLinkPairs);
+        SubstitutionMappings substitutionMappings = new SubstitutionMappings(null, "tosca.nodes.nfv.NS", null, requirements, null);
+
+        //Creating TopologyTemplate
+        TopologyTemplate topologyTemplate = new TopologyTemplate(null, substitutionMappings, null, nodeTemplates, null, null);
+
+        //Creating Metadata
+        Metadata metadata = new Metadata(osmNsDescriptor.getId(), nsdVendor, nsdVersion);
+
+        //Creating DescriptorTemplate
+        DescriptorTemplate nsd = new DescriptorTemplate("tosca_simple_yaml", null, "Descriptor generated by 5G Apps & Services Catalogue", metadata, null, null, null, topologyTemplate);
+
+        return nsd;
     }
 }

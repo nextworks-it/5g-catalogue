@@ -3,6 +3,7 @@ package it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.interfaces;
 import it.nextworks.nfvmano.libs.common.elements.KeyValuePair;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 
+import java.util.List;
 import java.util.Map;
 
 public interface ManoSynchronizationInterface {
@@ -12,18 +13,18 @@ public interface ManoSynchronizationInterface {
      *
      * @param project Project
      *
-     * @return Map <id, version> of all Vnf descriptors handled by the Mano Plugin
+     * @return Map <id, List<version>> of all Vnf descriptors handled by the Mano Plugin
      */
-    Map<String, String> getAllVnfd(String project);
+    Map<String, List<String>> getAllVnfd(String project);
 
     /**
      * This method is called at startup to synchronize Catalogue and Mano Plugin.
      *
      * @param project Project
      *
-     * @return Map <id, version> of all Ns descriptors handled by the Mano Plugin
+     * @return Map <id, List<version>> of all Ns descriptors handled by the Mano Plugin
      */
-    Map<String, String> getAllNsd(String project);
+    Map<String, List<String>> getAllNsd(String project);
 
     /**
      * This method is called by Catalogue when a new descriptor is found.
