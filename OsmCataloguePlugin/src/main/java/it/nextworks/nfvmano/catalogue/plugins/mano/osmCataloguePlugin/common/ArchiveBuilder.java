@@ -51,7 +51,7 @@ public class ArchiveBuilder {
         this.defaultLogo = defaultLogo;
     }
 
-    public File makeNewArchive(OsmNSPackage ymlFile, String readmeContent, File logoFile) {
+    public File makeNewArchive(OsmNSPackage ymlFile, String readmeContent, File logoFile, File monitoringFile) {
         if (!(ymlFile.getNsdCatalog().getNsds().size() == 1)) {
             throw new IllegalArgumentException("Too many NSDs in file");
         }
@@ -63,24 +63,27 @@ public class ArchiveBuilder {
         makeSubFolder(folder, "scripts");
         makeSubFolder(folder, "vnf_config");
         File iconsFolder = makeSubFolder(folder, "icons");
+        File monitoringFolder = makeSubFolder(folder, "monitoring");
         copyFile(iconsFolder, logoFile);
+        if(monitoringFile != null)
+            copyFile(monitoringFolder, monitoringFile);
         // TODO checksum
         return compress(folder);
     }
 
     public File makeNewArchive(OsmNSPackage ymlFile, File logoFile) {
-        return makeNewArchive(ymlFile, "", logoFile);
+        return makeNewArchive(ymlFile, "", logoFile, null);
     }
 
-    public File makeNewArchive(OsmNSPackage ymlFile, String readmeContent) {
-        return makeNewArchive(ymlFile, readmeContent, defaultLogo);
+    public File makeNewArchive(OsmNSPackage ymlFile, String readmeContent, File monitoringFile) {
+        return makeNewArchive(ymlFile, readmeContent, defaultLogo, monitoringFile);
     }
 
     public File makeNewArchive(OsmNSPackage ymlFile) {
-        return makeNewArchive(ymlFile, "", defaultLogo);
+        return makeNewArchive(ymlFile, "", defaultLogo, null);
     }
 
-    public File makeNewArchive(OsmVNFPackage ymlFile, String readmeContent, File logoFile, File cloudInitFile) {
+    public File makeNewArchive(OsmVNFPackage ymlFile, String readmeContent, File logoFile, File cloudInitFile, File monitoringFile) {
         if (!(ymlFile.getVnfdCatalog().getVnfd().size() == 1)) {
             throw new IllegalArgumentException("Too many VNFDs in file");
         }
@@ -90,23 +93,26 @@ public class ArchiveBuilder {
         makeYml(ymlFile, vnfdId, folder);
         File iconsFolder = makeSubFolder(folder, "icons");
         File cloudInitFolder = makeSubFolder(folder, "cloud_init");
+        File monitoringFolder = makeSubFolder(folder, "monitoring");
         copyFile(iconsFolder, logoFile);
         if (cloudInitFile != null)
             copyFile(cloudInitFolder, cloudInitFile);
+        if(monitoringFile != null)
+            copyFile(monitoringFolder, monitoringFile);
         // TODO checksum
         return compress(folder);
     }
 
     public File makeNewArchive(OsmVNFPackage ymlFile, File logoFile) {
-        return makeNewArchive(ymlFile, "", logoFile, null);
+        return makeNewArchive(ymlFile, "", logoFile, null, null);
     }
 
-    public File makeNewArchive(OsmVNFPackage ymlFile, String readmeContent, File cloudInit) {
-        return makeNewArchive(ymlFile, readmeContent, defaultLogo, cloudInit);
+    public File makeNewArchive(OsmVNFPackage ymlFile, String readmeContent, File cloudInit, File monitoringFile) {
+        return makeNewArchive(ymlFile, readmeContent, defaultLogo, cloudInit, monitoringFile);
     }
 
     public File makeNewArchive(OsmVNFPackage ymlFile) {
-        return makeNewArchive(ymlFile, "", defaultLogo, null);
+        return makeNewArchive(ymlFile, "", defaultLogo, null, null);
     }
 
     private File makeFolder(String Id) {

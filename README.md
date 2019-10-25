@@ -77,7 +77,7 @@ For the versions available, see tags on this repository.
 
 ## Authors
 
-**Francesca Moscatelli**, **Giacomo Bernini**, **Giada Landi**, **Leonardo Agueci**, **Marco Capitani**, **Gino Carrozzo**   [Nextworks S.r.l.](http://www.nextworks.it)
+**Francesca Moscatelli**, **Giacomo Bernini**, **Giada Landi**, **Leonardo Agueci**, **Gino Carrozzo**   [Nextworks S.r.l.](http://www.nextworks.it)
 
 ## License
 

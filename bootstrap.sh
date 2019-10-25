@@ -48,11 +48,6 @@ function prepareEnv()
     cd ../NFV_MANO_SOL001_LIBS_DESCRIPTORS
     mvn clean install
     
-log "BUILDING OSM R4 CLIENT..."
-    cd ../../5g-catalogue/OSMr4Client
-    mvn clean install
-    cd ..
-
 log "CLONING SUBMODULES..."
     git submodule update --init
 }
@@ -60,9 +55,7 @@ log "CLONING SUBMODULES..."
 function compileApp()
 {
     log "COMPILING 5G APPs & SERVICEs CATALOGUE"
-    cd 5gcatalogue-app
-    mvn clean package
-    cd ../
+    mvn clean install
 }
 
 function runApp()

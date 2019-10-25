@@ -35,7 +35,6 @@ import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
-import org.junit.internal.runners.statements.Fail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,77 +108,78 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         for (MANOPlugin manoPlugin : pluginManger.manoDrivers.values()) {
             List<ProjectResource> projectResourceList = projectRepository.findAll();
             for (ProjectResource project : projectResourceList) {
-                Map<String, String> vnfFromManoList = manoPlugin.getAllVnfd(project.getProjectId());
+                Map<String, List<String>> vnfFromManoList = manoPlugin.getAllVnfd(project.getProjectId());
                 if (vnfFromManoList == null) {
                     log.error("Project " + project.getProjectId() + " - Cannot retrieve VNFDs list from MANO with ID " + manoPlugin.getPluginId());
                     continue;
                 }
                 List<VnfPkgInfoResource> vnfPkgInfoResourceList = vnfPkgInfoRepository.findByProjectId(project.getProjectId());
-                for (Map.Entry<String, String> vnfFromMano : vnfFromManoList.entrySet()) {
+                for (Map.Entry<String, List<String>> vnfFromMano : vnfFromManoList.entrySet()) {
                     String vnfdId = vnfFromMano.getKey();
-                    String vnfdVersion = vnfFromMano.getValue();
-                    if(!Utilities.isUUID(vnfdId)){
-                        log.error("Project " + project.getProjectId() + " - Cannot retrieve VNFD with ID " + vnfdId + " and version " + vnfdVersion + " from MANO with ID " + manoPlugin.getPluginId() + ", ID is not in UUID format");
-                        continue;
-                    }
-                    Optional<VnfPkgInfoResource> optionalVnfPkgInfoResource = vnfPkgInfoRepository.findByVnfdIdAndVnfdVersionAndProjectId(UUID.fromString(vnfdId), vnfdVersion, project.getProjectId());
-                    if (!optionalVnfPkgInfoResource.isPresent()) {
-                        if(manoPlugin.getManoType().toString().startsWith("OSM")){//Avoid sync among projects of VNFs uploaded from NBI, OSM plugin doesn't handle projects
-                            boolean isRetrievedFromMano = true;
-                            List<VnfPkgInfoResource> infoResources = vnfPkgInfoRepository.findByVnfdIdAndVnfdVersion(UUID.fromString(vnfdId), vnfdVersion);
-                            for(VnfPkgInfoResource infoResource : infoResources)
-                                if (!infoResource.isRetrievedFromMANO()) {
-                                    isRetrievedFromMano = false;
-                                    break;
-                                }
-                            if(!isRetrievedFromMano)
-                                continue;
-                        }
-                        log.info("Project {} - Uploading VNFD with ID {} and version {} retrieved from MANO with ID {}", project.getProjectId(), vnfdId, vnfdVersion, manoPlugin.getPluginId());
-                        KeyValuePair vnfPath = manoPlugin.getTranslatedPkgPath(vnfdId, vnfdVersion, project.getProjectId());
-                        if (vnfPath == null) {
-                            log.error("Project " + project.getProjectId() + " - Cannot retrieve VNFD with ID " + vnfdId + " and version " + vnfdVersion + " from MANO with ID " + manoPlugin.getPluginId());
+                    for(String vnfdVersion : vnfFromMano.getValue()) {
+                        if (!Utilities.isUUID(vnfdId)) {
+                            log.error("Project " + project.getProjectId() + " - Cannot retrieve VNFD with ID " + vnfdId + " and version " + vnfdVersion + " from MANO with ID " + manoPlugin.getPluginId() + ", ID is not in UUID format");
                             continue;
                         }
-                        CreateVnfPkgInfoRequest request = new CreateVnfPkgInfoRequest();
-                        KeyValuePairs userDefinedData = new KeyValuePairs();
-                        userDefinedData.put("isRetrievedFromMANO", "yes");
-                        userDefinedData.put(manoPlugin.getPluginId(), "yes");
-                        request.setUserDefinedData(userDefinedData);
-                        try {
-                            VnfPkgInfo vnfPkgInfo = createVnfPkgInfo(request, project.getProjectId(), true);
-                            File vnfPkg = null;
-                            if (vnfPath.getValue().equals(PathType.LOCAL.toString())) {
-                                vnfPkg = new File(vnfPath.getKey());
-                            } else {
-                                log.error("Path Type not currently supported");
+                        Optional<VnfPkgInfoResource> optionalVnfPkgInfoResource = vnfPkgInfoRepository.findByVnfdIdAndVnfdVersionAndProjectId(UUID.fromString(vnfdId), vnfdVersion, project.getProjectId());
+                        if (!optionalVnfPkgInfoResource.isPresent()) {
+                            if (manoPlugin.getManoType().toString().startsWith("OSM")) {//Avoid sync among projects of VNFs uploaded from NBI, OSM plugin doesn't handle projects
+                                boolean isRetrievedFromMano = true;
+                                List<VnfPkgInfoResource> infoResources = vnfPkgInfoRepository.findByVnfdIdAndVnfdVersion(UUID.fromString(vnfdId), vnfdVersion);
+                                for (VnfPkgInfoResource infoResource : infoResources)
+                                    if (!infoResource.isRetrievedFromMANO()) {
+                                        isRetrievedFromMano = false;
+                                        break;
+                                    }
+                                if (!isRetrievedFromMano)
+                                    continue;
+                            }
+                            log.info("Project {} - Uploading VNFD with ID {} and version {} retrieved from MANO with ID {}", project.getProjectId(), vnfdId, vnfdVersion, manoPlugin.getPluginId());
+                            KeyValuePair vnfPath = manoPlugin.getTranslatedPkgPath(vnfdId, vnfdVersion, project.getProjectId());
+                            if (vnfPath == null) {
+                                log.error("Project " + project.getProjectId() + " - Cannot retrieve VNFD with ID " + vnfdId + " and version " + vnfdVersion + " from MANO with ID " + manoPlugin.getPluginId());
                                 continue;
                             }
-                            MultipartFile multipartFile = Utilities.createMultiPartFromFile(vnfPkg);
-                            uploadVnfPkg(vnfPkgInfo.getId().toString(), multipartFile, ContentType.ZIP, false, project.getProjectId());
-                            updateVnfPkgInfoOperationStatus(vnfPkgInfo.getId().toString(), manoPlugin.getPluginId(), OperationStatus.SUCCESSFULLY_DONE, CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION);
-                            manoPlugin.notifyOnboarding(vnfPkgInfo.getId().toString(), vnfdId, vnfdVersion, project.getProjectId(), OperationStatus.SUCCESSFULLY_DONE);
-                        } catch (Exception e) {
-                            log.error(e.getMessage());
-                            log.debug(null, e);
-                            manoPlugin.notifyOnboarding(null, vnfdId, vnfdVersion, project.getProjectId(), OperationStatus.FAILED);
-                        }
-                    } else {
-                        log.info("Project {} - VNFD with ID {} and version {} retrieved from MANO with ID {} is already present", project.getProjectId(), vnfdId, vnfdVersion, manoPlugin.getPluginId());
-                        VnfPkgInfo vnfPkgInfo = buildVnfPkgInfo(optionalVnfPkgInfoResource.get());
-                        if (vnfPkgInfo.getManoIdToOnboardingStatus().get(manoPlugin.getPluginId()) == null || !vnfPkgInfo.getManoIdToOnboardingStatus().get(manoPlugin.getPluginId()).equals(PackageOnboardingStateType.ONBOARDED)) {
+                            CreateVnfPkgInfoRequest request = new CreateVnfPkgInfoRequest();
+                            KeyValuePairs userDefinedData = new KeyValuePairs();
+                            userDefinedData.put("isRetrievedFromMANO", "yes");
+                            userDefinedData.put(manoPlugin.getPluginId(), "yes");
+                            request.setUserDefinedData(userDefinedData);
                             try {
-                                optionalVnfPkgInfoResource.get().getUserDefinedData().put(manoPlugin.getPluginId(), "yes");
-                                vnfPkgInfoRepository.saveAndFlush(optionalVnfPkgInfoResource.get());
+                                VnfPkgInfo vnfPkgInfo = createVnfPkgInfo(request, project.getProjectId(), true);
+                                File vnfPkg = null;
+                                if (vnfPath.getValue().equals(PathType.LOCAL.toString())) {
+                                    vnfPkg = new File(vnfPath.getKey());
+                                } else {
+                                    log.error("Path Type not currently supported");
+                                    continue;
+                                }
+                                MultipartFile multipartFile = Utilities.createMultiPartFromFile(vnfPkg);
+                                uploadVnfPkg(vnfPkgInfo.getId().toString(), multipartFile, ContentType.ZIP, false, project.getProjectId());
                                 updateVnfPkgInfoOperationStatus(vnfPkgInfo.getId().toString(), manoPlugin.getPluginId(), OperationStatus.SUCCESSFULLY_DONE, CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION);
                                 manoPlugin.notifyOnboarding(vnfPkgInfo.getId().toString(), vnfdId, vnfdVersion, project.getProjectId(), OperationStatus.SUCCESSFULLY_DONE);
-                            } catch (NotExistingEntityException e) {
+                            } catch (Exception e) {
                                 log.error(e.getMessage());
                                 log.debug(null, e);
                                 manoPlugin.notifyOnboarding(null, vnfdId, vnfdVersion, project.getProjectId(), OperationStatus.FAILED);
                             }
+                        } else {
+                            log.info("Project {} - VNFD with ID {} and version {} retrieved from MANO with ID {} is already present", project.getProjectId(), vnfdId, vnfdVersion, manoPlugin.getPluginId());
+                            VnfPkgInfo vnfPkgInfo = buildVnfPkgInfo(optionalVnfPkgInfoResource.get());
+                            if (vnfPkgInfo.getManoIdToOnboardingStatus().get(manoPlugin.getPluginId()) == null || !vnfPkgInfo.getManoIdToOnboardingStatus().get(manoPlugin.getPluginId()).equals(PackageOnboardingStateType.ONBOARDED)) {
+                                try {
+                                    optionalVnfPkgInfoResource.get().getUserDefinedData().put(manoPlugin.getPluginId(), "yes");
+                                    vnfPkgInfoRepository.saveAndFlush(optionalVnfPkgInfoResource.get());
+                                    updateVnfPkgInfoOperationStatus(vnfPkgInfo.getId().toString(), manoPlugin.getPluginId(), OperationStatus.SUCCESSFULLY_DONE, CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION);
+                                    manoPlugin.notifyOnboarding(vnfPkgInfo.getId().toString(), vnfdId, vnfdVersion, project.getProjectId(), OperationStatus.SUCCESSFULLY_DONE);
+                                } catch (NotExistingEntityException e) {
+                                    log.error(e.getMessage());
+                                    log.debug(null, e);
+                                    manoPlugin.notifyOnboarding(null, vnfdId, vnfdVersion, project.getProjectId(), OperationStatus.FAILED);
+                                }
+                            }
+                            vnfPkgInfoResourceList.removeIf(t -> t.getId().equals(optionalVnfPkgInfoResource.get().getId()));
                         }
-                        vnfPkgInfoResourceList.removeIf(t -> t.getId().equals(optionalVnfPkgInfoResource.get().getId()));
                     }
                 }
                 for (VnfPkgInfoResource vnfPkgInfoResource : vnfPkgInfoResourceList) {
@@ -198,10 +198,12 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                                     manoPlugin.notifyDelete(vnfPkgInfoResource.getId().toString(), vnfPkgInfoResource.getVnfdId().toString(), vnfPkgInfoResource.getVnfdVersion(), project.getProjectId(), OperationStatus.SUCCESSFULLY_DONE);
                                 }else{
                                     manoPlugin.notifyDelete(vnfPkgInfoResource.getId().toString(), vnfPkgInfoResource.getVnfdId().toString(), vnfPkgInfoResource.getVnfdVersion(), project.getProjectId(), OperationStatus.SUCCESSFULLY_DONE);
+                                    targetVnfPkgInfoResource.get().getUserDefinedData().put(manoPlugin.getPluginId(), "no");
                                 }
                             }catch (NotPermittedOperationException e){
                                 log.error("Project {} - Failed to delete VNFD with ID {} and version {}, it is not deletable", project.getProjectId(), vnfPkgInfoResource.getVnfdId(), vnfPkgInfoResource.getVnfdVersion());
                                 manoPlugin.notifyDelete(vnfPkgInfoResource.getId().toString(), vnfPkgInfoResource.getVnfdId().toString(), vnfPkgInfoResource.getVnfdVersion(), project.getProjectId(), OperationStatus.FAILED);
+                                log.info("Project {} - Sending VNF Onboarding notification for VNFD with ID {} and version {} to MANO with ID {}", project.getProjectId(), vnfPkgInfoResource.getVnfdId(), vnfPkgInfoResource.getVnfdVersion(), manoPlugin.getPluginId());
                                 List<String> siteOrManoIds = new ArrayList<>();
                                 siteOrManoIds.add(manoPlugin.getPluginId());
                                 VnfPkgOnBoardingNotificationMessage msg =
@@ -330,6 +332,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                             notificationManager.sendVnfPkgDeletionNotification(new VnfPkgDeletionNotificationMessage(vnfPkgInfoResource.getId().toString(), notification.getVnfdId(), notification.getVnfdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.SUCCESSFULLY_DONE, notification.getPluginId()));
                         } else {
                             notificationManager.sendVnfPkgDeletionNotification(new VnfPkgDeletionNotificationMessage(vnfPkgInfoResource.getId().toString(), notification.getVnfdId(), notification.getVnfdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.SUCCESSFULLY_DONE, notification.getPluginId()));
+                            targetVnfPkgInfoResource.get().getUserDefinedData().put(notification.getPluginId(), "no");
                         }
                     }catch (NotPermittedOperationException e){
                         log.error("Project {} - Failed to delete VNFD with ID {} and version {}, it is not deletable", project, vnfPkgInfoResource.getVnfdId(), vnfPkgInfoResource.getVnfdVersion());
@@ -498,9 +501,8 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                         log.error("Details: ", e);
                     }
 
-                    UUID operationId;
                     if(!vnfPkgInfoResource.isRetrievedFromMANO()) {
-                        operationId = insertOperationInfoInConsumersMap(vnfPkgInfoId,
+                        UUID operationId = insertOperationInfoInConsumersMap(vnfPkgInfoId,
                                 CatalogueMessageType.NSD_DELETION_NOTIFICATION, OperationStatus.SENT, null);
                         VnfPkgDeletionNotificationMessage msg = new VnfPkgDeletionNotificationMessage(vnfPkgInfoId, vnfdId.toString(), vnfPkgInfoResource.getVnfdVersion(), project, operationId, ScopeType.LOCAL, OperationStatus.SENT);
                         msg.setVnfName(vnfPkgInfoResource.getVnfProductName());
@@ -811,6 +813,11 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                 throw new MalformattedElementException("VNFD id not in UUID format");
             }
 
+            VNFNode vnfNode = dt.getTopologyTemplate().getVNFNodes().values().iterator().next();//For the moment assume only one VNF node
+            if(!dt.getMetadata().getVersion().equals(vnfNode.getProperties().getDescriptorVersion()) ||
+                    !dt.getMetadata().getDescriptorId().equals(vnfNode.getProperties().getDescriptorId()))
+                throw new MalformattedElementException("Descriptor ID and version specified into metadata are not aligned with those specified into VNFNode");
+
             vnfdId = UUID.fromString(vnfPkgId_string);
 
             Optional<VnfPkgInfoResource> optionalVnfPkgInfoResource = vnfPkgInfoRepository.findByVnfdIdAndVnfdVersionAndProjectId(vnfdId, dt.getMetadata().getVersion(), project);
@@ -882,9 +889,6 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         else
             vnfPkgInfoResource.setPublished(false);
 
-        vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
-        log.debug("VNF PKG info updated");
-
         // send notification over kafka bus
         if(!vnfPkgInfoResource.isRetrievedFromMANO()) {
             List<String> siteOrManoIds = new ArrayList<>();
@@ -892,10 +896,17 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             if(userDefinedData == null || userDefinedData.size() == 0)
                 siteOrManoIds.addAll(pluginManger.manoDrivers.keySet());
             else
-                for(MANOPlugin mano : pluginManger.manoDrivers.values())
-                    if((userDefinedData.containsKey(mano.getPluginId()) && userDefinedData.get(mano.getPluginId()).equals("yes"))
-                        || (userDefinedData.containsKey(mano.getMano().getManoSite()) && userDefinedData.get(mano.getMano().getManoSite()).equals("yes")))
+                for(MANOPlugin mano : pluginManger.manoDrivers.values()) {
+                    if ((userDefinedData.containsKey(mano.getPluginId()) && userDefinedData.get(mano.getPluginId()).equals("yes"))
+                            || (userDefinedData.containsKey(mano.getMano().getManoSite()) && userDefinedData.get(mano.getMano().getManoSite()).equals("yes")))
                         siteOrManoIds.add(mano.getPluginId());
+                }
+            if(siteOrManoIds.size() == 0)
+                siteOrManoIds.addAll(pluginManger.manoDrivers.keySet());
+
+            for(MANOPlugin mano : pluginManger.manoDrivers.values())
+                if(vnfPkgInfoResource.getUserDefinedData().remove(mano.getPluginId()) == null)
+                    vnfPkgInfoResource.getUserDefinedData().remove(mano.getMano().getManoSite());
 
             UUID operationId = insertOperationInfoInConsumersMap(vnfPkgInfoId,
                     CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION, OperationStatus.SENT, siteOrManoIds);
@@ -905,6 +916,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             notificationManager.sendVnfPkgOnBoardingNotification(msg);
         }
 
+        vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
         log.debug("VNF Pkg content uploaded and vnfPkgOnBoardingNotification delivered");
     }
 
@@ -1007,6 +1019,12 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                 vnfPkgInfoResource.setAcknowledgedOnboardOpConsumers(ackMap);
 
                 if (type == CatalogueMessageType.VNFPKG_ONBOARDING_NOTIFICATION) {
+                    if(!optionalVnfPkgInfoResource.get().isRetrievedFromMANO()) {
+                        if (opStatus.equals(OperationStatus.SUCCESSFULLY_DONE))
+                            optionalVnfPkgInfoResource.get().getUserDefinedData().put(pluginId, "yes");
+                        else
+                            optionalVnfPkgInfoResource.get().getUserDefinedData().put(pluginId, "no");
+                    }
                     log.debug("Checking VNF Pkg with vnfPkgInfoId {} onboarding state", vnfPkgInfoId);
                     vnfPkgInfoResource.setOnboardingState(checkVnfPkgOnboardingState(vnfPkgInfoId, ackMap));
                 }

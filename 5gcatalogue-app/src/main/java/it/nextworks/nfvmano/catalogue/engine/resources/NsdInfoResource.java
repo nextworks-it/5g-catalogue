@@ -87,6 +87,8 @@ public class NsdInfoResource {
 
     private boolean isPublished;
 
+    private boolean isRetrievedFromMANO;
+
     public NsdInfoResource() {
     }
 
@@ -267,6 +269,14 @@ public class NsdInfoResource {
 
     public void setPublished(boolean published) {
         isPublished = published;
+    }
+
+    public boolean isRetrievedFromMANO() {
+        return isRetrievedFromMANO;
+    }
+
+    public void setRetrievedFromMANO(boolean retrievedFromMANO) {
+        isRetrievedFromMANO = retrievedFromMANO;
     }
 
     public void isDeletable() throws NotPermittedOperationException {

@@ -597,7 +597,7 @@ public class Catalogue2CataloguePlugin extends Plugin
                 } catch (RestClientException e1) {
                     log.error("Error when trying to get NSD with nsdInfo  " + nsdInfo.getId().toString() + ". Error: " + e1.getMessage());
                     try {
-                        nsdService.deleteNsdInfo(createdNsdInfo.getId().toString(), "admin");
+                        nsdService.deleteNsdInfo(createdNsdInfo.getId().toString(), "admin", false);
                     } catch (Exception e) {
                         log.error("Unable to delete nsdInfo " + createdNsdInfo.getId().toString() + " after failure while loading NSD: " + e.getMessage());
                     }

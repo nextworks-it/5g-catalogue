@@ -13,6 +13,7 @@ public interface TranslationInformationRepository extends JpaRepository<Translat
     Optional<TranslationInformation> findById(String UUID);
 
     Optional<TranslationInformation> findByCatInfoIdAndOsmManoId(String catInfoId, String osmManoId);
+    List<TranslationInformation> findByOsmManoId(String osmManoId);
     List<TranslationInformation> findByOsmInfoIdAndOsmManoId(String osmInfoId, String osmManoId);
     List<TranslationInformation> findByOsmDescriptorIdAndDescriptorVersionAndOsmManoId(String osmDescriptorId, String descriptorVersion, String osmManoId);
     List<TranslationInformation> findByCatDescriptorIdAndDescriptorVersionAndOsmManoId(String catDescriptorId, String descriptorVersion, String osmManoId);

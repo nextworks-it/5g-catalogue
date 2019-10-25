@@ -16,8 +16,10 @@
 package it.nextworks.nfvmano.catalogue.repos;
 
 import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
+import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,7 +29,9 @@ public interface NsdInfoRepository extends JpaRepository<NsdInfoResource, UUID> 
 
     Optional<NsdInfoResource> findByNsdId(UUID nsdId);
 
-    Optional<NsdInfoResource> findByNsdIdAndNsdVersion(UUID nsdId, String nsdVersion);
+    List<NsdInfoResource> findByNsdIdAndNsdVersion(UUID nsdId, String nsdVersion);
 
     Optional<NsdInfoResource> findByNsdIdAndNsdVersionAndProjectId(UUID nsdId, String nsdVersion, String projectId);
+
+    List<NsdInfoResource> findByProjectId(String projectId);
 }

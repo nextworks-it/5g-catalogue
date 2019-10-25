@@ -176,7 +176,7 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 
     @Override
     public void sendNsdDeletionNotification(NsdDeletionNotificationMessage notification)
-            throws MethodNotImplementedException, FailedOperationException {
+            throws FailedOperationException {
         try {
             log.info("Sending nsdDeletionNotification for NSD with nsdId: " + notification.getNsdId());
 

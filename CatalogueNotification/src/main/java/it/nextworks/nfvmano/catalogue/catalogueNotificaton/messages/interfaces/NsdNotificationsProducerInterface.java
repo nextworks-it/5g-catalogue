@@ -32,7 +32,7 @@ public interface NsdNotificationsProducerInterface {
      * @throws MalformattedElementException
      * @throws FailedOperationException
      */
-    void sendNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) throws FailedOperationException, MalformattedElementException, MethodNotImplementedException;
+    void sendNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) throws FailedOperationException, MalformattedElementException;
 
     /**
      * This method is called when a new NSD is changed, after all the steps are done.
@@ -51,7 +51,7 @@ public interface NsdNotificationsProducerInterface {
      * @throws MethodNotImplementedException
      * @throws FailedOperationException
      */
-    void sendNsdDeletionNotification(NsdDeletionNotificationMessage notification) throws MethodNotImplementedException, FailedOperationException;
+    void sendNsdDeletionNotification(NsdDeletionNotificationMessage notification) throws FailedOperationException;
 
     /**
      * This method is called when a new PNF is on-boarded, after all the steps are done.
