@@ -47,6 +47,7 @@ function prepareEnv()
     mvn clean install
     cd ../NFV_MANO_SOL001_LIBS_DESCRIPTORS
     mvn clean install
+    cd ../../5g-catalogue    
     
 log "CLONING SUBMODULES..."
     git submodule update --init
