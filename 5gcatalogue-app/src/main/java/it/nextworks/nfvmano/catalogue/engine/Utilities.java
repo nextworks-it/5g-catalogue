@@ -29,8 +29,6 @@ public class Utilities {
         Optional<UserResource> optional = userRepository.findByUserName(userName);
 
         if (optional.isPresent()) {
-            if (projectId == null)
-                return true;
             UserResource userResource = optional.get();
 
             List<String> projectResources = userResource.getProjects();

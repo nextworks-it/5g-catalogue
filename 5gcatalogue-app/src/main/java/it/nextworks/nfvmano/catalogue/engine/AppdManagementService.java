@@ -1,9 +1,14 @@
 package it.nextworks.nfvmano.catalogue.engine;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.nextworks.nfvmano.catalogue.auth.AuthUtilities;
+import it.nextworks.nfvmano.catalogue.auth.projectmanagement.ProjectResource;
+import it.nextworks.nfvmano.catalogue.common.FileUtilities;
+import it.nextworks.nfvmano.catalogue.repos.ProjectRepository;
+import it.nextworks.nfvmano.catalogue.repos.UserRepository;
 import it.nextworks.nfvmano.catalogue.repos.mec0102.*;
+import it.nextworks.nfvmano.libs.common.exceptions.NotAuthorizedOperationException;
 import it.nextworks.nfvmano.libs.ifa.catalogues.interfaces.MecAppPackageManagementConsumerInterface;
-import it.nextworks.nfvmano.libs.ifa.catalogues.interfaces.MecAppPackageManagementProviderInterface;
 import it.nextworks.nfvmano.libs.ifa.catalogues.interfaces.elements.AppPackageInfo;
 
 import it.nextworks.nfvmano.libs.ifa.catalogues.interfaces.messages.*;
@@ -16,9 +21,11 @@ import it.nextworks.nfvmano.libs.ifa.common.messages.SubscribeRequest;
 import it.nextworks.nfvmano.libs.ifa.descriptors.appd.*;
 import it.nextworks.nfvmano.libs.ifa.descriptors.common.elements.VirtualComputeDesc;
 import org.apache.commons.compress.archivers.ArchiveException;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -31,6 +38,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static it.nextworks.nfvmano.catalogue.engine.Utilities.checkUserProjects;
+
 /**
  * This service manages the external requests for MEC App Package management
  * and interacts with the internal repositories of the APPD catalog.
@@ -40,48 +49,48 @@ import java.util.Optional;
  *
  */
 @Service
-public class AppdManagementService implements MecAppPackageManagementProviderInterface {
+public class AppdManagementService implements AppdManagementInterface {
 
     private static final Logger log = LoggerFactory.getLogger(AppdManagementService.class);
 
     @Autowired
-    AppPackageInfoRepository appPackageInfoRepository;
+    private AppPackageInfoRepository appPackageInfoRepository;
 
     @Autowired
-    AppdRepository appdRepository;
+    private AppdRepository appdRepository;
 
     @Autowired
-    VirtualComputeDescriptorRepository vcdRepository;
+    private VirtualComputeDescriptorRepository vcdRepository;
 
     @Autowired
-    AppExternalCpdRepository appExternalCpdRepository;
+    private AppExternalCpdRepository appExternalCpdRepository;
 
     @Autowired
-    MecServiceDependencyRepository mecServiceDependencyRepository;
+    private MecServiceDependencyRepository mecServiceDependencyRepository;
 
     @Autowired
-    TransportDependencyRepository transportDependencyRepository;
+    private TransportDependencyRepository transportDependencyRepository;
 
     @Autowired
-    TransportDescriptorRepository transportDescriptorRepository;
+    private TransportDescriptorRepository transportDescriptorRepository;
 
     @Autowired
-    SecurityInfoRepository securityInfoRepository;
+    private SecurityInfoRepository securityInfoRepository;
 
     @Autowired
-    MecServiceDescriptorRepository mecServiceDescriptorRepository;
+    private MecServiceDescriptorRepository mecServiceDescriptorRepository;
 
     @Autowired
-    MecServiceTransportRepository mecServiceTransportRepository;
+    private MecServiceTransportRepository mecServiceTransportRepository;
 
     @Autowired
-    TrafficRuleDescriptorRepository trafficRuleDescriptorRepository;
+    private TrafficRuleDescriptorRepository trafficRuleDescriptorRepository;
 
     @Autowired
-    TrafficFilterRepository trafficFilterRepository;
+    private TrafficFilterRepository trafficFilterRepository;
 
     @Autowired
-    MeAppInterfaceDescriptorRepository meAppInterfaceDescriptorRepository;
+    private MeAppInterfaceDescriptorRepository meAppInterfaceDescriptorRepository;
 
     /*
     @Autowired
@@ -89,9 +98,18 @@ public class AppdManagementService implements MecAppPackageManagementProviderInt
     */
 
     @Autowired
-    FileUtilities fileUtilities;
+    private FileUtilities fileUtilities;
+
+    @Autowired
+    private ProjectRepository projectRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     public AppdManagementService() { }
+
+    @Value("${keycloak.enabled:true}")
+    private boolean keycloakEnabled;
 
     @Override
     public File fetchOnboardedApplicationPackage(String onboardedAppPkgId)
@@ -100,9 +118,23 @@ public class AppdManagementService implements MecAppPackageManagementProviderInt
     }
 
     @Override
-    public QueryOnBoadedAppPkgInfoResponse queryApplicationPackage(GeneralizedQueryRequest request)
-            throws MethodNotImplementedException, NotExistingEntityException, MalformattedElementException {
+    public QueryOnBoadedAppPkgInfoResponse queryApplicationPackage(GeneralizedQueryRequest request, String project)
+            throws MethodNotImplementedException, NotExistingEntityException, MalformattedElementException, NotAuthorizedOperationException {
         log.debug("Received MEC application package query.");
+        if (project != null) {
+            Optional<ProjectResource> projectOptional = projectRepository.findByProjectId(project);
+            if (!projectOptional.isPresent()) {
+                log.error("Project with id " + project + " does not exist");
+                throw new MalformattedElementException("Project with id " + project + " does not exist");
+            }
+        }
+        try {
+            if (project != null && keycloakEnabled && !it.nextworks.nfvmano.catalogue.engine.Utilities.checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
+                throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
+            }
+        } catch (it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException e) {
+            throw new NotAuthorizedOperationException(e.getMessage());
+        }
         request.isValid();
 
         //At the moment the only filters accepted are:
@@ -146,18 +178,19 @@ public class AppdManagementService implements MecAppPackageManagementProviderInt
             log.error("Received query MEC App package with attribute selector. Not supported at the moment.");
             throw new MethodNotImplementedException("Received query MEC App package with attribute selector. Not supported at the moment.");
         }
+        //TODO filter per project
         return new QueryOnBoadedAppPkgInfoResponse(pkgList);
     }
 
     @Override
     public String subscribeMecAppPackageInfo(SubscribeRequest request, MecAppPackageManagementConsumerInterface consumer)
-            throws MethodNotImplementedException, MalformattedElementException, FailedOperationException{
+            throws MethodNotImplementedException, MalformattedElementException, FailedOperationException, NotAuthorizedOperationException{
         throw new MethodNotImplementedException("Method not implemented");
     }
 
     @Override
     public void unsubscribeMecAppPackageInfo(String subscriptionId)
-            throws MethodNotImplementedException, NotExistingEntityException, MalformattedElementException {
+            throws MethodNotImplementedException, NotExistingEntityException, MalformattedElementException, NotAuthorizedOperationException {
         throw new MethodNotImplementedException("Method not implemented");
     }
     /*
@@ -203,10 +236,25 @@ public class AppdManagementService implements MecAppPackageManagementProviderInt
     */
 
     @Override
-    public OnboardAppPackageResponse onboardAppPackage(OnboardAppPackageRequest request)
+    public OnboardAppPackageResponse onboardAppPackage(OnboardAppPackageRequest request, String project)
             throws MethodNotImplementedException, AlreadyExistingEntityException, FailedOperationException,
-            MalformattedElementException {
+            MalformattedElementException, NotAuthorizedOperationException {
         log.debug("Received on-board MEC application package request.");
+        if (project != null) {
+            Optional<ProjectResource> projectOptional = projectRepository.findByProjectId(project);
+            if (!projectOptional.isPresent()) {
+                log.error("Project with id " + project + " does not exist");
+                throw new MalformattedElementException("Project with id " + project + " does not exist");
+            }
+            try {
+                if (keycloakEnabled && !checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
+                    throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
+                }
+            } catch (it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException e) {
+                throw new NotAuthorizedOperationException(e.getMessage());
+            }
+        }
+
         request.isValid();
 
         //Retrieve the appD
@@ -236,7 +284,10 @@ public class AppdManagementService implements MecAppPackageManagementProviderInt
         }
 
         String appdId = appd.getAppDId();
-
+        //TODO create AppPackageInfoResource che ingloba appPackageInfo + progetto  e creare repo e aggiungere ad Id e versione anche il progetto
+        //TODO add security check in all other following methods
+        //TODO controllare che dopo le modifiche sui progetti (non più obbligatorio), tutto sia a posto
+        //TODO controllare anche che funzioni la variabile /tmp/catalogue e che quindi tutto venga salvato li dentro (quando si fa retrieve da osm)
         //check if a MEC application package with the same AppD ID and the same version already exists
         if (appPackageInfoRepository.findByAppdIdAndVersion(appdId, version).isPresent()) {
             log.error("MEC Application Package with ID " + appdId + " and version " + version + " already existing. Impossible to on-board a new one.");
@@ -263,12 +314,12 @@ public class AppdManagementService implements MecAppPackageManagementProviderInt
 
         } catch (AlreadyExistingEntityException e) {
             log.error("Failed MEC AppD saving - overlapping elements");
-            appPackageInfoRepository.delete(appPackageInfoId);
+            appPackageInfoRepository.deleteById(appPackageInfoId);
             log.debug("App package info deleted");
             throw new AlreadyExistingEntityException(e.getMessage());
         } catch (Exception e) {
             log.error("Failed MEC AppD saving - generic error");
-            appPackageInfoRepository.delete(appPackageInfoId);
+            appPackageInfoRepository.deleteById(appPackageInfoId);
             log.debug("App package info deleted");
             throw new FailedOperationException(e.getMessage());
         }
@@ -276,10 +327,17 @@ public class AppdManagementService implements MecAppPackageManagementProviderInt
     }
 
     @Override
-    public synchronized void enableAppPackage(String onboardedAppPkgId) throws MethodNotImplementedException,
-            NotExistingEntityException, FailedOperationException, MalformattedElementException {
+    public synchronized void enableAppPackage(String onboardedAppPkgId, String project) throws MethodNotImplementedException,
+            NotExistingEntityException, FailedOperationException, MalformattedElementException, NotAuthorizedOperationException {
         log.debug("Received request to enable MEC app package with ID " + onboardedAppPkgId);
         if (onboardedAppPkgId == null) throw new MalformattedElementException("Received request with null ID.");
+        if (project != null) {
+            Optional<ProjectResource> projectOptional = projectRepository.findByProjectId(project);
+            if (!projectOptional.isPresent()) {
+                log.error("Project with id " + project + " does not exist");
+                throw new MalformattedElementException("Project with id " + project + " does not exist");
+            }
+        }
         AppPackageInfo pkg = findAppPackageInfo(onboardedAppPkgId);
         if (pkg.getOperationalState() == OperationalState.ENABLED) {
             log.error("MEC app package " + onboardedAppPkgId + " already enabled.");
@@ -296,10 +354,17 @@ public class AppdManagementService implements MecAppPackageManagementProviderInt
     }
 
     @Override
-    public synchronized void disableAppPackage(String onboardedAppPkgId) throws MethodNotImplementedException,
-            NotExistingEntityException, FailedOperationException, MalformattedElementException {
+    public synchronized void disableAppPackage(String onboardedAppPkgId, String project) throws MethodNotImplementedException,
+            NotExistingEntityException, FailedOperationException, MalformattedElementException, NotAuthorizedOperationException {
         log.debug("Received request to disable MEC app package with ID " + onboardedAppPkgId);
         if (onboardedAppPkgId == null) throw new MalformattedElementException("Received request with null ID.");
+        if (project != null) {
+            Optional<ProjectResource> projectOptional = projectRepository.findByProjectId(project);
+            if (!projectOptional.isPresent()) {
+                log.error("Project with id " + project + " does not exist");
+                throw new MalformattedElementException("Project with id " + project + " does not exist");
+            }
+        }
         AppPackageInfo pkg = findAppPackageInfo(onboardedAppPkgId);
         if (pkg.getOperationalState() == OperationalState.DISABLED) {
             log.error("MEC app package " + onboardedAppPkgId + " already disabled.");
@@ -316,10 +381,17 @@ public class AppdManagementService implements MecAppPackageManagementProviderInt
     }
 
     @Override
-    public synchronized void deleteAppPackage(String onboardedAppPkgId) throws MethodNotImplementedException,
-            NotExistingEntityException, FailedOperationException, MalformattedElementException {
+    public synchronized void deleteAppPackage(String onboardedAppPkgId, String project) throws MethodNotImplementedException,
+            NotExistingEntityException, FailedOperationException, MalformattedElementException, NotAuthorizedOperationException {
         log.debug("Received request to delete MEC app package with ID " + onboardedAppPkgId);
         if (onboardedAppPkgId == null) throw new MalformattedElementException("Received request with null ID.");
+        if (project != null) {
+            Optional<ProjectResource> projectOptional = projectRepository.findByProjectId(project);
+            if (!projectOptional.isPresent()) {
+                log.error("Project with id " + project + " does not exist");
+                throw new MalformattedElementException("Project with id " + project + " does not exist");
+            }
+        }
         AppPackageInfo pkg = findAppPackageInfo(onboardedAppPkgId);
         if (pkg.getUsageState() == UsageState.IN_USE) {
             log.debug("MEC App package still in use. It will be removed later on. Setting it to pending delete");
@@ -335,7 +407,7 @@ public class AppdManagementService implements MecAppPackageManagementProviderInt
 
     @Override
     public void abortAppPackageDeletion(String onboardedAppPkgId) throws MethodNotImplementedException,
-            NotExistingEntityException, FailedOperationException, MalformattedElementException {
+            NotExistingEntityException, FailedOperationException, MalformattedElementException, NotAuthorizedOperationException {
         throw new MethodNotImplementedException();
     }
 
@@ -532,12 +604,12 @@ public class AppdManagementService implements MecAppPackageManagementProviderInt
             return id;
         } catch (AlreadyExistingEntityException e) {
             log.error("Error while storing the elements of the AppD since one of the element already existed: " + e.getMessage());
-            appdRepository.delete(id);
+            appdRepository.deleteById(id);
             log.debug("AppD with ID " + id + " removed from DB.");
             throw new AlreadyExistingEntityException(e.getMessage());
         } catch (Exception e) {
             log.error("General error while storing the elements of the AppD: " + e.getMessage());
-            appdRepository.delete(id);
+            appdRepository.deleteById(id);
             log.debug("AppD with ID " + id + " removed from DB.");
             throw new FailedOperationException(e.getMessage());
         }

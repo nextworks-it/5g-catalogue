@@ -1,6 +1,9 @@
 package it.nextworks.nfvmano.catalogue.nbi.mec0102.appdmanagement;
 
+import it.nextworks.nfvmano.catalogue.common.Utilities;
 import it.nextworks.nfvmano.catalogue.engine.AppdManagementService;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.ProblemDetails;
+import it.nextworks.nfvmano.libs.common.exceptions.NotAuthorizedOperationException;
 import it.nextworks.nfvmano.libs.ifa.common.exceptions.*;
 import it.nextworks.nfvmano.libs.ifa.catalogues.interfaces.messages.OnboardAppPackageRequest;
 import it.nextworks.nfvmano.libs.ifa.catalogues.interfaces.messages.OnboardAppPackageResponse;
@@ -9,6 +12,8 @@ import it.nextworks.nfvmano.libs.ifa.common.messages.GeneralizedQueryRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -23,13 +28,19 @@ public class AppdApiController {
     @Autowired
     AppdManagementService appdManagement;
 
+    @Value("${catalogue.default.project:admin}")
+    private String defaultProject;
+
     public AppdApiController() {	}
 
     @RequestMapping(value = "/appd/query", method = RequestMethod.POST)
-    public ResponseEntity<?> queryApplicationPackage(@RequestBody GeneralizedQueryRequest request) {
+    public ResponseEntity<?> queryApplicationPackage(@RequestParam(required = false) String project,
+                                                     @RequestBody GeneralizedQueryRequest request,
+                                                     @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+        //If project == null then retrive all AppDs
         log.debug("Received query Application Package request");
         try {
-            QueryOnBoadedAppPkgInfoResponse response = appdManagement.queryApplicationPackage(request);
+            QueryOnBoadedAppPkgInfoResponse response = appdManagement.queryApplicationPackage(request, project);
             return new ResponseEntity<QueryOnBoadedAppPkgInfoResponse>(response, HttpStatus.OK);
         } catch (MalformattedElementException e) {
             log.error("Malformatted request: " + e.getMessage());
@@ -40,6 +51,9 @@ public class AppdApiController {
         } catch (MethodNotImplementedException e) {
             log.error("Method not implemented. " + e.getMessage());
             return new ResponseEntity<String>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (NotAuthorizedOperationException e) {
+            log.error("Forbidden. " + e.getMessage());
+            return new ResponseEntity<String>(e.getMessage(), HttpStatus.FORBIDDEN);
         }
     }
 
@@ -76,70 +90,94 @@ public class AppdApiController {
     */
 
     @RequestMapping(value = "/appd", method = RequestMethod.POST)
-    public ResponseEntity<?> onboardAppPackage(@RequestBody OnboardAppPackageRequest request) {
+    public ResponseEntity<?> onboardAppPackage(@RequestParam(required = false) String project,
+                                               @RequestBody OnboardAppPackageRequest request,
+                                               @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+        if(project == null)
+            project = defaultProject;
+
         log.debug("Received on board App package request");
         try {
-            OnboardAppPackageResponse response = appdManagement.onboardAppPackage(request);
+            OnboardAppPackageResponse response = appdManagement.onboardAppPackage(request, project);
             return new ResponseEntity<OnboardAppPackageResponse>(response, HttpStatus.CREATED);
-        } catch (MethodNotImplementedException e) {
+        } catch (MethodNotImplementedException | FailedOperationException e) {
             return new ResponseEntity<String>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (AlreadyExistingEntityException e) {
             return new ResponseEntity<String>(e.getMessage(), HttpStatus.CONFLICT);
-        } catch (FailedOperationException e) {
-            return new ResponseEntity<String>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (MalformattedElementException e) {
             return new ResponseEntity<String>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (NotAuthorizedOperationException e) {
+            log.error("Forbidden. " + e.getMessage());
+            return new ResponseEntity<String>(e.getMessage(), HttpStatus.FORBIDDEN);
         }
     }
 
     @RequestMapping(value = "/appd/{appPackageId}/enable", method = RequestMethod.PUT)
-    public ResponseEntity<?> enableAppPackage(@PathVariable String appPackageId) {
+    public ResponseEntity<?> enableAppPackage(@RequestParam(required = false) String project,
+                                              @PathVariable String appPackageId,
+                                              @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+        if(project == null)
+            project = defaultProject;
+
         log.debug("Received request to enable App package " + appPackageId);
         try {
-            appdManagement.enableAppPackage(appPackageId);
+            appdManagement.enableAppPackage(appPackageId, project);
             return new ResponseEntity<>(HttpStatus.OK);
-        } catch (MethodNotImplementedException e) {
+        } catch (MethodNotImplementedException | FailedOperationException e) {
             return new ResponseEntity<String>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (NotExistingEntityException e) {
             return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
-        } catch (FailedOperationException e) {
-            return new ResponseEntity<String>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (MalformattedElementException e) {
             return new ResponseEntity<String>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (NotAuthorizedOperationException e) {
+            log.error("Forbidden. " + e.getMessage());
+            return new ResponseEntity<String>(e.getMessage(), HttpStatus.FORBIDDEN);
         }
     }
 
     @RequestMapping(value = "/appd/{appPackageId}/disable", method = RequestMethod.PUT)
-    public ResponseEntity<?> disableAppPackage(@PathVariable String appPackageId) {
+    public ResponseEntity<?> disableAppPackage(@RequestParam(required = false) String project,
+                                               @PathVariable String appPackageId,
+                                               @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+        if(project == null)
+            project = defaultProject;
+
         log.debug("Received request to disable App package " + appPackageId);
         try {
-            appdManagement.disableAppPackage(appPackageId);
+            appdManagement.disableAppPackage(appPackageId, project);
             return new ResponseEntity<>(HttpStatus.OK);
-        } catch (MethodNotImplementedException e) {
+        } catch (MethodNotImplementedException | FailedOperationException e) {
             return new ResponseEntity<String>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (NotExistingEntityException e) {
             return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
-        } catch (FailedOperationException e) {
-            return new ResponseEntity<String>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (MalformattedElementException e) {
             return new ResponseEntity<String>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (NotAuthorizedOperationException e) {
+            log.error("Forbidden. " + e.getMessage());
+            return new ResponseEntity<String>(e.getMessage(), HttpStatus.FORBIDDEN);
         }
     }
 
     @RequestMapping(value = "/appd/{appPackageId}/delete", method = RequestMethod.PUT)
-    public ResponseEntity<?> deleteAppPackage(@PathVariable String appPackageId) {
+    public ResponseEntity<?> deleteAppPackage(@RequestParam(required = false) String project,
+                                              @PathVariable String appPackageId,
+                                              @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+        if(project == null)
+            project = defaultProject;
+
         log.debug("Received request to delete App package " + appPackageId);
         try {
-            appdManagement.deleteAppPackage(appPackageId);
+            appdManagement.deleteAppPackage(appPackageId, project);
             return new ResponseEntity<>(HttpStatus.OK);
-        } catch (MethodNotImplementedException e) {
+        } catch (MethodNotImplementedException | FailedOperationException e) {
             return new ResponseEntity<String>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (NotExistingEntityException e) {
             return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
-        } catch (FailedOperationException e) {
-            return new ResponseEntity<String>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (MalformattedElementException e) {
             return new ResponseEntity<String>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (NotAuthorizedOperationException e) {
+            log.error("Forbidden. " + e.getMessage());
+            return new ResponseEntity<String>(e.getMessage(), HttpStatus.FORBIDDEN);
         }
     }
 }

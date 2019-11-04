@@ -522,7 +522,6 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             log.error("Wrong ID format: " + vnfPkgInfoId);
             throw new MalformattedElementException("Wrong ID format: " + vnfPkgInfoId);
         }
-
     }
 
     @Override
@@ -724,7 +723,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             }
         }
         try {
-            if (keycloakEnabled && !it.nextworks.nfvmano.catalogue.engine.Utilities.checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
+            if (project != null && keycloakEnabled && !it.nextworks.nfvmano.catalogue.engine.Utilities.checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
                 throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
             }
         } catch (NotExistingEntityException e) {

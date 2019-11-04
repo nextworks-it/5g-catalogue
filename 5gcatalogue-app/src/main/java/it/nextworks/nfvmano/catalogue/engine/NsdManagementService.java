@@ -868,13 +868,12 @@ public class NsdManagementService implements NsdManagementInterface {
             }
         }
         try {
-            if (keycloakEnabled && !checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
+            if (project != null && keycloakEnabled && !checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
                 throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
             }
         } catch (NotExistingEntityException e) {
             throw new NotAuthorizedOperationException(e.getMessage());
         }
-
 
         List<NsdInfoResource> nsdInfoResources = nsdInfoRepo.findAll();
         List<NsdInfo> nsdInfos = new ArrayList<>();
@@ -1494,7 +1493,7 @@ public class NsdManagementService implements NsdManagementInterface {
             }
         }
         try {
-            if (keycloakEnabled && !checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
+            if (project != null && keycloakEnabled && !checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
                 throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
             }
         } catch (NotExistingEntityException e) {

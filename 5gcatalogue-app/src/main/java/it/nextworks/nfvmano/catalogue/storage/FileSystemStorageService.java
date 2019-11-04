@@ -47,6 +47,9 @@ public class FileSystemStorageService {
     @Value("${catalogue.storageRootDir}")
     private String rootDir;
 
+    @Value("${environment.tmpDir}")
+    private String tmpDir;
+
     public FileSystemStorageService() {
     }
 
@@ -284,6 +287,7 @@ public class FileSystemStorageService {
             //create rootLocation + nsds and vnfpkgs folders
             Files.createDirectories(nsdsLocation);
             Files.createDirectories(vnfPkgsLocation);
+            Files.createDirectories(Paths.get(tmpDir));
         } catch (IOException e) {
             throw new FailedOperationException("Unable to create local storage directories: " + e.getMessage());
         }
