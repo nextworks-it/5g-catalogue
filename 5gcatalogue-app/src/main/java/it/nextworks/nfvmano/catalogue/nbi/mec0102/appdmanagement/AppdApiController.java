@@ -37,7 +37,9 @@ public class AppdApiController {
     public ResponseEntity<?> queryApplicationPackage(@RequestParam(required = false) String project,
                                                      @RequestBody GeneralizedQueryRequest request,
                                                      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
-        //If project == null then retrive all AppDs
+        if(project == null)
+            project = defaultProject;
+
         log.debug("Received query Application Package request");
         try {
             QueryOnBoadedAppPkgInfoResponse response = appdManagement.queryApplicationPackage(request, project);

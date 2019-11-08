@@ -16,20 +16,21 @@
 package it.nextworks.nfvmano.catalogue.repos.mec0102;
 
 import java.util.Optional;
+import java.util.UUID;
 
-import it.nextworks.nfvmano.libs.ifa.catalogues.interfaces.elements.AppPackageInfo;
+import it.nextworks.nfvmano.catalogue.engine.resources.AppPackageInfoResource;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 
-public interface AppPackageInfoRepository extends JpaRepository<AppPackageInfo, Long>{
+public interface AppPackageInfoResourceRepository extends JpaRepository<AppPackageInfoResource, UUID>{
 	
 	@Transactional
-	Optional<AppPackageInfo> findByAppPackageInfoId(String appPackageInfoId);
+	Optional<AppPackageInfoResource> findByAppPackageInfoId(String appPackageInfoId);
 	
 	@Transactional
-	Optional<AppPackageInfo> findByAppdIdAndVersion(String appdId, String version);
+	Optional<AppPackageInfoResource> findByAppdIdAndVersionAndProject(String appdId, String version, String project);
 	
 	@Transactional
-	Optional<AppPackageInfo> findByAppdId(String appdId);
+	Optional<AppPackageInfoResource> findByAppdId(String appdId);
 
 }

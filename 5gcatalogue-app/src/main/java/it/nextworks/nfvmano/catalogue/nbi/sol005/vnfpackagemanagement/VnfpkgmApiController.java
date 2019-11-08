@@ -98,7 +98,9 @@ public class VnfpkgmApiController implements VnfpkgmApi {
     public ResponseEntity<?> getVNFPkgsInfo(@RequestParam(required = false) String project,
                                             @RequestParam(required = false) UUID vnfdId,
                                             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
-        //If project == null then retrive all VNFPkgs Info
+        if(project == null)
+            project = defaultProject;
+
         String accept = request.getHeader("Accept");
         // TODO: process URI parameters for filters and attributes. At the moment it returns all the VNF Pkgs info
         if (accept != null && accept.contains("application/json")) {
@@ -125,7 +127,6 @@ public class VnfpkgmApiController implements VnfpkgmApi {
     public ResponseEntity<?> queryVNFPkgInfo(@RequestParam(required = false) String project,
                                              @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
                                              @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
-
         if(project == null)
             project = defaultProject;
 
@@ -171,7 +172,6 @@ public class VnfpkgmApiController implements VnfpkgmApi {
                                               @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
                                               @ApiParam(value = "", required = true) @Valid @RequestBody VnfPkgInfoModifications body,
                                               @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
-
         if(project == null)
             project = defaultProject;
 
@@ -210,7 +210,6 @@ public class VnfpkgmApiController implements VnfpkgmApi {
     public ResponseEntity<?> deleteVNFPkgInfo(@RequestParam(required = false) String project,
                                               @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
                                               @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
-
         if(project == null)
             project = defaultProject;
 
@@ -249,7 +248,6 @@ public class VnfpkgmApiController implements VnfpkgmApi {
     public ResponseEntity<?> getVNFD(@RequestParam(required = false) String project,
                                      @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
                                      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
-
         if(project == null)
             project = defaultProject;
 
@@ -293,7 +291,6 @@ public class VnfpkgmApiController implements VnfpkgmApi {
                                        @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
                                        @ApiParam(value = "") @RequestHeader(value = "Range", required = false) String range,
                                        @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
-
         if(project == null)
             project = defaultProject;
 
@@ -338,7 +335,6 @@ public class VnfpkgmApiController implements VnfpkgmApi {
                                           @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
                                           @ApiParam(value = "The payload body contains a VNF Package ZIP file. The request shall set the \"Content-Type\" HTTP header as defined above") @RequestHeader(value = "Content-Type", required = false) String contentType,
                                           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
-
         if(project == null)
             project = defaultProject;
 

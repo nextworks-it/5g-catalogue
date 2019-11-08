@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.nextworks.nfvmano.catalogue.auth.AuthUtilities;
 import it.nextworks.nfvmano.catalogue.auth.projectmanagement.ProjectResource;
 import it.nextworks.nfvmano.catalogue.common.FileUtilities;
+import it.nextworks.nfvmano.catalogue.engine.resources.AppPackageInfoResource;
+import it.nextworks.nfvmano.catalogue.engine.resources.PnfdInfoResource;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdInfo;
 import it.nextworks.nfvmano.catalogue.repos.ProjectRepository;
 import it.nextworks.nfvmano.catalogue.repos.UserRepository;
 import it.nextworks.nfvmano.catalogue.repos.mec0102.*;
@@ -33,10 +36,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static it.nextworks.nfvmano.catalogue.engine.Utilities.checkUserProjects;
 
@@ -54,7 +54,7 @@ public class AppdManagementService implements AppdManagementInterface {
     private static final Logger log = LoggerFactory.getLogger(AppdManagementService.class);
 
     @Autowired
-    private AppPackageInfoRepository appPackageInfoRepository;
+    private AppPackageInfoResourceRepository appPackageInfoResourceRepository;
 
     @Autowired
     private AppdRepository appdRepository;
@@ -121,7 +121,7 @@ public class AppdManagementService implements AppdManagementInterface {
     public QueryOnBoadedAppPkgInfoResponse queryApplicationPackage(GeneralizedQueryRequest request, String project)
             throws MethodNotImplementedException, NotExistingEntityException, MalformattedElementException, NotAuthorizedOperationException {
         log.debug("Received MEC application package query.");
-        if (project != null) {
+        if (project != null && !project.equals("*")) {
             Optional<ProjectResource> projectOptional = projectRepository.findByProjectId(project);
             if (!projectOptional.isPresent()) {
                 log.error("Project with id " + project + " does not exist");
@@ -129,7 +129,7 @@ public class AppdManagementService implements AppdManagementInterface {
             }
         }
         try {
-            if (project != null && keycloakEnabled && !it.nextworks.nfvmano.catalogue.engine.Utilities.checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
+            if (project != null && !project.equals("*") && keycloakEnabled && !it.nextworks.nfvmano.catalogue.engine.Utilities.checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
                 throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
             }
         } catch (it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException e) {
@@ -154,23 +154,33 @@ public class AppdManagementService implements AppdManagementInterface {
             Map<String, String> fp = filter.getParameters();
             if (fp.size() == 1 && fp.containsKey("APP_PACKAGE_INFO_ID")) {
                 String pkgId = fp.get("APP_PACKAGE_INFO_ID");
-                AppPackageInfo pkg = findAppPackageInfo(pkgId);
-                AppPackageInfo p = fillAppPackageInfoDetails(pkg);
-                pkgList.add(p);
+                AppPackageInfoResource pkg = findAppPackageInfoResource(pkgId);
+                AppPackageInfoResource p = fillAppPackageInfoResourceDetails(pkg);
+                if(project != null && project.equals("*"))
+                    throw new NotAuthorizedOperationException("Please specify a valid project");
+                if (project != null && !p.getProject().equals(project))
+                    throw new NotAuthorizedOperationException("Specified project differs from APPD info project");
+                pkgList.add(buildAppPackageInfo(p));
                 log.debug("Added MEC package info found in DB");
             } else if (fp.size() == 2 && fp.containsKey("APPD_ID") && fp.containsKey("APPD_VERSION")) {
                 String appdId = fp.get("APPD_ID");
                 String version = fp.get("APPD_VERSION");
-                AppPackageInfo pkg = findAppPackageInfo(appdId, version);
-                AppPackageInfo p = fillAppPackageInfoDetails(pkg);
-                pkgList.add(p);
+                if(project != null && project.equals("*"))
+                    throw new NotAuthorizedOperationException("Please specify a valid project");
+                AppPackageInfoResource pkg = findAppPackageInfoResource(appdId, version, project);
+                AppPackageInfoResource p = fillAppPackageInfoResourceDetails(pkg);
+                pkgList.add(buildAppPackageInfo(p));
                 log.debug("Added MEC package info found in DB");
             } else if (fp.isEmpty()) {
                 log.debug("Query with empty filter. Returning all the elements");
-                List<AppPackageInfo> pkgs = appPackageInfoRepository.findAll();
-                for (AppPackageInfo pkg : pkgs) {
-                    AppPackageInfo p = fillAppPackageInfoDetails(pkg);
-                    pkgList.add(p);
+                List<AppPackageInfoResource> pkgs = appPackageInfoResourceRepository.findAll();
+                for (AppPackageInfoResource pkg : pkgs) {
+                    if (project != null && !project.equals("*") && !pkg.getProject().equals(project)) {
+                        continue;
+                    } else {
+                        AppPackageInfoResource p = fillAppPackageInfoResourceDetails(pkg);
+                        pkgList.add(buildAppPackageInfo(p));
+                    }
                 }
                 log.debug("Added all MEC package infos found in DB");
             }
@@ -178,7 +188,6 @@ public class AppdManagementService implements AppdManagementInterface {
             log.error("Received query MEC App package with attribute selector. Not supported at the moment.");
             throw new MethodNotImplementedException("Received query MEC App package with attribute selector. Not supported at the moment.");
         }
-        //TODO filter per project
         return new QueryOnBoadedAppPkgInfoResponse(pkgList);
     }
 
@@ -239,7 +248,7 @@ public class AppdManagementService implements AppdManagementInterface {
     public OnboardAppPackageResponse onboardAppPackage(OnboardAppPackageRequest request, String project)
             throws MethodNotImplementedException, AlreadyExistingEntityException, FailedOperationException,
             MalformattedElementException, NotAuthorizedOperationException {
-        log.debug("Received on-board MEC application package request.");
+        log.debug("Received on-board MEC application package request in project {}.", project);
         if (project != null) {
             Optional<ProjectResource> projectOptional = projectRepository.findByProjectId(project);
             if (!projectOptional.isPresent()) {
@@ -248,7 +257,7 @@ public class AppdManagementService implements AppdManagementInterface {
             }
             try {
                 if (keycloakEnabled && !checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
-                    throw new NotAuthorizedOperationException("Current user cannot access to the specified project");
+                    throw new NotAuthorizedOperationException("Current user cannot access to the specified project with id" + project);
                 }
             } catch (it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException e) {
                 throw new NotAuthorizedOperationException(e.getMessage());
@@ -284,46 +293,48 @@ public class AppdManagementService implements AppdManagementInterface {
         }
 
         String appdId = appd.getAppDId();
-        //TODO create AppPackageInfoResource che ingloba appPackageInfo + progetto  e creare repo e aggiungere ad Id e versione anche il progetto
-        //TODO add security check in all other following methods
-        //TODO controllare che dopo le modifiche sui progetti (non più obbligatorio), tutto sia a posto
-        //TODO controllare anche che funzioni la variabile /tmp/catalogue e che quindi tutto venga salvato li dentro (quando si fa retrieve da osm)
+
         //check if a MEC application package with the same AppD ID and the same version already exists
-        if (appPackageInfoRepository.findByAppdIdAndVersion(appdId, version).isPresent()) {
-            log.error("MEC Application Package with ID " + appdId + " and version " + version + " already existing. Impossible to on-board a new one.");
-            throw new AlreadyExistingEntityException("MEC Application Package with ID " + appdId + " and version " + version + " already existing. Impossible to on-board a new one.");
+        if (appPackageInfoResourceRepository.findByAppdIdAndVersionAndProject(appdId, version, project).isPresent()) {
+            log.error("MEC Application Package with ID " + appdId + " and version " + version + " already existing in project " + project + ". Impossible to on-board a new one.");
+            throw new AlreadyExistingEntityException("MEC Application Package with ID " + appdId + " and version " + version + " already existing in project " + project + ". Impossible to on-board a new one.");
         }
 
-        //check if a MEC AppD with same ID, provider and version already exists
-        if (appdRepository.findByAppDIdAndAppDVersionAndAppProvider(appdId, version, appd.getAppProvider()).isPresent()) {
-            log.error("MEC AppD with AppD ID " + appdId + ", provider " + appd.getAppProvider() + " and version " + version + " already existing in DB. Impossible to create a new one.");
-            throw new AlreadyExistingEntityException("MEC AppD with AppD ID " + appdId + ", provider " + appd.getAppProvider() + " and version " + version + " already existing in DB. Impossible to create a new one.");
+        UUID appPackageInfoResourceId;
+        String appPackageInfoResourceIdString;
+        Long storedAppdId;
+        String storedAppdIdString;
+
+        //Check if a MEC AppD with same ID, provider and version already exists. If it exists, don't store new Appd element but just connect the App Pkg info to that one.
+        //We are assuming that two Appds with the same ID, version and provider are identical
+        Optional<Appd> storedAppd = appdRepository.findByAppDIdAndAppDVersionAndAppProvider(appdId, version, appd.getAppProvider());
+        if (storedAppd.isPresent()) {
+            appPackageInfoResourceId = storeAppPackageInfo(request, storedAppd.get(), project);
+            appPackageInfoResourceIdString = String.valueOf(appPackageInfoResourceId);
+            storedAppdId = storedAppd.get().getId();
+            storedAppdIdString = String.valueOf(storedAppdId);
+        }else{
+            appPackageInfoResourceId = storeAppPackageInfo(request, appd, project);
+            appPackageInfoResourceIdString = String.valueOf(appPackageInfoResourceId);
+            try {
+                storedAppdId = storeAppd(appd);
+                storedAppdIdString = String.valueOf(storedAppdId);
+                log.debug("Successful MEC application package on-boarding. App package ID: " + appPackageInfoResourceId + " - Internal AppD ID: " + storedAppdIdString);
+                //notify(new AppPackageOnBoardingNotification(appPackageInfoIdString, storedAppdIdString));
+            } catch (AlreadyExistingEntityException e) {
+                log.error("Failed MEC AppD saving - overlapping elements");
+                appPackageInfoResourceRepository.deleteById(appPackageInfoResourceId);
+                log.debug("App package info deleted");
+                throw new AlreadyExistingEntityException(e.getMessage());
+            } catch (Exception e) {
+                log.error("Failed MEC AppD saving - generic error");
+                appPackageInfoResourceRepository.deleteById(appPackageInfoResourceId);
+                log.debug("App package info deleted");
+                throw new FailedOperationException(e.getMessage());
+            }
         }
 
-        Long appPackageInfoId = storeAppPackageInfo(request, appd);
-        String appPackageInfoIdString = String.valueOf(appPackageInfoId);
-
-        try {
-            Long storedAppdId = storeAppd(appd);
-            String storedAppdIdString = String.valueOf(storedAppdId);
-
-            log.debug("Successful MEC application package on-boarding. App package ID: " + String.valueOf(appPackageInfoId) + " - Internal AppD ID: " + storedAppdIdString);
-            //notify(new AppPackageOnBoardingNotification(appPackageInfoIdString, storedAppdIdString));
-
-            return new OnboardAppPackageResponse(appPackageInfoIdString, storedAppdIdString);
-
-        } catch (AlreadyExistingEntityException e) {
-            log.error("Failed MEC AppD saving - overlapping elements");
-            appPackageInfoRepository.deleteById(appPackageInfoId);
-            log.debug("App package info deleted");
-            throw new AlreadyExistingEntityException(e.getMessage());
-        } catch (Exception e) {
-            log.error("Failed MEC AppD saving - generic error");
-            appPackageInfoRepository.deleteById(appPackageInfoId);
-            log.debug("App package info deleted");
-            throw new FailedOperationException(e.getMessage());
-        }
-
+        return new OnboardAppPackageResponse(appPackageInfoResourceIdString, storedAppdIdString);
     }
 
     @Override
@@ -338,7 +349,18 @@ public class AppdManagementService implements AppdManagementInterface {
                 throw new MalformattedElementException("Project with id " + project + " does not exist");
             }
         }
-        AppPackageInfo pkg = findAppPackageInfo(onboardedAppPkgId);
+        AppPackageInfoResource pkg = findAppPackageInfoResource(onboardedAppPkgId);
+        if (project != null && !pkg.getProject().equals(project)) {
+            throw new NotAuthorizedOperationException("Specified project differs from Appd info project");
+        } else {
+            try {
+                if (keycloakEnabled && !checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
+                    throw new NotAuthorizedOperationException("Current user cannot access to the specified project with id" + project);
+                }
+            } catch (it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException e) {
+                throw new NotAuthorizedOperationException(e.getMessage());
+            }
+        }
         if (pkg.getOperationalState() == OperationalState.ENABLED) {
             log.error("MEC app package " + onboardedAppPkgId + " already enabled.");
             throw new FailedOperationException("MEC app package " + onboardedAppPkgId + " already enabled.");
@@ -348,7 +370,7 @@ public class AppdManagementService implements AppdManagementInterface {
             throw new FailedOperationException("MEC app package " + onboardedAppPkgId + " under deletion. Impossible to enable");
         }
         pkg.setOperationalState(OperationalState.ENABLED);
-        appPackageInfoRepository.saveAndFlush(pkg);
+        appPackageInfoResourceRepository.saveAndFlush(pkg);
         log.debug("MEC app package " + onboardedAppPkgId + " enabled.");
         //notify(new AppPackageStateChangeNotification(onboardedAppPkgId, AppdChangeType.OPERATIONAL_STATE_CHANGE, OperationalState.ENABLED, false));
     }
@@ -365,7 +387,18 @@ public class AppdManagementService implements AppdManagementInterface {
                 throw new MalformattedElementException("Project with id " + project + " does not exist");
             }
         }
-        AppPackageInfo pkg = findAppPackageInfo(onboardedAppPkgId);
+        AppPackageInfoResource pkg = findAppPackageInfoResource(onboardedAppPkgId);
+        if (project != null && !pkg.getProject().equals(project)) {
+            throw new NotAuthorizedOperationException("Specified project differs from Appd info project");
+        } else {
+            try {
+                if (keycloakEnabled && !checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
+                    throw new NotAuthorizedOperationException("Current user cannot access to the specified project with id" + project);
+                }
+            } catch (it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException e) {
+                throw new NotAuthorizedOperationException(e.getMessage());
+            }
+        }
         if (pkg.getOperationalState() == OperationalState.DISABLED) {
             log.error("MEC app package " + onboardedAppPkgId + " already disabled.");
             throw new FailedOperationException("MEC app package " + onboardedAppPkgId + " already disabled.");
@@ -375,7 +408,7 @@ public class AppdManagementService implements AppdManagementInterface {
             throw new FailedOperationException("MEC app package " + onboardedAppPkgId + " under deletion. Impossible to disable");
         }
         pkg.setOperationalState(OperationalState.DISABLED);
-        appPackageInfoRepository.saveAndFlush(pkg);
+        appPackageInfoResourceRepository.saveAndFlush(pkg);
         log.debug("MEC app package " + onboardedAppPkgId + " enabled.");
         //notify(new AppPackageStateChangeNotification(onboardedAppPkgId, AppdChangeType.OPERATIONAL_STATE_CHANGE, OperationalState.DISABLED, false));
     }
@@ -392,14 +425,25 @@ public class AppdManagementService implements AppdManagementInterface {
                 throw new MalformattedElementException("Project with id " + project + " does not exist");
             }
         }
-        AppPackageInfo pkg = findAppPackageInfo(onboardedAppPkgId);
+        AppPackageInfoResource pkg = findAppPackageInfoResource(onboardedAppPkgId);
+        if (project != null && !pkg.getProject().equals(project)) {
+            throw new NotAuthorizedOperationException("Specified project differs from Appd info project");
+        } else {
+            try {
+                if (keycloakEnabled && !checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
+                    throw new NotAuthorizedOperationException("Current user cannot access to the specified project with id" + project);
+                }
+            } catch (it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException e) {
+                throw new NotAuthorizedOperationException(e.getMessage());
+            }
+        }
         if (pkg.getUsageState() == UsageState.IN_USE) {
             log.debug("MEC App package still in use. It will be removed later on. Setting it to pending delete");
             pkg.setDeletionPending(true);
-            appPackageInfoRepository.save(pkg);
+            appPackageInfoResourceRepository.save(pkg);
             //notify(new AppPackageStateChangeNotification(onboardedAppPkgId, AppdChangeType.APP_PACKAGE_IN_DELETION_PENDING, pkg.getOperationalState(), true));
         } else {
-            appPackageInfoRepository.delete(pkg);
+            appPackageInfoResourceRepository.delete(pkg);
             log.debug("MEC App pacakge " + onboardedAppPkgId + " removed from DB.");
             //notify(new AppPackageStateChangeNotification(onboardedAppPkgId, AppdChangeType.APP_PACKAGE_DELETION, pkg.getOperationalState(), false));
         }
@@ -450,9 +494,9 @@ public class AppdManagementService implements AppdManagementInterface {
      * @return the MEC app package info
      * @throws NotExistingEntityException if the package info is not present in the repository
      */
-    private AppPackageInfo findAppPackageInfo(String appPackageInfoId) throws NotExistingEntityException {
+    private AppPackageInfoResource findAppPackageInfoResource(String appPackageInfoId) throws NotExistingEntityException {
         log.debug("Searching MEC App package info with ID " + appPackageInfoId);
-        Optional<AppPackageInfo> appPackageInfoOpt = appPackageInfoRepository.findByAppPackageInfoId(appPackageInfoId);
+        Optional<AppPackageInfoResource> appPackageInfoOpt = appPackageInfoResourceRepository.findByAppPackageInfoId(appPackageInfoId);
         if (appPackageInfoOpt.isPresent()) {
             log.debug("MEC App package info with ID " + appPackageInfoId + " found.");
             return appPackageInfoOpt.get();
@@ -470,15 +514,15 @@ public class AppdManagementService implements AppdManagementInterface {
      * @return the MEC app package info
      * @throws NotExistingEntityException if the package info is not present in the repository
      */
-    private AppPackageInfo findAppPackageInfo(String appdId, String version) throws NotExistingEntityException {
+    private AppPackageInfoResource findAppPackageInfoResource(String appdId, String version, String project) throws NotExistingEntityException {
         log.debug("Searching MEC App package info with AppD ID " + appdId + " and version " + version);
-        Optional<AppPackageInfo> appPackageInfoOpt = appPackageInfoRepository.findByAppdIdAndVersion(appdId, version);
+        Optional<AppPackageInfoResource> appPackageInfoOpt = appPackageInfoResourceRepository.findByAppdIdAndVersionAndProject(appdId, version, project);
         if (appPackageInfoOpt.isPresent()) {
-            log.debug("MEC App package info with App ID " + appdId + " and version " + version + " found.");
+            log.debug("MEC App package info with App ID " + appdId + " and version " + version + " found in project " + project + ".");
             return appPackageInfoOpt.get();
         } else {
-            log.warn("MEC App package info with App ID " + appdId + " and version " + version + " not found.");
-            throw new NotExistingEntityException("MEC App package info with App ID " + appdId + " and version " + version + " not found.");
+            log.warn("MEC App package info with App ID " + appdId + " and version " + version + " not found in project " + project + ".");
+            throw new NotExistingEntityException("MEC App package info with App ID " + appdId + " and version " + version + " not found in project " + project + ".");
         }
     }
 
@@ -489,7 +533,7 @@ public class AppdManagementService implements AppdManagementInterface {
      * @return the completed app package info
      * @throws NotExistingEntityException if the required information are not found
      */
-    private AppPackageInfo fillAppPackageInfoDetails(AppPackageInfo input) throws NotExistingEntityException {
+    private AppPackageInfoResource fillAppPackageInfoResourceDetails(AppPackageInfoResource input) throws NotExistingEntityException {
         String appdId = input.getAppdId();
         String version = input.getVersion();
         String provider = input.getProvider();
@@ -540,9 +584,9 @@ public class AppdManagementService implements AppdManagementInterface {
 
     //Private methods to store app package info and appd
 
-    private synchronized Long storeAppPackageInfo(OnboardAppPackageRequest request, Appd appd) {
-        log.debug("Storing MEC App package info.");
-        AppPackageInfo appPackageInfo = new AppPackageInfo(null, //appPackageInfoId
+    private synchronized UUID storeAppPackageInfo(OnboardAppPackageRequest request, Appd appd, String project) {
+        log.debug("Storing MEC App package info resource in project {}.", project);
+        AppPackageInfoResource appPackageInfoResource = new AppPackageInfoResource(null, //appPackageInfoId
                 appd.getAppDId(),
                 appd.getAppDVersion(),
                 appd.getAppProvider(),
@@ -550,18 +594,19 @@ public class AppdManagementService implements AppdManagementInterface {
                 null, //appd,
                 OperationalState.ENABLED,
                 UsageState.NOT_IN_USE,
-                false);
+                false,
+                project);
 
-        appPackageInfoRepository.saveAndFlush(appPackageInfo);
+        appPackageInfoResourceRepository.saveAndFlush(appPackageInfoResource);
 
-        AppPackageInfo createdPackage = appPackageInfoRepository.findByAppdIdAndVersion(appd.getAppDId(), appd.getAppDVersion()).get();
-        Long id = createdPackage.getId();
-        log.debug("Added MEC package info with AppD ID " + appd.getAppDId() + ", version " + appd.getAppDVersion() + " and provider " + request.getProvider() + ". Internal ID assigned to the APP package: " + id);
+        AppPackageInfoResource createdPackage = appPackageInfoResourceRepository.findByAppdIdAndVersionAndProject(appd.getAppDId(), appd.getAppDVersion(), project).get();
+        UUID id = createdPackage.getId();
+        log.debug("Added MEC package info resource with AppD ID " + appd.getAppDId() + ", version " + appd.getAppDVersion() + " and provider " + request.getProvider() + ". Internal ID assigned to the APP package: " + id);
 
         String pkgId = String.valueOf(id);
         createdPackage.setAppPackageInfoId(pkgId);
-        appPackageInfoRepository.saveAndFlush(createdPackage);
-        log.debug("Stored MEC App package info.");
+        appPackageInfoResourceRepository.saveAndFlush(createdPackage);
+        log.debug("Stored MEC App package info resource in project {}.", project);
 
         return id;
     }
@@ -623,6 +668,7 @@ public class AppdManagementService implements AppdManagementInterface {
 
         VirtualComputeDesc vcd = input.getVirtualComputeDescriptor();
         String vcdId = vcd.getVirtualComputeDescId();
+        //TODO add also provider to the find?
         if (vcdRepository.findByVirtualComputeDescIdAndAppdAppDIdAndAppdAppDVersion(vcdId, appdId, version).isPresent()) {
             log.error("VCD " + vcdId + " already existing. Impossible to load a new one");
             throw new AlreadyExistingEntityException("VCD " + vcdId + " already existing.");
@@ -811,4 +857,16 @@ public class AppdManagementService implements AppdManagementInterface {
         log.debug("All the traffic rule descriptors have been stored.");
     }
 
+    private AppPackageInfo buildAppPackageInfo(AppPackageInfoResource p) {
+        return new AppPackageInfo(
+                p.getAppPackageInfoId(),
+                p.getAppdId(),
+                p.getVersion(),
+                p.getProvider(),
+                p.getName(),
+                p.getAppd(),
+                p.getOperationalState(),
+                p.getUsageState(),
+                p.isDeletionPending());
+    }
 }
