@@ -66,6 +66,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
     private static final Logger log = LoggerFactory.getLogger(OpenSourceMANOR4PlusPlugin.class);
     private Path osmDirPath;
     private File osmDir;
+    private Path tmpDirPath;
     private final File logo;
     private final OSMMano osm;
     private OSMr4PlusClient osmClient;
@@ -75,7 +76,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
 
     public OpenSourceMANOR4PlusPlugin(MANOType manoType, MANO mano, String kafkaBootstrapServers,
                                       OsmInfoObjectRepository osmInfoObjectRepository, TranslationInformationRepository translationInformationRepository, String localTopic, String remoteTopic,
-                                      KafkaTemplate<String, String> kafkaTemplate, Path osmDirPath, Path logoPath, boolean manoSync, long syncPeriod) {
+                                      KafkaTemplate<String, String> kafkaTemplate, Path osmDirPath, Path tmpDir, Path logoPath, boolean manoSync, long syncPeriod) {
         super(manoType, mano, kafkaBootstrapServers, localTopic, remoteTopic, kafkaTemplate, manoSync);
         if (MANOType.OSMR4 != manoType && MANOType.OSMR5 != manoType && MANOType.OSMR6 != manoType) {
             throw new IllegalArgumentException("OSM R4+ plugin requires an OSM R4+ type MANO");
@@ -86,6 +87,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
         this.osmDirPath = osmDirPath;
         this.logo = new File(logoPath.toUri());
         this.syncPeriod = syncPeriod;
+        this.tmpDirPath = tmpDir;
     }
 
     private static <T> List<T> parseResponse(OSMHttpResponse httpResponse, String opId, Class<T> clazz) throws FailedOperationException {
@@ -404,7 +406,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
             cloudInit = new File(osmDirPath.toString() + "/" + vnfPackageInfo.getAdmin().getStorage().getPkgDir() + "/cloud_init/" + vnfNode.getInterfaces().getVnflcm().getInstantiate().getImplementation());
         }
         log.info("{} - Creating TOSCA VNF Pkg with descriptor ID {} and version {}", osm.getManoId(), vnfPackageInfo.getDescriptorId(), vnfPackageInfo.getVersion());
-        return ToscaArchiveBuilder.createVNFCSAR(vnfPackageInfo.getId(), vnfd, cloudInit);
+        return ToscaArchiveBuilder.createVNFCSAR(vnfPackageInfo.getId(), vnfd, tmpDirPath.toString(), cloudInit);
     }
 
     private String createNsPkgTosca (OsmInfoObject nsPackageInfo) throws MalformattedElementException, IllegalStateException, IOException, IllegalArgumentException{
@@ -413,7 +415,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
         List<TranslationInformation> translationInformationList = translationInformationRepository.findByOsmManoId(osm.getManoId());
         DescriptorTemplate nsd = ToscaDescriptorsParser.generateNsDescriptor(osmDirPath.toString() + "/" + nsPackageInfo.getAdmin().getStorage().getDescriptor(), vnfInfoList, translationInformationList, osmDirPath);
         log.info("{} - Creating TOSCA NS Pkg with descriptor ID {} and version {}", osm.getManoId(), nsPackageInfo.getDescriptorId(), nsPackageInfo.getVersion());
-        return ToscaArchiveBuilder.createNSCSAR(nsPackageInfo.getId(), nsd);
+        return ToscaArchiveBuilder.createNSCSAR(nsPackageInfo.getId(), nsd, tmpDirPath.toString());
     }
 
     @Override

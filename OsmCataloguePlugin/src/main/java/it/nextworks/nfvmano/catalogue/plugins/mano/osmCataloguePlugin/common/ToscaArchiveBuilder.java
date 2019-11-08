@@ -27,7 +27,7 @@ public class ToscaArchiveBuilder {
 
     private static final Logger log = LoggerFactory.getLogger(ArchiveBuilder.class);
 
-    public static String createVNFCSAR(String vnfPackageInfoId, DescriptorTemplate template, File cloudInit) throws IllegalStateException{
+    public static String createVNFCSAR(String vnfPackageInfoId, DescriptorTemplate template, String tmpDir, File cloudInit) throws IllegalStateException{
         String vnfName = "descriptor";
         String vnfId = "1";
         String vnfPackagePath;
@@ -45,7 +45,7 @@ public class ToscaArchiveBuilder {
             vnfName = template.getTopologyTemplate().getVNFNodes().keySet().iterator().next();
 
             //Create directories
-            File root = makeFolder(vnfName + "_" + vnfPackageInfoId);
+            File root = makeFolder(tmpDir,vnfName + "_" + vnfPackageInfoId);
             File definitions = makeSubFolder(root, "Definitions");
             File files = makeSubFolder(root, "Files");
             File licenses = makeSubFolder(files, "Licences");
@@ -99,7 +99,7 @@ public class ToscaArchiveBuilder {
         return vnfPackagePath;
     }
 
-    public static String createNSCSAR(String nsPackageInfoId, DescriptorTemplate template) throws IllegalStateException{
+    public static String createNSCSAR(String nsPackageInfoId, DescriptorTemplate template, String tmpDir) throws IllegalStateException{
         String serviceName = "descriptor";
         String servicePackagePath;
 
@@ -116,7 +116,7 @@ public class ToscaArchiveBuilder {
 
         try{
             //Create directories
-            File root = makeFolder(serviceName + "_" + nsPackageInfoId);
+            File root = makeFolder(tmpDir,serviceName + "_" + nsPackageInfoId);
             File definitions = makeSubFolder(root, "Definitions");
             File files = makeSubFolder(root, "Files");
             File licenses = makeSubFolder(files, "Licences");
@@ -167,8 +167,8 @@ public class ToscaArchiveBuilder {
         return servicePackagePath;
     }
 
-    public static File makeFolder(String name) {
-        File folder = new File("/tmp", name);
+    public static File makeFolder(String root, String name) {
+        File folder = new File(root, name);
         if (folder.isDirectory()) {
             if (!rmRecursively(folder)) {
                 throw new IllegalStateException(
