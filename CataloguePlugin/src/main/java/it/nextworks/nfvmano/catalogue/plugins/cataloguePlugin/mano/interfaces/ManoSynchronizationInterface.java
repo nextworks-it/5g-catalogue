@@ -59,4 +59,13 @@ public interface ManoSynchronizationInterface {
      */
     void notifyDelete(String infoId, String descriptorId, String descriptorVersion, String project, OperationStatus opStatus);
 
+
+    /**
+     * This method is called by Catalogue to retrieve the Mano Pkg info Id .
+     *
+     * @param catalogueInfoId Catalogue Pkg info Id
+     *
+     * @return Mano Pkg info Id
+     */
+    String getManoPkgInfoId(String catalogueInfoId);
 }

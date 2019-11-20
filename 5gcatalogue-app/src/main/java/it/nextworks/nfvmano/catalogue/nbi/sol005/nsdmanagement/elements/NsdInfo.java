@@ -15,6 +15,7 @@
  */
 package it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -89,6 +90,10 @@ public class NsdInfo {
 
     @JsonProperty("projectId")
     private String projectId;
+
+    @JsonProperty("manoInfoIds")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private Map<String, String> manoInfoIds = new HashMap<>();
 
     public NsdInfo id(UUID id) {
         this.id = id;
@@ -469,6 +474,14 @@ public class NsdInfo {
         this.projectId = projectId;
     }
 
+    public Map<String, String> getManoInfoIds() {
+        return manoInfoIds;
+    }
+
+    public void setManoInfoIds(Map<String, String> manoInfoIds) {
+        this.manoInfoIds = manoInfoIds;
+    }
+
     @Override
     public boolean equals(java.lang.Object o) {
         if (this == o) {
@@ -490,14 +503,15 @@ public class NsdInfo {
                 && Objects.equals(this.nsdOperationalState, nsdInfo.nsdOperationalState)
                 && Objects.equals(this.nsdUsageState, nsdInfo.nsdUsageState)
                 && Objects.equals(this.userDefinedData, nsdInfo.userDefinedData)
-                && Objects.equals(this.links, nsdInfo.links);
+                && Objects.equals(this.links, nsdInfo.links)
+                && Objects.equals(this.manoInfoIds, nsdInfo.manoInfoIds);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id, nsdId, nsdName, nsdVersion, nsdDesigner, nsdInvariantId, vnfPkgIds, pnfdInfoIds,
                 nestedNsdInfoIds, nsdOnboardingState, onboardingFailureDetails, nsdOperationalState, nsdUsageState,
-                userDefinedData, links);
+                userDefinedData, links, manoInfoIds);
     }
 
     @Override
@@ -520,6 +534,7 @@ public class NsdInfo {
         sb.append("    nsdUsageState: ").append(toIndentedString(nsdUsageState)).append("\n");
         sb.append("    userDefinedData: ").append(toIndentedString(userDefinedData)).append("\n");
         sb.append("    links: ").append(toIndentedString(links)).append("\n");
+        sb.append("    manoInfoIds: ").append(toIndentedString(manoInfoIds)).append("\n");
         sb.append("}");
         return sb.toString();
     }

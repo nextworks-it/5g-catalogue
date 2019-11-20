@@ -46,7 +46,7 @@ public interface NsdManagementInterface {
 
     NsdInfo getNsdInfo(String nsdInfoId, String project) throws FailedOperationException, NotPermittedOperationException, NotExistingEntityException, MalformattedElementException, MethodNotImplementedException, NotAuthorizedOperationException;
 
-    List<NsdInfo> getAllNsdInfos(String project) throws FailedOperationException, MethodNotImplementedException, NotAuthorizedOperationException;
+    List<NsdInfo> getAllNsdInfos(String project, String extraData) throws FailedOperationException, MethodNotImplementedException, NotAuthorizedOperationException;
 
     void uploadNsd(String nsdInfoId, MultipartFile nsd, ContentType contentType, boolean isInternalRequest, String project) throws Exception, FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException;
 

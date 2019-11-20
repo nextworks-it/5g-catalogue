@@ -63,6 +63,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import static it.nextworks.nfvmano.catalogue.engine.Utilities.*;
 
@@ -858,7 +859,7 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
-    public List<NsdInfo> getAllNsdInfos(String project) throws FailedOperationException, MethodNotImplementedException, NotAuthorizedOperationException {
+    public List<NsdInfo> getAllNsdInfos(String project, String extraData) throws FailedOperationException, MethodNotImplementedException, NotAuthorizedOperationException {
         log.debug("Processing request to get all NSD infos");
         if (project != null && !project.equals("*")) {
             Optional<ProjectResource> projectOptional = projectRepository.findByProjectId(project);
@@ -883,6 +884,17 @@ public class NsdManagementService implements NsdManagementInterface {
                 continue;
             } else {
                 NsdInfo nsdInfo = buildNsdInfo(nsdInfoResource);
+                if(extraData != null && extraData.equals("manoInfoIds")){
+                    Map<String, NotificationResource> onBoardingMap = nsdInfoResource.getAcknowledgedOnboardOpConsumers();;
+                    List<MANOPlugin> manos = new ArrayList<>(pluginManger.manoDrivers.values());
+                    for(MANOPlugin mano : manos){
+                        if (onBoardingMap.containsKey(mano.getPluginId()) && onBoardingMap.get(mano.getPluginId()).getOpStatus().equals(OperationStatus.SUCCESSFULLY_DONE)) {
+                            String manoInfoId = mano.getManoPkgInfoId(nsdInfoResource.getId().toString());
+                            if(manoInfoId != null)
+                                nsdInfo.getManoInfoIds().put(mano.getPluginId(), manoInfoId);
+                        }
+                    }
+                }
                 nsdInfos.add(nsdInfo);
                 log.debug("Added NSD info " + nsdInfoResource.getId());
             }

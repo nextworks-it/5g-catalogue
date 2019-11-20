@@ -51,6 +51,7 @@ public interface NsdApi {
             @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
     @RequestMapping(value = "/nsd/v1/ns_descriptors", produces = {"application/json"}, method = RequestMethod.GET)
     ResponseEntity<?> getNSDsInfo(@RequestParam(required = false) String project,
+                                  @RequestParam(required = false) String extraData,
                                   @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization);
 
     @ApiOperation(value = "Query NSD Info", nickname = "getNSDInfo", notes = "The GET method reads information about an individual NS descriptor. This method shall follow the provisions specified in GS NFV-SOL 005 Tables 5.4.3.3.2-1 and 5.4.3.3.2-2 of GS NFV-SOL 005 for URI query parameters, request and response data structures, and response codes.", response = NsdInfo.class, tags = {})

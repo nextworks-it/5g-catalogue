@@ -77,6 +77,11 @@ public class DummyMANOPlugin extends MANOPlugin {
     }
 
     @Override
+    public String getManoPkgInfoId(String cataloguePkgInfoId){
+        return null;
+    }
+
+    @Override
     public void notifyOnboarding(String infoId, String descriptorId, String descriptorVersion, String project, OperationStatus opStatus){
     }
 

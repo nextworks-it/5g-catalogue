@@ -92,7 +92,7 @@ public class NsdApiController implements NsdApi {
                     "Accept header null or different from application/json"), HttpStatus.PRECONDITION_FAILED);
     }
 
-    public ResponseEntity<?> getNSDsInfo(@RequestParam(required = false) String project, @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+    public ResponseEntity<?> getNSDsInfo(@RequestParam(required = false) String project, @RequestParam(required = false) String extraData, @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         log.debug("Processing REST request to retrieve all NSD infos");
         if(project == null)
             project = defaultProject;
@@ -101,7 +101,7 @@ public class NsdApiController implements NsdApi {
         // TODO: process URI parameters for filters and attributes. At the moment it returns all the NSDs info
         if (accept != null && accept.contains("application/json")) {
             try {
-                List<NsdInfo> nsdInfos = nsdManagementService.getAllNsdInfos(project);
+                List<NsdInfo> nsdInfos = nsdManagementService.getAllNsdInfos(project, extraData);
                 log.debug("NSD infos retrieved");
                 return new ResponseEntity<List<NsdInfo>>(nsdInfos, HttpStatus.OK);
             } catch (NotAuthorizedOperationException e) {

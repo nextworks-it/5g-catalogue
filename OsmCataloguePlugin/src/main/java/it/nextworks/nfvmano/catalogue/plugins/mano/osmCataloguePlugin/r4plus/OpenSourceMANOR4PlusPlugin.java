@@ -262,6 +262,11 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
         log.info("{} - Received Sync Pkg deletion notification for Descriptor with ID {} and version {} for project {} : {}", osm.getManoId(), descriptorId, descriptorVersion, project, opStatus.toString());
     }
 
+    @Override
+    public String getManoPkgInfoId(String cataloguePkgInfoId){
+       return  getOsmInfoId(cataloguePkgInfoId);
+    }
+
     private void OSMSynchronization(){
         log.info("{} - Runtime synchronization, started retrieving Osm VNF and NS Pkgs", osm.getManoId());
         Long startSync = Instant.now().getEpochSecond();
