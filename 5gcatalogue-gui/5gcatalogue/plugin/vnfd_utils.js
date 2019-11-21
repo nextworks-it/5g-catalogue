@@ -17,12 +17,23 @@
 function getAllVnfInfos(elemId, callback, resId) {
     var project = document.getElementById('project').innerHTML;
     console.log("PROJECT COOKIE: " + getCookie("PROJECT"));
-    getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages?project=" + getCookie("PROJECT"), callback, [elemId, resId]);
+    if(this.useDefaultProject(project)){
+    	getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages", callback, [elemId, resId]);
+    }else{
+    	getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages?project=" + getCookie("PROJECT"), callback, [elemId, resId]);getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages?project=" + getCookie("PROJECT"), callback, [elemId, resId]);
+    	
+    }
+    
 }
 
 function getVnfInfo(vnfInfoId, callback, elemId) {
     var project = document.getElementById('project').innerHTML;
-    getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "?project=" + getCookie("PROJECT"), callback, [elemId]);
+    if(this.useDefaultProject(project)){
+		getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId +"", callback, [elemId]);
+    }else{
+    	getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "?project=" + getCookie("PROJECT"), callback, [elemId]);
+    }
+    
 }
 
 function fillVNFsCounter(data, params) {
@@ -34,7 +45,12 @@ function fillVNFsCounter(data, params) {
 
 function deleteVnfInfo(vnfInfoId, resId) {
     var project = document.getElementById('project').innerHTML;
-    deleteRequestToURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "?project=" + getCookie("PROJECT"), showResultMessage, ["VNF with vnfInfoID " + vnfInfoId + " successfully deleted."]);
+    if(this.useDefaultProject(project)){
+		deleteRequestToURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId , showResultMessage, ["VNF with vnfInfoID " + vnfInfoId + " successfully deleted."]);
+    }else{
+    	deleteRequestToURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "?project=" + getCookie("PROJECT"), showResultMessage, ["VNF with vnfInfoID " + vnfInfoId + " successfully deleted."]);	
+    }
+    
 }
 
 function updateVnfInfo(vnfInfoId, elemId) {
@@ -46,7 +62,12 @@ function updateVnfInfo(vnfInfoId, elemId) {
 
     //console.log("VnfInfoModifications: " + json);
     var project = document.getElementById('project').innerHTML;
-    patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "?project=" + getCookie("PROJECT"), json, showResultMessage, ["VNF with vnfInfoId " + vnfInfoId + " successfully updated."]);
+    if(this.useDefaultProject(project)){
+		patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId, json, showResultMessage, ["VNF with vnfInfoId " + vnfInfoId + " successfully updated."]);
+    }else{
+    	patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "?project=" + getCookie("PROJECT"), json, showResultMessage, ["VNF with vnfInfoId " + vnfInfoId + " successfully updated."]);	
+    }
+    
 }
 
 function loadVNFFile(elemId, resId) {
@@ -65,7 +86,12 @@ function createVnfInfoId(file, resId) {
     var json = JSON.stringify(jsonObj, null, 4);
     //console.log(json)
     var project = document.getElementById('project').innerHTML;
-    postJsonToURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages?project=" + getCookie("PROJECT"), json, uploadVnfContent, [file, resId]);
+    if(this.useDefaultProject(project)){
+		postJsonToURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages", json, uploadVnfContent, [file, resId]);
+    }else{
+    	postJsonToURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages?project=" + getCookie("PROJECT"), json, uploadVnfContent, [file, resId]);	
+    }
+    
 }
 
 function uploadVnfContent(data, params) {
@@ -77,7 +103,12 @@ function uploadVnfContent(data, params) {
     var vnfInfoId = data['id'];
 
     var project = document.getElementById('project').innerHTML;
-    putFileToURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "/package_content?project=" + getCookie("PROJECT"), formData, showResultMessage, ["VNF with vnfInfoId " + vnfInfoId + " successfully updated."]);
+    if(this.useDefaultProject(project)){
+		putFileToURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "/package_content", formData, showResultMessage, ["VNF with vnfInfoId " + vnfInfoId + " successfully updated."]);
+    }else{
+    	putFileToURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "/package_content?project=" + getCookie("PROJECT"), formData, showResultMessage, ["VNF with vnfInfoId " + vnfInfoId + " successfully updated."]);
+    }
+    
 }
 
 function getDescription(descrId) {
@@ -101,7 +132,12 @@ function readVNF(graphId) {
 
 function getVNF(vnfInfoId, elemId, callback) {
     var project = document.getElementById('project').innerHTML;
-    getFileFromURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "/vnfd?project=" + getCookie("PROJECT"), callback, [vnfInfoId, elemId]);
+    if(this.useDefaultProject(project)){
+		getFileFromURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "/vnfd", callback, [vnfInfoId, elemId]);
+    }else{
+    	getFileFromURLWithAuth("http://" + catalogueAddr + ":8083/vnfpkgm/v1/vnf_packages/" + vnfInfoId + "/vnfd?project=" + getCookie("PROJECT"), callback, [vnfInfoId, elemId]);
+    }
+    
 }
 
 function exportVnfPkg(vnfPkgInfoId, resId) {

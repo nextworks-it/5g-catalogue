@@ -18,9 +18,14 @@
 var catalogueAddr = window.location.hostname;
 var cataloguePort = '8083';
 var isPublic = false;
-var kcEnabled = true;
+var kcEnabled = false;
 
 var stopRefreshing = false;
+
+function useDefaultProject(project){
+	return project=="";
+}
+
 
 function refresh(btnFlag) {
 	if(stopRefreshing && !Boolean(btnFlag)) {
