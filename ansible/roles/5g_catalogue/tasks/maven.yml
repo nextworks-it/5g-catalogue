@@ -46,5 +46,5 @@
     path: '{{ maven_home_parent_directory }}/{{ maven_file_name }}'
 
 - name: test mvn
-  shell: /opt/apache-maven-3.6.2/bin/mvn -version
-
+  # shell: /opt/apache-maven-3.6.2/bin/mvn -version
+  shell: /opt/apache-maven-3.3.9/bin/mvn -version
