@@ -859,7 +859,7 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
-    public List<NsdInfo> getAllNsdInfos(String project, String extraData) throws FailedOperationException, MethodNotImplementedException, NotAuthorizedOperationException {
+    public List<NsdInfo> getAllNsdInfos(String project, String extraData, UUID nsdId) throws FailedOperationException, MethodNotImplementedException, NotAuthorizedOperationException {
         log.debug("Processing request to get all NSD infos");
         if (project != null && !project.equals("*")) {
             Optional<ProjectResource> projectOptional = projectRepository.findByProjectId(project);
@@ -876,7 +876,12 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new NotAuthorizedOperationException(e.getMessage());
         }
 
-        List<NsdInfoResource> nsdInfoResources = nsdInfoRepo.findAll();
+        List<NsdInfoResource> nsdInfoResources;
+        if(nsdId == null)
+            nsdInfoResources = nsdInfoRepo.findAll();
+        else
+            nsdInfoResources = nsdInfoRepo.findByNsdId(nsdId);
+
         List<NsdInfo> nsdInfos = new ArrayList<>();
 
         for (NsdInfoResource nsdInfoResource : nsdInfoResources) {

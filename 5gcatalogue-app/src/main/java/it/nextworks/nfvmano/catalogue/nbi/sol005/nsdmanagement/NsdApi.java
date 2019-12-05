@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.util.UUID;
 
 @javax.annotation.Generated(value = "io.swagger.codegen.languages.SpringCodegen", date = "2018-07-23T16:31:35.952+02:00")
 
@@ -51,6 +52,7 @@ public interface NsdApi {
             @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
     @RequestMapping(value = "/nsd/v1/ns_descriptors", produces = {"application/json"}, method = RequestMethod.GET)
     ResponseEntity<?> getNSDsInfo(@RequestParam(required = false) String project,
+                                  @RequestParam(required = false) UUID nsdId,
                                   @RequestParam(required = false) String extraData,
                                   @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization);
 

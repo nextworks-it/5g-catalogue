@@ -38,6 +38,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 @javax.annotation.Generated(value = "io.swagger.codegen.languages.SpringCodegen", date = "2018-07-23T16:31:35.952+02:00")
 
@@ -92,7 +93,7 @@ public class NsdApiController implements NsdApi {
                     "Accept header null or different from application/json"), HttpStatus.PRECONDITION_FAILED);
     }
 
-    public ResponseEntity<?> getNSDsInfo(@RequestParam(required = false) String project, @RequestParam(required = false) String extraData, @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+    public ResponseEntity<?> getNSDsInfo(@RequestParam(required = false) String project, @RequestParam(required = false) UUID nsdId, @RequestParam(required = false) String extraData, @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         log.debug("Processing REST request to retrieve all NSD infos");
         if(project == null)
             project = defaultProject;
@@ -101,7 +102,7 @@ public class NsdApiController implements NsdApi {
         // TODO: process URI parameters for filters and attributes. At the moment it returns all the NSDs info
         if (accept != null && accept.contains("application/json")) {
             try {
-                List<NsdInfo> nsdInfos = nsdManagementService.getAllNsdInfos(project, extraData);
+                List<NsdInfo> nsdInfos = nsdManagementService.getAllNsdInfos(project, extraData, nsdId);
                 log.debug("NSD infos retrieved");
                 return new ResponseEntity<List<NsdInfo>>(nsdInfos, HttpStatus.OK);
             } catch (NotAuthorizedOperationException e) {
