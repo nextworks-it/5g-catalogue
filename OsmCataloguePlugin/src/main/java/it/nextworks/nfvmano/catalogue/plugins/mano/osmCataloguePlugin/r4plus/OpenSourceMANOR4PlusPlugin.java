@@ -74,9 +74,11 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
     private TranslationInformationRepository translationInformationRepository;
     private long syncPeriod;
 
+    private boolean useVimNetworkName;
+
     public OpenSourceMANOR4PlusPlugin(MANOType manoType, MANO mano, String kafkaBootstrapServers,
                                       OsmInfoObjectRepository osmInfoObjectRepository, TranslationInformationRepository translationInformationRepository, String localTopic, String remoteTopic,
-                                      KafkaTemplate<String, String> kafkaTemplate, Path osmDirPath, Path tmpDir, Path logoPath, boolean manoSync, long syncPeriod) {
+                                      KafkaTemplate<String, String> kafkaTemplate, Path osmDirPath, Path tmpDir, Path logoPath, boolean manoSync, long syncPeriod, boolean useVimNetworkName) {
         super(manoType, mano, kafkaBootstrapServers, localTopic, remoteTopic, kafkaTemplate, manoSync);
         if (MANOType.OSMR4 != manoType && MANOType.OSMR5 != manoType && MANOType.OSMR6 != manoType) {
             throw new IllegalArgumentException("OSM R4+ plugin requires an OSM R4+ type MANO");
@@ -88,6 +90,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
         this.logo = new File(logoPath.toUri());
         this.syncPeriod = syncPeriod;
         this.tmpDirPath = tmpDir;
+        this.useVimNetworkName = useVimNetworkName;
     }
 
     private static <T> List<T> parseResponse(OSMHttpResponse httpResponse, String opId, Class<T> clazz) throws FailedOperationException {
@@ -475,7 +478,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                             descriptorTemplate.getTopologyTemplate().getNSNodes().values().iterator().next().getProperties().setInvariantId(osmDescriptorId);
                         }
 
-                        NsdBuilder nsdBuilder = new NsdBuilder(logo);
+                        NsdBuilder nsdBuilder = new NsdBuilder(logo, useVimNetworkName);
                         List<DescriptorTemplate> includedVnfds = new ArrayList<>();
                         for (KeyValuePair vnfPathPair : notification.getIncludedVnfds().values()) {
                             if (vnfPathPair.getValue().equals(PathType.LOCAL.toString())) {

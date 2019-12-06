@@ -113,6 +113,9 @@ public class PluginsManager {
     @Value("${mano.runtime.sync}")
     private boolean runtimeSync;
 
+    @Value("${osm.vim.network.name.enabled}")
+    private boolean useOsmVimNetworkName;
+
     @Value("${mano.osm.runtime.sync.period.in.minute}")
     private long osmSyncPeriod;
 
@@ -331,7 +334,7 @@ public class PluginsManager {
                     localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr3Dir, logo);*/
         } else if (mano.getManoType().equals(MANOType.OSMR4) || mano.getManoType().equals(MANOType.OSMR5) || mano.getManoType().equals(MANOType.OSMR6)) {
             Path osmr4PlusDir = Paths.get(osmDir, "/" + mano.getManoType().toString().toLowerCase());
-            return new OpenSourceMANOR4PlusPlugin(mano.getManoType(), mano, bootstrapServers, osmInfoObjectRepository, translationInformationRepository, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr4PlusDir, Paths.get(tmpDir), logo, runtimeSync, osmSyncPeriod);
+            return new OpenSourceMANOR4PlusPlugin(mano.getManoType(), mano, bootstrapServers, osmInfoObjectRepository, translationInformationRepository, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr4PlusDir, Paths.get(tmpDir), logo, runtimeSync, osmSyncPeriod, useOsmVimNetworkName);
         } else {
             throw new MalformattedElementException("Unsupported MANO type. Skipping");
         }

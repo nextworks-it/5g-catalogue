@@ -31,6 +31,8 @@ import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
+
 public class NsdBuilder {
 
     private static final Logger log = LoggerFactory.getLogger(NsdBuilder.class);
@@ -38,9 +40,19 @@ public class NsdBuilder {
     private OsmNSPackage osmPackage;
     private DescriptorTemplate dt;
 
+
+    private boolean osmVimNetworkNameEnabled;
+
     public NsdBuilder(File defaultLogo) {
         this.defaultLogo = defaultLogo;
     }
+
+    public NsdBuilder(File defaultLogo, boolean useVimNetworkName) {
+        this.defaultLogo = defaultLogo;
+        this.osmVimNetworkNameEnabled = useVimNetworkName;
+
+    }
+
 
     private VNFDConnectionPointReference makeCPRef(String vnfdId, int memberIndex, String cpId) {
         VNFDConnectionPointReference cpr = new VNFDConnectionPointReference();
@@ -61,7 +73,8 @@ public class NsdBuilder {
         vld.setShortName(vlId);
         vld.setMgmtNetwork(vlId.endsWith("_mgmt") || vlId.startsWith("mgmt_") || vlId.equalsIgnoreCase("default")); // TODO
         vld.setType("ELAN");
-        vld.setVimNetworkName(vlId);
+        if(osmVimNetworkNameEnabled)
+            vld.setVimNetworkName(vlId);
         vld.setVnfdConnectionPointReferences(
                 vlToVnfMapping.getOrDefault(vlId, Collections.emptyMap()).entrySet()
                         .stream()
