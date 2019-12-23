@@ -1,15 +1,10 @@
-Added lines in nfv descriptors POM
+Ansible Playbook for 5G Catalogue
 
-<plugin>
-    <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-jar-plugin</artifactId>
-    <version>3.0.2</version>
-</plugin>
+-Install Ansible on Control Node (https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
 
-in order to work with openjdk9 and maven 3.6
-need to check POMs in git public repo
+-Edit the file /etc/ansible/hosts adding the target machines (the ones in which the 5G Catalogue will be installed)
 
-Need to define a company strategy and structure to git folders when ansible installation is required:
--build locally or on target machine? 
--just putting the jar-exe file on the target machine or the entire code? 
--How generic has to be the installation (user/key/topics need to be choosen runtime?)
+-Replace "hosts" on 5g_catalogue_playbook.yml with the target host/hosts (default: localhost)
+
+-Launch ansible playbook 
+$ansible-playbook -v 5g_catalogue_playbook.yml

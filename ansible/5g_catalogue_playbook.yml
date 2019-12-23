@@ -1,11 +1,11 @@
-- hosts: ansible_test
+- hosts: localhost   #replace with target host 
   remote_user: ubuntu
   roles:
   - role: java_role
   - role: 5g_catalogue
   - kafka
   
-- hosts: ansible_test
+- hosts: localhost   #replace with target host 
   remote_user: ubuntu
   tasks:
 #  - name: remove 5gcatalogue folder
