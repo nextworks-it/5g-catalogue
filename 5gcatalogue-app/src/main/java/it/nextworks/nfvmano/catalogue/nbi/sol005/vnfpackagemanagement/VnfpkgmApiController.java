@@ -97,6 +97,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
 
     public ResponseEntity<?> getVNFPkgsInfo(@RequestParam(required = false) String project,
                                             @RequestParam(required = false) UUID vnfdId,
+                                            @RequestParam(required = false) String extraData,
                                             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         if(project == null)
             project = defaultProject;
@@ -105,7 +106,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
         // TODO: process URI parameters for filters and attributes. At the moment it returns all the VNF Pkgs info
         if (accept != null && accept.contains("application/json")) {
             try {
-                List<VnfPkgInfo> vnfPkgInfos = vnfPackageManagementInterface.getAllVnfPkgInfos(project, vnfdId);
+                List<VnfPkgInfo> vnfPkgInfos = vnfPackageManagementInterface.getAllVnfPkgInfos(project, extraData, vnfdId);
                 log.debug("VNF Pkg infos retrieved");
                 return new ResponseEntity<List<VnfPkgInfo>>(vnfPkgInfos, HttpStatus.OK);
             } catch (NotPermittedOperationException | FailedOperationException e) {

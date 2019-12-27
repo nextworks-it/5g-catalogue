@@ -22,6 +22,7 @@ import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NsVirtualLink.NsVirtualLi
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import it.nextworks.nfvmano.libs.descriptors.templates.VirtualLinkPair;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VnfExtCp.VnfExtCpNode;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.nsDescriptor.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,14 +65,15 @@ public class NsdBuilder {
 
     private VLD makeVld(
             String vlId,
-            NsVirtualLinkNode link,
+            List<DescriptorTemplate> vnfds,
             Map<String, Map<ConstituentVNFD, String>> vlToVnfMapping
     ) {
         VLD vld = new VLD();
         vld.setId(vlId);
         vld.setName(vlId);
         vld.setShortName(vlId);
-        vld.setMgmtNetwork(vlId.endsWith("_mgmt") || vlId.startsWith("mgmt_") || vlId.equalsIgnoreCase("default")); // TODO
+        if(isMgmtNetwork(vlToVnfMapping.getOrDefault(vlId, Collections.emptyMap()), vnfds))
+            vld.setMgmtNetwork(true);
         vld.setType("ELAN");
         if(osmVimNetworkNameEnabled)
             vld.setVimNetworkName(vlId);
@@ -87,6 +89,37 @@ public class NsdBuilder {
         );
 
         return vld;
+    }
+
+    private boolean isMgmtNetwork(Map<ConstituentVNFD, String> cpToVnfMapping, List<DescriptorTemplate> vnfds){
+        boolean isMgmt = true;
+        for(Map.Entry<ConstituentVNFD, String> entry : cpToVnfMapping.entrySet()){
+            if(!isMgmt)
+                break;
+            for(DescriptorTemplate vnfd : vnfds){
+                if(vnfd.getMetadata().getDescriptorId().equals(entry.getKey().getVnfdIdentifierReference())){
+                    try {
+                        Map<String, VnfExtCpNode> cpNodes = vnfd.getTopologyTemplate().getVnfExtCpNodes();
+                        VnfExtCpNode cpNode = cpNodes.get(entry.getValue());
+                        if(cpNode != null){
+                            if(cpNode.getProperties().getVirtualNetworkInterfaceRequirements().isEmpty()){
+                                isMgmt = false;
+                                break;
+                            }
+                            Map<String, String> interfaceRequirements = cpNode.getProperties().getVirtualNetworkInterfaceRequirements().get(0).getNetworkInterfaceRequirements();
+                            if(!interfaceRequirements.containsKey("isManagement") || !interfaceRequirements.get("isManagement").equalsIgnoreCase("true")){
+                                isMgmt = false;
+                                break;
+                            }
+                        }
+                    }catch (MalformattedElementException e){
+                        log.debug(null, e);
+                    }
+                }
+            }
+        }
+
+        return isMgmt;
     }
 
     public void parseDescriptorTemplate(DescriptorTemplate template, List<DescriptorTemplate> vnfds, MANOType manoType) throws MalformattedElementException {
@@ -163,9 +196,12 @@ public class NsdBuilder {
 
         List<VLD> vlds = dt.getTopologyTemplate().getNsVirtualLinkNodes().entrySet()
                 .stream()
-                .map(e -> makeVld(e.getKey(), e.getValue(), vlToVnfMapping))
+                .map(e -> makeVld(e.getKey(), vnfds, vlToVnfMapping))
                 .collect(Collectors.toList());
-
+        //check if a mgmt is set, if not set the first vld found ad mgmt
+        List<Boolean> isMgmtNetowrks = vlds.stream().map(VLD::isMgmtNetwork).collect(Collectors.toList());
+        if(!isMgmtNetowrks.contains(true))
+            vlds.get(0).setMgmtNetwork(true);
         List<NSDescriptor> nsds = new ArrayList<>();
         NSDescriptor osmNsd = new NSDescriptor();
         osmNsd.setId(nsd.getProperties().getDescriptorId());

@@ -60,6 +60,7 @@ public interface VnfpkgmApi {
             method = RequestMethod.GET)
     ResponseEntity<?> getVNFPkgsInfo(@RequestParam(required = false) String project,
                                      @RequestParam(required = false) UUID vnfdId,
+                                     @RequestParam(required = false) String extraData,
                                      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization);
 
     @ApiOperation(value = "Query VNF Package Info", nickname = "queryVNFPkgInfo", notes = "", response = VnfPkgInfo.class, tags = {})

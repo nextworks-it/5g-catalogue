@@ -890,7 +890,7 @@ public class NsdManagementService implements NsdManagementInterface {
             } else {
                 NsdInfo nsdInfo = buildNsdInfo(nsdInfoResource);
                 if(extraData != null && extraData.equals("manoInfoIds")){
-                    Map<String, NotificationResource> onBoardingMap = nsdInfoResource.getAcknowledgedOnboardOpConsumers();;
+                    Map<String, NotificationResource> onBoardingMap = nsdInfoResource.getAcknowledgedOnboardOpConsumers();
                     List<MANOPlugin> manos = new ArrayList<>(pluginManger.manoDrivers.values());
                     for(MANOPlugin mano : manos){
                         if (onBoardingMap.containsKey(mano.getPluginId()) && onBoardingMap.get(mano.getPluginId()).getOpStatus().equals(OperationStatus.SUCCESSFULLY_DONE)) {
@@ -1974,7 +1974,7 @@ public class NsdManagementService implements NsdManagementInterface {
         for (Entry<String, NotificationResource> entry : ackMap.entrySet()) {
             if (entry.getValue().getOperation() == CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION && entry.getValue().getPluginType() == PluginType.MANO) {
                 if (entry.getValue().getOpStatus() == OperationStatus.SUCCESSFULLY_DONE) {
-                    log.error("NSD with nsdInfoId {} is onboarded in at least one MANO", nsdInfoId);
+                    log.info("NSD with nsdInfoId {} is onboarded in at least one MANO", nsdInfoId);
                     return NsdOnboardingStateType.ONBOARDED;
                 }
                 /*

@@ -46,20 +46,30 @@ public class VnfdBuilder {
 
         ManagementInterface mgmtInt = new ManagementInterface();
         for (Map.Entry<String, VnfExtCpNode> cpNode : cpNodes.entrySet()) {
+            //TODO check if getting the first element is correct
+            if(cpNode.getValue().getProperties().getVirtualNetworkInterfaceRequirements().isEmpty())
+                continue;
+            Map<String, String> interfaceRequirements = cpNode.getValue().getProperties().getVirtualNetworkInterfaceRequirements().get(0).getNetworkInterfaceRequirements();
+            if(interfaceRequirements.containsKey("isManagement") && interfaceRequirements.get("isManagement").equalsIgnoreCase("true")){
+                mgmtInt.setCp(cpNode.getKey());
+                break;//considering only the first cp found
+            }
+            /*
             List<String> exVirtualLinks = cpNode.getValue().getRequirements().getExternalVirtualLink();
             for (String exVirtualLink : exVirtualLinks)
                 if (exVirtualLink.endsWith("_mgmt") || exVirtualLink.startsWith("mgmt_") || exVirtualLink.equalsIgnoreCase("default"))
                     mgmtInt.setCp(cpNode.getKey());
+             */
         }
 
         //Set first cp as management
         if (mgmtInt.getCp() == null)
-            mgmtInt.setCp(cpNodes.keySet().iterator().next());
+            mgmtInt.setCp(cpNodes.keySet().iterator().next());//set the first connection point a management if no defined
 
         return mgmtInt;
     }
 
-    private Interface makeVDUInterface(String cpName, VnfExtCpNode cpNode) {
+    private Interface makeVDUInterface(String cpName, VnfExtCpNode cpNode, String mgmtCp) {
 
         Interface osmVduInterface = new Interface();
         osmVduInterface.setExtConnPointRef(cpName);
@@ -69,10 +79,14 @@ public class VnfdBuilder {
         virtualInterface.setType("VIRTIO");
         osmVduInterface.setVirtualInterface(virtualInterface);
         osmVduInterface.setPosition(++interfacesPosition);
+        if(cpName.equals(mgmtCp))
+            osmVduInterface.setMgmtInterface(true);
+        /*
         List<String> exVirtualLinks = cpNode.getRequirements().getExternalVirtualLink();
         for (String exVirtualLink : exVirtualLinks)
             if (exVirtualLink.endsWith("_mgmt") || exVirtualLink.startsWith("mgmt_") || exVirtualLink.equalsIgnoreCase("default"))
                 osmVduInterface.setMgmtInterface(true);
+        */
 
         return osmVduInterface;
     }
@@ -142,7 +156,7 @@ public class VnfdBuilder {
 
         List<Interface> osmVduInterfaces = cpNodes.entrySet()
                 .stream()
-                .map(e -> makeVDUInterface(e.getKey(), e.getValue()))
+                .map(e -> makeVDUInterface(e.getKey(), e.getValue(), osmMgmtInterface.getCp()))
                 .collect(Collectors.toList());
 
         Map<String, VDUVirtualBlockStorageNode> blockStorageNodes = template.getTopologyTemplate().getVDUBlockStorageNodes();

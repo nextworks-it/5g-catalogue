@@ -33,8 +33,11 @@ import it.nextworks.nfvmano.catalogue.translators.tosca.elements.CSARInfo;
 import it.nextworks.nfvmano.libs.common.elements.KeyValuePair;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
+import it.nextworks.nfvmano.libs.descriptors.elements.VirtualNetworkInterfaceRequirements;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VnfExtCp.VnfExtCpNode;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VnfExtCp.VnfExtCpProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +52,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 public class VnfPackageManagementService implements VnfPackageManagementInterface {
@@ -713,7 +717,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
     }
 
     @Override
-    public List<VnfPkgInfo> getAllVnfPkgInfos(String project, UUID vnfdId) throws FailedOperationException, MethodNotImplementedException, NotPermittedOperationException, NotAuthorizedOperationException {
+    public List<VnfPkgInfo> getAllVnfPkgInfos(String project, String extraData, UUID vnfdId) throws FailedOperationException, MethodNotImplementedException, NotPermittedOperationException, NotAuthorizedOperationException {
         log.debug("Processing request to get all VNF Pkg infos");
         if (project != null && !project.equals("*")) {
             Optional<ProjectResource> projectOptional = projectRepository.findByProjectId(project);
@@ -743,6 +747,17 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                 continue;
             } else {
                 VnfPkgInfo vnfPkgInfo = buildVnfPkgInfo(vnfPkgInfoResource);
+                if(extraData != null && extraData.equals("manoInfoIds")){
+                    Map<String, NotificationResource> onBoardingMap = vnfPkgInfoResource.getAcknowledgedOnboardOpConsumers();
+                    List<MANOPlugin> manos = new ArrayList<>(pluginManger.manoDrivers.values());
+                    for(MANOPlugin mano : manos){
+                        if (onBoardingMap.containsKey(mano.getPluginId()) && onBoardingMap.get(mano.getPluginId()).getOpStatus().equals(OperationStatus.SUCCESSFULLY_DONE)) {
+                            String manoInfoId = mano.getManoPkgInfoId(vnfPkgInfoResource.getId().toString());
+                            if(manoInfoId != null)
+                                vnfPkgInfo.getManoInfoIds().put(mano.getPluginId(), manoInfoId);
+                        }
+                    }
+                }
                 vnfPkgInfos.add(vnfPkgInfo);
                 log.debug("Added VNF Pkg info " + vnfPkgInfoResource.getId());
             }
@@ -818,6 +833,22 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                 throw new MalformattedElementException("Descriptor ID and version specified into metadata are not aligned with those specified into VNFNode");
 
             vnfdId = UUID.fromString(vnfPkgId_string);
+
+            Map<String, VnfExtCpNode> vnfExtCpNodes = dt.getTopologyTemplate().getVnfExtCpNodes();
+            if(vnfExtCpNodes.isEmpty())
+                throw new MalformattedElementException("No External Connection Points defined");
+            List<String> mgmtCps = new ArrayList<>();
+            for(Map.Entry<String, VnfExtCpNode> cpNode : vnfExtCpNodes.entrySet()) {
+                if (cpNode.getValue().getProperties().getVirtualNetworkInterfaceRequirements().isEmpty())
+                    continue;
+                Map<String, String> interfaceRequirements = cpNode.getValue().getProperties().getVirtualNetworkInterfaceRequirements().get(0).getNetworkInterfaceRequirements();
+                if (interfaceRequirements.containsKey("isManagement") && interfaceRequirements.get("isManagement").equalsIgnoreCase("true"))
+                    mgmtCps.add(cpNode.getKey());
+            }
+            if(mgmtCps.size() == 0)
+                throw new MalformattedElementException("Please define a management Connection Point");
+            else if (mgmtCps.size() > 1)
+                throw new MalformattedElementException("Multiple management Connection Points are not allowed");
 
             Optional<VnfPkgInfoResource> optionalVnfPkgInfoResource = vnfPkgInfoRepository.findByVnfdIdAndVnfdVersionAndProjectId(vnfdId, dt.getMetadata().getVersion(), project);
             if (optionalVnfPkgInfoResource.isPresent()) {

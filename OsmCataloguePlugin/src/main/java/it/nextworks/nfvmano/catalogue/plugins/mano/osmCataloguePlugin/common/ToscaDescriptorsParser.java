@@ -75,7 +75,13 @@ public class ToscaDescriptorsParser {
             layerProtocols.add(LayerProtocol.IPV4);
             List<CpProtocolData> protocolData = new ArrayList<>();
             protocolData.add(new CpProtocolData(LayerProtocol.IPV4, null));
-            VnfExtCpProperties cpProperties = new VnfExtCpProperties(null, layerProtocols, CpRole.LEAF, cp.getName(), protocolData, false, null);
+            List<VirtualNetworkInterfaceRequirements> virtualNetworkInterfaceRequirements = new ArrayList<>();
+            HashMap<String, String> interfaceRequirements = new HashMap<>();
+            if(osmVnfDescriptor.getManagementInterface().getCp().equalsIgnoreCase(cp.getName()))
+                interfaceRequirements.put("isManagement", "true");
+            VirtualNetworkInterfaceRequirements virtualNetworkInterfaceRequirement = new VirtualNetworkInterfaceRequirements(null, null, false, interfaceRequirements, null);
+            virtualNetworkInterfaceRequirements.add(virtualNetworkInterfaceRequirement);
+            VnfExtCpProperties cpProperties = new VnfExtCpProperties(null, layerProtocols, CpRole.LEAF, cp.getName(), protocolData, false, virtualNetworkInterfaceRequirements);
             List<String> externalVirtualLink = new ArrayList<>();
             externalVirtualLink.add(cp.getName());
             VnfExtCpRequirements cpRequirements = new  VnfExtCpRequirements(externalVirtualLink, null);

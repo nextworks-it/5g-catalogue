@@ -15,6 +15,7 @@
  */
 package it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
@@ -83,6 +84,10 @@ public class VnfPkgInfo {
 
     @JsonProperty("projectId")
     private String projectId;
+
+    @JsonProperty("manoInfoIds")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private Map<String, String> manoInfoIds = new HashMap<>();
 
     public VnfPkgInfo id(UUID id) {
         this.id = id;
@@ -427,6 +432,14 @@ public class VnfPkgInfo {
         this.projectId = projectId;
     }
 
+    public Map<String, String> getManoInfoIds() {
+        return manoInfoIds;
+    }
+
+    public void setManoInfoIds(Map<String, String> manoInfoIds) {
+        this.manoInfoIds = manoInfoIds;
+    }
+
     @Override
     public boolean equals(java.lang.Object o) {
         if (this == o) {
@@ -449,12 +462,13 @@ public class VnfPkgInfo {
                 Objects.equals(this.operationalState, vnfPkgInfo.operationalState) &&
                 Objects.equals(this.usageState, vnfPkgInfo.usageState) &&
                 Objects.equals(this.userDefinedData, vnfPkgInfo.userDefinedData) &&
-                Objects.equals(this.links, vnfPkgInfo.links);
+                Objects.equals(this.links, vnfPkgInfo.links)
+                && Objects.equals(this.manoInfoIds, vnfPkgInfo.manoInfoIds);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, vnfdId, vnfProvider, vnfProductName, vnfSoftwareVersion, vnfdVersion, checksum, softwareImages, additionalArtifacts, onboardingState, operationalState, usageState, userDefinedData, links);
+        return Objects.hash(id, vnfdId, vnfProvider, vnfProductName, vnfSoftwareVersion, vnfdVersion, checksum, softwareImages, additionalArtifacts, onboardingState, operationalState, usageState, userDefinedData, links, manoInfoIds);
     }
 
     @Override
@@ -476,6 +490,7 @@ public class VnfPkgInfo {
         sb.append("    usageState: ").append(toIndentedString(usageState)).append("\n");
         sb.append("    userDefinedData: ").append(toIndentedString(userDefinedData)).append("\n");
         sb.append("    links: ").append(toIndentedString(links)).append("\n");
+        sb.append("    manoInfoIds: ").append(toIndentedString(manoInfoIds)).append("\n");
         sb.append("}");
         return sb.toString();
     }
