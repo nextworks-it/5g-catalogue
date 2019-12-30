@@ -30,6 +30,9 @@ kafka.skip.send=false
 | ------ | ------ |
 | NfvManoLibsSol001Common | [README](https://github.com/nextworks-it/nfv-sol-libs) |
 | NfvManoLibsSol001Descriptors | [README](https://github.com/nextworks-it/nfv-sol-libs) |
+| NfvManoLibsCommon | [README](https://github.com/nextworks-it/nfv-ifa-libs) |
+| NfvManoLibsDescriptors | [README](https://github.com/nextworks-it/nfv-ifa-libs) |
+| NfvManoLibsCCataloguesIf | [README](https://github.com/nextworks-it/nfv-ifa-libs) |
 | J-OSMClient | [README](https://github.com/girtel/J-OSMClient) |
 | OpenStack4j | [README](https://github.com/ContainX/openstack4j) |
 
