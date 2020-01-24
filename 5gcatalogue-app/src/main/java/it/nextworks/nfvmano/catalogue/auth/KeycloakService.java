@@ -37,9 +37,6 @@ public class KeycloakService {
     @Value("${keycloak.resource}")
     private String clientId;
 
-    @Value("${catalogue.frontendId}")
-    private String frontendId;
-
     @Value("${catalogue.userGroup}")
     private String userGroupId;
 
@@ -132,12 +129,6 @@ public class KeycloakService {
         userRepresentation.setLastName(lastName);
         userRepresentation.setRealmRoles(Arrays.asList("User"));
         userRepresentation.setGroups(Arrays.asList("5G-MEDIA", "5GCity"));
-
-        /*Map<String, List<String>> clientRoles = new HashMap<>();
-        clientRoles.put(clientId, Arrays.asList("ROLE_USER"));
-        clientRoles.put(frontendId, Arrays.asList("ROLE_SERVICE_DEVELOPER", "ROLE_SERVICE_COMPOSER"));
-
-        userRepresentation.setClientRoles(clientRoles);*/
 
         ObjectMapper mapper = new ObjectMapper();
         try {

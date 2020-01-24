@@ -193,10 +193,7 @@ public class ToscaDescriptorsParser {
             if(vld.getVimNetworkName() != null)
                 vLinkName = vld.getVimNetworkName();
             else {
-                if(vld.isMgmtNetwork())
-                    vLinkName = vld.getId() + "_mgmt";
-                else
-                    vLinkName = vld.getId();
+                vLinkName = vld.getId();
             }
             List<LayerProtocol> layerProtocols = new ArrayList<>();
             layerProtocols.add(LayerProtocol.IPV4);
