@@ -1,12 +1,15 @@
 package it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.common;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import it.nextworks.nfvmano.libs.descriptors.templates.Node;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
+import org.omg.PortableInterceptor.ORBInitInfoPackage.DuplicateName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,13 +26,14 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature.*;
+
 public class ToscaArchiveBuilder {
 
-    private static final Logger log = LoggerFactory.getLogger(ArchiveBuilder.class);
+    private static final Logger log = LoggerFactory.getLogger(ToscaArchiveBuilder.class);
 
     public static String createVNFCSAR(String vnfPackageInfoId, DescriptorTemplate template, String tmpDir, File cloudInit) throws IllegalStateException{
         String vnfName = "descriptor";
-        String vnfId = "1";
         String vnfPackagePath;
 
         Date date = new Date();
@@ -87,8 +91,13 @@ public class ToscaArchiveBuilder {
 
             //Create descriptor files
             File descriptorFile = new File(definitions, vnfName + ".yaml");
-            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+            final YAMLFactory yamlFactory = new YAMLFactory()
+                    .configure(USE_NATIVE_TYPE_ID, false)
+                    .configure(USE_NATIVE_OBJECT_ID, false)
+                    .configure(WRITE_DOC_START_MARKER, false);
+            ObjectMapper mapper = new ObjectMapper(yamlFactory);
             mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+            mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
             mapper.writeValue(descriptorFile, template);
 
             vnfPackagePath = compress(root.toPath().toString());
@@ -103,11 +112,13 @@ public class ToscaArchiveBuilder {
         String serviceName = "descriptor";
         String servicePackagePath;
 
+        /*
         Map<String, Node> nodes = template.getTopologyTemplate().getNodeTemplates();
         for(Map.Entry<String, Node> node : nodes.entrySet()){
             if(node.getValue().getType().equals("tosca.nodes.nfv.NS"))
                 serviceName = node.getKey();
         }
+        */
 
         Date date = new Date();
         long time = date.getTime();
@@ -115,6 +126,8 @@ public class ToscaArchiveBuilder {
         List<String> strings = new ArrayList<>();
 
         try{
+            serviceName = template.getTopologyTemplate().getNSNodes().keySet().iterator().next();
+
             //Create directories
             File root = makeFolder(tmpDir,serviceName + "_" + nsPackageInfoId);
             File definitions = makeSubFolder(root, "Definitions");
@@ -153,12 +166,17 @@ public class ToscaArchiveBuilder {
 
             //Create descriptor files
             File descriptorFile = new File(definitions, serviceName + ".yaml");
-            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+            final YAMLFactory yamlFactory = new YAMLFactory()
+                    .configure(USE_NATIVE_TYPE_ID, false)
+                    .configure(USE_NATIVE_OBJECT_ID, false)
+                    .configure(WRITE_DOC_START_MARKER, false);
+            ObjectMapper mapper = new ObjectMapper(yamlFactory);
             mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+            mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
             mapper.writeValue(descriptorFile, template);
 
             servicePackagePath = compress(root.toPath().toString());
-        } catch (IOException e) {
+        } catch (IOException | MalformattedElementException e) {
             throw new IllegalStateException(
                     String.format("Could not write files. Error: %s", e.getMessage())
             );

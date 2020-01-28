@@ -18,9 +18,9 @@
 function getAllNsdInfos(elemId, callback, resId) {
     var project = document.getElementById('project').innerHTML;
     if(this.useDefaultProject(project)){
-		getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors", callback, [elemId, resId]);
+		getJsonFromURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/ns_descriptors", callback, [elemId, resId]);
     }else{
-    	getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors?project=" + getCookie("PROJECT"), callback, [elemId, resId]);	
+    	getJsonFromURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/ns_descriptors?project=" + getCookie("PROJECT"), callback, [elemId, resId]);
     }
     
 }
@@ -28,9 +28,9 @@ function getAllNsdInfos(elemId, callback, resId) {
 function getNsdInfo(nsdInfoId, callback, elemId) {
     var project = document.getElementById('project').innerHTML;
     if(this.useDefaultProject(project)){
-		getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId, callback, [elemId]);
+		getJsonFromURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/ns_descriptors/" + nsdInfoId, callback, [elemId]);
     }else{
-    	getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "?project=" + getCookie("PROJECT"), callback, [elemId]);	
+    	getJsonFromURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/ns_descriptors/" + nsdInfoId + "?project=" + getCookie("PROJECT"), callback, [elemId]);
     }
     
 }
@@ -46,12 +46,12 @@ function fillNSDsCounter(data, params) {
 function deleteNsdInfo(nsdInfoId, resId) {
     var project = document.getElementById('project').innerHTML;
     if(this.useDefaultProject(project)){
-		getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId , callback, [elemId]);
-    	deleteRequestToURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId, showResultMessage, ["NSD with nsdInfoID " + nsdInfoId + " successfully deleted."]);
+		getJsonFromURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/ns_descriptors/" + nsdInfoId , callback, [elemId]);
+    	deleteRequestToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/ns_descriptors/" + nsdInfoId, showResultMessage, ["NSD with nsdInfoID " + nsdInfoId + " successfully deleted."]);
 
     }else{
- 		getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "?project=" + getCookie("PROJECT"), callback, [elemId]);
-    	deleteRequestToURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "?project=" + getCookie("PROJECT"), showResultMessage, ["NSD with nsdInfoID " + nsdInfoId + " successfully deleted."]);
+ 		getJsonFromURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/ns_descriptors/" + nsdInfoId + "?project=" + getCookie("PROJECT"), callback, [elemId]);
+    	deleteRequestToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/ns_descriptors/" + nsdInfoId + "?project=" + getCookie("PROJECT"), showResultMessage, ["NSD with nsdInfoID " + nsdInfoId + " successfully deleted."]);
    	
     }
 }
@@ -66,9 +66,9 @@ function updateNsdInfo(nsdInfoId, elemId) {
     console.log("NsdInfoModifications: " + json);
     var project = document.getElementById('project').innerHTML;
     if(this.useDefaultProject(project)){
-		patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId, json, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully updated."]);
+		patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/ns_descriptors/" + nsdInfoId, json, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully updated."]);
     }else{
-    	patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "?project=" + getCookie("PROJECT"), json, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully updated."]);
+    	patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/ns_descriptors/" + nsdInfoId + "?project=" + getCookie("PROJECT"), json, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully updated."]);
     }
     
 }
@@ -90,9 +90,9 @@ function createNsdInfoId(file, resId) {
 
     var project = document.getElementById('project').innerHTML;
     if(this.useDefaultProject(project)){
-    	postJsonToURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors", json, uploadNsdContent, [file, resId]);	
+    	postJsonToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/ns_descriptors", json, uploadNsdContent, [file, resId]);
     }else{
-    	postJsonToURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors?project=" + getCookie("PROJECT"), json, uploadNsdContent, [file, resId]);
+    	postJsonToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/ns_descriptors?project=" + getCookie("PROJECT"), json, uploadNsdContent, [file, resId]);
     }
     
 }
@@ -107,15 +107,15 @@ function uploadNsdContent(data, params) {
 
     var project = document.getElementById('project').innerHTML;
     if(this.useDefaultProject(project)){
-		putFileToURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content", formData, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully updated."]);
+		putFileToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content", formData, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully updated."]);
     }else{
-    	putFileToURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content?project=" + getCookie("PROJECT"), formData, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully updated."]);	
+    	putFileToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content?project=" + getCookie("PROJECT"), formData, showResultMessage, ["NSD with nsdInfoId " + nsdInfoId + " successfully updated."]);
     }
     
 }
 
 function exportNsd(nsdInfoId, resId) {
-    postToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/cat2catOperation/exportNsd/" + nsdInfoId, showResultMessage, ["Request for uploading NSD with nsdInfoId " + nsdInfoId + " successfully submitted to public 5G Catalogue."])
+    postToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/catalogue/cat2catOperation/exportNsd/" + nsdInfoId, showResultMessage, ["Request for uploading NSD with nsdInfoId " + nsdInfoId + " successfully submitted to public 5G Catalogue."])
 }
 
 function getDescription(descrId) {
@@ -140,9 +140,9 @@ function readNSD(graphId) {
 function getNSD(nsdInfoId, elemId, callback) {
     var project = document.getElementById('project').innerHTML;
     if(this.useDefaultProject){
-		getFileFromURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content", callback, [nsdInfoId, elemId]);
+		getFileFromURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content", callback, [nsdInfoId, elemId]);
     }else{
-    	getFileFromURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content?project=" + getCookie("PROJECT"), callback, [nsdInfoId, elemId]);	
+    	getFileFromURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/ns_descriptors/" + nsdInfoId + "/nsd_content?project=" + getCookie("PROJECT"), callback, [nsdInfoId, elemId]);
     }
     
 }

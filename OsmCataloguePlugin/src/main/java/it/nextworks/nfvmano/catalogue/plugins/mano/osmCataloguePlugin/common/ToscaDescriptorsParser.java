@@ -85,7 +85,7 @@ public class ToscaDescriptorsParser {
             List<String> externalVirtualLink = new ArrayList<>();
             externalVirtualLink.add(cp.getName());
             VnfExtCpRequirements cpRequirements = new  VnfExtCpRequirements(externalVirtualLink, null);
-            nodeTemplates.put(cp.getName(), new VnfExtCpNode("tosca.nodes.nfv.VnfExtCp", cpProperties, cpRequirements));
+            nodeTemplates.put(cp.getName(), new VnfExtCpNode(null, cpProperties, cpRequirements));//type: "tosca.nodes.nfv.VnfExtCp"
         }
 
         if(osmVnfDescriptor.getVduList() == null || osmVnfDescriptor.getVduList().size() == 0)
@@ -108,7 +108,7 @@ public class ToscaDescriptorsParser {
         String vnfNodeName = osmVnfDescriptor.getName();
         if(vnfNodeName == null)
             vnfNodeName = osmVnfDescriptor.getShortName();
-        nodeTemplates.put(vnfNodeName + "_storage", new VDUVirtualBlockStorageNode("tosca.nodes.nfv.Vdu.VirtualBlockStorage", bsProperties));
+        nodeTemplates.put(vnfNodeName + "_storage", new VDUVirtualBlockStorageNode(null, bsProperties));//type: "tosca.nodes.nfv.Vdu.VirtualBlockStorage"
 
         log.debug("Creating VDUComputeNode");
         //Creating VDUComputeNode
@@ -127,7 +127,7 @@ public class ToscaDescriptorsParser {
         List<String> storages = new ArrayList<>();
         storages.add(vnfNodeName + "_storage");
         VDUComputeRequirements vduRequirements = new VDUComputeRequirements(null, storages);
-        nodeTemplates.put(vdu.getName(), new VDUComputeNode("tosca.nodes.nfv.Vdu.Compute", vduProperties, vduCapabilities, vduRequirements));
+        nodeTemplates.put(vdu.getName(), new VDUComputeNode(null, vduProperties, vduCapabilities, vduRequirements));//type: "tosca.nodes.nfv.Vdu.Compute"
 
         log.debug("Creating VNFNode");
         //Creating VNFNode
@@ -143,7 +143,7 @@ public class ToscaDescriptorsParser {
         VNFInterfaces vnfInterfaces = null;
         if(vdu.getCloudInitFile() != null)
             vnfInterfaces = new VNFInterfaces(null, new Vnflcm(new LcmOperation(vdu.getCloudInitFile()), null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null));
-        nodeTemplates.put(vnfNodeName + "_VNF", new VNFNode("tosca.nodes.nfv.VNF", vnfNodeName, vnfProperties, null, null, vnfInterfaces));
+        nodeTemplates.put(vnfNodeName + "_VNF", new VNFNode(null, vnfNodeName, vnfProperties, null, null, vnfInterfaces));//type: "tosca.nodes.nfv.VNF"
 
         //Creating SubstitutionMappings
         SubstitutionMappingsRequirements requirements = new SubstitutionMappingsRequirements(null, virtualLink);
@@ -200,7 +200,7 @@ public class ToscaDescriptorsParser {
             ConnectivityType connectivityType = new ConnectivityType(layerProtocols, FlowPattern.LINE);
             VlProfile vlProfile = new VlProfile(new LinkBitrateRequirements(1000000, 10000), new LinkBitrateRequirements(100000, 10000), null, null);
             NsVirtualLinkProperties vLinkProperties = new NsVirtualLinkProperties(null, vLinkName, vlProfile, connectivityType, null);
-            nodeTemplates.put(vLinkName, new NsVirtualLinkNode("tosca.nodes.nfv.NsVirtualLink", vLinkProperties, null));
+            nodeTemplates.put(vLinkName, new NsVirtualLinkNode(null, vLinkProperties, null));//type: "tosca.nodes.nfv.NsVirtualLink"
             virtualLinkNames.add(vLinkName);
             List<VNFDConnectionPointReference> vnfdConnectionPointReferenceList = vld.getVnfdConnectionPointReferences();
             for(VNFDConnectionPointReference vnfdConnectionPointReference : vnfdConnectionPointReferenceList){
@@ -228,7 +228,7 @@ public class ToscaDescriptorsParser {
                 vnfNodeName = osmVnfDescriptor.getShortName();
             VNFProperties vnfProperties = new VNFProperties(catVnfDescriptorId, osmVnfDescriptor.getVersion(), osmVnfDescriptor.getVendor(), vnfNodeName, "1.0", vnfNodeName, osmVnfDescriptor.getDescription(), null, null, null, null, null, null, null, vnfNodeName + "_flavor", vnfNodeName + " flavor", null);
             VNFRequirements vnfRequirements = new VNFRequirements(virtualLinkRequirements.get(vnfd.getVnfdIdentifierReference()));
-            nodeTemplates.put(vnfNodeName, new VNFNode("tosca.nodes.nfv.VNF", vnfNodeName, vnfProperties, vnfRequirements, null, null));
+            nodeTemplates.put(vnfNodeName, new VNFNode(null, vnfNodeName, vnfProperties, vnfRequirements, null, null));//type: "tosca.nodes.nfv.VNF"
         }
 
         log.debug("Creating NSNode");
@@ -248,7 +248,7 @@ public class ToscaDescriptorsParser {
         if(nsNodeName == null)
             nsNodeName = osmNsDescriptor.getShortName();
         NSProperties nsProperties = new NSProperties(osmNsDescriptor.getId(), nsdVendor, nsdVersion, nsNodeName, osmNsDescriptor.getId());
-        nodeTemplates.put(nsNodeName + "_NS", new NSNode("tosca.nodes.nfv.NS", nsProperties, nsRequirements));
+        nodeTemplates.put(nsNodeName + "_NS", new NSNode(null, nsProperties, nsRequirements));//type: "tosca.nodes.nfv.NS"
 
         //Creating SubstitutionMappings
         List<VirtualLinkPair> virtualLinkPairs = new ArrayList<>();

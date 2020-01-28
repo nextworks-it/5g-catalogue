@@ -15,23 +15,23 @@
 */
 
 function getAllMANOPlugins(tableId, resId) {
-	getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/manoManagement/manos", createPluginsTable, [tableId, resId]);
+	getJsonFromURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/catalogue/manoManagement/manos", createPluginsTable, [tableId, resId]);
 }
 
 function getAllCataloguePlugins(tableId, resId) {
-	getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/cat2catManagement/5gcatalogues", createCataloguePluginsTable, [tableId, resId]);
+	getJsonFromURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/catalogue/cat2catManagement/5gcatalogues", createCataloguePluginsTable, [tableId, resId]);
 }
 
 function getAllProjects(tableId, resId, callback) {
-	getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/projectManagement/projects", callback, [tableId, resId]);
+	getJsonFromURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/catalogue/projectManagement/projects", callback, [tableId, resId]);
 }
 
 function getAllUsers(tableId, resId) {
-	getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/userManagement/users", createUsersTable, [tableId, resId]);
+	getJsonFromURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/catalogue/userManagement/users", createUsersTable, [tableId, resId]);
 }
 
 function getUser(divId, resId, callback) {
-    getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/userManagement/users/" + divId, callback, [divId, resId]);
+    getJsonFromURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/catalogue/userManagement/users/" + divId, callback, [divId, resId]);
 }
 
 function loadMANOPlugin(textId, elemId, resId) {
@@ -102,25 +102,25 @@ function createNewUser(inputs) {
 }
 
 function postMANO(manoId, data) {
-    postJsonToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/manoManagement/manos", data, showResultMessage, ["MANO " + manoId + " has been successfully created."]);
+    postJsonToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/catalogue/manoManagement/manos", data, showResultMessage, ["MANO " + manoId + " has been successfully created."]);
 }
 
 function postCatalogue(catalogueId, data) {
-    postJsonToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/cat2catManagement/5gcatalogues", data, showResultMessage, ["Catalogue " + catalogueId + " has been successfully created."]);
+    postJsonToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/catalogue/cat2catManagement/5gcatalogues", data, showResultMessage, ["Catalogue " + catalogueId + " has been successfully created."]);
 }
 
 function putUserToProject(userNameInput, projectIdInput) {
     var userName = document.getElementById(userNameInput).value;
     var projecId = document.getElementById(projectIdInput).value;
-    putToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/userManagement/projects/" + projecId + "/users/" + userName, showResultMessage, ["User" + userName + " has been successfully added to Project " + projecId + "."]);
+    putToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/catalogue/userManagement/projects/" + projecId + "/users/" + userName, showResultMessage, ["User" + userName + " has been successfully added to Project " + projecId + "."]);
 }
 
 function postProject(projectId, data) {
-    postJsonToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/projectManagement/projects", data, showResultMessage, ["Project " + projectId + " has been successfully created."]);
+    postJsonToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/catalogue/projectManagement/projects", data, showResultMessage, ["Project " + projectId + " has been successfully created."]);
 }
 
 function postUser(userName, data) {
-    postJsonToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/userManagement/users", data, showResultMessage, ["User " + userName + " has been successfully created."]);
+    postJsonToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/catalogue/userManagement/users", data, showResultMessage, ["User " + userName + " has been successfully created."]);
 }
 
 function updateMANOPlugin(manoId, manoType, elemId) {
@@ -132,7 +132,7 @@ function updateMANOPlugin(manoId, manoType, elemId) {
     jsonObj['pluginOperationalState'] = opState;
     var json = JSON.stringify(jsonObj, null, 4);
 
-    patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/manoManagement/manos/" + manoId, json, showResultMessage, ["MANO Plugin with manoId " + manoId + " successfully updated."]);
+    patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/catalogue/manoManagement/manos/" + manoId, json, showResultMessage, ["MANO Plugin with manoId " + manoId + " successfully updated."]);
 }
 
 function updateCataloguePlugin(catalogueId, elemId) {
@@ -145,7 +145,7 @@ function updateCataloguePlugin(catalogueId, elemId) {
 
     console.log(json);
 
-    patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/cat2catManagement/5gcatalogues/" + catalogueId, json, showResultMessage, ["Catalogue Plugin with catalogueId " + catalogueId + " successfully updated."]);
+    patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/catalogue/cat2catManagement/5gcatalogues/" + catalogueId, json, showResultMessage, ["Catalogue Plugin with catalogueId " + catalogueId + " successfully updated."]);
 }
 
 function createPluginsTable(data, params) {
@@ -485,7 +485,7 @@ function createUsersTable(data, params) {
     }
     
     table.innerHTML += rows + '</tbody>';
-    getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/projectManagement/projects", fillCreateUserModal, ["defaultProject", "response"]);
+    getJsonFromURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/catalogue/projectManagement/projects", fillCreateUserModal, ["defaultProject", "response"]);
 }
 
 function createUsersTableRow(data, btnFlag, cbacks, names, columns, resId) {
@@ -496,7 +496,7 @@ function createUsersTableRow(data, btnFlag, cbacks, names, columns, resId) {
     if (btnFlag) {
         btnText += createLinkSet(data['userName'], resId, names, cbacks);
 
-        getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/projectManagement/projects", createAddToProjectModal, [data['userName'], "addToProjectModals", "response"]);
+        getJsonFromURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/catalogue/projectManagement/projects", createAddToProjectModal, [data['userName'], "addToProjectModals", "response"]);
     }
 
 	text += '<tr>';

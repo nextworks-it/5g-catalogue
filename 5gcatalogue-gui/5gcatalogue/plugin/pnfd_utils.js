@@ -17,9 +17,9 @@
 function getAllPnfdInfos(elemId, callback, resId) {
     var project = document.getElementById('project').innerHTML;
     if(this.useDefaultProject(project)){
-         getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/pnf_descriptors" , callback, [elemId, resId]);
+         getJsonFromURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/pnf_descriptors" , callback, [elemId, resId]);
     }else{
-        getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/pnf_descriptors?project=" + getCookie("PROJECT"), callback, [elemId, resId]);     
+        getJsonFromURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/pnf_descriptors?project=" + getCookie("PROJECT"), callback, [elemId, resId]);
     }
    
 }
@@ -27,9 +27,9 @@ function getAllPnfdInfos(elemId, callback, resId) {
 function getPnfdInfo(pnfdInfoId, callback, elemId) {
     var project = document.getElementById('project').innerHTML;
     if(this.useDefaultProject(project)){
-        getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/pnf_descriptors/" + pnfdInfoId, callback, [elemId]);
+        getJsonFromURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/pnf_descriptors/" + pnfdInfoId, callback, [elemId]);
     }else{
-        getJsonFromURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/pnf_descriptors/" + pnfdInfoId + "?project=" + getCookie("PROJECT"), callback, [elemId]);    
+        getJsonFromURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/pnf_descriptors/" + pnfdInfoId + "?project=" + getCookie("PROJECT"), callback, [elemId]);
     }
     
 }
@@ -44,9 +44,9 @@ function fillPNFDsCounter(data, params) {
 function deletePnfdInfo(pnfdInfoId, resId) {
      var project = document.getElementById('project').innerHTML;
     if(this.useDefaultProject(project)){
-        deleteRequestToURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/pnf_descriptors/" + pnfdInfoId, showResultMessage, ["PNFD with pnfdInfoID " + pnfdInfoId + " successfully deleted."]);
+        deleteRequestToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/pnf_descriptors/" + pnfdInfoId, showResultMessage, ["PNFD with pnfdInfoID " + pnfdInfoId + " successfully deleted."]);
     }else{
-        deleteRequestToURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/pnf_descriptors/" + pnfdInfoId + "?project=" + getCookie("PROJECT"), showResultMessage, ["PNFD with pnfdInfoID " + pnfdInfoId + " successfully deleted."]);
+        deleteRequestToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/pnf_descriptors/" + pnfdInfoId + "?project=" + getCookie("PROJECT"), showResultMessage, ["PNFD with pnfdInfoID " + pnfdInfoId + " successfully deleted."]);
     }
     
 }
@@ -60,10 +60,10 @@ function updatePnfdInfo(pnfdInfoId, elemId) {
     console.log("PnfdInfoModifications: " + json);
      var project = document.getElementById('project').innerHTML;
     if(this.useDefaultProject(project)){
-            patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/pnf_descriptors/" + pnfdInfoId, json, showResultMessage, ["PNFD with pnfdInfoId " + nsdInfoId + " successfully updated."]);
+            patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/pnf_descriptors/" + pnfdInfoId, json, showResultMessage, ["PNFD with pnfdInfoId " + nsdInfoId + " successfully updated."]);
 
         }else{
-            patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/pnf_descriptors/" + pnfdInfoId + "?project=" + getCookie("PROJECT"), json, showResultMessage, ["PNFD with pnfdInfoId " + nsdInfoId + " successfully updated."]);        
+            patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/pnf_descriptors/" + pnfdInfoId + "?project=" + getCookie("PROJECT"), json, showResultMessage, ["PNFD with pnfdInfoId " + nsdInfoId + " successfully updated."]);
         }
     
 }
@@ -83,7 +83,7 @@ function createPnfdInfoId(file, resId) {
     var jsonObj = {"userDefinedData" : {} };
     var json = JSON.stringify(jsonObj, null, 4);
     
-    postJsonToURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/pnf_descriptors?project=" + getCookie("PROJECT"), json, uploadPnfdContent, [file, resId]);
+    postJsonToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/pnf_descriptors?project=" + getCookie("PROJECT"), json, uploadPnfdContent, [file, resId]);
 }
 
 function uploadPnfdContent(data, params) {
@@ -95,9 +95,9 @@ function uploadPnfdContent(data, params) {
     var pnfdInfoId = data['id'];
     var project = document.getElementById('project').innerHTML;
     if(this.useDefaultProject(project)){
-        putFileToURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/pnf_descriptors/" + pnfdInfoId + "/pnfd_content", formData, showResultMessage, ["PNFD with pnfdInfoId " + pnfdInfoId + " successfully updated."]);
+        putFileToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/pnf_descriptors/" + pnfdInfoId + "/pnfd_content", formData, showResultMessage, ["PNFD with pnfdInfoId " + pnfdInfoId + " successfully updated."]);
     }else{
-        putFileToURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/pnf_descriptors/" + pnfdInfoId + "/pnfd_content?project=" + getCookie("PROJECT"), formData, showResultMessage, ["PNFD with pnfdInfoId " + pnfdInfoId + " successfully updated."]);    
+        putFileToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/pnf_descriptors/" + pnfdInfoId + "/pnfd_content?project=" + getCookie("PROJECT"), formData, showResultMessage, ["PNFD with pnfdInfoId " + pnfdInfoId + " successfully updated."]);
     }
     
 }
@@ -124,9 +124,9 @@ function readPNFD(elemId, callback) {
 function getPNFD(pnfdInfoId, elemId, callback) {
      var project = document.getElementById('project').innerHTML;
     if(this.useDefaultProject(project)){
-        getFileFromURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/pnf_descriptors/" + pnfdInfoId + "/pnfd_content", callback, [pnfdInfoId, elemId]);
+        getFileFromURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/pnf_descriptors/" + pnfdInfoId + "/pnfd_content", callback, [pnfdInfoId, elemId]);
     }else{
-        getFileFromURLWithAuth("http://" + catalogueAddr + ":8083/nsd/v1/pnf_descriptors/" + pnfdInfoId + "/pnfd_content?project=" + getCookie("PROJECT"), callback, [pnfdInfoId, elemId]);    
+        getFileFromURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/pnf_descriptors/" + pnfdInfoId + "/pnfd_content?project=" + getCookie("PROJECT"), callback, [pnfdInfoId, elemId]);
     }
 
     
@@ -134,7 +134,7 @@ function getPNFD(pnfdInfoId, elemId, callback) {
 
 function exportPnfd(pnfdInfoId, resId) {
     
-    postToURLWithAuth("http://" + catalogueAddr + ":8083/catalogue/cat2catOperation/exportPnfd/" + pnfdInfoId, showResultMessage, ["Request for uploading PNFD with pnfdInfoId " + pnfdInfoId + " successfully submitted to public 5G Catalogue."])
+    postToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/catalogue/cat2catOperation/exportPnfd/" + pnfdInfoId, showResultMessage, ["Request for uploading PNFD with pnfdInfoId " + pnfdInfoId + " successfully submitted to public 5G Catalogue."])
 }
 
 function showPnfdGraphCanvas(data,params) {
