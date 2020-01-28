@@ -32,12 +32,12 @@ kafka.skip.send=false
 | NfvManoLibsSol001Descriptors | [README](https://github.com/nextworks-it/nfv-sol-libs) |
 | NfvManoLibsCommon | [README](https://github.com/nextworks-it/nfv-ifa-libs) |
 | NfvManoLibsDescriptors | [README](https://github.com/nextworks-it/nfv-ifa-libs) |
-| NfvManoLibsCCataloguesIf | [README](https://github.com/nextworks-it/nfv-ifa-libs) |
+| NfvManoLibsCataloguesIf | [README](https://github.com/nextworks-it/nfv-ifa-libs) |
 | J-OSMClient | [README](https://github.com/girtel/J-OSMClient) |
 | OpenStack4j | [README](https://github.com/ContainX/openstack4j) |
 
 ### Configuration
-For properly configuring the 5G Apps & Services Catalogue, the [application.properties](https://github.com/nextworks-it/5g-catalogue/blob/master/5gcatalogue-app/src/main/resources/application.properties) file has to be modified according to the environmentwher the catalogue is deployed. See instructions at [HOWTOCONFIGURE](https://github.com/nextworks-it/5g-catalogue/blob/master/HOWTOCONFIGURE.md
+For properly configuring the 5G Apps & Services Catalogue, the [application.properties](https://github.com/nextworks-it/5g-catalogue/blob/master/5gcatalogue-app/src/main/resources/application.properties) file has to be modified according to the environment where the catalogue is deployed. See instructions at [HOWTOCONFIGURE](https://github.com/nextworks-it/5g-catalogue/blob/master/HOWTOCONFIGURE.md)
 
 ### Installing
 
@@ -46,6 +46,7 @@ Run the "bootstrap" script for setting up the environment:
 - Create the Catalogue log folder, "/var/log/5gcatalogue"
 - Install PostgresSQL (if not present) and create the Catalogue DB, "cataloguedb"
 - Clone and install "NfvManoLibsSol001Common" and "NfvManoLibsSol001Descriptors" libs
+- Clone and install "NfvManoLibsCommon" , "NfvManoLibsDescriptors" and "NfvManoLibsCataloguesIf" libs 
 
 ```
 $ ./bootstrap.sh env-dep
