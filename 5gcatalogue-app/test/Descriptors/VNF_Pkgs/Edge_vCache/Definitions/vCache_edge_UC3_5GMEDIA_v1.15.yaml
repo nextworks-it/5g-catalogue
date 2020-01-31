@@ -71,6 +71,7 @@ topologyTemplate:
         layerProtocols: [IPV4]
         role: LEAF
         description: mgmt interface
+	virtualNetworkInterfaceRequirements: [networkInterfaceRequirements: {isManagement: true}]
       requirements:
         externalVirtualLink: [vm_mgmt]
     
