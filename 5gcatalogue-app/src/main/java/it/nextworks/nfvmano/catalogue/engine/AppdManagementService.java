@@ -286,13 +286,16 @@ public class AppdManagementService implements AppdManagementInterface {
             throw new FailedOperationException("Onboarding failed because the retrieved AppD is malformatted.");
         }
 
+        String appdId = appd.getAppDId();
+        if (!Utilities.isUUID(appdId)) {
+            throw new MalformattedElementException("AppD id not in UUID format");
+        }
+
         String version = appd.getAppDVersion();
         if (!(version.equals(request.getVersion()))) {
             log.error("AppD version and version in the request are not matching. Onboarding failed.");
             throw new FailedOperationException("Onboarding failed because of mismatching versions.");
         }
-
-        String appdId = appd.getAppDId();
 
         //check if a MEC application package with the same AppD ID and the same version already exists
         if (appPackageInfoResourceRepository.findByAppdIdAndVersionAndProject(appdId, version, project).isPresent()) {
@@ -305,6 +308,8 @@ public class AppdManagementService implements AppdManagementInterface {
         Long storedAppdId;
         String storedAppdIdString;
 
+        //TODO create VNFPackage
+
         //Check if a MEC AppD with same ID, provider and version already exists. If it exists, don't store new Appd element but just connect the App Pkg info to that one.
         //We are assuming that two Appds with the same ID, version and provider are identical
         Optional<Appd> storedAppd = appdRepository.findByAppDIdAndAppDVersionAndAppProvider(appdId, version, appd.getAppProvider());
@@ -313,6 +318,7 @@ public class AppdManagementService implements AppdManagementInterface {
             appPackageInfoResourceIdString = String.valueOf(appPackageInfoResourceId);
             storedAppdId = storedAppd.get().getId();
             storedAppdIdString = String.valueOf(storedAppdId);
+            //TODO onboard VNF
         }else{
             appPackageInfoResourceId = storeAppPackageInfo(request, appd, project);
             appPackageInfoResourceIdString = String.valueOf(appPackageInfoResourceId);
@@ -320,6 +326,7 @@ public class AppdManagementService implements AppdManagementInterface {
                 storedAppdId = storeAppd(appd);
                 storedAppdIdString = String.valueOf(storedAppdId);
                 log.debug("Successful MEC application package on-boarding. App package ID: " + appPackageInfoResourceId + " - Internal AppD ID: " + storedAppdIdString);
+                //TODO onboard VNF
                 //notify(new AppPackageOnBoardingNotification(appPackageInfoIdString, storedAppdIdString));
             } catch (AlreadyExistingEntityException e) {
                 log.error("Failed MEC AppD saving - overlapping elements");

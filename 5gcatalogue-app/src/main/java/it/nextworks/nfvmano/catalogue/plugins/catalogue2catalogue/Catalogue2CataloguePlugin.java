@@ -40,10 +40,8 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.function.Consumer;
@@ -379,8 +377,8 @@ public class Catalogue2CataloguePlugin extends Plugin
                         vnfPkgInfo = vnfdApi.createVNFPkgInfo(request);
                         log.debug("Created vnfdInfo with id: " + vnfPkgInfo.getId());
                     } catch (RestClientException e1) {
-                        log.error("Unable to create a new PnfdInfo resource on public 5G Catalogue with id {}: {}", catalogue.getCatalogueId(), e1.getMessage());
-                        throw new RestClientException("Unable to create a new PnfdInfo resource on public 5G Catalogue with id " + catalogue.getCatalogueId());
+                        log.error("Unable to create a new VnfdInfo resource on public 5G Catalogue with id {}: {}", catalogue.getCatalogueId(), e1.getMessage());
+                        throw new RestClientException("Unable to create a new VnfdInfo resource on public 5G Catalogue with id " + catalogue.getCatalogueId());
                     }
 
                     try {
@@ -675,24 +673,25 @@ public class Catalogue2CataloguePlugin extends Plugin
     }
 
     private MultipartFile createMultiPartFromFile(File file, String contentType) throws FailedOperationException {
-
-        /*byte[] content = null;
+        
+        DiskFileItem fileItem;
         try {
-            content = Files.readAllBytes(file.toPath());
-        } catch (final IOException e) {
-        }*/
-
-        DiskFileItem fileItem = new DiskFileItem("file", contentType, false, file.getName(), (int) file.length() , file.getParentFile());
-        try {
-            fileItem.getOutputStream();
-        } catch (IOException e) {
-            log.error("Unable  to create Multipart file");
+            fileItem = new DiskFileItem("file",  Files.probeContentType(file.toPath()), false, file.getName(), (int) file.length() , file.getParentFile());
+            InputStream input =  new FileInputStream(file);
+            OutputStream os = fileItem.getOutputStream();
+            int ret = input.read();
+            while ( ret != -1 )
+            {
+                os.write(ret);
+                ret = input.read();
+            }
+            os.flush();
+        } catch (Exception e) {
             throw new FailedOperationException("Unable  to create Multipart file");
         }
-        MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
 
-        /*MultipartFile multipartFile = new MockMultipartFile("file",
-                file.getName(), contentType, content);*/
+
+        MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
 
         return multipartFile;
     }
