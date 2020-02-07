@@ -40,6 +40,7 @@ import it.nextworks.nfvmano.libs.mec.catalogues.interfaces.messages.OnboardAppPa
 import it.nextworks.nfvmano.libs.mec.catalogues.interfaces.messages.QueryOnBoadedAppPkgInfoResponse;
 import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.io.FileUtils;
+import org.openstack4j.openstack.compute.domain.actions.FloatingIpActions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +54,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static it.nextworks.nfvmano.catalogue.engine.Utilities.checkUserProjects;
 
@@ -308,6 +310,7 @@ public class AppdManagementService implements AppdManagementInterface {
             throw new FailedOperationException("Onboarding failed because the retrieved AppD is malformatted.");
         }
 
+        boolean isMgmtCpDefined = false;
         for(AppExternalCpd cp : appd.getAppExtCpd()){
             if(!cp.getLayerProtocol().equals(LayerProtocol.IPV4))
                 throw new MethodNotImplementedException("Only IPV4 Layer Protocol is supported at the moment");
@@ -317,7 +320,16 @@ public class AppdManagementService implements AppdManagementInterface {
                 if(addressData.getiPAddressType() != null && !addressData.getiPAddressType().equals(IpVersion.IPv4))
                     throw new MethodNotImplementedException("Only IPV4 addresses are supported at the moment");
             }
+            for(AddressData addressData : cp.getAddressData()){
+                if(addressData.isManagement()) {
+                    isMgmtCpDefined = true;
+                    break;
+                }
+            }
         }
+
+        if(appd.getAppExtCpd().size() != 0 && !isMgmtCpDefined)
+            throw new FailedOperationException("Please define a management connection point");
 
         String appdId = appd.getAppDId();
         if (!Utilities.isUUID(appdId)) {
@@ -381,7 +393,11 @@ public class AppdManagementService implements AppdManagementInterface {
             vnfPackageManagementService.uploadVnfPkg(vnfPkgInfo.getId().toString(), multipartFile, ContentType.ZIP, false, project);
         }catch(Exception e){
             log.debug("Unable to generate VNF TOSCA Pkg with descriptor ID {} and version {} for project {}: {}", appd.getAppDId(), appd.getAppDVersion(), project, e.getMessage());
-            //TODO delete APPD package
+            try {
+                deleteAppPackage(appPackageInfoResourceId.toString(), project);
+            }catch(NotExistingEntityException e1) {
+                log.error("Cannot delete App Package Info Resource with ID {} - Not found in DB", appPackageInfoResourceId.toString());
+            }
             throw new FailedOperationException("Cannot on-board App Pkg - Unable to generate and on-board VNF TOSCA Pkg : " + e.getMessage());
         }
 
@@ -963,8 +979,8 @@ public class AppdManagementService implements AppdManagementInterface {
                 }
 
                 it.nextworks.nfvmano.libs.descriptors.elements.AddressData solAddressData = new it.nextworks.nfvmano.libs.descriptors.elements.AddressData(addressData.getAddressType(), l2AddressData, l3AddressData);
-                protocolData.add(new CpProtocolData(cp.getLayerProtocol(), null));
-                if (addressData.isManagement() && interfaceRequirements.get("isManagement") != null)
+                protocolData.add(new CpProtocolData(cp.getLayerProtocol(), solAddressData));
+                if (addressData.isManagement() && interfaceRequirements.get("isManagement") == null)
                     interfaceRequirements.put("isManagement", "true");
             }
 
@@ -977,8 +993,6 @@ public class AppdManagementService implements AppdManagementInterface {
             nodeTemplates.put(cp.getCpdId(), new VnfExtCpNode(null, cpProperties, cpRequirements));
         }
 
-        //TODO check if there is a cp di mgmt, else define one
-        
         log.debug("Creating VDUVirtualBlockStorageNodes");
         //Creating  VDUVirtualBlockStorageNodes
         VirtualBlockStorageData virtualBlockStorageData;
