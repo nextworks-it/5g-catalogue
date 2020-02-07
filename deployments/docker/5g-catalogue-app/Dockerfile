@@ -7,8 +7,6 @@ ARG catalogue_version=master
 ARG catalogue_repo=https://github.com/nextworks-it/5g-catalogue.git
 ARG nfv_sol_libs_version=master
 ARG nfv_sol_libs_repo=https://github.com/nextworks-it/nfv-sol-libs.git
-ARG nfv_ifa_libs_version=master
-ARG nfv_ifa_libs_repo=https://github.com/nextworks-it/nfv-ifa-libs.git
 ARG mano_id=DEFAULT_MANO
 ARG mano_type=DUMMY
 ARG mano_site=DEFAULT_SITE
@@ -44,18 +42,6 @@ RUN git checkout ${nfv_sol_libs_version}
 WORKDIR /home/nfv-sol-libs/NFV_MANO_SOL001_LIBS_COMMON
 RUN mvn clean install
 WORKDIR /home/nfv-sol-libs/NFV_MANO_SOL001_LIBS_DESCRIPTORS
-RUN mvn clean install
-
-# Install nfvo-libs
-WORKDIR /home
-RUN git clone ${nfv_ifa_libs_repo} nfv-ifa-libs
-WORKDIR /home/nfv-ifa-libs
-RUN git checkout ${nfv_ifa_libs_version}
-WORKDIR /home/nfv-ifa-libs/NFV_MANO_LIBS_COMMON
-RUN mvn clean install
-WORKDIR /home/nfv-ifa-libs/NFV_MANO_LIBS_DESCRIPTORS
-RUN mvn clean install
-WORKDIR /home/nfv-ifa-libs/NFV_MANO_LIBS_CATALOGUES_IF
 RUN mvn clean install
 
 # Install 5G Apps and Services Catalogue App

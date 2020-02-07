@@ -1267,6 +1267,8 @@ public class NsdManagementService implements NsdManagementInterface {
         else
             nsdInfo.setPublished(false);
 
+        nsdInfoRepo.saveAndFlush(nsdInfo);
+
         // send notification over kafka bus
         if(!nsdInfo.isRetrievedFromMANO()) {
             List<String> manoIds = checkWhereOnboardNS(nsdInfo);
@@ -1297,10 +1299,11 @@ public class NsdManagementService implements NsdManagementInterface {
                     operationId, ScopeType.LOCAL, OperationStatus.SENT, siteOrManoIds, new KeyValuePair(rootDir + ConfigurationParameters.storageNsdsSubfolder + "/" + project + "/" + nsdId.toString() + "/" + nsdInfo.getNsdVersion(), PathType.LOCAL.toString()));
             msg.setIncludedVnfds(includedVnfds);
             msg.setIncludedPnfds(includedPnfds);
+
             // send notification over kafka bus
             notificationManager.sendNsdOnBoardingNotification(msg);
+            nsdInfoRepo.saveAndFlush(nsdInfo);
         }
-        nsdInfoRepo.saveAndFlush(nsdInfo);
         log.debug("NSD content uploaded and nsdOnBoardingNotification delivered");
     }
 

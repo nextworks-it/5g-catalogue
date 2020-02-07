@@ -15,15 +15,11 @@
 */
 package it.nextworks.nfvmano.catalogue.repos.mec0102;
 
-import java.util.List;
 import java.util.Optional;
 
-import it.nextworks.nfvmano.libs.ifa.descriptors.common.elements.VirtualComputeDesc;
+import it.nextworks.nfvmano.libs.mec.catalogues.descriptors.appd.VirtualComputeDesc;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface VirtualComputeDescriptorRepository extends JpaRepository<VirtualComputeDesc, Long> {
-	List<VirtualComputeDesc> findByVnfdVnfdIdAndVnfdVnfProviderAndVnfdVnfdVersion(String vnfdId, String vnfProvider, String version);
-	List<VirtualComputeDesc> findByAppdAppDIdAndAppdAppDVersion(String appdId, String version);
-	Optional<VirtualComputeDesc> findByVirtualComputeDescIdAndVnfdVnfdIdAndVnfdVnfProviderAndVnfdVnfdVersion(String vcdId, String vnfdId, String vnfProvider, String version);
 	Optional<VirtualComputeDesc> findByVirtualComputeDescIdAndAppdAppDIdAndAppdAppDVersion(String vcdId, String appdId, String version);
 }

@@ -1,28 +1,43 @@
 package it.nextworks.nfvmano.catalogue.engine;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import it.nextworks.nfvmano.catalogue.auth.AuthUtilities;
 import it.nextworks.nfvmano.catalogue.auth.projectmanagement.ProjectResource;
 import it.nextworks.nfvmano.catalogue.common.FileUtilities;
+import it.nextworks.nfvmano.catalogue.engine.elements.ContentType;
 import it.nextworks.nfvmano.catalogue.engine.resources.AppPackageInfoResource;
-import it.nextworks.nfvmano.catalogue.engine.resources.PnfdInfoResource;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.PnfdInfo;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.CreateVnfPkgInfoRequest;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.VnfPkgInfo;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.common.ToscaArchiveBuilder;
 import it.nextworks.nfvmano.catalogue.repos.ProjectRepository;
 import it.nextworks.nfvmano.catalogue.repos.UserRepository;
 import it.nextworks.nfvmano.catalogue.repos.mec0102.*;
-import it.nextworks.nfvmano.libs.common.exceptions.NotAuthorizedOperationException;
-import it.nextworks.nfvmano.libs.ifa.catalogues.interfaces.MecAppPackageManagementConsumerInterface;
-import it.nextworks.nfvmano.libs.ifa.catalogues.interfaces.elements.AppPackageInfo;
-
-import it.nextworks.nfvmano.libs.ifa.catalogues.interfaces.messages.*;
-import it.nextworks.nfvmano.libs.ifa.common.elements.Filter;
-import it.nextworks.nfvmano.libs.ifa.common.enums.OperationalState;
-import it.nextworks.nfvmano.libs.ifa.common.enums.UsageState;
-import it.nextworks.nfvmano.libs.ifa.common.exceptions.*;
-import it.nextworks.nfvmano.libs.ifa.common.messages.GeneralizedQueryRequest;
-import it.nextworks.nfvmano.libs.ifa.common.messages.SubscribeRequest;
-import it.nextworks.nfvmano.libs.ifa.descriptors.appd.*;
-import it.nextworks.nfvmano.libs.ifa.descriptors.common.elements.VirtualComputeDesc;
+import it.nextworks.nfvmano.libs.common.elements.Filter;
+import it.nextworks.nfvmano.libs.common.enums.*;
+import it.nextworks.nfvmano.libs.common.exceptions.*;
+import it.nextworks.nfvmano.libs.common.messages.GeneralizedQueryRequest;
+import it.nextworks.nfvmano.libs.common.messages.SubscribeRequest;
+import it.nextworks.nfvmano.libs.descriptors.capabilities.VirtualComputeCapability;
+import it.nextworks.nfvmano.libs.descriptors.capabilities.VirtualComputeCapabilityProperties;
+import it.nextworks.nfvmano.libs.descriptors.elements.*;
+import it.nextworks.nfvmano.libs.descriptors.templates.*;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VDU.*;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFInterfaces;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFProperties;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VnfExtCp.VnfExtCpNode;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VnfExtCp.VnfExtCpProperties;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VnfExtCp.VnfExtCpRequirements;
+import it.nextworks.nfvmano.libs.mec.catalogues.descriptors.appd.*;
+import it.nextworks.nfvmano.libs.mec.catalogues.descriptors.appd.AddressData;
+import it.nextworks.nfvmano.libs.mec.catalogues.interfaces.MecAppPackageManagementConsumerInterface;
+import it.nextworks.nfvmano.libs.mec.catalogues.interfaces.elements.AppPackageInfo;
+import it.nextworks.nfvmano.libs.mec.catalogues.interfaces.messages.OnboardAppPackageRequest;
+import it.nextworks.nfvmano.libs.mec.catalogues.interfaces.messages.OnboardAppPackageResponse;
+import it.nextworks.nfvmano.libs.mec.catalogues.interfaces.messages.QueryOnBoadedAppPkgInfoResponse;
 import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -30,6 +45,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -90,7 +106,7 @@ public class AppdManagementService implements AppdManagementInterface {
     private TrafficFilterRepository trafficFilterRepository;
 
     @Autowired
-    private MeAppInterfaceDescriptorRepository meAppInterfaceDescriptorRepository;
+    private MecAppInterfaceDescriptorRepository mecAppInterfaceDescriptorRepository;
 
     /*
     @Autowired
@@ -110,6 +126,12 @@ public class AppdManagementService implements AppdManagementInterface {
 
     @Value("${keycloak.enabled:true}")
     private boolean keycloakEnabled;
+
+    @Value("${environment.tmpDir}")
+    private String tmpDir;
+
+    @Autowired
+    VnfPackageManagementService vnfPackageManagementService;
 
     @Override
     public File fetchOnboardedApplicationPackage(String onboardedAppPkgId)
@@ -286,6 +308,17 @@ public class AppdManagementService implements AppdManagementInterface {
             throw new FailedOperationException("Onboarding failed because the retrieved AppD is malformatted.");
         }
 
+        for(AppExternalCpd cp : appd.getAppExtCpd()){
+            if(!cp.getLayerProtocol().equals(LayerProtocol.IPV4))
+                throw new MethodNotImplementedException("Only IPV4 Layer Protocol is supported at the moment");
+            for(AddressData addressData : cp.getAddressData()){
+                if(addressData.getAddressType() != null && !addressData.getAddressType().equals(AddressType.IP_ADDRESS))
+                    throw new MethodNotImplementedException("Only IP address type is supported at the moment");
+                if(addressData.getiPAddressType() != null && !addressData.getiPAddressType().equals(IpVersion.IPv4))
+                    throw new MethodNotImplementedException("Only IPV4 addresses are supported at the moment");
+            }
+        }
+
         String appdId = appd.getAppDId();
         if (!Utilities.isUUID(appdId)) {
             throw new MalformattedElementException("AppD id not in UUID format");
@@ -308,8 +341,6 @@ public class AppdManagementService implements AppdManagementInterface {
         Long storedAppdId;
         String storedAppdIdString;
 
-        //TODO create VNFPackage
-
         //Check if a MEC AppD with same ID, provider and version already exists. If it exists, don't store new Appd element but just connect the App Pkg info to that one.
         //We are assuming that two Appds with the same ID, version and provider are identical
         Optional<Appd> storedAppd = appdRepository.findByAppDIdAndAppDVersionAndAppProvider(appdId, version, appd.getAppProvider());
@@ -318,7 +349,6 @@ public class AppdManagementService implements AppdManagementInterface {
             appPackageInfoResourceIdString = String.valueOf(appPackageInfoResourceId);
             storedAppdId = storedAppd.get().getId();
             storedAppdIdString = String.valueOf(storedAppdId);
-            //TODO onboard VNF
         }else{
             appPackageInfoResourceId = storeAppPackageInfo(request, appd, project);
             appPackageInfoResourceIdString = String.valueOf(appPackageInfoResourceId);
@@ -326,7 +356,6 @@ public class AppdManagementService implements AppdManagementInterface {
                 storedAppdId = storeAppd(appd);
                 storedAppdIdString = String.valueOf(storedAppdId);
                 log.debug("Successful MEC application package on-boarding. App package ID: " + appPackageInfoResourceId + " - Internal AppD ID: " + storedAppdIdString);
-                //TODO onboard VNF
                 //notify(new AppPackageOnBoardingNotification(appPackageInfoIdString, storedAppdIdString));
             } catch (AlreadyExistingEntityException e) {
                 log.error("Failed MEC AppD saving - overlapping elements");
@@ -339,6 +368,21 @@ public class AppdManagementService implements AppdManagementInterface {
                 log.debug("App package info deleted");
                 throw new FailedOperationException(e.getMessage());
             }
+        }
+
+        //Generate corresponding VNF
+        try {
+            DescriptorTemplate vnfd = generateVnfDFromAppD(appd);
+            CreateVnfPkgInfoRequest createVnfPkgInfoRequest = new CreateVnfPkgInfoRequest();
+            VnfPkgInfo vnfPkgInfo = vnfPackageManagementService.createVnfPkgInfo(createVnfPkgInfoRequest, project, true);
+            String vnfPkgPath = ToscaArchiveBuilder.createVNFCSAR(vnfPkgInfo.getId().toString(), vnfd, tmpDir, null);
+            File vnfPkg = new File(vnfPkgPath);
+            MultipartFile multipartFile = Utilities.createMultiPartFromFile(vnfPkg);
+            vnfPackageManagementService.uploadVnfPkg(vnfPkgInfo.getId().toString(), multipartFile, ContentType.ZIP, false, project);
+        }catch(Exception e){
+            log.debug("Unable to generate VNF TOSCA Pkg with descriptor ID {} and version {} for project {}: {}", appd.getAppDId(), appd.getAppDVersion(), project, e.getMessage());
+            //TODO delete APPD package
+            throw new FailedOperationException("Cannot on-board App Pkg - Unable to generate and on-board VNF TOSCA Pkg : " + e.getMessage());
         }
 
         return new OnboardAppPackageResponse(appPackageInfoResourceIdString, storedAppdIdString);
@@ -851,10 +895,10 @@ public class AppdManagementService implements AppdManagementInterface {
             }
             log.debug("All the traffic filters have been stored.");
 
-            List<MeAppInterfaceDescriptor> dstInterfaces = trd.getDstInterface();
-            for (MeAppInterfaceDescriptor maid : dstInterfaces) {
-                MeAppInterfaceDescriptor targetIf = new MeAppInterfaceDescriptor(target, maid.getInterfaceType(), maid.getTunnelInfo(), maid.getSrcMACAddress(), maid.getDstMACAddress(), maid.getDstIPAddress());
-                meAppInterfaceDescriptorRepository.saveAndFlush(targetIf);
+            List<MecAppInterfaceDescriptor> dstInterfaces = trd.getDstInterface();
+            for (MecAppInterfaceDescriptor maid : dstInterfaces) {
+                MecAppInterfaceDescriptor targetIf = new MecAppInterfaceDescriptor(target, maid.getInterfaceType(), maid.getTunnelInfo(), maid.getSrcMACAddress(), maid.getDstMACAddress(), maid.getDstIPAddress());
+                mecAppInterfaceDescriptorRepository.saveAndFlush(targetIf);
                 log.debug("ME Application interface descriptor stored.");
             }
             log.debug("All the ME app interface descriptors have been stored.");
@@ -875,5 +919,114 @@ public class AppdManagementService implements AppdManagementInterface {
                 p.getOperationalState(),
                 p.getUsageState(),
                 p.isDeletionPending());
+    }
+
+    private DescriptorTemplate generateVnfDFromAppD(Appd appd) throws IOException, IllegalArgumentException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
+        mapper.enable(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT);
+        mapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+
+        log.debug("Creating VnfExtCpNode");
+        //Creating VnfExtCpNode and VirtualinkRequirements for SubstitutionMappingsRequirements
+        LinkedHashMap<String, Node> nodeTemplates = new LinkedHashMap<>();
+        List<VirtualLinkPair> virtualLink = new ArrayList<>();
+
+        List<AppExternalCpd> appExternalCpdList;
+        if(appd.getAppExtCpd() == null || appd.getAppExtCpd().size() == 0) {
+            appExternalCpdList = new ArrayList<>();
+            List<AddressData> addressDataList = new ArrayList<>();
+            AddressData addressData = new AddressData(AddressType.IP_ADDRESS, true, false, true, IpVersion.IPv4, 1);
+            addressDataList.add(addressData);
+            appExternalCpdList.add(new AppExternalCpd(null, "ext_cp", LayerProtocol.IPV4, CpRole.LEAF, "External cp", addressDataList, null));
+        }else{
+            appExternalCpdList = appd.getAppExtCpd();
+        }
+
+        for(AppExternalCpd cp : appExternalCpdList){
+            virtualLink.add(new VirtualLinkPair(cp.getCpdId(), cp.getCpdId()));
+            List<LayerProtocol> layerProtocols = new ArrayList<>();
+            layerProtocols.add(cp.getLayerProtocol());
+            List<CpProtocolData> protocolData = new ArrayList<>();
+            List<it.nextworks.nfvmano.libs.descriptors.elements.VirtualNetworkInterfaceRequirements> virtualNetworkInterfaceRequirements = new ArrayList<>();
+            HashMap<String, String> interfaceRequirements = new HashMap<>();
+            for(AddressData addressData : cp.getAddressData()){
+                L3AddressData l3AddressData;
+                L2AddressData l2AddressData;
+                if (addressData.getAddressType().equals(AddressType.IP_ADDRESS)) {
+                    l3AddressData = new L3AddressData(addressData.isiPAddressAssignment(), addressData.isFloatingIpActivated(), addressData.getiPAddressType(), addressData.getNumberOfIpAddress());
+                    l2AddressData = null;
+                }else{
+                    l3AddressData = null;
+                    l2AddressData = new L2AddressData(true);
+                }
+
+                it.nextworks.nfvmano.libs.descriptors.elements.AddressData solAddressData = new it.nextworks.nfvmano.libs.descriptors.elements.AddressData(addressData.getAddressType(), l2AddressData, l3AddressData);
+                protocolData.add(new CpProtocolData(cp.getLayerProtocol(), null));
+                if (addressData.isManagement() && interfaceRequirements.get("isManagement") != null)
+                    interfaceRequirements.put("isManagement", "true");
+            }
+
+            it.nextworks.nfvmano.libs.descriptors.elements.VirtualNetworkInterfaceRequirements virtualNetworkInterfaceRequirement = new it.nextworks.nfvmano.libs.descriptors.elements.VirtualNetworkInterfaceRequirements(null, null, false, interfaceRequirements, null);
+            virtualNetworkInterfaceRequirements.add(virtualNetworkInterfaceRequirement);
+            VnfExtCpProperties cpProperties = new VnfExtCpProperties(null, layerProtocols, cp.getCpRole(), cp.getCpdId(), protocolData, false, virtualNetworkInterfaceRequirements);
+            List<String> externalVirtualLink = new ArrayList<>();
+            externalVirtualLink.add(cp.getCpdId());
+            VnfExtCpRequirements cpRequirements = new  VnfExtCpRequirements(externalVirtualLink, null);
+            nodeTemplates.put(cp.getCpdId(), new VnfExtCpNode(null, cpProperties, cpRequirements));
+        }
+
+        //TODO check if there is a cp di mgmt, else define one
+        
+        log.debug("Creating VDUVirtualBlockStorageNodes");
+        //Creating  VDUVirtualBlockStorageNodes
+        VirtualBlockStorageData virtualBlockStorageData;
+        VDUVirtualBlockStorageProperties bsProperties;
+        List<String> storages = new ArrayList<>();
+        if(appd.getVirtualStorageDescriptor() == null || appd.getVirtualStorageDescriptor().size() == 0){
+            virtualBlockStorageData = new VirtualBlockStorageData(appd.getSwImageDescriptor().getMinDisk(), null, false);
+            bsProperties = new VDUVirtualBlockStorageProperties(virtualBlockStorageData, null);
+            nodeTemplates.put(appd.getVirtualComputeDescriptor().getVirtualComputeDescId() + "_storage", new VDUVirtualBlockStorageNode(null, bsProperties));
+            storages.add(appd.getVirtualComputeDescriptor().getVirtualComputeDescId() + "_storage");
+        }else {
+            for(VirtualStorageDesc virtualStorageDesc : appd.getVirtualStorageDescriptor()) {
+                virtualBlockStorageData = new VirtualBlockStorageData(virtualStorageDesc.getSizeOfStorage(), null, false);
+                bsProperties = new VDUVirtualBlockStorageProperties(virtualBlockStorageData, null);
+                nodeTemplates.put(virtualStorageDesc.getStorageId(), new VDUVirtualBlockStorageNode(null, bsProperties));
+                storages.add(virtualStorageDesc.getStorageId());
+            }
+        }
+
+        log.debug("Creating VDUComputeNode");
+        //Creating VDUComputeNode
+        SwImageDesc swImageDesc = appd.getSwImageDescriptor();
+        VirtualComputeDesc virtualComputeDesc = appd.getVirtualComputeDescriptor();
+        SwImageData swImageData = new SwImageData(swImageDesc.getSwImage(), swImageDesc.getVersion(), swImageDesc.getChecksum(), ContainerFormat.valueOf(swImageDesc.getContainerFormat().toUpperCase()), DiskFormat.valueOf(swImageDesc.getDiskFormat().toUpperCase()), swImageDesc.getMinDisk(), swImageDesc.getMinRam(), swImageDesc.getSize(), swImageDesc.getOperatingSystem(), swImageDesc.getSupportedVirtualisationEnvironment());
+        VduProfile vduProfile = new VduProfile(1, 1);
+        VDUComputeProperties vduProperties = new VDUComputeProperties(virtualComputeDesc.getVirtualComputeDescId(), null, null, null, null, null, null, vduProfile, swImageData);
+        VirtualComputeCapabilityProperties vccProperties = new VirtualComputeCapabilityProperties(null, null, null, new VirtualMemory(virtualComputeDesc.getVirtualMemory().getVirtualMemSize(), null, null, false), new VirtualCpu(null, null, virtualComputeDesc.getVirtualCpu().getNumVirtualCpu(), null, null, null, null), null);
+        VirtualComputeCapability virtualComputeCapability = new VirtualComputeCapability(vccProperties);
+        VDUComputeCapabilities vduCapabilities = new VDUComputeCapabilities(virtualComputeCapability);
+        VDUComputeRequirements vduRequirements = new VDUComputeRequirements(null, storages);
+        nodeTemplates.put(virtualComputeDesc.getVirtualComputeDescId(), new VDUComputeNode(null, vduProperties, vduCapabilities, vduRequirements));
+
+        log.debug("Creating VNFNode");
+        //Creating VNFNode
+        VNFProperties vnfProperties = new VNFProperties(appd.getAppDId(), appd.getAppDVersion(), appd.getAppProvider(), appd.getAppName(), appd.getAppSoftVersion(), appd.getAppName(), appd.getAppDescription(), null, null, null, null, null, null, null, appd.getAppName() + "_flavor", appd.getAppName() + " flavor", null);
+        nodeTemplates.put(appd.getAppName() + "_VNF", new VNFNode(null, appd.getAppName(), vnfProperties, null, null, null));
+
+        //Creating SubstitutionMappings
+        SubstitutionMappingsRequirements requirements = new SubstitutionMappingsRequirements(null, virtualLink);
+        SubstitutionMappings substitutionMappings = new SubstitutionMappings(null, "tosca.nodes.nfv.VNF", null, requirements, null);
+
+        //Creating TopologyTemplate
+        TopologyTemplate topologyTemplate = new TopologyTemplate(null, substitutionMappings, null, nodeTemplates, null, null);
+
+        //Creating Metadata
+        Metadata metadata = new Metadata(appd.getAppDId(), appd.getAppProvider(), appd.getAppDVersion());
+
+        //Creating DescriptorTemplate
+        return new DescriptorTemplate("tosca_simple_yaml", null, "Descriptor generated by 5G Apps & Services Catalogue", metadata, null, null, null, topologyTemplate);
     }
 }

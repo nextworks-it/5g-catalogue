@@ -50,22 +50,6 @@ function prepareEnv()
     cd ../NFV_MANO_SOL001_LIBS_DESCRIPTORS
     mvn clean install
     cd ../../5g-catalogue    
-    
-    if [ ! -d  ../nfv-ifa-libs/ ]; then
-        cd ..
-        git clone https://github.com/nextworks-it/nfv-ifa-libs.git
-        cd nfv-ifa-libs
-        git checkout v1.0
-        cd ../5g-catalogue
-    fi
-
-    cd ../nfv-ifa-libs/NFV_MANO_LIBS_COMMON
-    mvn clean install
-    cd ../NFV_MANO_LIBS_DESCRIPTORS
-    mvn clean install
-    cd ../NFV_MANO_LIBS_CATALOGUES_IF
-    mvn clean install
-    cd ../../5g-catalogue 
 
 log "CLONING SUBMODULES..."
     git submodule update --init

@@ -15,8 +15,7 @@
 */
 package it.nextworks.nfvmano.catalogue.repos.mec0102;
 
-
-import it.nextworks.nfvmano.libs.ifa.descriptors.appd.Appd;
+import it.nextworks.nfvmano.libs.mec.catalogues.descriptors.appd.Appd;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,8 +26,5 @@ public interface AppdRepository extends JpaRepository<Appd, Long> {
 	
 	@Transactional
 	Optional<Appd> findByAppDIdAndAppDVersionAndAppProvider(String appdId, String version, String provider);
-	
-	@Transactional
-	List<Appd> findByAppDId(String appdId);
 
 }

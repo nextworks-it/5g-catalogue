@@ -18,12 +18,11 @@ package it.nextworks.nfvmano.catalogue.repos.mec0102;
 import java.util.List;
 import java.util.Optional;
 
-import it.nextworks.nfvmano.libs.ifa.descriptors.appd.TrafficRuleDescriptor;
+import it.nextworks.nfvmano.libs.mec.catalogues.descriptors.appd.TrafficRuleDescriptor;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TrafficRuleDescriptorRepository extends JpaRepository<TrafficRuleDescriptor, Long> {
 
-	List<TrafficRuleDescriptor> findByAppdAppDIdAndAppdAppDVersion(String appdId, String version);
 	Optional<TrafficRuleDescriptor> findByTrafficRuleIdAndAppdAppDIdAndAppdAppDVersion(String trafficRuleId, String appdId, String version);
 	
 }

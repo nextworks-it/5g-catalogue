@@ -20,6 +20,7 @@ import it.nextworks.nfvmano.catalogue.engine.elements.ContentType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOnboardingStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdOperationalStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdUsageStateType;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.PackageOnboardingStateType;
 import it.nextworks.nfvmano.libs.common.exceptions.NotPermittedOperationException;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Fetch;
@@ -280,7 +281,7 @@ public class NsdInfoResource {
     }
 
     public void isDeletable() throws NotPermittedOperationException {
-        if (nsdOperationalState != NsdOperationalStateType.DISABLED)
+        if (nsdOnboardingState != NsdOnboardingStateType.FAILED && nsdOperationalState != NsdOperationalStateType.DISABLED)
             throw new NotPermittedOperationException("NSD info " + this.id + " cannot be deleted because not DISABLED");
         if (nsdUsageState != NsdUsageStateType.NOT_IN_USE)
             throw new NotPermittedOperationException("NSD info " + this.id + " cannot be deleted because IN USE");

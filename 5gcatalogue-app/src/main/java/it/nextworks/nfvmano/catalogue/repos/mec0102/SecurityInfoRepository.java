@@ -15,7 +15,7 @@
 */
 package it.nextworks.nfvmano.catalogue.repos.mec0102;
 
-import it.nextworks.nfvmano.libs.ifa.descriptors.appd.SecurityInfo;
+import it.nextworks.nfvmano.libs.mec.catalogues.descriptors.appd.SecurityInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SecurityInfoRepository extends JpaRepository<SecurityInfo, Long>{

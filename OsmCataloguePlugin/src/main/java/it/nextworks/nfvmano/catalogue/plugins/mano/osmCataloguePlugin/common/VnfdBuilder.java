@@ -100,7 +100,10 @@ public class VnfdBuilder {
         osmVdu.setName(vdu.getProperties().getName());
         osmVdu.setDescription(vdu.getProperties().getName());
         osmVdu.setCount(vdu.getProperties().getVduProfile().getMinNumberOfInstances());
-        osmVdu.setImage(requiredBlockStorage.getProperties().getSwImageData().getImageName());
+        if(vdu.getProperties().getSwImageData() == null)
+            osmVdu.setImage(requiredBlockStorage.getProperties().getSwImageData().getImageName());
+        else
+            osmVdu.setImage(vdu.getProperties().getSwImageData().getImageName());
         osmVdu.setInterfaces(interfaces);
         VMFlavor flavor = new VMFlavor();
         flavor.setMemoryMb(vdu.getCapabilities().getVirtualCompute().getProperties().getVirtualMemory().getVirtualMemSize());

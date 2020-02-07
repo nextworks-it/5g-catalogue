@@ -18,14 +18,11 @@ package it.nextworks.nfvmano.catalogue.repos.mec0102;
 import java.util.List;
 import java.util.Optional;
 
-import it.nextworks.nfvmano.libs.ifa.descriptors.appd.MecServiceDependency;
+import it.nextworks.nfvmano.libs.mec.catalogues.descriptors.appd.MecServiceDependency;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MecServiceDependencyRepository extends JpaRepository<MecServiceDependency, Long>{
 
-	List<MecServiceDependency> findByAppdRequiredAppDIdAndAppdRequiredAppDVersion(String appdId, String version);
 	Optional<MecServiceDependency> findBySerNameAndAppdRequiredAppDIdAndAppdRequiredAppDVersion(String serName, String appdId, String version);
-	
-	List<MecServiceDependency> findByAppdOptionalAppDIdAndAppdOptionalAppDVersion(String appdId, String version);
 	Optional<MecServiceDependency> findBySerNameAndAppdOptionalAppDIdAndAppdOptionalAppDVersion(String serName, String appdId, String version);
 }

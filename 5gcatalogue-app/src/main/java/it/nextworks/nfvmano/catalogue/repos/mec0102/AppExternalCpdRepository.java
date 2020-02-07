@@ -18,10 +18,9 @@ package it.nextworks.nfvmano.catalogue.repos.mec0102;
 import java.util.List;
 import java.util.Optional;
 
-import it.nextworks.nfvmano.libs.ifa.descriptors.appd.AppExternalCpd;
+import it.nextworks.nfvmano.libs.mec.catalogues.descriptors.appd.AppExternalCpd;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface AppExternalCpdRepository extends JpaRepository<AppExternalCpd, Long>{
-	List<AppExternalCpd> findByAppdAppDIdAndAppdAppDVersion(String appdId, String version);
 	Optional<AppExternalCpd> findByCpdIdAndAppdAppDIdAndAppdAppDVersion(String cpdId, String appdId, String version);
 }

@@ -15,7 +15,7 @@
 */
 package it.nextworks.nfvmano.catalogue.repos.mec0102;
 
-import it.nextworks.nfvmano.libs.ifa.descriptors.appd.TrafficFilter;
+import it.nextworks.nfvmano.libs.mec.catalogues.descriptors.appd.TrafficFilter;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TrafficFilterRepository extends JpaRepository<TrafficFilter, Long>{
