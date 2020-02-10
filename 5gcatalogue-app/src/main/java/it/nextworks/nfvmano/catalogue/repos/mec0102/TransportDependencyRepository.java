@@ -15,7 +15,7 @@
 */
 package it.nextworks.nfvmano.catalogue.repos.mec0102;
 
-import it.nextworks.nfvmano.libs.ifa.descriptors.appd.TransportDependency;
+import it.nextworks.nfvmano.libs.mec.catalogues.descriptors.appd.TransportDependency;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TransportDependencyRepository extends JpaRepository<TransportDependency, Long>{

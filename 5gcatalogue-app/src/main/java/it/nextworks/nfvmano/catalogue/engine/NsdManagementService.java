@@ -28,10 +28,7 @@ import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.Pat
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.ScopeType;
 import it.nextworks.nfvmano.catalogue.common.ConfigurationParameters;
 import it.nextworks.nfvmano.catalogue.engine.elements.ContentType;
-import it.nextworks.nfvmano.catalogue.engine.resources.NotificationResource;
-import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
-import it.nextworks.nfvmano.catalogue.engine.resources.PnfdInfoResource;
-import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
+import it.nextworks.nfvmano.catalogue.engine.resources.*;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.*;
 import it.nextworks.nfvmano.catalogue.plugins.PluginsManager;
 import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.C2COnboardingStateType;
@@ -40,17 +37,20 @@ import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANOPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.repos.MANORepository;
 import it.nextworks.nfvmano.catalogue.repos.*;
+import it.nextworks.nfvmano.catalogue.repos.mec0102.AppPackageInfoResourceRepository;
 import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
 import it.nextworks.nfvmano.catalogue.translators.tosca.ArchiveParser;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.catalogue.translators.tosca.elements.CSARInfo;
 import it.nextworks.nfvmano.libs.common.elements.KeyValuePair;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
+import it.nextworks.nfvmano.libs.common.enums.UsageState;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
 import it.nextworks.nfvmano.libs.descriptors.pnfd.nodes.PNF.PNFNode;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
+import it.nextworks.nfvmano.libs.mec.catalogues.descriptors.appd.Appd;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,7 +63,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 
 import static it.nextworks.nfvmano.catalogue.engine.Utilities.*;
 
@@ -79,6 +78,9 @@ public class NsdManagementService implements NsdManagementInterface {
     private PnfdInfoRepository pnfdInfoRepo;
 
     @Autowired
+    private AppPackageInfoResourceRepository appPackageInfoResourceRepository;
+
+    @Autowired
     private FileSystemStorageService storageService;
 
     @Autowired
@@ -92,6 +94,9 @@ public class NsdManagementService implements NsdManagementInterface {
 
     @Autowired
     private VnfPackageManagementService vnfPackageManagementService;
+
+    @Autowired
+    private AppdManagementService appdManagementService;
 
     @Autowired
     private VnfPkgInfoRepository vnfPkgInfoRepository;
@@ -647,6 +652,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     }
                 }
 
+                List<Appd> appds = appdManagementService.getAssociatedAppD(nsdInfo.getId());
                 log.debug("The NSD info can be removed");
                 if (nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.ONBOARDED
                         || nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.LOCAL_ONBOARDED
@@ -658,7 +664,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     try {
                         storageService.deleteNsd(project, nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion());
                     } catch (Exception e) {
-                        log.error("Unable to delete NSD with nsdId {} from fylesystem", nsdInfo.getNsdId().toString());
+                        log.error("Unable to delete NSD with nsdId {} from filesystem", nsdInfo.getNsdId().toString());
                         log.error("Details: ", e);
                     }
 
@@ -674,6 +680,23 @@ public class NsdManagementService implements NsdManagementInterface {
                 }
 
                 nsdInfoRepo.deleteById(id);
+
+                //Remove or update AppD if any
+                for(Appd appd : appds){
+                    Optional<AppPackageInfoResource> appPackageInfoResourceOptional = appPackageInfoResourceRepository.findByAppdIdAndVersionAndProject(appd.getAppDId(), appd.getAppDVersion(), project);
+                    if(appPackageInfoResourceOptional.isPresent()) {
+                        AppPackageInfoResource appPackageInfoResource = appPackageInfoResourceOptional.get();
+                        appPackageInfoResource.setUsageState(UsageState.NOT_IN_USE);
+                        appPackageInfoResourceRepository.saveAndFlush(appPackageInfoResource);
+                        if (appPackageInfoResource.isDeletionPending()) {
+                            try {
+                                appdManagementService.deleteAppPackage(appPackageInfoResource.getAppPackageInfoId(), project, true);
+                            }catch (Exception e){
+                                log.error("Cannot delete the Appd in pending deletion");
+                            }
+                        }
+                    }
+                }
                 log.debug("Deleted NSD info resource with id: " + nsdInfoId);
             } else {
                 log.debug("NSD info resource with id " + nsdInfoId + "not found");
@@ -1267,6 +1290,19 @@ public class NsdManagementService implements NsdManagementInterface {
         else
             nsdInfo.setPublished(false);
 
+        nsdInfoRepo.saveAndFlush(nsdInfo);
+
+        List<Appd> appds = appdManagementService.getAssociatedAppD(nsdInfo.getId());
+        //Update AppD if any
+        for(Appd appd : appds){
+            Optional<AppPackageInfoResource> appPackageInfoResourceOptional = appPackageInfoResourceRepository.findByAppdIdAndVersionAndProject(appd.getAppDId(), appd.getAppDVersion(), project);
+            if(appPackageInfoResourceOptional.isPresent()) {
+                AppPackageInfoResource appPackageInfoResource = appPackageInfoResourceOptional.get();
+                appPackageInfoResource.setUsageState(UsageState.IN_USE);
+                appPackageInfoResourceRepository.saveAndFlush(appPackageInfoResource);
+            }
+        }
+
         // send notification over kafka bus
         if(!nsdInfo.isRetrievedFromMANO()) {
             List<String> manoIds = checkWhereOnboardNS(nsdInfo);
@@ -1297,10 +1333,11 @@ public class NsdManagementService implements NsdManagementInterface {
                     operationId, ScopeType.LOCAL, OperationStatus.SENT, siteOrManoIds, new KeyValuePair(rootDir + ConfigurationParameters.storageNsdsSubfolder + "/" + project + "/" + nsdId.toString() + "/" + nsdInfo.getNsdVersion(), PathType.LOCAL.toString()));
             msg.setIncludedVnfds(includedVnfds);
             msg.setIncludedPnfds(includedPnfds);
+
             // send notification over kafka bus
             notificationManager.sendNsdOnBoardingNotification(msg);
+            nsdInfoRepo.saveAndFlush(nsdInfo);
         }
-        nsdInfoRepo.saveAndFlush(nsdInfo);
         log.debug("NSD content uploaded and nsdOnBoardingNotification delivered");
     }
 

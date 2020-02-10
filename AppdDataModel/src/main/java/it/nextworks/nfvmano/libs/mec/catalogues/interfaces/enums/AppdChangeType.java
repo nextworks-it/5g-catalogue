@@ -13,12 +13,12 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package it.nextworks.nfvmano.catalogue.repos.mec0102;
+package it.nextworks.nfvmano.libs.mec.catalogues.interfaces.enums;
 
-import it.nextworks.nfvmano.libs.ifa.descriptors.appd.MeAppInterfaceDescriptor;
-import org.springframework.data.jpa.repository.JpaRepository;
+public enum AppdChangeType {
 
-
-public interface MeAppInterfaceDescriptorRepository extends JpaRepository<MeAppInterfaceDescriptor, Long>{
-
+	OPERATIONAL_STATE_CHANGE,
+	APP_PACKAGE_IN_DELETION_PENDING,
+	APP_PACKAGE_DELETION
+	
 }

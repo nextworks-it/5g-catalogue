@@ -37,8 +37,6 @@ services:
         catalogue_server_port: ${CATALOGUE_SERVER_PORT}
         nfv_sol_libs_repo: https://github.com/nextworks-it/nfv-sol-libs.git
         nfv_sol_libs_version: ${CATALOGUE_SOL_LIBS_VERSION}
-        nfv_ifa_libs_repo: https://github.com/nextworks-it/nfv-ifa-libs.git
-        nfv_ifa_libs_version: ${CATALOGUE_IFA_LIBS_VERSION}
         mano_id: ${MANO_ID}
         mano_type: ${MANO_TYPE}
         mano_site: ${MANO_SITE}

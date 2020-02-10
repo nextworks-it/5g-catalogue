@@ -8,10 +8,11 @@
 
     <modules>
         <module>CatalogueNotification</module>
-	<module>CataloguePlugin</module>
-	<module>OSMr4PlusDataModel</module>
-	<module>OSMr4PlusClient</module>
-	<module>OsmCataloguePlugin</module>
+	    <module>CataloguePlugin</module>
+        <module>AppdDataModel</module>
+	    <module>OSMr4PlusDataModel</module>
+	    <module>OSMr4PlusClient</module>
+	    <module>OsmCataloguePlugin</module>
         <module>5gcatalogue-app</module>
     </modules>
 </project>

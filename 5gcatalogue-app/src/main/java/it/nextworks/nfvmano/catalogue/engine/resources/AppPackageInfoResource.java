@@ -2,10 +2,10 @@ package it.nextworks.nfvmano.catalogue.engine.resources;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import it.nextworks.nfvmano.libs.ifa.common.enums.OperationalState;
-import it.nextworks.nfvmano.libs.ifa.common.enums.UsageState;
-import it.nextworks.nfvmano.libs.ifa.common.exceptions.MalformattedElementException;
-import it.nextworks.nfvmano.libs.ifa.descriptors.appd.Appd;
+import it.nextworks.nfvmano.libs.common.enums.OperationalState;
+import it.nextworks.nfvmano.libs.common.enums.UsageState;
+import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
+import it.nextworks.nfvmano.libs.mec.catalogues.descriptors.appd.Appd;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Fetch;

@@ -29,8 +29,4 @@ public interface AppPackageInfoResourceRepository extends JpaRepository<AppPacka
 	
 	@Transactional
 	Optional<AppPackageInfoResource> findByAppdIdAndVersionAndProject(String appdId, String version, String project);
-	
-	@Transactional
-	Optional<AppPackageInfoResource> findByAppdId(String appdId);
-
 }

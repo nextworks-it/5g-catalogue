@@ -491,6 +491,10 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                     throw new FailedOperationException("Cannot remove VNF Pkg info, it has been retrieved from MANO");
                 }
 
+                if(!isInternalRequest && vnfPkgInfoResource.getUserDefinedData().containsKey("isGeneratedFromAppD") && vnfPkgInfoResource.getUserDefinedData().get("isGeneratedFromAppD").equals("yes")){
+                    throw new FailedOperationException("Cannot remove VNF Pkg info, it has been generated from AppD. Please perform operations directly on the AppD");
+                }
+
                 log.debug("The VNF Pkg info can be removed");
                 if (vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.ONBOARDED
                         || vnfPkgInfoResource.getOnboardingState() == PackageOnboardingStateType.LOCAL_ONBOARDED
@@ -554,6 +558,10 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
 
         if(!isInternalRequest && vnfPkgInfoResource.isRetrievedFromMANO()){
             throw new FailedOperationException("Cannot update VNF Pkg info, it has been retrieved from MANO");
+        }
+
+        if(!isInternalRequest && vnfPkgInfoResource.getUserDefinedData().containsKey("isGeneratedFromAppD") && vnfPkgInfoResource.getUserDefinedData().get("isGeneratedFromAppD").equals("yes")){
+            throw new FailedOperationException("Cannot update VNF Pkg info, it has been generated from AppD. Please perform operations directly on the AppD");
         }
 
         //TODO add possibility to update onboarding on manos

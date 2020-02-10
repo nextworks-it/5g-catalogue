@@ -265,7 +265,7 @@ public class VnfPkgInfoResource {
     }
 
     public void isDeletable() throws NotPermittedOperationException {
-        if (operationalState != PackageOperationalStateType.DISABLED)
+        if (onboardingState != PackageOnboardingStateType.FAILED && operationalState != PackageOperationalStateType.DISABLED)
             throw new NotPermittedOperationException("VNF Pkg info " + this.id + " cannot be deleted because not DISABLED");
         if (usageState != PackageUsageStateType.NOT_IN_USE)
             throw new NotPermittedOperationException("VNF Pkg info " + this.id + " cannot be deleted because IN USE");

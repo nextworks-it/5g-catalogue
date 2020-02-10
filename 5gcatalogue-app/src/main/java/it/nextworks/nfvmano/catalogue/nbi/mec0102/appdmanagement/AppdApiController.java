@@ -1,14 +1,12 @@
 package it.nextworks.nfvmano.catalogue.nbi.mec0102.appdmanagement;
 
-import it.nextworks.nfvmano.catalogue.common.Utilities;
 import it.nextworks.nfvmano.catalogue.engine.AppdManagementService;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.ProblemDetails;
-import it.nextworks.nfvmano.libs.common.exceptions.NotAuthorizedOperationException;
-import it.nextworks.nfvmano.libs.ifa.common.exceptions.*;
-import it.nextworks.nfvmano.libs.ifa.catalogues.interfaces.messages.OnboardAppPackageRequest;
-import it.nextworks.nfvmano.libs.ifa.catalogues.interfaces.messages.OnboardAppPackageResponse;
-import it.nextworks.nfvmano.libs.ifa.catalogues.interfaces.messages.QueryOnBoadedAppPkgInfoResponse;
-import it.nextworks.nfvmano.libs.ifa.common.messages.GeneralizedQueryRequest;
+import it.nextworks.nfvmano.libs.common.exceptions.*;
+import it.nextworks.nfvmano.libs.common.messages.GeneralizedQueryRequest;
+import it.nextworks.nfvmano.libs.mec.catalogues.descriptors.appd.Appd;
+import it.nextworks.nfvmano.libs.mec.catalogues.interfaces.messages.OnboardAppPackageRequest;
+import it.nextworks.nfvmano.libs.mec.catalogues.interfaces.messages.OnboardAppPackageResponse;
+import it.nextworks.nfvmano.libs.mec.catalogues.interfaces.messages.QueryOnBoadedAppPkgInfoResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +16,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
 
 @CrossOrigin
 @Controller
@@ -169,7 +170,7 @@ public class AppdApiController {
 
         log.debug("Received request to delete App package " + appPackageId);
         try {
-            appdManagement.deleteAppPackage(appPackageId, project);
+            appdManagement.deleteAppPackage(appPackageId, project, false);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (MethodNotImplementedException | FailedOperationException e) {
             return new ResponseEntity<String>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -180,6 +181,18 @@ public class AppdApiController {
         } catch (NotAuthorizedOperationException e) {
             log.error("Forbidden. " + e.getMessage());
             return new ResponseEntity<String>(e.getMessage(), HttpStatus.FORBIDDEN);
+        }
+    }
+
+    @RequestMapping(value = "/appd/{nsdInfoId}", method = RequestMethod.GET)
+    public ResponseEntity<?> associatedAppd(@PathVariable String nsdInfoId,
+                                              @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+        log.debug("Received request to get Appd associated to Ns Info Resource with Id " + nsdInfoId);
+        try {
+            List<Appd> appdList = appdManagement.getAssociatedAppD(UUID.fromString(nsdInfoId));
+            return new ResponseEntity<List<Appd>>(appdList, HttpStatus.OK);
+        } catch (NotExistingEntityException e) {
+            return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
 }

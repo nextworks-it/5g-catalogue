@@ -15,7 +15,6 @@ For properly configuring the 5G Apps & Services Catalogue, the [.env](https://gi
 | ------ | ------ |
 | CATALOGUE_VERSION | 5G Apps & Services Catalogue version |
 | CATALOGUE_SOL_LIBS_VERSION | NfvManoLibsSol001 version |
-| CATALOGUE_IFA_LIBS_VERSION | NfvManoLibs version |
 | CATALOGUE_SERVER_PORT | 5G Apps & Services Catalogue Server port |
 | CATALOGUE_GUI_PORT | 5G Apps & Services Catalogue GUI port |
 | CATALOGUE_PROFILE | Four different profiles are defined. See below for more information |
@@ -66,3 +65,9 @@ Inside the folder [5g-catalogue-app/profiles](https://github.com/nextworks-it/5g
 ```
 $ sudo docker-compose -f "docker-compose.yml" up -d --build
 ```
+
+### SCRIPTS
+
+Inside the folder [scripts](https://github.com/nextworks-it/5g-catalogue/blob/master/deployments/docker/scripts/) there are five scripts for managing the application.
+
+**The scripts must be run from the directory where the compose file is defined**
