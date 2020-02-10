@@ -9,11 +9,19 @@ import it.nextworks.nfvmano.catalogue.auth.projectmanagement.ProjectResource;
 import it.nextworks.nfvmano.catalogue.common.FileUtilities;
 import it.nextworks.nfvmano.catalogue.engine.elements.ContentType;
 import it.nextworks.nfvmano.catalogue.engine.resources.AppPackageInfoResource;
+import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
+import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdInfo;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.CreateVnfPkgInfoRequest;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.PackageOperationalStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.VnfPkgInfo;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.VnfPkgInfoModifications;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.common.ToscaArchiveBuilder;
+import it.nextworks.nfvmano.catalogue.repos.NsdInfoRepository;
 import it.nextworks.nfvmano.catalogue.repos.ProjectRepository;
 import it.nextworks.nfvmano.catalogue.repos.UserRepository;
+import it.nextworks.nfvmano.catalogue.repos.VnfPkgInfoRepository;
 import it.nextworks.nfvmano.catalogue.repos.mec0102.*;
 import it.nextworks.nfvmano.libs.common.elements.Filter;
 import it.nextworks.nfvmano.libs.common.enums.*;
@@ -134,6 +142,12 @@ public class AppdManagementService implements AppdManagementInterface {
 
     @Autowired
     VnfPackageManagementService vnfPackageManagementService;
+
+    @Autowired
+    NsdInfoRepository nsdInfoRepository;
+
+    @Autowired
+    VnfPkgInfoRepository vnfPkgInfoRepository;
 
     @Override
     public File fetchOnboardedApplicationPackage(String onboardedAppPkgId)
@@ -381,11 +395,13 @@ public class AppdManagementService implements AppdManagementInterface {
                 throw new FailedOperationException(e.getMessage());
             }
         }
-
         //Generate corresponding VNF
         try {
             DescriptorTemplate vnfd = generateVnfDFromAppD(appd);
             CreateVnfPkgInfoRequest createVnfPkgInfoRequest = new CreateVnfPkgInfoRequest();
+            KeyValuePairs userDefinedData = new KeyValuePairs();
+            userDefinedData.put("isGeneratedFromAppD", "yes");
+            createVnfPkgInfoRequest.setUserDefinedData(userDefinedData);
             VnfPkgInfo vnfPkgInfo = vnfPackageManagementService.createVnfPkgInfo(createVnfPkgInfoRequest, project, true);
             String vnfPkgPath = ToscaArchiveBuilder.createVNFCSAR(vnfPkgInfo.getId().toString(), vnfd, tmpDir, null);
             File vnfPkg = new File(vnfPkgPath);
@@ -394,7 +410,7 @@ public class AppdManagementService implements AppdManagementInterface {
         }catch(Exception e){
             log.debug("Unable to generate VNF TOSCA Pkg with descriptor ID {} and version {} for project {}: {}", appd.getAppDId(), appd.getAppDVersion(), project, e.getMessage());
             try {
-                deleteAppPackage(appPackageInfoResourceId.toString(), project);
+                deleteAppPackage(appPackageInfoResourceId.toString(), project, true);
             }catch(NotExistingEntityException e1) {
                 log.error("Cannot delete App Package Info Resource with ID {} - Not found in DB", appPackageInfoResourceId.toString());
             }
@@ -436,6 +452,19 @@ public class AppdManagementService implements AppdManagementInterface {
             log.error("MEC app package " + onboardedAppPkgId + " under deletion. Impossible to enable.");
             throw new FailedOperationException("MEC app package " + onboardedAppPkgId + " under deletion. Impossible to enable");
         }
+
+        //Updating corresponding VNFD
+        try {
+            VnfPkgInfoModifications vnfPkgInfoModifications = new VnfPkgInfoModifications();
+            vnfPkgInfoModifications.setOperationalState(PackageOperationalStateType.ENABLED);
+            Optional<VnfPkgInfoResource> vnfPkgInfoResourceOptional = vnfPkgInfoRepository.findByVnfdIdAndVnfdVersionAndProjectId(UUID.fromString(pkg.getAppdId()), pkg.getVersion(), project);
+            if(!vnfPkgInfoResourceOptional.isPresent())
+                throw new FailedOperationException("VNF package not found");
+            vnfPackageManagementService.updateVnfPkgInfo(vnfPkgInfoModifications, vnfPkgInfoResourceOptional.get().getId().toString(), project, true);
+        }catch (Exception e){
+            throw new FailedOperationException("Cannot enable MEC app package - Impossible to update the corresponding VNF package : " + e.getMessage());
+        }
+
         pkg.setOperationalState(OperationalState.ENABLED);
         appPackageInfoResourceRepository.saveAndFlush(pkg);
         log.debug("MEC app package " + onboardedAppPkgId + " enabled.");
@@ -474,14 +503,27 @@ public class AppdManagementService implements AppdManagementInterface {
             log.error("MEC app package " + onboardedAppPkgId + " under deletion. Impossible to disable.");
             throw new FailedOperationException("MEC app package " + onboardedAppPkgId + " under deletion. Impossible to disable");
         }
+
+        //Updating corresponding VNFD
+        try {
+            VnfPkgInfoModifications vnfPkgInfoModifications = new VnfPkgInfoModifications();
+            vnfPkgInfoModifications.setOperationalState(PackageOperationalStateType.DISABLED);
+            Optional<VnfPkgInfoResource> vnfPkgInfoResourceOptional = vnfPkgInfoRepository.findByVnfdIdAndVnfdVersionAndProjectId(UUID.fromString(pkg.getAppdId()), pkg.getVersion(), project);
+            if(!vnfPkgInfoResourceOptional.isPresent())
+                throw new FailedOperationException("VNF package not found");
+            vnfPackageManagementService.updateVnfPkgInfo(vnfPkgInfoModifications, vnfPkgInfoResourceOptional.get().getId().toString(), project, true);
+        }catch (Exception e){
+            throw new FailedOperationException("Cannot enable MEC app package - Impossible to update the corresponding VNF package : " + e.getMessage());
+        }
+
         pkg.setOperationalState(OperationalState.DISABLED);
         appPackageInfoResourceRepository.saveAndFlush(pkg);
-        log.debug("MEC app package " + onboardedAppPkgId + " enabled.");
+        log.debug("MEC app package " + onboardedAppPkgId + " disabled.");
         //notify(new AppPackageStateChangeNotification(onboardedAppPkgId, AppdChangeType.OPERATIONAL_STATE_CHANGE, OperationalState.DISABLED, false));
     }
 
     @Override
-    public synchronized void deleteAppPackage(String onboardedAppPkgId, String project) throws MethodNotImplementedException,
+    public synchronized void deleteAppPackage(String onboardedAppPkgId, String project, boolean isInternalRequest) throws MethodNotImplementedException,
             NotExistingEntityException, FailedOperationException, MalformattedElementException, NotAuthorizedOperationException {
         log.debug("Received request to delete MEC app package with ID " + onboardedAppPkgId);
         if (onboardedAppPkgId == null) throw new MalformattedElementException("Received request with null ID.");
@@ -497,7 +539,7 @@ public class AppdManagementService implements AppdManagementInterface {
             throw new NotAuthorizedOperationException("Specified project differs from Appd info project");
         } else {
             try {
-                if (keycloakEnabled && !checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
+                if (!isInternalRequest && keycloakEnabled && !checkUserProjects(userRepository, AuthUtilities.getUserNameFromJWT(), project)) {
                     throw new NotAuthorizedOperationException("Current user cannot access to the specified project with id" + project);
                 }
             } catch (it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException e) {
@@ -510,6 +552,18 @@ public class AppdManagementService implements AppdManagementInterface {
             appPackageInfoResourceRepository.save(pkg);
             //notify(new AppPackageStateChangeNotification(onboardedAppPkgId, AppdChangeType.APP_PACKAGE_IN_DELETION_PENDING, pkg.getOperationalState(), true));
         } else {
+            //Deleting corresponding VNFD
+            try {
+                VnfPkgInfoModifications vnfPkgInfoModifications = new VnfPkgInfoModifications();
+                vnfPkgInfoModifications.setOperationalState(PackageOperationalStateType.DISABLED);
+                Optional<VnfPkgInfoResource> vnfPkgInfoResourceOptional = vnfPkgInfoRepository.findByVnfdIdAndVnfdVersionAndProjectId(UUID.fromString(pkg.getAppdId()), pkg.getVersion(), project);
+                if(!vnfPkgInfoResourceOptional.isPresent())
+                    throw new FailedOperationException("VNF package not found");
+                vnfPackageManagementService.updateVnfPkgInfo(vnfPkgInfoModifications, vnfPkgInfoResourceOptional.get().getId().toString(), project, true);
+                vnfPackageManagementService.deleteVnfPkgInfo(vnfPkgInfoResourceOptional.get().getId().toString(), project, true);
+            }catch (Exception e){
+                throw new FailedOperationException("Cannot delete MEC app package - Impossible to delete the corresponding VNF package : " + e.getMessage());
+            }
             appPackageInfoResourceRepository.delete(pkg);
             log.debug("MEC App pacakge " + onboardedAppPkgId + " removed from DB.");
             //notify(new AppPackageStateChangeNotification(onboardedAppPkgId, AppdChangeType.APP_PACKAGE_DELETION, pkg.getOperationalState(), false));
@@ -520,6 +574,31 @@ public class AppdManagementService implements AppdManagementInterface {
     public void abortAppPackageDeletion(String onboardedAppPkgId) throws MethodNotImplementedException,
             NotExistingEntityException, FailedOperationException, MalformattedElementException, NotAuthorizedOperationException {
         throw new MethodNotImplementedException();
+    }
+
+    @Override
+    public List<Appd> getAssociatedAppD(UUID nsdId) throws NotExistingEntityException{
+        List<Appd> appds = new ArrayList<>();
+        Optional<NsdInfoResource> nsdInfoOptional = nsdInfoRepository.findById(nsdId);
+        if(!nsdInfoOptional.isPresent())
+            throw new NotExistingEntityException("NS Info Resource with Id " + nsdId.toString() + " not found");
+        NsdInfoResource nsdInfoResource = nsdInfoOptional.get();
+        List<UUID> vnfPkgIds = nsdInfoResource.getVnfPkgIds();
+        for(UUID vnfPkgId : vnfPkgIds){
+            Optional<VnfPkgInfoResource> vnfPkgInfoResourceOptional = vnfPkgInfoRepository.findById(vnfPkgId);
+            if(!vnfPkgInfoResourceOptional.isPresent())
+                throw new NotExistingEntityException("VNF Pkg Info Resource with Id " + vnfPkgId.toString() + " not found");
+            VnfPkgInfoResource vnfPkgInfoResource = vnfPkgInfoResourceOptional.get();
+            UUID vnfdId = vnfPkgInfoResource.getVnfdId();
+            String vnfdVersion = vnfPkgInfoResource.getVnfdVersion();
+            String project = vnfPkgInfoResource.getProjectId();
+            Optional<AppPackageInfoResource> appPackageInfoResourceOptional = appPackageInfoResourceRepository.findByAppdIdAndVersionAndProject(vnfdId.toString(), vnfdVersion, project);
+            if(!appPackageInfoResourceOptional.isPresent())
+                throw new NotExistingEntityException("Appd with Id " + vnfdId.toString() + " and version " + vnfdVersion + " not found in project " + project);
+            AppPackageInfoResource appPackageInfoResource = fillAppPackageInfoResourceDetails(appPackageInfoResourceOptional.get());
+            appds.add(appPackageInfoResource.getAppd());
+        }
+        return appds;
     }
 
     /**
