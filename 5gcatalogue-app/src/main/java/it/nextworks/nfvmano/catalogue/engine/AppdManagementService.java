@@ -593,10 +593,10 @@ public class AppdManagementService implements AppdManagementInterface {
             String vnfdVersion = vnfPkgInfoResource.getVnfdVersion();
             String project = vnfPkgInfoResource.getProjectId();
             Optional<AppPackageInfoResource> appPackageInfoResourceOptional = appPackageInfoResourceRepository.findByAppdIdAndVersionAndProject(vnfdId.toString(), vnfdVersion, project);
-            if(!appPackageInfoResourceOptional.isPresent())
-                throw new NotExistingEntityException("Appd with Id " + vnfdId.toString() + " and version " + vnfdVersion + " not found in project " + project);
-            AppPackageInfoResource appPackageInfoResource = fillAppPackageInfoResourceDetails(appPackageInfoResourceOptional.get());
-            appds.add(appPackageInfoResource.getAppd());
+            if(appPackageInfoResourceOptional.isPresent()) {
+                AppPackageInfoResource appPackageInfoResource = fillAppPackageInfoResourceDetails(appPackageInfoResourceOptional.get());
+                appds.add(appPackageInfoResource.getAppd());
+            }
         }
         return appds;
     }
