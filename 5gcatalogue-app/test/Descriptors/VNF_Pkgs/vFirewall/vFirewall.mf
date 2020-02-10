@@ -1,9 +1,0 @@
-metadata:
-	vnf_product_name: vFirewall
-	vnf_provider_id: NXW
-	vnf_package_version: 1.11
-	vnf_release_date_time: 2017-01-01T10:00+03:00
-
-configuration:
-	cloud_init:
-		Source: Files/Scripts/cloud-init.txt

@@ -502,6 +502,7 @@ public class NsdManagementService implements NsdManagementInterface {
                 }
             }
         }
+        /* TODO uncomment when it will be possible to onboard the PNF on MANOs
         manosIterator = availableManos.iterator();
         for(UUID pnfInfoId : nsdInfoResource.getPnfdInfoIds()){
             Optional<PnfdInfoResource> pnfdInfoResource = pnfdInfoRepo.findById(pnfInfoId);
@@ -514,6 +515,7 @@ public class NsdManagementService implements NsdManagementInterface {
                 }
             }
         }
+         */
         manosIterator = availableManos.iterator();
         for(UUID nestedNsdInfoId : nsdInfoResource.getNestedNsdInfoIds()){
             Optional<NsdInfoResource> nestedNsInfoResource = nsdInfoRepo.findById(nestedNsdInfoId);
@@ -1267,14 +1269,12 @@ public class NsdManagementService implements NsdManagementInterface {
         List<UUID> vnfPkgIds = new ArrayList<>();
         for (String vnfdInfoId : includedVnfds.keySet()) {
             log.debug("Adding vnfPkgInfo Id {} to vnfPkgs list in nsdInfo", vnfdInfoId);
-            log.debug("Adding vnfPkgInfo Id {} to vnfPkgs list in nsdInfo", vnfdInfoId);
             vnfPkgIds.add(UUID.fromString(vnfdInfoId));
         }
         nsdInfo.setVnfPkgIds(vnfPkgIds);
 
         List<UUID> pnfdIds = new ArrayList<>();
         for (String pnfdInfoId : includedPnfds.keySet()) {
-            log.debug("Adding pnfdInfo Id {} to pnfs list in nsdInfo", pnfdInfoId);
             log.debug("Adding pnfdInfo Id {} to pnfs list in nsdInfo", pnfdInfoId);
             pnfdIds.add(UUID.fromString(pnfdInfoId));
         }
@@ -1289,9 +1289,7 @@ public class NsdManagementService implements NsdManagementInterface {
             nsdInfo.setPublished(true);
         else
             nsdInfo.setPublished(false);
-
-        nsdInfoRepo.saveAndFlush(nsdInfo);
-
+        
         List<Appd> appds = appdManagementService.getAssociatedAppD(nsdInfo.getId());
         //Update AppD if any
         for(Appd appd : appds){
