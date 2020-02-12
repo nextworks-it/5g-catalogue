@@ -1,5 +1,5 @@
 # Download base image Alpine JDK 8
-FROM openjdk:8-jdk-alpine
+FROM openjdk:8-alpine
 
 # Define variables
 ARG catalogue_server_port=8083

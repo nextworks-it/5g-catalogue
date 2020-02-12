@@ -12,6 +12,8 @@ services:
     environment:
         KAFKA_LISTENERS: PLAINTEXT://:9092
         KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    ports:
+      - ${KAFKA_PORT}:9092
     depends_on:
       - zookeeper
 
@@ -24,7 +26,9 @@ services:
       POSTGRES_DB: cataloguedb
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      
+    ports:
+      - ${POSTGRES_PORT}:5432
+
   5gCatalogueApp:
     image: 5g-catalogue-app:${CATALOGUE_VERSION}
     restart: always
@@ -90,4 +94,10 @@ services:
       - ${CATALOGUE_GUI_PORT}:80
     depends_on:
       - 5gCatalogueApp
- 
+
+networks:
+  default:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24

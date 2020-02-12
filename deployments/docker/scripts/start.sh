@@ -1,3 +1,3 @@
 #!/bin/bash
 
-sudo docker-compose -f "docker-compose.yml" start
+docker-compose -f "docker-compose.yml" start

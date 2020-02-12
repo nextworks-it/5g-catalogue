@@ -63,7 +63,7 @@ Inside the folder [5g-catalogue-app/profiles](https://github.com/nextworks-it/5g
 ### Build and Run Containers
 
 ```
-$ sudo docker-compose -f "docker-compose.yml" up -d --build
+$ docker-compose -f "docker-compose.yml" up -d --build
 ```
 
 ### SCRIPTS

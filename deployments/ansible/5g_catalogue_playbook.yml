@@ -1,4 +1,4 @@
-- hosts: loicalhost   #replace with target host 
+- hosts: localhost   #replace with target host 
   remote_user: ubuntu
   gather_facts: True
   tasks:
@@ -10,9 +10,10 @@
     lineinfile: dest=/etc/hosts 
                 state=present
                 dest=/etc/hosts 
-                regexp='.*{{ item }}$' line="{{ hostvars[item].ansible_default_ipv4.address }} {{item}}" 
+                regexp='.*{{ item }}$' line="{{ hostvars[item].ansible_default_ipv4.address }} {{ansible_hostname}}" 
     when: hostvars[item].ansible_default_ipv4.address is defined
     with_items: "{{ groups['all'] }}"
+
 - hosts: localhost   #replace with target host 
   remote_user: ubuntu
   roles:
@@ -23,10 +24,10 @@
 - hosts: localhost   #replace with target host 
   remote_user: ubuntu
   tasks:
-#  - name: remove 5gcatalogue folder
-#    file: 
-#      path: /opt/5gcatalogue
-#      state: absent
+  - name: remove 5gcatalogue folder
+    file: 
+      path: /opt/5gcatalogue
+      state: absent
 
   - name: remove nf-sol-libs folder
     file: 
@@ -37,9 +38,9 @@
     file:
       path: /opt/5gcatalogue
       state: directory
-#  - git:
-#      repo: 'https://github.com/nextworks-it/5g-catalogue.git'
-#      dest: /opt/5gcatalogue
+  - git:
+      repo: 'https://github.com/nextworks-it/5g-catalogue.git'
+      dest: /opt/5gcatalogue
 
   - name: changing 5gcatalogue folder pesmissions
     shell: chown -R ubuntu:ubuntu /opt/5gcatalogue
@@ -73,28 +74,19 @@
       owner: postgres
     become_user: postgres
 
-#  - name: Install PIP
-#    apt: name=python-pip state=present
-#  - name: Install lxml
-#    pip: name=lxml
-#  - name: Modify pom attributes COMMON - arifactId
-#    become: yes
-#    xml:
-#      path: /opt/nfv-sol-libs/NFV_MANO_SOL001_LIBS_COMMON/pom.xml
-#      xpath:  /x:project/build/plugins/plugin/*
-#      namespaces:
-#          x: "http://maven.apache.org/POM/4.0.0"
-#      state: absent
-#  - name: Modify pom attributes COMMON - version
-#    xml:
-#      path: /opt/nfv-sol-libs/NFV_MANO_SOL001_LIBS_COMMON/pom.xml
-#      xpath:  /x:project/build/plugins/plugin
-#      namespaces:
-#          x: "http://maven.apache.org/POM/4.0.0"
-#      add_children:
-#      - artifactId: maven-jar-plugin
-#      - version: 3.0.2    
-
+  - name: REMOVE pom NFV LIBS COMMON
+    become: yes
+    file:
+      path: /opt/nfv-sol-libs/NFV_MANO_SOL001_LIBS_COMMON/pom.xml
+      state: absent
+  - name: Copy file with owner and permissions
+    become: yes
+    copy:
+      src: files/nfv_common_pom.xml
+      dest: /opt/nfv-sol-libs/NFV_MANO_SOL001_LIBS_COMMON/pom.xml
+      owner: ubuntu
+      group: ubuntu
+      mode: '0644'   
 
   - name: BUILDING NFV-LIB DEPENDENCIES...COMMON
     remote_user: ubuntu
@@ -102,23 +94,37 @@
     args:
       chdir: /opt/nfv-sol-libs/NFV_MANO_SOL001_LIBS_COMMON
 
+  - name: REMOVE pom NFV LIBS DESCRIPTORS
+    become: yes
+    file:
+      path: /opt/nfv-sol-libs/NFV_MANO_SOL001_LIBS_DESCRIPTORS/pom.xml
+      state: absent
+  - name: Copy file with owner and permissions
+    copy:
+      src: files/nfv_descriptors_pom.xml
+      dest: /opt/nfv-sol-libs/NFV_MANO_SOL001_LIBS_DESCRIPTORS/pom.xml
+      owner: ubuntu
+      group: ubuntu
+      mode: '0644'
+
   - name: BUILDING NFV-LIB DEPENDENCIES...DESCRIPTORS
     remote_user: ubuntu
-    shell: mvn clean install
+    shell: /opt/apache-maven-3.3.9/bin/mvn clean install
     args: 
       chdir: /opt/nfv-sol-libs/NFV_MANO_SOL001_LIBS_DESCRIPTORS
 
-#  - name: BUILDING OSMR4CLIENT
-#    remote_user: ubuntu
-#    shell: /opt/apache-maven-3.3.9/bin/mvn clean install
-#    args: 
-#      chdir: /opt/5gcatalogue/OSMr4Client
-
-#  - name: COMPILING 5G APPs & SERVICEs CATALOGUE
-#    remote_user: ubuntu
-#    shell:  /opt/apache-maven-3.3.9/bin/mvn clean package
-#    args:
-#      chdir: /opt/5gcatalogue/5gcatalogue-app
+  - name: REMOVE pom OSMR4DATAMODEL
+    become: yes
+    file:
+      path: /opt/5gcatalogue/OSMr4PlusDataModel/pom.xml
+      state: absent
+  - name: Copy file with owner and permissions
+    copy:
+      src: files/osmr4_datamodel_pom.xml
+      dest: /opt/5gcatalogue/OSMr4PlusDataModel/pom.xml
+      owner: ubuntu
+      group: ubuntu
+      mode: '0644' 
 
   - name: COMPILING 5G APPs & SERVICEs CATALOGUE
     remote_user: ubuntu

@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>it.nextworks.nfvmano</groupId>
-	<artifactId>NfvManoLibsSol001Common</artifactId>
+	<artifactId>NfvManoLibsSol001Descriptors</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>NFV_MANO_LIBS_SOL001_COMMON</name>
-	<description>Common libraries for NFV MANO information model. Aligned with SOL001 v2.4.1</description>
+	<name>NFV_MANO_LIBS_SOL001_DESCRIPTORS</name>
+	<description>Information model libraries for NFV MANO descriptors. Aligned with SOL001 v2.4.1</description>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -37,32 +37,33 @@
 		</dependency>
 		
 		<dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-            </dependency>
-        
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-        </dependency>
-        
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
-        
+			<groupId>it.nextworks.nfvmano</groupId>
+			<artifactId>NfvManoLibsSol001Common</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+
 	</dependencies>
 
 
 	<build>
 		<plugins>
+			<!--  
 			<plugin>
-                           <groupId>org.apache.maven.plugins</groupId>
-                           <artifactId>maven-jar-plugin</artifactId>
-                           <version>3.0.2</version>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			-->
+                        <plugin>
+                             <groupId>org.apache.maven.plugins</groupId>
+                             <artifactId>maven-jar-plugin</artifactId>
+                             <version>3.2.0</version>
                         </plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+			</plugin>
 		</plugins>
 	</build>
-	
 
 </project>
+
