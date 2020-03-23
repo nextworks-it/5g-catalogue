@@ -6,6 +6,7 @@ import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -106,6 +107,35 @@ public class Utilities {
         }
 
         return monitoringParametersFilename;
+    }
+
+    public static List<String> getScriptsFromManifest(File mf) throws IOException{
+        List<String> scriptsFilename = new ArrayList<>();
+        BufferedReader br = new BufferedReader(new FileReader(mf));
+        try {
+            String line;
+            String regexRoot = "scripts:";
+            String regex = "^Source: (Files\\/Scripts\\/[\\s\\S]*)$";
+            while ((line = br.readLine()) != null) {
+                line = line.trim();
+                if (line.matches(regexRoot)) {
+                    while((line = br.readLine()) != null) {
+                        line = line.trim();
+                        if (line.matches(regex)) {
+                            Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+                            Matcher matcher = pattern.matcher(line.trim());
+                            if (matcher.find()) {
+                                scriptsFilename.add(matcher.group(1));
+                            }
+                        }
+                    }
+                }
+            }
+        } finally {
+            br.close();
+        }
+
+        return scriptsFilename;
     }
 
     public static Set<String> listFiles(String dir) throws IOException {
