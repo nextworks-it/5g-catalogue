@@ -413,6 +413,7 @@ public class NsdApiController implements NsdApi {
 
     public ResponseEntity<?> getPNFDsInfo(
             @RequestParam(required = false) String project,
+            @RequestParam(required = false) UUID pnfdId,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "Indicates to exclude the following complex attributes from the response. See clause 4.3.3 for details. The NFVO shall support this parameter. The following attributes shall be excluded from the PnfdInfo structure in the response body if this parameter is provided, or none of the parameters \"all_fields,\" \"fields\", \"exclude_fields\", \"exclude_default\" are provided: userDefinedData")
             @Valid @RequestParam(value = "exclude_default", required = false) String excludeDefault,
@@ -426,7 +427,7 @@ public class NsdApiController implements NsdApi {
         // TODO: process URI parameters for filters and attributes. At the moment it returns all the PNFDs info
         if (accept != null && accept.contains("application/json")) {
             try {
-                List<PnfdInfo> pnfdInfos = nsdManagementService.getAllPnfdInfos(project);
+                List<PnfdInfo> pnfdInfos = nsdManagementService.getAllPnfdInfos(project, pnfdId);
                 log.debug("PNFD infos retrieved");
                 return new ResponseEntity<List<PnfdInfo>>(pnfdInfos, HttpStatus.OK);
             } catch (FailedOperationException e) {

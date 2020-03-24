@@ -145,6 +145,7 @@ public interface NsdApi {
     @RequestMapping(value = "/nsd/v1/pnf_descriptors", produces = {"application/json"}, method = RequestMethod.GET)
     ResponseEntity<?> getPNFDsInfo(
             @RequestParam(required = false) String project,
+            @RequestParam(required = false) UUID pnfdId,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "Indicates to exclude the following complex attributes from the response. See clause 4.3.3 for details. The NFVO shall support this parameter. The following attributes shall be excluded from the PnfdInfo structure in the response body if this parameter is provided, or none of the parameters \"all_fields,\" \"fields\", \"exclude_fields\", \"exclude_default\" are provided: userDefinedData.") @Valid @RequestParam(value = "exclude_default", required = false) String excludeDefault,
             @ApiParam(value = "Include all complex attributes in the response. See clause 4.3.3 for details. The NFVO shall support this parameter.") @Valid @RequestParam(value = "all_fields", required = false) String allFields);

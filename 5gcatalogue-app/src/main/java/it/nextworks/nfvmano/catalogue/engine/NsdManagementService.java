@@ -1535,7 +1535,7 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
-    public List<PnfdInfo> getAllPnfdInfos(String project) throws FailedOperationException, MethodNotImplementedException, NotAuthorizedOperationException {
+    public List<PnfdInfo> getAllPnfdInfos(String project, UUID pnfdId) throws FailedOperationException, MethodNotImplementedException, NotAuthorizedOperationException {
         log.debug("Processing request to get all PNFD infos");
         if (project != null && !project.equals("*")) {
             Optional<ProjectResource> projectOptional = projectRepository.findByProjectId(project);
@@ -1552,7 +1552,12 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new NotAuthorizedOperationException(e.getMessage());
         }
 
-        List<PnfdInfoResource> pnfdInfoResources = pnfdInfoRepo.findAll();
+        List<PnfdInfoResource> pnfdInfoResources;
+        if(pnfdId == null)
+            pnfdInfoResources = pnfdInfoRepo.findAll();
+        else
+            pnfdInfoResources = pnfdInfoRepo.findByPnfdId(pnfdId);
+
         List<PnfdInfo> pnfdInfos = new ArrayList<>();
 
         for (PnfdInfoResource pnfdInfoResource : pnfdInfoResources) {

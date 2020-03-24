@@ -41,7 +41,7 @@ function prepareEnv()
         cd ..
         git clone https://github.com/nextworks-it/nfv-sol-libs.git
         cd nfv-sol-libs
-        git checkout v3.1
+        git checkout v3.1.1
         cd ../5g-catalogue
     fi
 

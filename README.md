@@ -5,10 +5,10 @@ NFV-SDN Catalogue capable of storing and  versioning:
 - Network Service Descriptors (NSDs)
 - Virtual Network Function Packages (VNF Packages)
 - Physical Network Function Descriptors (PNFs)
+- Multi-access Edge Computing App Packages (MEC App Packages)
 
 #### In roadmap
 - Software Defined Network App Packages (SDN App Packages)
-- Multi-access Edge Computing App Packages (MEC App Packages)
 
 ## Getting Started
 
@@ -30,9 +30,6 @@ kafka.skip.send=false
 | ------ | ------ |
 | NfvManoLibsSol001Common | [README](https://github.com/nextworks-it/nfv-sol-libs) |
 | NfvManoLibsSol001Descriptors | [README](https://github.com/nextworks-it/nfv-sol-libs) |
-| NfvManoLibsCommon | [README](https://github.com/nextworks-it/nfv-ifa-libs) |
-| NfvManoLibsDescriptors | [README](https://github.com/nextworks-it/nfv-ifa-libs) |
-| NfvManoLibsCataloguesIf | [README](https://github.com/nextworks-it/nfv-ifa-libs) |
 | J-OSMClient | [README](https://github.com/girtel/J-OSMClient) |
 | OpenStack4j | [README](https://github.com/ContainX/openstack4j) |
 
@@ -46,7 +43,6 @@ Run the "bootstrap" script for setting up the environment:
 - Create the Catalogue log folder, "/var/log/5gcatalogue"
 - Install PostgresSQL (if not present) and create the Catalogue DB, "cataloguedb"
 - Clone and install "NfvManoLibsSol001Common" and "NfvManoLibsSol001Descriptors" libs
-- Clone and install "NfvManoLibsCommon" , "NfvManoLibsDescriptors" and "NfvManoLibsCataloguesIf" libs 
 
 ```
 $ ./bootstrap.sh env-dep

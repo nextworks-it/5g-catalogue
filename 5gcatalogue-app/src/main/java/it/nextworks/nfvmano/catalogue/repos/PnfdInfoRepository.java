@@ -18,6 +18,7 @@ package it.nextworks.nfvmano.catalogue.repos;
 import it.nextworks.nfvmano.catalogue.engine.resources.PnfdInfoResource;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,7 +26,7 @@ public interface PnfdInfoRepository extends JpaRepository<PnfdInfoResource, UUID
 
     Optional<PnfdInfoResource> findById(UUID id);
 
-    Optional<PnfdInfoResource> findByPnfdId(UUID pnfdId);
+    List<PnfdInfoResource> findByPnfdId(UUID pnfdId);
 
     Optional<PnfdInfoResource> findByPnfdIdAndPnfdVersion(UUID pnfdId, String pnfdVersion);
 
