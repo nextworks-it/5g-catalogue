@@ -1334,8 +1334,8 @@ public class NsdManagementService implements NsdManagementInterface {
 
             // send notification over kafka bus
             notificationManager.sendNsdOnBoardingNotification(msg);
-            nsdInfoRepo.saveAndFlush(nsdInfo);
         }
+        nsdInfoRepo.saveAndFlush(nsdInfo);
         log.debug("NSD content uploaded and nsdOnBoardingNotification delivered");
     }
 
