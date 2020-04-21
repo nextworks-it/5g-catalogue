@@ -23,8 +23,6 @@ topologyTemplate:
         version: "1.15"
         name: vCDN_UC3_5GMEDIA
         invariantId: 0002fcbd-d418-41e2-a41a-98f6fd999475
-      requirements:
-        virtualLink: [vm_mgmt, origin_net, cache_net, user_net]
     
     vm_mgmt:
       type: tosca.nodes.nfv.NsVirtualLink
@@ -153,5 +151,5 @@ topologyTemplate:
         descriptorInvariantId: e31e7e53-5239-4dfe-8235-180c62794f5e
       requirements:
         virtualLink:
-          - vm_mgmt
-          - origin_net
+          vm_mgmt: vm_mgmt
+          origin_net: origin_net

@@ -243,12 +243,12 @@ public class ToscaDescriptorsParser {
         String nsdVendor = osmNsDescriptor.getVendor();
         if(nsdVendor == null)
             nsdVendor = "Undefined";
-        NSRequirements nsRequirements = new NSRequirements(virtualLinkNames);
+        //NSRequirements nsRequirements = new NSRequirements(virtualLinkNames);
         String nsNodeName = osmNsDescriptor.getName();
         if(nsNodeName == null)
             nsNodeName = osmNsDescriptor.getShortName();
         NSProperties nsProperties = new NSProperties(osmNsDescriptor.getId(), nsdVendor, nsdVersion, nsNodeName, osmNsDescriptor.getId());
-        nodeTemplates.put(nsNodeName + "_NS", new NSNode(null, nsProperties, nsRequirements));//type: "tosca.nodes.nfv.NS"
+        nodeTemplates.put(nsNodeName + "_NS", new NSNode(null, nsProperties, null));//type: "tosca.nodes.nfv.NS"
 
         //Creating SubstitutionMappings
         List<VirtualLinkPair> virtualLinkPairs = new ArrayList<>();

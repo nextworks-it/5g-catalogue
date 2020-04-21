@@ -559,10 +559,9 @@ public class NsdManagementService implements NsdManagementInterface {
                 throw new NotAuthorizedOperationException(e.getMessage());
             }
         }
-        if(targetKvp.containsKey("isRetrievedFromMANO") && targetKvp.get("isRetrievedFromMANO").equals("yes"))
-            nsdInfoResource.setRetrievedFromMANO(true);
-        else
-            nsdInfoResource.setRetrievedFromMANO(false);
+        nsdInfoResource.setRetrievedFromMANO(targetKvp.containsKey("isRetrievedFromMANO") && targetKvp.get("isRetrievedFromMANO").equals("yes"));
+        nsdInfoResource.setMultiSite(targetKvp.containsKey("multiSite") && targetKvp.get("multiSite").equals("yes"));
+
         nsdInfoRepo.saveAndFlush(nsdInfoResource);
         UUID nsdInfoId = nsdInfoResource.getId();
         log.debug("Created NSD info with ID " + nsdInfoId);
@@ -1052,11 +1051,13 @@ public class NsdManagementService implements NsdManagementInterface {
         // pre-set nsdinfo attributes to properly store NSDs
         // UUID nsdId = UUID.randomUUID();
 
+        Map<String, KeyValuePair> nestedNsds;
         Map<String, KeyValuePair> includedVnfds;
         Map<String, KeyValuePair> includedPnfds;
         NsdOnboardingStateType onboardingStateType = NsdOnboardingStateType.UPLOADING;
 
         CSARInfo csarInfo = null;
+        NSNode nsNode;
 
         switch (contentType) {
             case ZIP: {
@@ -1073,8 +1074,15 @@ public class NsdManagementService implements NsdManagementInterface {
 
                     csarInfo = archiveParser.archiveToCSARInfo(project, nsd, false, true);
                     dt = csarInfo.getMst();
+
+                    //TODO remove
+                    Map<String, NSNode> nsNodeMap = dt.getTopologyTemplate().getNSNodes();
+                    if(nsNodeMap.size() != 1 && !nsdInfo.isMultiSite())
+                        throw new MalformattedElementException("Composite NSs can currently be only multi-site");
+
                     nsdFilename = csarInfo.getPackageFilename();
 
+                    nestedNsds = checkNestedNSDs(dt, project);
                     includedVnfds = checkVNFPkgs(dt, project);
                     includedPnfds = checkPNFDs(dt, project);
 
@@ -1084,17 +1092,16 @@ public class NsdManagementService implements NsdManagementInterface {
                         throw new MalformattedElementException("NSD id not in UUID format");
                     }
 
-                    NSNode nsNode = dt.getTopologyTemplate().getNSNodes().values().iterator().next();//For the moment assume only one NS node
-                    if(!dt.getMetadata().getVersion().equals(nsNode.getProperties().getVersion()) ||
-                            !dt.getMetadata().getDescriptorId().equals(nsNode.getProperties().getDescriptorId()))
+                    //NSNode nsNode = dt.getTopologyTemplate().getNSNodes().values().iterator().next();//For the moment assume only one NS node
+                    nsNode = getCompositeNsNode(dt);
+                    if(nsNode == null)
                         throw new MalformattedElementException("Descriptor ID and version specified into metadata are not aligned with those specified into NSNode");
 
                     nsdId = UUID.fromString(nsdId_string);
 
                     Optional<NsdInfoResource> optionalNsdInfoResource = nsdInfoRepo.findByNsdIdAndNsdVersionAndProjectId(nsdId, dt.getMetadata().getVersion(), project);
-                    if (optionalNsdInfoResource.isPresent()) {
+                    if (optionalNsdInfoResource.isPresent())
                         throw new AlreadyExistingEntityException("An NSD with the same id and version already exists in the project");
-                    }
 
                     nsdInfo.setNsdId(nsdId);
 
@@ -1129,7 +1136,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     onboardingStateType = NsdOnboardingStateType.FAILED;
                     nsdInfo.setNsdOnboardingState(onboardingStateType);
                     nsdInfoRepo.saveAndFlush(nsdInfo);
-                    throw new MalformattedElementException("Unable to onboard NSD because VNFDs info are missing or malformed: " + e.getMessage());
+                    throw new MalformattedElementException(e.getMessage());
                 } catch (NotAuthorizedOperationException e) {
                     onboardingStateType = NsdOnboardingStateType.FAILED;
                     nsdInfo.setNsdOnboardingState(onboardingStateType);
@@ -1155,6 +1162,12 @@ public class NsdManagementService implements NsdManagementInterface {
 
                     dt = descriptorsParser.fileToDescriptorTemplate(inputFile);
 
+                    //TODO remove
+                    Map<String, NSNode> nsNodeMap = dt.getTopologyTemplate().getNSNodes();
+                    if(nsNodeMap.size() != 1 && !nsdInfo.isMultiSite())
+                        throw new MalformattedElementException("Composite NSs can currently be only multi-site");
+
+                    nestedNsds = checkNestedNSDs(dt, project);
                     includedVnfds = checkVNFPkgs(dt, project);
                     includedPnfds = checkPNFDs(dt, project);
 
@@ -1164,9 +1177,8 @@ public class NsdManagementService implements NsdManagementInterface {
                         throw new MalformattedElementException("NSD id not in UUID format");
                     }
 
-                    NSNode nsNode = dt.getTopologyTemplate().getNSNodes().values().iterator().next();//For the moment assume only one NS node
-                    if(!dt.getMetadata().getVersion().equals(nsNode.getProperties().getVersion()) ||
-                            !dt.getMetadata().getDescriptorId().equals(nsNode.getProperties().getDescriptorId()))
+                    nsNode = getCompositeNsNode(dt);
+                    if(nsNode == null)
                         throw new MalformattedElementException("Descriptor ID and version specified into metadata are not aligned with those specified into NSNode");
 
                     nsdId = UUID.fromString(nsdId_string);
@@ -1202,7 +1214,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     onboardingStateType = NsdOnboardingStateType.FAILED;
                     nsdInfo.setNsdOnboardingState(onboardingStateType);
                     nsdInfoRepo.saveAndFlush(nsdInfo);
-                    throw new MalformattedElementException("Unable to onboard NSD because VNFDs info are missing or malformed: " + e.getMessage());
+                    throw new MalformattedElementException(e.getMessage());
                 } catch (NotAuthorizedOperationException e) {
                     onboardingStateType = NsdOnboardingStateType.FAILED;
                     nsdInfo.setNsdOnboardingState(onboardingStateType);
@@ -1240,20 +1252,8 @@ public class NsdManagementService implements NsdManagementInterface {
         nsdInfo.setNsdOperationalState(NsdOperationalStateType.ENABLED);
         nsdInfo.setNsdDesigner(dt.getMetadata().getVendor());
         nsdInfo.setNsdInvariantId(UUID.fromString(dt.getMetadata().getDescriptorId()));
-        Map<String, NSNode> nsNodes = dt.getTopologyTemplate().getNSNodes();
-        String nsdName = "";
-        if (nsNodes.size() == 1) {
-            for (Entry<String, NSNode> nsNode : nsNodes.entrySet()) {
-                nsdName = nsNode.getValue().getProperties().getName();
-            }
-        } else {
-            Map<String, String> subMapsProperties = dt.getTopologyTemplate().getSubstituitionMappings().getProperties();
-            for (Map.Entry<String, String> entry : subMapsProperties.entrySet()) {
-                if (entry.getKey().equalsIgnoreCase("name")) {
-                    nsdName = entry.getValue();
-                }
-            }
-        }
+
+        String nsdName = nsNode.getProperties().getName();
 
         log.debug("NSD name: " + nsdName);
         nsdInfo.setNsdName(nsdName);
@@ -1265,6 +1265,13 @@ public class NsdManagementService implements NsdManagementInterface {
         } else {
             nsdInfo.addNsdFilename(nsdFilename);
         }
+
+        List<UUID> nestedNsdIds = new ArrayList<>();
+        for (String nestedNsdId : nestedNsds.keySet()) {
+            log.debug("Adding nsdInfo Id {} to nestedNsdInfoIds list in nsdInfo", nestedNsdId);
+            nestedNsdIds.add(UUID.fromString(nestedNsdId));
+        }
+        nsdInfo.setNestedNsdInfoIds(nestedNsdIds);
 
         List<UUID> vnfPkgIds = new ArrayList<>();
         for (String vnfdInfoId : includedVnfds.keySet()) {
@@ -1302,7 +1309,7 @@ public class NsdManagementService implements NsdManagementInterface {
         }
 
         // send notification over kafka bus
-        if(!nsdInfo.isRetrievedFromMANO()) {
+        if(!nsdInfo.isRetrievedFromMANO() && !nsdInfo.isMultiSite()) {
             List<String> manoIds = checkWhereOnboardNS(nsdInfo);
             List<String> siteOrManoIds = new ArrayList<>();
             Map<String, String> userDefinedData = nsdInfo.getUserDefinedData();
@@ -1855,6 +1862,64 @@ public class NsdManagementService implements NsdManagementInterface {
             log.error("Wrong ID format: " + pnfdInfoId);
             throw new MalformattedElementException("Wrong ID format: " + pnfdInfoId);
         }
+    }
+
+    public NSNode getCompositeNsNode(DescriptorTemplate dt) throws MalformattedElementException{
+        Map<String, NSNode> nsNodeMap = dt.getTopologyTemplate().getNSNodes();
+        for(NSNode nsNode : nsNodeMap.values())
+            if(nsNode.getProperties().getDescriptorId().equals(dt.getMetadata().getDescriptorId())
+                    && nsNode.getProperties().getVersion().equals(dt.getMetadata().getVersion()))
+                    return nsNode;
+        return null;
+    }
+
+    public Map<String, KeyValuePair> checkNestedNSDs(DescriptorTemplate nsd, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, IOException, NotPermittedOperationException, NotAuthorizedOperationException {
+
+        log.debug("Checking nested NS availability for NSD " + nsd.getMetadata().getDescriptorId() + " with version " + nsd.getMetadata().getVersion());
+        if (project != null) {
+            Optional<ProjectResource> projectOptional = projectRepository.findByProjectId(project);
+            if (!projectOptional.isPresent()) {
+                log.error("Project with id " + project + " does not exist");
+                throw new FailedOperationException("Project with id " + project + " does not exist");
+            }
+        }
+        Map<String, NSNode> nsNodes = nsd.getTopologyTemplate().getNSNodes();
+
+        Map<String, KeyValuePair> nestedNsds = new HashMap<>();
+
+        for (Map.Entry<String, NSNode> nsNodeEntry : nsNodes.entrySet()) {
+
+            String nsdId = nsNodeEntry.getValue().getProperties().getDescriptorId();
+            String version = nsNodeEntry.getValue().getProperties().getVersion();
+
+            if(nsdId.equals(nsd.getMetadata().getDescriptorId()) && version.equals(nsd.getMetadata().getVersion()))
+                continue;
+
+            Optional<NsdInfoResource> optional = nsdInfoRepo.findByNsdIdAndNsdVersionAndProjectId(UUID.fromString(nsdId), version, project);
+            if (!optional.isPresent()) {
+                throw new NotExistingEntityException("Nested NSD for nsdId " + nsdId + "and version " + version + " not find in project " + project);
+            }
+
+            NsdInfoResource nsdInfoResource = optional.get();
+            List<String> nsdFileNames = nsdInfoResource.getNsdFilename();
+            if (nsdFileNames.size() != 1) {
+                log.error("Found zero or more than one file for NSD in YAML format. Error");
+                throw new FailedOperationException("Found more than one file for NSD in YAML format. Error");
+            }
+            String fileName = nsdFileNames.get(0);
+
+            log.debug("Searching NSD {} with nsdId {} and version {} in project {}", fileName, nsdId, version, project);
+            File nsd_file = storageService.loadFileAsResource(project, nsdId, version, fileName, false).getFile();
+            DescriptorTemplate nestedNsd = descriptorsParser.fileToDescriptorTemplate(nsd_file);
+
+            log.debug("Nested NSD successfully parsed - its content is: \n"
+                    + DescriptorsParser.descriptorTemplateToString(nestedNsd));
+
+            if (!nestedNsds.containsKey(nsdInfoResource.getId().toString()))
+                nestedNsds.put(nsdInfoResource.getId().toString(), new KeyValuePair(rootDir + ConfigurationParameters.storageNsdsSubfolder + "/" + project + "/" + nsdId + "/" + version, PathType.LOCAL.toString()));
+        }
+
+        return nestedNsds;
     }
 
     public Map<String, KeyValuePair> checkVNFPkgs(DescriptorTemplate nsd, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, IOException, NotPermittedOperationException, NotAuthorizedOperationException {

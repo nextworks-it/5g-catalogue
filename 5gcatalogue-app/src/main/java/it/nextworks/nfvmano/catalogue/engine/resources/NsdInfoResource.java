@@ -90,6 +90,8 @@ public class NsdInfoResource {
 
     private boolean isRetrievedFromMANO;
 
+    private boolean multiSite;
+
     public NsdInfoResource() {
     }
 
@@ -278,6 +280,14 @@ public class NsdInfoResource {
 
     public void setRetrievedFromMANO(boolean retrievedFromMANO) {
         isRetrievedFromMANO = retrievedFromMANO;
+    }
+
+    public boolean isMultiSite() {
+        return multiSite;
+    }
+
+    public void setMultiSite(boolean multiSite) {
+        this.multiSite = multiSite;
     }
 
     public void isDeletable() throws NotPermittedOperationException {
