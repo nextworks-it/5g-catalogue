@@ -24,7 +24,7 @@ import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.Pat
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.ScopeType;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginOperationalState;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.*;
-import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.osm.OSMMano;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.osm.OSM;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.common.*;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.repos.TranslationInformationRepository;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.repos.OsmInfoObjectRepository;
@@ -68,7 +68,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
     private File osmDir;
     private Path tmpDirPath;
     private final File logo;
-    private final OSMMano osm;
+    private final OSM osm;
     private OSMr4PlusClient osmClient;
     private OsmInfoObjectRepository osmInfoObjectRepository;
     private TranslationInformationRepository translationInformationRepository;
@@ -80,10 +80,10 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                                       OsmInfoObjectRepository osmInfoObjectRepository, TranslationInformationRepository translationInformationRepository, String localTopic, String remoteTopic,
                                       KafkaTemplate<String, String> kafkaTemplate, Path osmDirPath, Path tmpDir, Path logoPath, boolean manoSync, long syncPeriod, boolean useVimNetworkName) {
         super(manoType, mano, kafkaBootstrapServers, localTopic, remoteTopic, kafkaTemplate, manoSync);
-        if (MANOType.OSMR4 != manoType && MANOType.OSMR5 != manoType && MANOType.OSMR6 != manoType) {
+        if (MANOType.OSMR4 != manoType && MANOType.OSMR5 != manoType && MANOType.OSMR6 != manoType && MANOType.OSMR7 != manoType) {
             throw new IllegalArgumentException("OSM R4+ plugin requires an OSM R4+ type MANO");
         }
-        osm = (OSMMano) mano;
+        osm = (OSM) mano;
         this.osmInfoObjectRepository = osmInfoObjectRepository;
         this.translationInformationRepository = translationInformationRepository;
         this.osmDirPath = osmDirPath;

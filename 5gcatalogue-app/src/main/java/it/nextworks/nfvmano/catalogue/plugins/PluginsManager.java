@@ -26,7 +26,7 @@ import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginOperationalS
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginType;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.*;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.dummy.DummyMano;
-import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.osm.OSMMano;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.osm.OSM;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.repos.MANORepository;
 import it.nextworks.nfvmano.catalogue.plugins.mano.*;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.r4plus.OpenSourceMANOR4PlusPlugin;
@@ -332,7 +332,7 @@ public class PluginsManager {
             //TODO activate R3
             /*return new OpenSourceMANOR3Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, descriptorsParser,
                     localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr3Dir, logo);*/
-        } else if (mano.getManoType().equals(MANOType.OSMR4) || mano.getManoType().equals(MANOType.OSMR5) || mano.getManoType().equals(MANOType.OSMR6)) {
+        } else if (mano.getManoType().equals(MANOType.OSMR4) || mano.getManoType().equals(MANOType.OSMR5) || mano.getManoType().equals(MANOType.OSMR6) || mano.getManoType().equals(MANOType.OSMR7)) {
             Path osmr4PlusDir = Paths.get(osmDir, "/" + mano.getManoType().toString().toLowerCase());
             return new OpenSourceMANOR4PlusPlugin(mano.getManoType(), mano, bootstrapServers, osmInfoObjectRepository, translationInformationRepository, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr4PlusDir, Paths.get(tmpDir), logo, runtimeSync, osmSyncPeriod, useOsmVimNetworkName);
         } else {
@@ -356,23 +356,23 @@ public class PluginsManager {
         MANOType type = mano.getManoType();
         log.debug("RECEIVED MANO:\nMANO ID: " + manoId + "\nMANO TYPE: " + type);
 
-        if (type == MANOType.OSMR3 || type == MANOType.OSMR4 || type == MANOType.OSMR5 || type == MANOType.OSMR6) {
+        if (type == MANOType.OSMR3 || type == MANOType.OSMR4 || type == MANOType.OSMR5 || type == MANOType.OSMR6 || type == MANOType.OSMR7) {
             log.debug("Processing request for creating " + type + "Plugin");
-            OSMMano osmMano = (OSMMano) mano;
-            OSMMano targetOsmMano = new OSMMano(
-                    osmMano.getManoId(),
-                    osmMano.getIpAddress(),
-                    osmMano.getUsername(),
-                    osmMano.getPassword(),
-                    osmMano.getProject(),
+            OSM osm = (OSM) mano;
+            OSM targetOsm = new OSM(
+                    osm.getManoId(),
+                    osm.getIpAddress(),
+                    osm.getUsername(),
+                    osm.getPassword(),
+                    osm.getProject(),
                     type,
-                    osmMano.getManoSite(),
-                    osmMano.getVimAccounts()
+                    osm.getManoSite(),
+                    osm.getVimAccounts()
             );
-            targetOsmMano.setPluginOperationalState(PluginOperationalState.ENABLED);
-            targetOsmMano.isValid();
+            targetOsm.setPluginOperationalState(PluginOperationalState.ENABLED);
+            targetOsm.isValid();
             log.debug("Persisting OSM MANO with manoId: " + manoId);
-            OSMMano createdMano = MANORepository.saveAndFlush(targetOsmMano);
+            OSM createdMano = MANORepository.saveAndFlush(targetOsm);
             log.debug("OSM MANO with manoId " + manoId + " successfully persisted");
             if(!isStartingPhase) {
                 log.debug("Instantiating OSM MANO with manoId: " + manoId);

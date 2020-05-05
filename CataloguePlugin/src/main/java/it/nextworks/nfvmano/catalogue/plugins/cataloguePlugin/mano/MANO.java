@@ -20,16 +20,19 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginOperationalState;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.dummy.DummyMano;
-import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.osm.OSMMano;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.onap.ONAP;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.osm.OSM;
 
 import javax.persistence.*;
 
 @Entity
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "manoType", visible = true)
-@JsonSubTypes({@JsonSubTypes.Type(value = OSMMano.class, name = "OSMR3"),
-        @JsonSubTypes.Type(value = OSMMano.class, name = "OSMR4"),
-        @JsonSubTypes.Type(value = OSMMano.class, name = "OSMR5"),
-        @JsonSubTypes.Type(value = OSMMano.class, name = "OSMR6"),
+@JsonSubTypes({@JsonSubTypes.Type(value = OSM.class, name = "OSMR3"),
+        @JsonSubTypes.Type(value = OSM.class, name = "OSMR4"),
+        @JsonSubTypes.Type(value = OSM.class, name = "OSMR5"),
+        @JsonSubTypes.Type(value = OSM.class, name = "OSMR6"),
+        @JsonSubTypes.Type(value = OSM.class, name = "OSMR7"),
+        @JsonSubTypes.Type(value = ONAP.class, name = "ONAP"),
         @JsonSubTypes.Type(value = DummyMano.class, name = "DUMMY")})
 public abstract class MANO {
 

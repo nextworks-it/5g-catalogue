@@ -27,7 +27,7 @@ import javax.persistence.Entity;
 import java.util.*;
 
 @Entity
-public class OSMMano extends MANO {
+public class OSM extends MANO {
 
     private String ipAddress;
     private String username;
@@ -39,11 +39,11 @@ public class OSMMano extends MANO {
     @Fetch(FetchMode.SELECT)
     private List<String> vimAccounts = new ArrayList<>();
 
-    public OSMMano() {
+    public OSM() {
         // JPA only
     }
 
-    public OSMMano(String manoId, String ipAddress, String username, String password, String project, MANOType manoType, String manoSite, List<String> vimAccounts) {
+    public OSM(String manoId, String ipAddress, String username, String password, String project, MANOType manoType, String manoSite, List<String> vimAccounts) {
         super(manoId, manoType, manoSite);
         this.ipAddress = ipAddress;
         this.username = username;
