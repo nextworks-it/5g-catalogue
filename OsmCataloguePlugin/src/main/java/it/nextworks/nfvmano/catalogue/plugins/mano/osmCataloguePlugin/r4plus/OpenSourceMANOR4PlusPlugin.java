@@ -136,8 +136,8 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
     }
 
     private void initOsmConnection() {
-        osmClient = new OSMr4PlusClient(osm.getIpAddress(), osm.getUsername(), osm.getPassword(), osm.getProject());
-        log.info("{} - OSM R4+ instance addr {}, user {}, project {} connected", osm.getManoId(), osm.getIpAddress(), osm.getUsername(),
+        osmClient = new OSMr4PlusClient(osm.getIpAddress(), osm.getPort(), osm.getUsername(), osm.getPassword(), osm.getProject());
+        log.info("{} - OSM R4+ instance addr {}:{}, user {}, project {} connected", osm.getManoId(), osm.getIpAddress(), osm.getPort(), osm.getUsername(),
                 osm.getProject());
 
         //Scheduling OSM synchronization
@@ -428,9 +428,9 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
 
     @Override
     public void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) {
-        log.info("{} - Received NSD onboarding notification for Nsd with ID {} and version {} for project {}", osm.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject());
         log.debug("Body: {}", notification);
         if (notification.getScope() == ScopeType.LOCAL) {
+            log.info("{} - Received NSD onboarding notification for Nsd with ID {} and version {} for project {}", osm.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject());
             if (Utilities.isTargetMano(notification.getSiteOrManoIds(), osm) && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
                 try {
                     String packagePath = notification.getPackagePath().getKey();
@@ -599,14 +599,15 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
     // TODO: to be implemented according to new descriptor format in OSMR4
     @Override
     public void acceptNsdChangeNotification(NsdChangeNotificationMessage notification) {
-        log.info("{} - Received Nsd change notification", osm.getManoId());
         log.debug("Body: {}", notification);
+        log.info("{} - Received Nsd change notification", osm.getManoId());
     }
 
     @Override
     public void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification) {
-        log.info("{} - Received Nsd deletion notification for Nsd with ID {} and version {} for project {}", osm.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject());
+        log.debug("Body: {}", notification);
         if (notification.getScope() == ScopeType.LOCAL) {
+            log.info("{} - Received Nsd deletion notification for Nsd with ID {} and version {} for project {}", osm.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject());
             if (translationInformationContainsCatInfoId(notification.getNsdInfoId()) && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
                 try {
                     String osmInfoPkgId = getOsmInfoId(notification.getNsdInfoId());
@@ -642,8 +643,9 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
 
     @Override
     public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) {
-        log.info("{} - Received Vnfd onboarding notification for Vnfd with ID {} and version {} for project {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject());
+        log.debug("Body: {}", notification);
         if (notification.getScope() == ScopeType.LOCAL) {
+            log.info("{} - Received Vnfd onboarding notification for Vnfd with ID {} and version {} for project {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject());
             if (Utilities.isTargetMano(notification.getSiteOrManoIds(), osm) && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
                 try {
                     String packagePath = notification.getPackagePath().getKey();
@@ -736,7 +738,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                 }
             }
         }else if(notification.getScope() == ScopeType.SYNC){
-            log.info("{} - Received Sync Pkg onboarding notification for NSD with ID {} and version {} for project {} : {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(), notification.getOpStatus().toString());
+            log.info("{} - Received Sync Pkg onboarding notification for Vnfd with ID {} and version {} for project {} : {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(), notification.getOpStatus().toString());
             if(notification.getPluginId().equals(osm.getManoId()) && notification.getOpStatus().equals(OperationStatus.SUCCESSFULLY_DONE)) {
                 String osmDescriptorId = getOsmDescriptorId(notification.getVnfdId(), notification.getVnfdVersion());
                 if(osmDescriptorId == null)
@@ -750,15 +752,15 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
 
     @Override
     public void acceptVnfPkgChangeNotification(VnfPkgChangeNotificationMessage notification) {
-        log.info("{} - Received VNF Pkg change notification", osm.getManoId());
         log.debug("Body: {}", notification);
+        log.info("{} - Received VNF Pkg change notification", osm.getManoId());
     }
 
     @Override
     public void acceptVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) {
-        log.info("{} - Received Vnfd deletion notification for Vnfd with ID {} and version {} for project {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject());
         log.debug("Body: {}", notification);
         if (notification.getScope() == ScopeType.LOCAL) {
+            log.info("{} - Received Vnfd deletion notification for Vnfd with ID {} and version {} for project {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject());
             if (translationInformationContainsCatInfoId(notification.getVnfPkgInfoId()) && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
                 try {
                     String osmInfoPkgId = getOsmInfoId(notification.getVnfPkgInfoId());
@@ -788,31 +790,20 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                 }
             }
         }else if(notification.getScope() == ScopeType.SYNC){
-            log.info("{} - Received Sync Pkg deletion notification for NSD with ID {} and version {} for project {} : {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(), notification.getOpStatus().toString());
+            log.info("{} - Received Sync Pkg deletion notification for Vnfd with ID {} and version {} for project {} : {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(), notification.getOpStatus().toString());
         }
     }
 
-    // TODO: to be implemented according to new descriptor format in OSMR4
     @Override
     public void acceptPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification) {
-        log.info("{} - Received PNFD onboarding notification", osm.getManoId());
         log.debug("Body: {}", notification);
+        log.info("{} - Received PNFD onboarding notification", osm.getManoId());
     }
 
-    // TODO: to be implemented according to new descriptor format in OSMR4
     @Override
     public void acceptPnfdDeletionNotification(PnfdDeletionNotificationMessage notification) {
-        log.info("{} - Received PNFD deletion notification", osm.getManoId());
         log.debug("Body: {}", notification);
-    }
-
-    private File loadFile(String filename) {
-        ClassLoader classLoader = getClass().getClassLoader();
-        URL resource = classLoader.getResource(filename);
-        if (resource == null) {
-            throw new IllegalArgumentException(String.format("Invalid resource %s", filename));
-        }
-        return new File(resource.getFile());
+        log.info("{} - Received PNFD deletion notification", osm.getManoId());
     }
 
     private String onBoardNsPackage(File file, String opId) throws FailedOperationException {

@@ -45,6 +45,13 @@
         </dependency>
 
         <dependency>
+            <groupId>it.nextworks.nfvmano.catalogue.plugins.mano</groupId>
+            <artifactId>OnapCataloguePlugin</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
             <groupId>it.nextworks.nfvmano</groupId>
             <artifactId>AppdDataModel</artifactId>
             <version>1.0-SNAPSHOT</version>

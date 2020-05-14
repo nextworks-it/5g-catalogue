@@ -479,7 +479,6 @@ public class NsdManagementService implements NsdManagementInterface {
         Map<String, NotificationResource> pluginToOperationState = new HashMap<>();
         for (MANO mano : manos) {
             pluginToOperationState.put(mano.getManoId(), new NotificationResource(nsdInfoId, messageType, opStatus, PluginType.MANO));
-
         }
         operationIdToConsumersAck.put(operationId.toString(), pluginToOperationState);
         return operationId;

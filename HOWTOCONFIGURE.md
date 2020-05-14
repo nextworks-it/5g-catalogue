@@ -58,9 +58,9 @@ catalogue.storageRootDir=/home/nextworks/catalogueStorage
 ```
 
 ### MANO PLUGINS CONFIGURATION
-If, for testing purpose, you need to disable MANO plugins, put to "DUMMY" mode
+If, for testing purpose, you need to disable MANO plugins, put to "true"
 ```
-catalogue.defaultMANOType=OSM
+catalogue.dummyMANO=false
 ```
 Directory where OSMR3 translated descriptors and packages are stored, **to be changed** depending on the ENV
 ```

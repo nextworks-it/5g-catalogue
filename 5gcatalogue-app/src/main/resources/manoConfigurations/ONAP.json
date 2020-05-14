@@ -1,0 +1,8 @@
+{
+  "manoId": "ONAP",
+  "manoType": "ONAP",
+  "manoSite": "ONAP_SITE",
+  "pluginOperationalState": "ENABLED",
+  "ipAddress": "10.30.8.23",
+  "port": "80"
+}

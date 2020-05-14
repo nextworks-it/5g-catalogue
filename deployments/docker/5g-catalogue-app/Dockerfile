@@ -11,6 +11,7 @@ ARG mano_id=DEFAULT_MANO
 ARG mano_type=DUMMY
 ARG mano_site=DEFAULT_SITE
 ARG mano_ip=127.0.0.1
+ARG mano_port=9999
 ARG mano_username=admin
 ARG mano_password=admin
 ARG mano_project=admin
@@ -55,6 +56,7 @@ RUN sed -i "s|_MANO_ID_|${mano_id}|g" /home/5g-catalogue/5gcatalogue-app/src/mai
     && sed -i "s|_MANO_TYPE_|${mano_type}|g" /home/5g-catalogue/5gcatalogue-app/src/main/resources/manoConfigurations/mano.json \
     && sed -i "s|_MANO_SITE_|${mano_site}|g" /home/5g-catalogue/5gcatalogue-app/src/main/resources/manoConfigurations/mano.json \
     && sed -i "s|_MANO_IP_|${mano_ip}|g" /home/5g-catalogue/5gcatalogue-app/src/main/resources/manoConfigurations/mano.json \
+    && sed -i "s|_MANO_PORT_|${mano_port}|g" /home/5g-catalogue/5gcatalogue-app/src/main/resources/manoConfigurations/mano.json \
     && sed -i "s|_MANO_USERNAME_|${mano_username}|g" /home/5g-catalogue/5gcatalogue-app/src/main/resources/manoConfigurations/mano.json \
     && sed -i "s|_MANO_PASSWORD_|${mano_password}|g" /home/5g-catalogue/5gcatalogue-app/src/main/resources/manoConfigurations/mano.json \
     && sed -i "s|_MANO_PROJECT_|${mano_project}|g" /home/5g-catalogue/5gcatalogue-app/src/main/resources/manoConfigurations/mano.json

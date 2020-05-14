@@ -15,19 +15,15 @@
  */
 package it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.*;
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.PathType;
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.ScopeType;
-import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginOperationalState;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.*;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.onap.ONAP;
 import it.nextworks.nfvmano.libs.common.elements.KeyValuePair;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
-import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -38,12 +34,10 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class OnapPlugin extends MANOPlugin {
 
@@ -52,6 +46,7 @@ public class OnapPlugin extends MANOPlugin {
     private File onapDir;
     private Path tmpDirPath;
     private final ONAP onap;
+    private OnapDriver onapClient;
     private long syncPeriod;
 
     public OnapPlugin(MANOType manoType, MANO mano, String kafkaBootstrapServers, String localTopic, String remoteTopic,
@@ -76,6 +71,11 @@ public class OnapPlugin extends MANOPlugin {
         } catch (IOException e) {
             log.error("Could not initialize tmp directory: " + e.getMessage());
         }
+    }
+
+    private void initOnapConnection() {
+        onapClient = new OnapDriver(onap.getIpAddress(), onap.getPort());
+        log.info("{} - ONAP instance addr {}:{} connected", onap.getManoId(), onap.getIpAddress(), onap.getPort());
 
         if(isManoSync()) {
             log.info("{} - Starting runtime synchronization, sync period every {} minutes", onap.getManoId(), syncPeriod);
@@ -129,7 +129,56 @@ public class OnapPlugin extends MANOPlugin {
         log.info("{} - Runtime synchronization, finished retrieving ONAP VNF and NS Pkgs", onap.getManoId());
     }
 
-    private void updateDB(boolean updateVNF, boolean updateNS, String project) throws FailedOperationException{
+    private void updateDB() throws FailedOperationException{
+        /*
+        if(updateVNF) {
+            log.info("{} - Updating VNFs DB for project {}", onap.getManoId());
+            //Retrieve VNFPkgInfos
+            response = osmClient.getVnfPackageList();
+            aux = parseResponse(response, null, OsmInfoObject.class);
+            packageInfoList.addAll(aux);
+            vnfPackageInfoIdList = aux.stream().map(OsmInfoObject::getId).collect(Collectors.toList());
+        }
+        if(updateNS){
+            log.info("{} - Updating NSs DB for project {}", osm.getManoId(), project);
+            //Retrieve NSPkgInfos
+            response = osmClient.getNsdInfoList();
+            aux = parseResponse(response, null, OsmInfoObject.class);
+            packageInfoList.addAll(aux);
+            nsPackageInfoIdList = aux.stream().map(OsmInfoObject::getId).collect(Collectors.toList());
+        }
+
+        for(OsmInfoObject packageInfo : packageInfoList) {
+            try {
+                osmInfoObject = osmInfoObjectRepository.findById(packageInfo.getId());
+                if (osmInfoObject.isPresent()) {
+                    log.info("{} - OSM Pkg with descriptor ID {} and version {} already present in project {}", osm.getManoId(), packageInfo.getDescriptorId(), packageInfo.getVersion(), project);
+                    osmInfoObject.get().setEpoch(Instant.now().getEpochSecond());
+                    osmInfoObjectRepository.saveAndFlush(osmInfoObject.get());
+                } else {
+                    log.info("{} - Retrieving OSM Pkg with descriptor ID {} and version {} from project {}", osm.getManoId(), packageInfo.getDescriptorId(), packageInfo.getVersion(), project);
+                    if(vnfPackageInfoIdList.contains(packageInfo.getId())) {
+                        response = osmClient.getVnfPackageContent(packageInfo.getId(), osmDirPath.toString());
+                        packageInfo.setType(OsmObjectType.VNF);
+                    }
+                    else {
+                        response = osmClient.getNsdContent(packageInfo.getId(), osmDirPath.toString());
+                        packageInfo.setType(OsmObjectType.NS);
+                    }
+                    parseResponse(response, null, null);
+                    File archive = new File(osmDirPath.toString() + "/" + packageInfo.getId() + ".tar.gz");
+                    Archiver archiver = ArchiverFactory.createArchiver(ArchiveFormat.TAR, CompressionType.GZIP);
+                    archiver.extract(archive, new File(osmDirPath.toString()));
+                    packageInfo.setEpoch(Instant.now().getEpochSecond());
+                    packageInfo.setOsmId(osm.getManoId());
+                    osmInfoObjectRepository.saveAndFlush(packageInfo);
+                }
+            } catch (FailedOperationException | IOException | IllegalStateException | IllegalArgumentException e) {
+                log.error("{} - Sync error: {}", osm.getManoId(), e.getMessage());
+                log.debug(null, e);
+            }
+        }
+        */
     }
 
     private String createVnfPkgTosca () throws MalformattedElementException, IllegalStateException, IOException, IllegalArgumentException{
@@ -147,28 +196,86 @@ public class OnapPlugin extends MANOPlugin {
     }
 
     @Override
-    public void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) { }
+    public void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) {
+        log.debug("Body: {}", notification);
+        if (notification.getScope() == ScopeType.LOCAL){
+            log.info("{} - Received NSD onboarding notification for Nsd with ID {} and version {} for project {}", onap.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject());
+            if(Utilities.isTargetMano(notification.getSiteOrManoIds(), onap)) {//No need to send notification back if the plugin is not in the target MANOs
+                log.debug("{} - NSD onboarding skipped", onap.getManoId());
+                sendNotification(new NsdOnBoardingNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject(),
+                        notification.getOperationId(), ScopeType.REMOTE, OperationStatus.RECEIVED,
+                        onap.getManoId(), null, null));
+            }
+        }else if(notification.getScope() == ScopeType.SYNC){
+            log.info("{} - Received Sync Pkg onboarding notification for NSD with ID {} and version {} for project {} : {}", onap.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject(), notification.getOpStatus().toString());
+            //TODO handle notification
+        }
+    }
 
     @Override
-    public void acceptNsdChangeNotification(NsdChangeNotificationMessage notification) { }
+    public void acceptNsdChangeNotification(NsdChangeNotificationMessage notification) {
+        log.debug("Body: {}", notification);
+        log.info("{} - Received Nsd change notification", onap.getManoId());
+    }
 
     @Override
-    public void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification) { }
+    public void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification) {
+        log.debug("Body: {}", notification);
+        if (notification.getScope() == ScopeType.LOCAL) {
+            log.info("{} - Received Nsd deletion notification for Nsd with ID {} and version {} for project {}", onap.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject());
+            //Onboarding from NBI is not enabled, thus there is no need to delete the package and send notification
+        } else if(notification.getScope() == ScopeType.SYNC){
+            log.info("{} - Received Sync Pkg deletion notification for NSD with ID {} and version {} for project {} : {}", onap.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject(), notification.getOpStatus().toString());
+            //TODO handle notification
+        }
+    }
 
     @Override
-    public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) { }
+    public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) {
+        log.debug("Body: {}", notification);
+        if (notification.getScope() == ScopeType.LOCAL) {
+            log.info("{} - Received Vnfd onboarding notification for Vnfd with ID {} and version {} for project {}", onap.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject());
+            if (Utilities.isTargetMano(notification.getSiteOrManoIds(), onap)) {//No need to send notification back if the plugin is not in the target MANOs
+                log.debug("{} - VNF Pkg onboarding skipped", onap.getManoId());
+                sendNotification(new VnfPkgOnBoardingNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(),
+                        notification.getOperationId(), ScopeType.REMOTE, OperationStatus.RECEIVED,
+                        onap.getManoId(), null,null));
+            }
+        }else if(notification.getScope() == ScopeType.SYNC){
+            log.info("{} - Received Sync Pkg onboarding notification for Vnfd with ID {} and version {} for project {} : {}", onap.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(), notification.getOpStatus().toString());
+            //TODO handle notification
+        }
+    }
 
     @Override
-    public void acceptVnfPkgChangeNotification(VnfPkgChangeNotificationMessage notification) { }
+    public void acceptVnfPkgChangeNotification(VnfPkgChangeNotificationMessage notification) {
+        log.debug("Body: {}", notification);
+        log.info("{} - Received VNF Pkg change notification", onap.getManoId());
+    }
 
     @Override
-    public void acceptVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) { }
+    public void acceptVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) {
+        log.debug("Body: {}", notification);
+        if (notification.getScope() == ScopeType.LOCAL) {
+            log.info("{} - Received Vnfd deletion notification for Vnfd with ID {} and version {} for project {}", onap.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject());
+            //Onboarding from NBI is not enabled, thus there is no need to delete the package and send notification
+        }else if(notification.getScope() == ScopeType.SYNC){
+            log.info("{} - Received Sync Pkg deletion notification for Vnfd with ID {} and version {} for project {} : {}", onap.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(), notification.getOpStatus().toString());
+            //TODO handle notification
+        }
+    }
 
     @Override
-    public void acceptPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification) { }
+    public void acceptPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification) {
+        log.debug("Body: {}", notification);
+        log.info("{} - Received PNFD onboarding notification", onap.getManoId());
+    }
 
     @Override
-    public void acceptPnfdDeletionNotification(PnfdDeletionNotificationMessage notification) { }
+    public void acceptPnfdDeletionNotification(PnfdDeletionNotificationMessage notification) {
+        log.debug("Body: {}", notification);
+        log.info("{} - Received PNFD deletion notification", onap.getManoId());
+    }
 
     private File loadFile(String filename) {
         ClassLoader classLoader = getClass().getClassLoader();

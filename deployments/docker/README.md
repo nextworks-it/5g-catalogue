@@ -51,7 +51,7 @@ Inside the folder [5g-catalogue-app/profiles](https://github.com/nextworks-it/5g
 | CATALOGUE_STARTUP_SYNC | Enable/Disable startup synchronization from MANO |
 | CATALOGUE_RUNTIME_SYNC | Enable/Disable runtime synchronization from MANO |
 | CATALOGUE_RUNTIME_SYNC_PERIOD | Runtime synchronization period |
-| CATALOGUE_MANO_TYPE | Two different MANO types are currently supported: DUMMY, OSM |
+| CATALOGUE_DUMMY_MANO | Use a Dummy MANO |
 | CATALOGUE_SKIP_MANO_CONFIG | Skip MANO plugin configuration |
 | CATALOGUE_OSM_VIM_NETWORK_NAME | Enable/Disable parameter "vim-network-name" on OSM NS descriptors |
 | CATALOGUE_LOGO_PATH | Directory where is possible to put the logo to be associated with the translated descriptors |

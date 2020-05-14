@@ -26,9 +26,11 @@ import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginOperationalS
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginType;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.*;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.dummy.DummyMano;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.onap.ONAP;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.osm.OSM;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.repos.MANORepository;
-import it.nextworks.nfvmano.catalogue.plugins.mano.*;
+import it.nextworks.nfvmano.catalogue.plugins.mano.DummyMANOPlugin;
+import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.OnapPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.r4plus.OpenSourceMANOR4PlusPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.repos.OsmInfoObjectRepository;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.repos.TranslationInformationRepository;
@@ -71,8 +73,8 @@ public class PluginsManager {
     @Value("${kafka.bootstrap-servers}")
     private String bootstrapServers;
 
-    @Value("${catalogue.defaultMANOType}")
-    private String defaultMANOType;
+    @Value("${catalogue.dummyMANO:false}")
+    private boolean dummyMANO;
 
     @Value("${catalogue.manoPluginsConfigurations}")
     private String configurationsDir;
@@ -92,11 +94,8 @@ public class PluginsManager {
     @Value("${kafkatopic.remote}")
     private String remoteNotificationTopic;
 
-    @Value("${catalogue.defaultMANOType}")
-    private String defaultManoType;
-
-    @Value("${catalogue.osm.localDir}")
-    private String osmDir;
+    @Value("${catalogue.mano.localDir}")
+    private String manoDir;
 
     @Value("${environment.tmpDir}")
     private String tmpDir;
@@ -164,8 +163,7 @@ public class PluginsManager {
 
     @PostConstruct
     public void initPlugins() {
-
-        if (defaultManoType.equalsIgnoreCase("DUMMY")) {
+        if (dummyMANO) {
             MANO dummy = new DummyMano("DUMMY", MANOType.DUMMY);
             dummy.setPluginOperationalState(PluginOperationalState.ENABLED);
             MANORepository.saveAndFlush(dummy);
@@ -327,14 +325,17 @@ public class PluginsManager {
             return new DummyMANOPlugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, descriptorsParser,
                     localNotificationTopic, remoteNotificationTopic, kafkaTemplate, runtimeSync);
         } else if (mano.getManoType().equals(MANOType.OSMR3)) {
-            Path osmr3Dir = Paths.get(osmDir, "/" + MANOType.OSMR3.toString().toLowerCase());
+            Path osmr3Dir = Paths.get(manoDir, "/" + MANOType.OSMR3.toString().toLowerCase());
             return null;
             //TODO activate R3
             /*return new OpenSourceMANOR3Plugin(mano.getManoType(), mano, bootstrapServers, nsdService, vnfdService, descriptorsParser,
                     localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr3Dir, logo);*/
         } else if (mano.getManoType().equals(MANOType.OSMR4) || mano.getManoType().equals(MANOType.OSMR5) || mano.getManoType().equals(MANOType.OSMR6) || mano.getManoType().equals(MANOType.OSMR7)) {
-            Path osmr4PlusDir = Paths.get(osmDir, "/" + mano.getManoType().toString().toLowerCase());
+            Path osmr4PlusDir = Paths.get(manoDir, "/" + mano.getManoType().toString().toLowerCase());
             return new OpenSourceMANOR4PlusPlugin(mano.getManoType(), mano, bootstrapServers, osmInfoObjectRepository, translationInformationRepository, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr4PlusDir, Paths.get(tmpDir), logo, runtimeSync, osmSyncPeriod, useOsmVimNetworkName);
+        } else if (mano.getManoType().equals(MANOType.ONAP)) {
+            Path onapDir = Paths.get(manoDir, "/" + mano.getManoType().toString().toLowerCase());
+            return new OnapPlugin(mano.getManoType(), mano, bootstrapServers, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, onapDir, Paths.get(tmpDir), runtimeSync, osmSyncPeriod);
         } else {
             throw new MalformattedElementException("Unsupported MANO type. Skipping");
         }
@@ -347,7 +348,6 @@ public class PluginsManager {
             log.error("A MANO with the same ID is already available in DB - Not acceptable");
             throw new AlreadyExistingEntityException(
                     "A MANO with the same ID is already available in DB - Not acceptable");
-
         }
 
         if (mano.getPluginOperationalState() == null) {
@@ -362,6 +362,7 @@ public class PluginsManager {
             OSM targetOsm = new OSM(
                     osm.getManoId(),
                     osm.getIpAddress(),
+                    osm.getPort(),
                     osm.getUsername(),
                     osm.getPassword(),
                     osm.getProject(),
@@ -382,6 +383,31 @@ public class PluginsManager {
                     log.error("Unsupported MANO type");
                 }
                 log.debug("OSM MANO with manoId " + manoId + " successfully instantiated");
+            }
+            return String.valueOf(createdMano.getId());
+        } else if (type == MANOType.ONAP) {
+            log.debug("Processing request for creating " + type + "Plugin");
+            ONAP onap = (ONAP) mano;
+            ONAP targetOnap = new ONAP(
+                    onap.getManoId(),
+                    onap.getIpAddress(),
+                    onap.getPort(),
+                    type,
+                    onap.getManoSite()
+            );
+            targetOnap.setPluginOperationalState(PluginOperationalState.ENABLED);
+            targetOnap.isValid();
+            log.debug("Persisting OSM MANO with manoId: " + manoId);
+            ONAP createdMano = MANORepository.saveAndFlush(targetOnap);
+            log.debug("Onap MANO with manoId " + manoId + " successfully persisted");
+            if(!isStartingPhase) {
+                log.debug("Instantiating Onap MANO with manoId: " + manoId);
+                try {
+                    addMANO(createdMano);
+                } catch (MalformattedElementException e) {
+                    log.error("Unsupported MANO type");
+                }
+                log.debug("Onap MANO with manoId " + manoId + " successfully instantiated");
             }
             return String.valueOf(createdMano.getId());
         } else if (type == MANOType.DUMMY) {

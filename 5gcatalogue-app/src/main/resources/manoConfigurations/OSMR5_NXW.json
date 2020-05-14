@@ -4,6 +4,7 @@
   "manoSite": "NXW_OSM",
   "pluginOperationalState": "ENABLED",
   "ipAddress": "10.30.7.23",
+  "port": "9999",
   "username": "admin",
   "password": "admin",
   "project": "admin",

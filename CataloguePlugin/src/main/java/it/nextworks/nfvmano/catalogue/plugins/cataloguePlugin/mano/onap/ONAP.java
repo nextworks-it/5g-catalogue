@@ -15,6 +15,7 @@
  */
 package it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.onap;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANO;
@@ -30,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ONAP extends MANO {
 
     private String ipAddress;
