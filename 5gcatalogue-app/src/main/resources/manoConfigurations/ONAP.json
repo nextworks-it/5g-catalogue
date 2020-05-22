@@ -1,5 +1,5 @@
 {
-  "manoId": "ONAP",
+  "manoId": "ONAP_TEST",
   "manoType": "ONAP",
   "manoSite": "ONAP_SITE",
   "pluginOperationalState": "ENABLED",

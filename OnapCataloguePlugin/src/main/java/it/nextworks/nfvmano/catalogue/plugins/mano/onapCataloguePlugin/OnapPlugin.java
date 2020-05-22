@@ -15,11 +15,19 @@
  */
 package it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.*;
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.PathType;
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.ScopeType;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.*;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.onap.ONAP;
+import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.model.OnapNsDescriptor;
+import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.model.OnapObject;
+import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.model.OnapObjectType;
+import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.model.OnapVnfDescriptor;
+import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.repos.OnapObjectRepository;
 import it.nextworks.nfvmano.libs.common.elements.KeyValuePair;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
@@ -29,15 +37,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class OnapPlugin extends MANOPlugin {
 
@@ -49,8 +61,12 @@ public class OnapPlugin extends MANOPlugin {
     private OnapDriver onapClient;
     private long syncPeriod;
 
+    private OnapObjectRepository onapObjectRepository;
+
+    private Long startSync;
+
     public OnapPlugin(MANOType manoType, MANO mano, String kafkaBootstrapServers, String localTopic, String remoteTopic,
-                                      KafkaTemplate<String, String> kafkaTemplate, Path onapDirPath, Path tmpDir, boolean manoSync, long syncPeriod) {
+                                      KafkaTemplate<String, String> kafkaTemplate, OnapObjectRepository onapObjectRepository, Path onapDirPath, Path tmpDir, boolean manoSync, long syncPeriod) {
         super(manoType, mano, kafkaBootstrapServers, localTopic, remoteTopic, kafkaTemplate, manoSync);
         if (MANOType.ONAP != manoType) {
             throw new IllegalArgumentException("ONAP plugin requires an ONAP type MANO");
@@ -59,6 +75,7 @@ public class OnapPlugin extends MANOPlugin {
         this.onapDirPath = onapDirPath;
         this.syncPeriod = syncPeriod;
         this.tmpDirPath = tmpDir;
+        this.onapObjectRepository = onapObjectRepository;
     }
 
     @Override
@@ -71,6 +88,7 @@ public class OnapPlugin extends MANOPlugin {
         } catch (IOException e) {
             log.error("Could not initialize tmp directory: " + e.getMessage());
         }
+        initOnapConnection();
     }
 
     private void initOnapConnection() {
@@ -87,31 +105,88 @@ public class OnapPlugin extends MANOPlugin {
 
     @Override
     public Map<String, List<String>> getAllVnfd(String project){
-        log.info("{} - Startup synchronization, started retrieving ONAP VNF Pkgs from project {}", onap.getManoId(), project);
-        log.info("{} - Startup synchronization, finished retrieving ONAP VNF Pkgs from project {}", onap.getManoId(), project);
+        log.info("{} - Startup synchronization, started retrieving ONAP Vnf Pkgs from project {}", onap.getManoId(), project);
+        this.startSync = Instant.now().getEpochSecond();
 
-        return null;
+        try {
+            updateDB();
+        } catch(FailedOperationException e){
+            log.error("{} - {}", onap.getManoId(), e.getMessage());
+            return null;
+        }
+
+        //Delete ONAP Pkg no longer present in ONAP and add to ids list the others
+        Map<String, List<String>> ids = new HashMap<>();
+        List<OnapObject> onapObjectList = onapObjectRepository.findByOnapIdAndType(onap.getManoId(), OnapObjectType.VNF);
+        for(OnapObject onapObject : onapObjectList){
+            if(onapObject.getEpoch().compareTo(startSync) < 0){
+                log.info("{} - Onap Vnf Pkg with descriptor ID {} and version {} no longer present in project {}", onap.getManoId(), onapObject.getDescriptorId(), onapObject.getVersion(), project);
+                onapObjectRepository.delete(onapObject);
+            }else{
+                ids.computeIfAbsent(onapObject.getDescriptorId(), k -> new ArrayList<>()).add(onapObject.getVersion());//ids.put(onapObject.getDescriptorId(), onapObject.getVersion());
+            }
+        }
+
+        log.info("{} - Startup synchronization, finished retrieving ONAP Vnf Pkgs from project {}", onap.getManoId(), project);
+
+        return ids;
     }
 
     @Override
     public Map<String, List<String>> getAllNsd(String project) {
-        log.info("{} - Startup synchronization, started retrieving ONAP NS Pkgs from project {}", onap.getManoId(), project);
-        log.info("{} - Startup synchronization, finished retrieving ONAP NS Pkgs from project {}", onap.getManoId(), project);
+        log.info("{} - Startup synchronization, started retrieving ONAP Ns Pkgs from project {}", onap.getManoId(), project);
+        //Delete Onap Pkg no longer present in Onap and add to ids list the others
+        Map<String, List<String>> ids = new HashMap<>();
+        List<OnapObject> onapObjectList = onapObjectRepository.findByOnapIdAndType(onap.getManoId(), OnapObjectType.NS);
+        for(OnapObject onapObject : onapObjectList){
+            if(onapObject.getEpoch().compareTo(this.startSync) < 0){
+                log.info("{} - Onap Ns Pkg with descriptor ID {} and version {} no longer present in project {}", onap.getManoId(), onapObject.getDescriptorId(), onapObject.getVersion(), project);
+                onapObjectRepository.delete(onapObject);
+            }else{
+                ids.computeIfAbsent(onapObject.getDescriptorId(), k -> new ArrayList<>()).add(onapObject.getVersion());//ids.put(onapObject.getDescriptorId(), onapObject.getVersion());
+            }
+        }
+        log.info("{} - Startup synchronization, finished retrieving ONAP Ns Pkgs from project {}", onap.getManoId(), project);
 
-        return null;
+        return ids;
     }
 
     @Override
     public KeyValuePair getTranslatedPkgPath(String descriptorId, String descriptorVersion, String project){
         log.info("{} - Translating ONAP Pkg with descriptor ID {} and version {} from project {}", onap.getManoId(), descriptorId, descriptorVersion, project);
+
+        Optional<OnapObject> onapObject = onapObjectRepository.findByDescriptorIdAndVersionAndOnapId(descriptorId, descriptorVersion, onap.getManoId());
+        String pkgPath = null;
+        try{
+            if(onapObject.isPresent()){
+                if(onapObject.get().getType().equals(OnapObjectType.VNF))
+                    pkgPath = createVnfPkgTosca(onapObject.get());
+                else
+                    pkgPath = createNsPkgTosca(onapObject.get());
+            }
+        }catch(Exception e){
+            log.error("{} - Unable to generate TOSCA Pkg with descriptor ID {} and version {} for project {}: {}", onap.getManoId(), descriptorId, descriptorVersion, project, e.getMessage());
+            log.debug(null, e);
+            return  null;
+        }
+
         log.info("{} - Uploading TOSCA Pkg with descriptor ID {} and version {} to project {}", onap.getManoId(), descriptorId, descriptorVersion, project);
 
-        return new KeyValuePair("pkgPath", PathType.LOCAL.toString());
+        return new KeyValuePair(pkgPath, PathType.LOCAL.toString());
     }
 
     @Override
     public void notifyOnboarding(String infoId, String descriptorId, String descriptorVersion, String project, OperationStatus opStatus){
         log.info("{} - Received Sync Pkg onboarding notification for Descriptor with ID {} and version {} for project {} : {}", onap.getManoId(), descriptorId, descriptorVersion, project, opStatus.toString());
+        Optional<OnapObject> onapObjectOptional = onapObjectRepository.findByDescriptorIdAndVersionAndOnapId(descriptorId, descriptorVersion, onap.getManoId());
+        if(onapObjectOptional.isPresent()){
+            OnapObject onapObject = onapObjectOptional.get();
+            if(opStatus.equals(OperationStatus.SUCCESSFULLY_DONE)){
+                onapObject.setCatalogueId(infoId);
+                onapObjectRepository.saveAndFlush(onapObject);
+            }else
+                onapObjectRepository.delete(onapObject);
+        }
     }
 
     @Override
@@ -121,78 +196,173 @@ public class OnapPlugin extends MANOPlugin {
 
     @Override
     public String getManoPkgInfoId(String cataloguePkgInfoId){
-       return  null;
+        Optional<OnapObject> onapObjectOptional = onapObjectRepository.findByCatalogueIdAndOnapId(cataloguePkgInfoId, onap.getManoId());
+        if(onapObjectOptional.isPresent())
+            return onapObjectOptional.get().getDescriptorId();
+        else
+            return  null;
     }
 
     private void ONAPSynchronization(){
-        log.info("{} - Runtime synchronization, started retrieving ONAP VNF and NS Pkgs", onap.getManoId());
-        log.info("{} - Runtime synchronization, finished retrieving ONAP VNF and NS Pkgs", onap.getManoId());
+        log.info("{} - Runtime synchronization, started retrieving ONAP Vnf and Ns Pkgs", onap.getManoId());
+        Long startSync = Instant.now().getEpochSecond();
+
+        List<OnapObject> oldOnapObjectList = onapObjectRepository.findByOnapId(onap.getManoId());
+        List<String> oldOnapIdList = oldOnapObjectList.stream().map(OnapObject::getDescriptorId).collect(Collectors.toList());
+
+        try {
+            updateDB();
+        } catch(FailedOperationException e){
+            log.error("{} - {}", onap.getManoId(), e.getMessage());
+            return;
+        }
+
+        List<OnapObject> onapObjectList = onapObjectRepository.findByOnapId(onap.getManoId());
+        UUID operationId;
+        for(OnapObject onapObject : onapObjectList){
+            //Upload new Onap Pkg
+            if(!oldOnapIdList.contains(onapObject.getDescriptorId())){
+                operationId = UUID.randomUUID();
+                String pkgPath;
+                try {
+                    if(onapObject.getType().equals(OnapObjectType.VNF))
+                        pkgPath = createVnfPkgTosca(onapObject);
+                    else
+                        pkgPath = createNsPkgTosca(onapObject);
+                }catch(Exception e){
+                    log.error("{} - Unable to generate TOSCA Pkg with descriptor ID {} and version {}: {}", onap.getManoId(), onapObject.getDescriptorId(), onapObject.getVersion(), e.getMessage());
+                    log.debug(null, e);
+                    continue;
+                }
+                log.info("{} - Uploading TOSCA Pkg with descriptor ID {} and version {}", onap.getManoId(), onapObject.getDescriptorId(), onapObject.getVersion());
+                if(onapObject.getType().equals(OnapObjectType.VNF))
+                    sendNotification(new VnfPkgOnBoardingNotificationMessage(null, onapObject.getDescriptorId(), onapObject.getVersion(), "all",
+                            operationId, ScopeType.SYNC, OperationStatus.SENT, onap.getManoId(), null, new KeyValuePair(pkgPath, PathType.LOCAL.toString())));
+                else
+                    sendNotification(new NsdOnBoardingNotificationMessage(null, onapObject.getDescriptorId(), onapObject.getVersion(), "all",
+                            operationId, ScopeType.SYNC, OperationStatus.SENT, onap.getManoId(), null, new KeyValuePair(pkgPath, PathType.LOCAL.toString())));
+            }
+            //Delete Onap Pkg no longer present in OSM
+            if(onapObject.getEpoch().compareTo(startSync) < 0){
+                log.info("{} - Onap Pkg with descriptor ID {} and version {} no longer present, deleting it", onap.getManoId(), onapObject.getDescriptorId(), onapObject.getVersion());
+                operationId = UUID.randomUUID();
+                if(onapObject.getType().equals(OnapObjectType.VNF))
+                    sendNotification(new VnfPkgDeletionNotificationMessage(null, onapObject.getDescriptorId(), onapObject.getVersion(), "all",
+                            operationId, ScopeType.SYNC, OperationStatus.SENT, onap.getManoId()));
+                else
+                    sendNotification(new NsdDeletionNotificationMessage(null, onapObject.getDescriptorId(), onapObject.getVersion(), "all",
+                            operationId, ScopeType.SYNC, OperationStatus.SENT, onap.getManoId()));
+                onapObjectRepository.delete(onapObject);
+            }
+        }
+
+        log.info("{} - Runtime synchronization, finished retrieving ONAP Vnf and Ns Pkgs", onap.getManoId());
     }
 
     private void updateDB() throws FailedOperationException{
-        /*
-        if(updateVNF) {
-            log.info("{} - Updating VNFs DB for project {}", onap.getManoId());
-            //Retrieve VNFPkgInfos
-            response = osmClient.getVnfPackageList();
-            aux = parseResponse(response, null, OsmInfoObject.class);
-            packageInfoList.addAll(aux);
-            vnfPackageInfoIdList = aux.stream().map(OsmInfoObject::getId).collect(Collectors.toList());
+        List<File> nsPackages;
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        //nsPackages = onapClient.getNsPackages(onapDir);//salva e fa unzip in onap dir, restituisce file unzipped
+        //TODO to be removed
+        nsPackages = new ArrayList<>();
+        String path = "/home/leonardo/Documents/ONAP.zip";
+        File nsPackageTmp = new File(path);
+        File targetFile = new File(String.format("%s/%s.zip", onapDir, "ONAP"));
+        try {
+            java.nio.file.Files.copy(
+                    nsPackageTmp.toPath(),
+                    targetFile.toPath(),
+                    StandardCopyOption.REPLACE_EXISTING);
+            Utilities.unzip(targetFile, new File(onapDir, "."));
+        }catch (IOException e){
+            log.error("Failed to copy and unzip the file");
         }
-        if(updateNS){
-            log.info("{} - Updating NSs DB for project {}", osm.getManoId(), project);
-            //Retrieve NSPkgInfos
-            response = osmClient.getNsdInfoList();
-            aux = parseResponse(response, null, OsmInfoObject.class);
-            packageInfoList.addAll(aux);
-            nsPackageInfoIdList = aux.stream().map(OsmInfoObject::getId).collect(Collectors.toList());
+        File unzippedNsPackage = new File(onapDir, "ONAP");
+        nsPackages.add(unzippedNsPackage);
+        path = "/home/leonardo/Documents/ONAP2.zip";
+        nsPackageTmp = new File(path);
+        targetFile = new File(String.format("%s/%s.zip", onapDir, "ONAP2"));
+        try {
+            java.nio.file.Files.copy(
+                    nsPackageTmp.toPath(),
+                    targetFile.toPath(),
+                    StandardCopyOption.REPLACE_EXISTING);
+            Utilities.unzip(targetFile, new File(onapDir, "."));
+        }catch (IOException e){
+            log.error("Failed to copy and unzip the file");
         }
+        unzippedNsPackage = new File(onapDir, "ONAP2");
+        nsPackages.add(unzippedNsPackage);
+        //TODO
 
-        for(OsmInfoObject packageInfo : packageInfoList) {
+        for(File nsPackage : nsPackages){
+            File nsDescriptorFile = Utilities.getNsDescriptorFile(nsPackage);
+            OnapNsDescriptor nsDescriptor;
             try {
-                osmInfoObject = osmInfoObjectRepository.findById(packageInfo.getId());
-                if (osmInfoObject.isPresent()) {
-                    log.info("{} - OSM Pkg with descriptor ID {} and version {} already present in project {}", osm.getManoId(), packageInfo.getDescriptorId(), packageInfo.getVersion(), project);
-                    osmInfoObject.get().setEpoch(Instant.now().getEpochSecond());
-                    osmInfoObjectRepository.saveAndFlush(osmInfoObject.get());
-                } else {
-                    log.info("{} - Retrieving OSM Pkg with descriptor ID {} and version {} from project {}", osm.getManoId(), packageInfo.getDescriptorId(), packageInfo.getVersion(), project);
-                    if(vnfPackageInfoIdList.contains(packageInfo.getId())) {
-                        response = osmClient.getVnfPackageContent(packageInfo.getId(), osmDirPath.toString());
-                        packageInfo.setType(OsmObjectType.VNF);
-                    }
-                    else {
-                        response = osmClient.getNsdContent(packageInfo.getId(), osmDirPath.toString());
-                        packageInfo.setType(OsmObjectType.NS);
-                    }
-                    parseResponse(response, null, null);
-                    File archive = new File(osmDirPath.toString() + "/" + packageInfo.getId() + ".tar.gz");
-                    Archiver archiver = ArchiverFactory.createArchiver(ArchiveFormat.TAR, CompressionType.GZIP);
-                    archiver.extract(archive, new File(osmDirPath.toString()));
-                    packageInfo.setEpoch(Instant.now().getEpochSecond());
-                    packageInfo.setOsmId(osm.getManoId());
-                    osmInfoObjectRepository.saveAndFlush(packageInfo);
+                nsDescriptor = mapper.readValue(nsDescriptorFile, OnapNsDescriptor.class);
+            }catch (Exception e){
+                throw new FailedOperationException("Cannot deserialize ONAP NS descriptor");
+            }
+            String nsdId = nsDescriptor.getNsdId();
+            Optional<OnapObject> onapObjectOptional = onapObjectRepository.findByDescriptorIdAndTypeAndOnapId(nsdId, OnapObjectType.NS, onap.getManoId());
+            OnapObject onapObject;
+            if(onapObjectOptional.isPresent()){
+                onapObject = onapObjectOptional.get();
+                log.info("{} - Onap Ns Pkg with descriptor ID {} and version {} already present", onap.getManoId(), onapObject.getDescriptorId(), onapObject.getVersion());
+                onapObject.setEpoch(Instant.now().getEpochSecond());
+            }else{
+                onapObject = new OnapObject();
+                onapObject.setVersion("1.0");
+                log.info("{} - Found new Ns Pkg with descriptor ID {} and version {}", onap.getManoId(), nsdId, onapObject.getVersion());
+                onapObject.setDescriptorId(nsdId);
+                onapObject.setOnapId(onap.getManoId());
+                onapObject.setType(OnapObjectType.NS);
+                onapObject.setEpoch(Instant.now().getEpochSecond());
+                onapObject.setPath(nsDescriptorFile.toPath().toString());
+            }
+            onapObjectRepository.saveAndFlush(onapObject);
+            List<File> vnfDescriptorFiles = Utilities.getVnfDescriptorFiles(nsPackage, nsDescriptor);
+            for(File vnfDescriptorFile : vnfDescriptorFiles){
+                OnapVnfDescriptor vnfDescriptor;
+                try {
+                    vnfDescriptor = mapper.readValue(vnfDescriptorFile, OnapVnfDescriptor.class);
+                }catch (Exception e){
+                    throw new FailedOperationException("Cannot deserialize ONAP VNF descriptor");
                 }
-            } catch (FailedOperationException | IOException | IllegalStateException | IllegalArgumentException e) {
-                log.error("{} - Sync error: {}", osm.getManoId(), e.getMessage());
-                log.debug(null, e);
+                String vnfdId = vnfDescriptor.getVnfdId();
+                onapObjectOptional = onapObjectRepository.findByDescriptorIdAndTypeAndOnapId(vnfdId, OnapObjectType.VNF, onap.getManoId());
+                if(onapObjectOptional.isPresent()){
+                    onapObject = onapObjectOptional.get();
+                    log.info("{} - Onap Vnf Pkg with descriptor ID {} and version {} already present", onap.getManoId(), onapObject.getDescriptorId(), onapObject.getVersion());
+                    onapObject.setEpoch(Instant.now().getEpochSecond());
+                }else{
+                    onapObject = new OnapObject();
+                    onapObject.setVersion("1.0");
+                    log.info("{} - Found new Vnf Pkg with descriptor ID {} and version {}", onap.getManoId(), vnfdId, onapObject.getVersion());
+                    onapObject.setDescriptorId(vnfdId);
+                    onapObject.setOnapId(onap.getManoId());
+                    onapObject.setType(OnapObjectType.VNF);
+                    onapObject.setEpoch(Instant.now().getEpochSecond());
+                    onapObject.setPath(vnfDescriptorFile.toPath().toString());
+                }
+                onapObjectRepository.saveAndFlush(onapObject);
             }
         }
-        */
     }
 
-    private String createVnfPkgTosca () throws MalformattedElementException, IllegalStateException, IOException, IllegalArgumentException{
-        log.info("{} - Creating TOSCA VNF Descriptor with ID {} and version {}", onap.getManoId(), "descriptor_id", "descriptor_version");
-        DescriptorTemplate vnfd = ToscaDescriptorsParser.generateVnfDescriptor();
-        log.info("{} - Creating TOSCA VNF Pkg with descriptor ID {} and version {}", onap.getManoId(), "descriptor_id", "descriptor_version");
-        return ToscaArchiveBuilder.createVNFCSAR();
+    private String createVnfPkgTosca (OnapObject onapObject) throws MalformattedElementException, IllegalStateException, IOException, IllegalArgumentException{
+        log.info("{} - Creating TOSCA VNF Descriptor with ID {} and version {}", onap.getManoId(), onapObject.getDescriptorId(), onapObject.getVersion());
+        DescriptorTemplate vnfd = ToscaDescriptorsParser.generateVnfDescriptor(onapObject.getPath());
+        log.info("{} - Creating TOSCA VNF Pkg with descriptor ID {} and version {}", onap.getManoId(), onapObject.getDescriptorId(), onapObject.getVersion());
+        return ToscaArchiveBuilder.createVNFCSAR(vnfd, tmpDirPath.toString());
     }
 
-    private String createNsPkgTosca () throws MalformattedElementException, IllegalStateException, IOException, IllegalArgumentException{
-        log.info("{} - Creating TOSCA NS Descriptor with ID {} and version {}", onap.getManoId(), "descriptor_id", "descriptor_version");
-        DescriptorTemplate nsd = ToscaDescriptorsParser.generateNsDescriptor();
-        log.info("{} - Creating TOSCA NS Pkg with descriptor ID {} and version {}", onap.getManoId(), "descriptor_id", "descriptor_version");
-        return ToscaArchiveBuilder.createNSCSAR();
+    private String createNsPkgTosca (OnapObject onapObject) throws MalformattedElementException, IllegalStateException, IOException, IllegalArgumentException{
+        log.info("{} - Creating TOSCA NS Descriptor with ID {} and version {}", onap.getManoId(), onapObject.getDescriptorId(), onapObject.getVersion());
+        DescriptorTemplate nsd = ToscaDescriptorsParser.generateNsDescriptor(onapObject.getPath());
+        log.info("{} - Creating TOSCA NS Pkg with descriptor ID {} and version {}", onap.getManoId(), onapObject.getDescriptorId(), onapObject.getVersion());
+        return ToscaArchiveBuilder.createNSCSAR(nsd, tmpDirPath.toString());
     }
 
     @Override

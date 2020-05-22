@@ -31,6 +31,7 @@ import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.osm.OSM;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.repos.MANORepository;
 import it.nextworks.nfvmano.catalogue.plugins.mano.DummyMANOPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.OnapPlugin;
+import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.repos.OnapObjectRepository;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.r4plus.OpenSourceMANOR4PlusPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.repos.OsmInfoObjectRepository;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.repos.TranslationInformationRepository;
@@ -156,6 +157,9 @@ public class PluginsManager {
 
     @Autowired
     private TranslationInformationRepository translationInformationRepository;
+
+    @Autowired
+    private OnapObjectRepository onapObjectRepository;
 
     public PluginsManager() {
 
@@ -335,7 +339,7 @@ public class PluginsManager {
             return new OpenSourceMANOR4PlusPlugin(mano.getManoType(), mano, bootstrapServers, osmInfoObjectRepository, translationInformationRepository, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr4PlusDir, Paths.get(tmpDir), logo, runtimeSync, osmSyncPeriod, useOsmVimNetworkName);
         } else if (mano.getManoType().equals(MANOType.ONAP)) {
             Path onapDir = Paths.get(manoDir, "/" + mano.getManoType().toString().toLowerCase());
-            return new OnapPlugin(mano.getManoType(), mano, bootstrapServers, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, onapDir, Paths.get(tmpDir), runtimeSync, osmSyncPeriod);
+            return new OnapPlugin(mano.getManoType(), mano, bootstrapServers, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, onapObjectRepository, onapDir, Paths.get(tmpDir), runtimeSync, osmSyncPeriod);
         } else {
             throw new MalformattedElementException("Unsupported MANO type. Skipping");
         }

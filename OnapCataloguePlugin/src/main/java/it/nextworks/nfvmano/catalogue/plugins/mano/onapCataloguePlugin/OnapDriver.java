@@ -14,7 +14,7 @@ public class OnapDriver {
         this.port = port;
     }
 
-    public List<File> getNsPackages(){
+    public List<File> getNsPackages(File onapDir){
         List<File> nsPackages = new ArrayList<>();
         /* example
         obj = (Resource) vnfApi.getVNFPkg(vnfPkgId, project, range, authorization);
@@ -26,7 +26,7 @@ public class OnapDriver {
                 StandardCopyOption.REPLACE_EXISTING);
 
         ArchiveParser.unzip(targetFile, new File(storagePath, vnfPkgId));
-         */
+       */
         return nsPackages;
     }
 }

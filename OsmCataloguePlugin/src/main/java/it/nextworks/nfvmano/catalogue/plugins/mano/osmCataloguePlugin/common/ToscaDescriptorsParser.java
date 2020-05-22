@@ -14,7 +14,6 @@ import it.nextworks.nfvmano.libs.descriptors.interfaces.LcmOperation;
 import it.nextworks.nfvmano.libs.descriptors.interfaces.Vnflcm;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSProperties;
-import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSRequirements;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NsVirtualLink.NsVirtualLinkNode;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NsVirtualLink.NsVirtualLinkProperties;
 import it.nextworks.nfvmano.libs.descriptors.templates.*;
@@ -161,7 +160,7 @@ public class ToscaDescriptorsParser {
         return vnfd;
     }
 
-    public static DescriptorTemplate generateNsDescriptor(String osmNsDescriptorPath, List<OsmInfoObject> vnfInfoList, List<TranslationInformation> translationInformationList, Path rootDir) throws IOException, IllegalArgumentException {
+    public static DescriptorTemplate generateNsDescriptor(String osmNsDescriptorPath, List<OsmInfoObject> vnfInfoList, List<OsmTranslationInformation> translationInformationList, Path rootDir) throws IOException, IllegalArgumentException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
         mapper.enable(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT);
@@ -219,7 +218,7 @@ public class ToscaDescriptorsParser {
             }
             OsmVNFPackage osmVnfPkg = mapper.readValue(new File(osmVnfDescriptorPath), OsmVNFPackage.class);
             VNFDescriptor osmVnfDescriptor = osmVnfPkg.getVnfdCatalog().getVnfd().get(0);//For the moment consider only one VNF present
-            List<TranslationInformation> filteredTranslationInformationList = translationInformationList.stream().filter(t -> t.getOsmDescriptorId().equals(osmVnfDescriptor.getId()) && t.getDescriptorVersion().equals(osmVnfDescriptor.getVersion())).collect(Collectors.toList());
+            List<OsmTranslationInformation> filteredTranslationInformationList = translationInformationList.stream().filter(t -> t.getOsmDescriptorId().equals(osmVnfDescriptor.getId()) && t.getDescriptorVersion().equals(osmVnfDescriptor.getVersion())).collect(Collectors.toList());
             String catVnfDescriptorId = osmVnfDescriptor.getId();
             if(filteredTranslationInformationList.size() != 0)
                 catVnfDescriptorId = filteredTranslationInformationList.get(0).getCatDescriptorId();

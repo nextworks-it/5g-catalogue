@@ -487,11 +487,11 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
 
                 vnfPkgInfoResource.isDeletable();
 
-                if(!isInternalRequest && vnfPkgInfoResource.isRetrievedFromMANO()){
+                if(!isInternalRequest && !vnfPkgInfoResource.getOnboardingState().equals(PackageOnboardingStateType.FAILED) && vnfPkgInfoResource.isRetrievedFromMANO()){
                     throw new FailedOperationException("Cannot remove VNF Pkg info, it has been retrieved from MANO");
                 }
 
-                if(!isInternalRequest && vnfPkgInfoResource.getUserDefinedData().containsKey("isGeneratedFromAppD") && vnfPkgInfoResource.getUserDefinedData().get("isGeneratedFromAppD").equals("yes")){
+                if(!isInternalRequest && !vnfPkgInfoResource.getOnboardingState().equals(PackageOnboardingStateType.FAILED) && vnfPkgInfoResource.getUserDefinedData().containsKey("isGeneratedFromAppD") && vnfPkgInfoResource.getUserDefinedData().get("isGeneratedFromAppD").equals("yes")){
                     throw new FailedOperationException("Cannot remove VNF Pkg info, it has been generated from AppD. Please perform operations directly on the AppD");
                 }
 
