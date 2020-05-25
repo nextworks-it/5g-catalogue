@@ -25,6 +25,7 @@ For properly configuring the 5G Apps & Services Catalogue, the [.env](https://gi
 | MANO_TYPE | Three different MANOs are currently supported: OSMR4, OSMR5, OSMR6 |
 | MANO_SITE | Identifier of the site to which the MANO belongs |
 | MANO_IP | IP address of the MANO |
+| MANO_PORT | Port of the MANO |
 | MANO_USERNAME | MANO username |
 | MANO_PASSWORD | MANO password |
 | MANO_PROJECT | MANO project |

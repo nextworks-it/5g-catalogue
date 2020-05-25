@@ -116,8 +116,8 @@ public class PluginsManager {
     @Value("${osm.vim.network.name.enabled}")
     private boolean useOsmVimNetworkName;
 
-    @Value("${mano.osm.runtime.sync.period.in.minute}")
-    private long osmSyncPeriod;
+    @Value("${mano.runtime.sync.period.in.minute}")
+    private long manoSyncPeriod;
 
     @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
@@ -336,10 +336,10 @@ public class PluginsManager {
                     localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr3Dir, logo);*/
         } else if (mano.getManoType().equals(MANOType.OSMR4) || mano.getManoType().equals(MANOType.OSMR5) || mano.getManoType().equals(MANOType.OSMR6) || mano.getManoType().equals(MANOType.OSMR7)) {
             Path osmr4PlusDir = Paths.get(manoDir, "/" + mano.getManoType().toString().toLowerCase());
-            return new OpenSourceMANOR4PlusPlugin(mano.getManoType(), mano, bootstrapServers, osmInfoObjectRepository, translationInformationRepository, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr4PlusDir, Paths.get(tmpDir), logo, runtimeSync, osmSyncPeriod, useOsmVimNetworkName);
+            return new OpenSourceMANOR4PlusPlugin(mano.getManoType(), mano, bootstrapServers, osmInfoObjectRepository, translationInformationRepository, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr4PlusDir, Paths.get(tmpDir), logo, runtimeSync, manoSyncPeriod, useOsmVimNetworkName);
         } else if (mano.getManoType().equals(MANOType.ONAP)) {
             Path onapDir = Paths.get(manoDir, "/" + mano.getManoType().toString().toLowerCase());
-            return new OnapPlugin(mano.getManoType(), mano, bootstrapServers, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, onapObjectRepository, onapDir, Paths.get(tmpDir), runtimeSync, osmSyncPeriod);
+            return new OnapPlugin(mano.getManoType(), mano, bootstrapServers, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, onapObjectRepository, onapDir, Paths.get(tmpDir), runtimeSync, manoSyncPeriod);
         } else {
             throw new MalformattedElementException("Unsupported MANO type. Skipping");
         }

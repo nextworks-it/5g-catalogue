@@ -217,42 +217,61 @@ public class OnapPlugin extends MANOPlugin {
             return;
         }
 
-        List<OnapObject> onapObjectList = onapObjectRepository.findByOnapId(onap.getManoId());
+        List<OnapObject> onapVnfList = onapObjectRepository.findByOnapIdAndType(onap.getManoId(), OnapObjectType.VNF);
+        List<OnapObject> onapNsList = onapObjectRepository.findByOnapIdAndType(onap.getManoId(), OnapObjectType.NS);
         UUID operationId;
-        for(OnapObject onapObject : onapObjectList){
-            //Upload new Onap Pkg
-            if(!oldOnapIdList.contains(onapObject.getDescriptorId())){
+        String pkgPath;
+
+        for(OnapObject onapVnf : onapVnfList) {
+            //upload new Vnf Pkgs
+            if(!oldOnapIdList.contains(onapVnf.getDescriptorId())){
                 operationId = UUID.randomUUID();
-                String pkgPath;
                 try {
-                    if(onapObject.getType().equals(OnapObjectType.VNF))
-                        pkgPath = createVnfPkgTosca(onapObject);
-                    else
-                        pkgPath = createNsPkgTosca(onapObject);
+                    pkgPath = createVnfPkgTosca(onapVnf);
                 }catch(Exception e){
-                    log.error("{} - Unable to generate TOSCA Pkg with descriptor ID {} and version {}: {}", onap.getManoId(), onapObject.getDescriptorId(), onapObject.getVersion(), e.getMessage());
+                    log.error("{} - Unable to generate TOSCA Vnf Pkg with descriptor ID {} and version {}: {}", onap.getManoId(), onapVnf.getDescriptorId(), onapVnf.getVersion(), e.getMessage());
                     log.debug(null, e);
                     continue;
                 }
-                log.info("{} - Uploading TOSCA Pkg with descriptor ID {} and version {}", onap.getManoId(), onapObject.getDescriptorId(), onapObject.getVersion());
-                if(onapObject.getType().equals(OnapObjectType.VNF))
-                    sendNotification(new VnfPkgOnBoardingNotificationMessage(null, onapObject.getDescriptorId(), onapObject.getVersion(), "all",
-                            operationId, ScopeType.SYNC, OperationStatus.SENT, onap.getManoId(), null, new KeyValuePair(pkgPath, PathType.LOCAL.toString())));
-                else
-                    sendNotification(new NsdOnBoardingNotificationMessage(null, onapObject.getDescriptorId(), onapObject.getVersion(), "all",
+                log.info("{} - Uploading TOSCA Vnf Pkg with descriptor ID {} and version {}", onap.getManoId(), onapVnf.getDescriptorId(), onapVnf.getVersion());
+                sendNotification(new VnfPkgOnBoardingNotificationMessage(null, onapVnf.getDescriptorId(), onapVnf.getVersion(), "all",
                             operationId, ScopeType.SYNC, OperationStatus.SENT, onap.getManoId(), null, new KeyValuePair(pkgPath, PathType.LOCAL.toString())));
             }
-            //Delete Onap Pkg no longer present in OSM
-            if(onapObject.getEpoch().compareTo(startSync) < 0){
-                log.info("{} - Onap Pkg with descriptor ID {} and version {} no longer present, deleting it", onap.getManoId(), onapObject.getDescriptorId(), onapObject.getVersion());
+        }
+
+        for(OnapObject onapNs : onapNsList){
+            //upload new Ns Pkgs
+            if(!oldOnapIdList.contains(onapNs.getDescriptorId())){
                 operationId = UUID.randomUUID();
-                if(onapObject.getType().equals(OnapObjectType.VNF))
-                    sendNotification(new VnfPkgDeletionNotificationMessage(null, onapObject.getDescriptorId(), onapObject.getVersion(), "all",
+                try {
+                    pkgPath = createNsPkgTosca(onapNs);
+                }catch(Exception e){
+                    log.error("{} - Unable to generate TOSCA Ns Pkg with descriptor ID {} and version {}: {}", onap.getManoId(), onapNs.getDescriptorId(), onapNs.getVersion(), e.getMessage());
+                    log.debug(null, e);
+                    continue;
+                }
+                log.info("{} - Uploading TOSCA Ns Pkg with descriptor ID {} and version {}", onap.getManoId(), onapNs.getDescriptorId(), onapNs.getVersion());
+                sendNotification(new NsdOnBoardingNotificationMessage(null, onapNs.getDescriptorId(), onapNs.getVersion(), "all",
+                            operationId, ScopeType.SYNC, OperationStatus.SENT, onap.getManoId(), null, new KeyValuePair(pkgPath, PathType.LOCAL.toString())));
+            }
+            //Delete Onap Ns Pkg no longer present
+            if(onapNs.getEpoch().compareTo(startSync) < 0){
+                log.info("{} - Onap Ns Pkg with descriptor ID {} and version {} no longer present, deleting it", onap.getManoId(), onapNs.getDescriptorId(), onapNs.getVersion());
+                operationId = UUID.randomUUID();
+                sendNotification(new NsdDeletionNotificationMessage(null, onapNs.getDescriptorId(), onapNs.getVersion(), "all",
                             operationId, ScopeType.SYNC, OperationStatus.SENT, onap.getManoId()));
-                else
-                    sendNotification(new NsdDeletionNotificationMessage(null, onapObject.getDescriptorId(), onapObject.getVersion(), "all",
+                onapObjectRepository.delete(onapNs);
+            }
+        }
+
+        for(OnapObject onapVnf : onapVnfList) {
+            //Delete Onap Vnf Pkg no longer present
+            if(onapVnf.getEpoch().compareTo(startSync) < 0){
+                log.info("{} - Onap Vnf Pkg with descriptor ID {} and version {} no longer present, deleting it", onap.getManoId(), onapVnf.getDescriptorId(), onapVnf.getVersion());
+                operationId = UUID.randomUUID();
+                sendNotification(new VnfPkgDeletionNotificationMessage(null, onapVnf.getDescriptorId(), onapVnf.getVersion(), "all",
                             operationId, ScopeType.SYNC, OperationStatus.SENT, onap.getManoId()));
-                onapObjectRepository.delete(onapObject);
+                onapObjectRepository.delete(onapVnf);
             }
         }
 
@@ -266,34 +285,24 @@ public class OnapPlugin extends MANOPlugin {
         //nsPackages = onapClient.getNsPackages(onapDir);//salva e fa unzip in onap dir, restituisce file unzipped
         //TODO to be removed
         nsPackages = new ArrayList<>();
-        String path = "/home/leonardo/Documents/ONAP.zip";
-        File nsPackageTmp = new File(path);
-        File targetFile = new File(String.format("%s/%s.zip", onapDir, "ONAP"));
-        try {
-            java.nio.file.Files.copy(
-                    nsPackageTmp.toPath(),
-                    targetFile.toPath(),
-                    StandardCopyOption.REPLACE_EXISTING);
-            Utilities.unzip(targetFile, new File(onapDir, "."));
-        }catch (IOException e){
-            log.error("Failed to copy and unzip the file");
+        File root = new File("/home/leonardo/Documents");
+        FilenameFilter zipFilter = (f, name) -> name.endsWith(".zip");
+        File[] zippedFiles = root.listFiles(zipFilter);
+        for(int i = 0; i < zippedFiles.length; i++) {
+            File nsPackageTmp = new File(zippedFiles[i].toPath().toString());
+            File targetFile = new File(String.format("%s/%s" , onapDir, zippedFiles[i].getName()));
+            try {
+                java.nio.file.Files.copy(
+                        nsPackageTmp.toPath(),
+                        targetFile.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING);
+                Utilities.unzip(targetFile, new File(onapDir, "."));
+            } catch (IOException e) {
+                log.error("Failed to copy and unzip the file");
+            }
+            File unzippedNsPackage = new File(onapDir, "ONAP" + i);
+            nsPackages.add(unzippedNsPackage);
         }
-        File unzippedNsPackage = new File(onapDir, "ONAP");
-        nsPackages.add(unzippedNsPackage);
-        path = "/home/leonardo/Documents/ONAP2.zip";
-        nsPackageTmp = new File(path);
-        targetFile = new File(String.format("%s/%s.zip", onapDir, "ONAP2"));
-        try {
-            java.nio.file.Files.copy(
-                    nsPackageTmp.toPath(),
-                    targetFile.toPath(),
-                    StandardCopyOption.REPLACE_EXISTING);
-            Utilities.unzip(targetFile, new File(onapDir, "."));
-        }catch (IOException e){
-            log.error("Failed to copy and unzip the file");
-        }
-        unzippedNsPackage = new File(onapDir, "ONAP2");
-        nsPackages.add(unzippedNsPackage);
         //TODO
 
         for(File nsPackage : nsPackages){
@@ -378,7 +387,17 @@ public class OnapPlugin extends MANOPlugin {
             }
         }else if(notification.getScope() == ScopeType.SYNC){
             log.info("{} - Received Sync Pkg onboarding notification for NSD with ID {} and version {} for project {} : {}", onap.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject(), notification.getOpStatus().toString());
-            //TODO handle notification
+            if(notification.getPluginId().equals(onap.getManoId())) {
+                Optional<OnapObject> onapObjectOptional = onapObjectRepository.findByDescriptorIdAndVersionAndOnapId(notification.getNsdId(), notification.getNsdVersion(), onap.getManoId());
+                if (onapObjectOptional.isPresent()) {
+                    OnapObject onapObject = onapObjectOptional.get();
+                    if (notification.getOpStatus().equals(OperationStatus.SUCCESSFULLY_DONE)) {
+                        onapObject.setCatalogueId(notification.getNsdInfoId());
+                        onapObjectRepository.saveAndFlush(onapObject);
+                    } else
+                        onapObjectRepository.delete(onapObject);
+                }
+            }
         }
     }
 
@@ -413,7 +432,17 @@ public class OnapPlugin extends MANOPlugin {
             }
         }else if(notification.getScope() == ScopeType.SYNC){
             log.info("{} - Received Sync Pkg onboarding notification for Vnfd with ID {} and version {} for project {} : {}", onap.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(), notification.getOpStatus().toString());
-            //TODO handle notification
+            if(notification.getPluginId().equals(onap.getManoId())) {
+                Optional<OnapObject> onapObjectOptional = onapObjectRepository.findByDescriptorIdAndVersionAndOnapId(notification.getVnfdId(), notification.getVnfdVersion(), onap.getManoId());
+                if (onapObjectOptional.isPresent()) {
+                    OnapObject onapObject = onapObjectOptional.get();
+                    if (notification.getOpStatus().equals(OperationStatus.SUCCESSFULLY_DONE)) {
+                        onapObject.setCatalogueId(notification.getVnfPkgInfoId());
+                        onapObjectRepository.saveAndFlush(onapObject);
+                    } else
+                        onapObjectRepository.delete(onapObject);
+                }
+            }
         }
     }
 
