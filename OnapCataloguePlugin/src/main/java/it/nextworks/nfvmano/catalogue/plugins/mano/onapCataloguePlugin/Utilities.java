@@ -46,11 +46,13 @@ public class Utilities {
         return false;
     }
 
-    public static void unzip(File zipfile, File directory) throws IOException {
+    public static String unzip(File zipfile, File directory) throws IOException {
+        String rootDir = null;
         ZipFile zfile = new ZipFile(zipfile);
         Enumeration<? extends ZipEntry> entries = zfile.entries();
         while (entries.hasMoreElements()) {
             ZipEntry entry = entries.nextElement();
+            rootDir = entry.getName().split("/")[0];//all the files are within a root directory
             File file = new File(directory, entry.getName());
             if (entry.isDirectory()) {
                 file.mkdirs();
@@ -64,6 +66,7 @@ public class Utilities {
                 }
             }
         }
+        return rootDir;
     }
 
     private static void copy(InputStream in, File file) throws IOException {

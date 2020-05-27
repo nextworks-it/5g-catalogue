@@ -33,6 +33,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
             <groupId>it.nextworks.nfvmano.catalogue.plugins</groupId>
             <artifactId>CataloguePlugin</artifactId>
             <version>1.0-SNAPSHOT</version>

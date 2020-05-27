@@ -279,10 +279,22 @@ public class OnapPlugin extends MANOPlugin {
     }
 
     private void updateDB() throws FailedOperationException{
-        List<File> nsPackages;
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        List<String> nsIds;
+        List<File> nsPackages = new ArrayList<>();
+        nsIds = onapClient.getNsIds();
+        for(String nsId : nsIds){
+            try {
+                File nsPackage = onapClient.getNsPackage(nsId, onapDir);
+                String unzippedPackageName = Utilities.unzip(nsPackage, new File(onapDir, "."));
+                nsPackages.add(new File(onapDir, unzippedPackageName));
+            }catch (IOException e) {
+                throw new FailedOperationException("Failed to unzip the file: " + e.getMessage());
+            }
+        }
         //nsPackages = onapClient.getNsPackages(onapDir);//salva e fa unzip in onap dir, restituisce file unzipped
+        /*
         //TODO to be removed
         nsPackages = new ArrayList<>();
         File root = new File("/home/leonardo/Documents");
@@ -304,7 +316,7 @@ public class OnapPlugin extends MANOPlugin {
             nsPackages.add(unzippedNsPackage);
         }
         //TODO
-
+        */
         for(File nsPackage : nsPackages){
             File nsDescriptorFile = Utilities.getNsDescriptorFile(nsPackage);
             OnapNsDescriptor nsDescriptor;

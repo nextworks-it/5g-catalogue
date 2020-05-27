@@ -199,6 +199,8 @@ public class ToscaDescriptorsParser {
             ConnectivityType connectivityType = new ConnectivityType(layerProtocols, FlowPattern.LINE);
             VlProfile vlProfile = new VlProfile(new LinkBitrateRequirements(1000000, 10000), new LinkBitrateRequirements(100000, 10000), null, null);
             NsVirtualLinkProperties vLinkProperties = new NsVirtualLinkProperties(null, vLinkName, vlProfile, connectivityType, null);
+            if(vld.isMgmtNetwork())
+                vLinkProperties.setMgmtNet(true);
             nodeTemplates.put(vLinkName, new NsVirtualLinkNode(null, vLinkProperties, null));//type: "tosca.nodes.nfv.NsVirtualLink"
             virtualLinkNames.add(vLinkName);
             List<VNFDConnectionPointReference> vnfdConnectionPointReferenceList = vld.getVnfdConnectionPointReferences();
