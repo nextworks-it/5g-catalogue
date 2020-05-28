@@ -45,6 +45,7 @@ services:
         mano_type: ${MANO_TYPE}
         mano_site: ${MANO_SITE}
         mano_ip: ${MANO_IP}
+        mano_port: ${MANO_PORT}
         mano_username: ${MANO_USERNAME}
         mano_password: ${MANO_PASSWORD}
         mano_project: ${MANO_PROJECT}

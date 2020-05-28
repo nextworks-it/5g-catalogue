@@ -15,6 +15,7 @@
  */
 package it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.osm;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANO;
@@ -27,9 +28,11 @@ import javax.persistence.Entity;
 import java.util.*;
 
 @Entity
-public class OSMMano extends MANO {
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class OSM extends MANO {
 
     private String ipAddress;
+    private String port;
     private String username;
     private String password;
     private String project;
@@ -39,13 +42,14 @@ public class OSMMano extends MANO {
     @Fetch(FetchMode.SELECT)
     private List<String> vimAccounts = new ArrayList<>();
 
-    public OSMMano() {
+    public OSM() {
         // JPA only
     }
 
-    public OSMMano(String manoId, String ipAddress, String username, String password, String project, MANOType manoType, String manoSite, List<String> vimAccounts) {
+    public OSM(String manoId, String ipAddress, String port, String username, String password, String project, MANOType manoType, String manoSite, List<String> vimAccounts) {
         super(manoId, manoType, manoSite);
         this.ipAddress = ipAddress;
+        this.port = port;
         this.username = username;
         this.password = password;
         this.project = project;
@@ -56,6 +60,9 @@ public class OSMMano extends MANO {
     public String getIpAddress() {
         return ipAddress;
     }
+
+    @JsonProperty("port")
+    public String getPort() { return port; }
 
     @JsonProperty("username")
     public String getUsername() {
@@ -85,6 +92,8 @@ public class OSMMano extends MANO {
     public void isValid() throws MalformattedElementException {
         if (this.ipAddress == null)
             throw new MalformattedElementException("OSMMano without ipAddress");
+        if (this.port == null)
+            throw new MalformattedElementException("OSMMano without port");
         if (this.username == null)
             throw new MalformattedElementException("OSMMano without username");
         if (this.password == null)

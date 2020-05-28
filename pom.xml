@@ -13,6 +13,7 @@
 	    <module>OSMr4PlusDataModel</module>
 	    <module>OSMr4PlusClient</module>
 	    <module>OsmCataloguePlugin</module>
+        <module>OnapCataloguePlugin</module>
         <module>5gcatalogue-app</module>
     </modules>
 </project>

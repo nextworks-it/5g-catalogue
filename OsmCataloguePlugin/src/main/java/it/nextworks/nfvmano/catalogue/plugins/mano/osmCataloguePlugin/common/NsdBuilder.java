@@ -64,21 +64,21 @@ public class NsdBuilder {
     }
 
     private VLD makeVld(
-            String vlId,
+            Map.Entry<String, NsVirtualLinkNode> vl,
             List<DescriptorTemplate> vnfds,
             Map<String, Map<ConstituentVNFD, String>> vlToVnfMapping
     ) {
         VLD vld = new VLD();
-        vld.setId(vlId);
-        vld.setName(vlId);
-        vld.setShortName(vlId);
-        if(isMgmtNetwork(vlToVnfMapping.getOrDefault(vlId, Collections.emptyMap()), vnfds))
+        vld.setId(vl.getKey());
+        vld.setName(vl.getKey());
+        vld.setShortName(vl.getKey());
+        if(vl.getValue().getProperties().isMgmtNet() && isMgmtNetwork(vlToVnfMapping.getOrDefault(vl.getKey(), Collections.emptyMap()), vnfds))
             vld.setMgmtNetwork(true);
         vld.setType("ELAN");
         if(osmVimNetworkNameEnabled)
-            vld.setVimNetworkName(vlId);
+            vld.setVimNetworkName(vl.getKey());
         vld.setVnfdConnectionPointReferences(
-                vlToVnfMapping.getOrDefault(vlId, Collections.emptyMap()).entrySet()
+                vlToVnfMapping.getOrDefault(vl.getKey(), Collections.emptyMap()).entrySet()
                         .stream()
                         .map(e -> makeCPRef(
                                 e.getKey().getVnfdIdentifierReference(),
@@ -196,11 +196,11 @@ public class NsdBuilder {
 
         List<VLD> vlds = dt.getTopologyTemplate().getNsVirtualLinkNodes().entrySet()
                 .stream()
-                .map(e -> makeVld(e.getKey(), vnfds, vlToVnfMapping))
+                .map(e -> makeVld(e, vnfds, vlToVnfMapping))
                 .collect(Collectors.toList());
         //check if a mgmt is set, if not set the first vld found ad mgmt
-        List<Boolean> isMgmtNetowrks = vlds.stream().map(VLD::isMgmtNetwork).collect(Collectors.toList());
-        if(!isMgmtNetowrks.contains(true))
+        List<Boolean> isMgmtNetworks = vlds.stream().map(VLD::isMgmtNetwork).collect(Collectors.toList());
+        if(!isMgmtNetworks.contains(true))
             vlds.get(0).setMgmtNetwork(true);
         List<NSDescriptor> nsds = new ArrayList<>();
         NSDescriptor osmNsd = new NSDescriptor();

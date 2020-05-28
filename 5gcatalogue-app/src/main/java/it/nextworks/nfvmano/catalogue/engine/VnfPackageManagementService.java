@@ -487,11 +487,11 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
 
                 vnfPkgInfoResource.isDeletable();
 
-                if(!isInternalRequest && vnfPkgInfoResource.isRetrievedFromMANO()){
+                if(!isInternalRequest && !vnfPkgInfoResource.getOnboardingState().equals(PackageOnboardingStateType.FAILED) && vnfPkgInfoResource.isRetrievedFromMANO()){
                     throw new FailedOperationException("Cannot remove VNF Pkg info, it has been retrieved from MANO");
                 }
 
-                if(!isInternalRequest && vnfPkgInfoResource.getUserDefinedData().containsKey("isGeneratedFromAppD") && vnfPkgInfoResource.getUserDefinedData().get("isGeneratedFromAppD").equals("yes")){
+                if(!isInternalRequest && !vnfPkgInfoResource.getOnboardingState().equals(PackageOnboardingStateType.FAILED) && vnfPkgInfoResource.getUserDefinedData().containsKey("isGeneratedFromAppD") && vnfPkgInfoResource.getUserDefinedData().get("isGeneratedFromAppD").equals("yes")){
                     throw new FailedOperationException("Cannot remove VNF Pkg info, it has been generated from AppD. Please perform operations directly on the AppD");
                 }
 
@@ -879,10 +879,10 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
             throw new MalformattedElementException("Error while parsing VNF Pkg");
         } catch (MalformattedElementException e) {
-            log.error("Error while parsing VNF Pkg, not aligned with CSAR format: " + e.getMessage());
+            log.error("Error while parsing VNF Pkg: " + e.getMessage());
             vnfPkgInfoResource.setOnboardingState(PackageOnboardingStateType.FAILED);
             vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
-            throw new MalformattedElementException("Error while parsing VNF Pkg, not aligned with CSAR format");
+            throw new MalformattedElementException("Error while parsing VNF Pkg: " + e.getMessage());
         } catch (AlreadyExistingEntityException e) {
             vnfPkgInfoResource.setOnboardingState(PackageOnboardingStateType.FAILED);
             vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);

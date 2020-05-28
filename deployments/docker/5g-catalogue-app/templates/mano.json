@@ -4,6 +4,7 @@
     "manoSite": "_MANO_SITE_",
     "pluginOperationalState": "ENABLED",
     "ipAddress": "_MANO_IP_",
+    "port": "_MANO_PORT_",
     "username": "_MANO_USERNAME_",
     "password": "_MANO_PASSWORD_",
     "project": "_MANO_PROJECT_",

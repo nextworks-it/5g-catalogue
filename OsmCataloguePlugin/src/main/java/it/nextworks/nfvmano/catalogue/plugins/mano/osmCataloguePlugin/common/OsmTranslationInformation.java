@@ -5,7 +5,7 @@ import javax.persistence.*;
 import java.util.UUID;
 
 @Entity
-public class TranslationInformation {
+public class OsmTranslationInformation {
 
     @Id
     private UUID id;
@@ -18,11 +18,11 @@ public class TranslationInformation {
 
     private String osmManoId;
 
-    public TranslationInformation(){
+    public OsmTranslationInformation(){
 
     }
 
-    public TranslationInformation(String catInfoId, String osmInfoId, String catDescriptorId, String osmDescriptorId, String descriptorVersion, String osmManoId){
+    public OsmTranslationInformation(String catInfoId, String osmInfoId, String catDescriptorId, String osmDescriptorId, String descriptorVersion, String osmManoId){
         this.id = UUID.randomUUID();
         this.catInfoId = catInfoId;
         this.osmInfoId = osmInfoId;

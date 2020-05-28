@@ -30,6 +30,7 @@ import it.nextworks.nfvmano.catalogue.common.ConfigurationParameters;
 import it.nextworks.nfvmano.catalogue.engine.elements.ContentType;
 import it.nextworks.nfvmano.catalogue.engine.resources.*;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.*;
+import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.PackageOnboardingStateType;
 import it.nextworks.nfvmano.catalogue.plugins.PluginsManager;
 import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.C2COnboardingStateType;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginType;
@@ -479,7 +480,6 @@ public class NsdManagementService implements NsdManagementInterface {
         Map<String, NotificationResource> pluginToOperationState = new HashMap<>();
         for (MANO mano : manos) {
             pluginToOperationState.put(mano.getManoId(), new NotificationResource(nsdInfoId, messageType, opStatus, PluginType.MANO));
-
         }
         operationIdToConsumersAck.put(operationId.toString(), pluginToOperationState);
         return operationId;
@@ -609,7 +609,7 @@ public class NsdManagementService implements NsdManagementInterface {
 
                 nsdInfo.isDeletable();
 
-                if(!isInternalRequest && nsdInfo.isRetrievedFromMANO()){
+                if(!isInternalRequest && !nsdInfo.getNsdOnboardingState().equals(NsdOnboardingStateType.FAILED) && nsdInfo.isRetrievedFromMANO()){
                     throw new FailedOperationException("Cannot remove NSD info, it has been retrieved from MANO");
                 }
 
