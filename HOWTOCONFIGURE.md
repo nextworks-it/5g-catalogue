@@ -74,9 +74,9 @@ Directory where you have to put the configuration JSON files for running MANO Pl
 ```
 catalogue.manoPluginsConfigurations=/manoConfigurations
 ```
-If, for testing purpose, you need to skip MANO Plugins configuration put to "true"
+If, for testing purpose, you need to skip MANO Plugins configuration put to "false"
 ``` 
-catalogue.skipMANOPluginsConfig=false
+catalogue.mano.localPluginsConfig=true
 ```
 Directory where you can put the logo to be associated with the translated descriptors, **to be changed** depending on the ENV
 ```

@@ -22,7 +22,7 @@ For properly configuring the 5G Apps & Services Catalogue, the [.env](https://gi
 | PUBLIC_CATALOGUE_ID | Identifier of the Public 5G Apps & Services Catalogue |
 | PUBLIC_CATALOGUE_URL | URL of the Public 5G Apps & Services Catalogue |
 | MANO_ID | Identifier of the MANO |
-| MANO_TYPE | Three different MANOs are currently supported: OSMR4, OSMR5, OSMR6 |
+| MANO_TYPE | Three different MANOs are currently supported: OSMR4, OSMR5, OSMR6, OSMR7, ONAP |
 | MANO_SITE | Identifier of the site to which the MANO belongs |
 | MANO_IP | IP address of the MANO |
 | MANO_PORT | Port of the MANO |
@@ -39,6 +39,7 @@ For properly configuring the 5G Apps & Services Catalogue, the [.env](https://gi
 | KEYCLOAK_ADMIN_ROLE | Keycloak User Role with administrative privileges |
 | KEYCLOAK_USER_ROLE | Keycloak User Role with limited privileges |
 | KEYCLOAK_GUI_CLIENT | 5G Apps & Services Catalogue GUI client configured on Keycloak. It must be configured with public access type |
+| SITE_INVENTORY_URL | URL of the Site Inventory for MANO configurations retrieval |
 
 Inside the folder [5g-catalogue-app/profiles](https://github.com/nextworks-it/5g-catalogue/blob/master/deployments/docker/5g-catalogue-app/profiles/) four different profiles are defined: 
 
@@ -53,7 +54,8 @@ Inside the folder [5g-catalogue-app/profiles](https://github.com/nextworks-it/5g
 | CATALOGUE_RUNTIME_SYNC | Enable/Disable runtime synchronization from MANO |
 | CATALOGUE_RUNTIME_SYNC_PERIOD | Runtime synchronization period |
 | CATALOGUE_DUMMY_MANO | Use a Dummy MANO |
-| CATALOGUE_SKIP_MANO_CONFIG | Skip MANO plugin configuration |
+| CATALOGUE_MANO_LOCAL_CONFIG | Load MANO plugin configuration from local folder |
+| CATALOGUE_MANO_SITE_INVENTORY_CONFIG | Load MANO plugin configuration from Site Inventory |
 | CATALOGUE_OSM_VIM_NETWORK_NAME | Enable/Disable parameter "vim-network-name" on OSM NS descriptors |
 | CATALOGUE_LOGO_PATH | Directory where is possible to put the logo to be associated with the translated descriptors |
 | CATALOGUE_VIM_TYPE | Under development |

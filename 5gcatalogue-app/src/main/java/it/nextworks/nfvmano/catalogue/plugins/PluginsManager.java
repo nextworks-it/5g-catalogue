@@ -35,6 +35,9 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.repos.Ona
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.r4plus.OpenSourceMANOR4PlusPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.repos.OsmInfoObjectRepository;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.repos.TranslationInformationRepository;
+import it.nextworks.nfvmano.catalogue.plugins.siteInventory.SiteInventoryDriver;
+import it.nextworks.nfvmano.catalogue.plugins.siteInventory.model.Credentials;
+import it.nextworks.nfvmano.catalogue.plugins.siteInventory.model.NfvOrchestrator;
 import it.nextworks.nfvmano.catalogue.plugins.vim.VIM;
 import it.nextworks.nfvmano.catalogue.repos.*;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
@@ -83,8 +86,14 @@ public class PluginsManager {
     @Value("${catalogue.vimPluginsConfiguration}")
     private String vimConfigurationsDir;
 
-    @Value("${catalogue.skipMANOPluginsConfig}")
-    private boolean skipMANOConfig;
+    @Value("${catalogue.mano.localPluginsConfig}")
+    private boolean localMANOConfig;
+
+    @Value("${catalogue.mano.siteInventoryPluginsConfig}")
+    private boolean siteInventoryMANOConfig;
+
+    @Value("${siteInventory.url}")
+    private String siteInventoryUrl;
 
     @Value("${catalogue.skipDescriptorsLoad}")
     private boolean skipDescriptorsLoad;
@@ -177,11 +186,10 @@ public class PluginsManager {
                 log.error("Unable to instantiate DUMMY MANO Plugin. Malformatted MANO: " + e.getMessage());
             }
         } else {
-            if (!skipMANOConfig) {
+            if (localMANOConfig) {
+                log.info("Going to retrieve MANO Plugin configurations from local folder");
                 resources = loadMANOConfigurations();
-
                 ObjectMapper mapper = new ObjectMapper();
-
                 if (resources != null) {
                     for (int i = 0; i < resources.length; i++) {
                         if (resources[i].isFile() || resources[i] instanceof ClassPathResource) {
@@ -193,14 +201,12 @@ public class PluginsManager {
                                 }
                                 log.debug("Loading MANO configuration from config file #" + i + "");
                                 MANO newMano = mapper.readValue(tmp, MANO.class);
-                                log.debug("Successfully loaded configuration for MANO with manoId: "
-                                        + newMano.getManoId());
+                                log.debug("Successfully loaded configuration for MANO with manoId: " + newMano.getManoId());
                                 try {
-                                    log.debug("Creating MANO Plugin with manoId " + newMano.getManoId()
-                                            + " from configuration file");
+                                    log.debug("Creating MANO Plugin with manoId " + newMano.getManoId() + " from configuration file");
                                     createMANOPlugin(newMano, true);
                                 } catch (AlreadyExistingEntityException e) {
-                                    log.error("MANO with manoId " + newMano.getManoId() + " already present in DB");
+                                    log.debug("MANO with manoId " + newMano.getManoId() + " already present in DB");
                                 } catch (MethodNotImplementedException e) {
                                     log.error("Unsupported MANO type for MANO with manoId: " + newMano.getManoId());
                                 } catch (MalformattedElementException e) {
@@ -216,6 +222,48 @@ public class PluginsManager {
                 }
             }
 
+            if(siteInventoryMANOConfig){
+                log.info("Going to retrieve MANO plugin configurations from Site Inventory");
+                List<NfvOrchestrator> nfvOrchestratorList = null;
+                try {
+                    SiteInventoryDriver siteInventoryDriver = new SiteInventoryDriver(siteInventoryUrl);
+                    nfvOrchestratorList = siteInventoryDriver.getNFVOs();
+                }catch(FailedOperationException e) {
+                    log.error("Unable to retrieve MANO configurations from site inventory: " + e.getMessage());
+                }
+                String newManoId = null;
+                try{
+                    if(nfvOrchestratorList != null) {
+                        for (NfvOrchestrator nfvOrchestrator : nfvOrchestratorList) {
+                            MANO newMano = null;
+                            newManoId = nfvOrchestrator.getName();
+                            if(newManoId == null)
+                                log.error("Unable to retrieve MANO plugin configuration: MANO ID is null");
+                            else if(nfvOrchestrator.getType() == null || nfvOrchestrator.getCredentials() == null || nfvOrchestrator.getSite() == null || nfvOrchestrator.getVersion() == null || nfvOrchestrator.getOperationalState() == null || nfvOrchestrator.getCredentials().getHost() == null)
+                                log.error("Unable to retrieve MANO plugin configuration for MANO with ID {}", newManoId);
+                            else {
+                                Credentials manoCredentials = nfvOrchestrator.getCredentials();
+                                if (nfvOrchestrator.getType().equalsIgnoreCase("OSM"))
+                                    newMano = new OSM(newManoId, manoCredentials.getHost(), String.valueOf(manoCredentials.getPort()), manoCredentials.getUsername(), manoCredentials.getPassword(), manoCredentials.getProject(), MANOType.valueOf(nfvOrchestrator.getType().toUpperCase() + nfvOrchestrator.getVersion().toUpperCase()), nfvOrchestrator.getSite().getName(), null);
+                                else if (nfvOrchestrator.getType().equalsIgnoreCase("ONAP"))
+                                    newMano = new ONAP(newManoId, manoCredentials.getHost(), String.valueOf(manoCredentials.getPort()), MANOType.valueOf(nfvOrchestrator.getType().toUpperCase()), nfvOrchestrator.getSite().getName());
+                                else
+                                    throw new MethodNotImplementedException("Unsupported MANO type");
+                                newMano.setPluginOperationalState(PluginOperationalState.valueOf(nfvOrchestrator.getOperationalState().toUpperCase()));
+                                log.debug("Creating MANO Plugin with manoId " + newMano.getManoId() + " from site inventory configuration");
+                                createMANOPlugin(newMano, true);
+                            }
+                        }
+                    }
+                }catch (AlreadyExistingEntityException e) {
+                    log.debug("MANO with manoId " + newManoId + " already present in DB");
+                } catch (MethodNotImplementedException e) {
+                    log.error("Unsupported MANO type for MANO with manoId: " + newManoId);
+                } catch (MalformattedElementException e) {
+                    log.error("Malformatted MANO with manoId " + newManoId + ": " + e.getMessage());
+                }
+            }
+
             log.debug("Loading MANO info from DB");
             List<MANO> manos = MANORepository.findAll();
 
@@ -226,7 +274,6 @@ public class PluginsManager {
                 try {
                     log.debug("Instantiating MANO with manoId: " + mano.getManoId());
                     if (mano.getPluginOperationalState() != PluginOperationalState.DELETING) {
-                        log.debug("Instantiating MANO with manoId: " + mano.getManoId());
                         addMANO(mano);
                         log.debug("MANO with manoId " + mano.getManoId() + " successfully instantiated");
                     } else {
@@ -349,9 +396,9 @@ public class PluginsManager {
             throws AlreadyExistingEntityException, MethodNotImplementedException, MalformattedElementException {
         String manoId = mano.getManoId();
         if (MANORepository.findByManoId(manoId).isPresent()) {
-            log.error("A MANO with the same ID is already available in DB - Not acceptable");
+            log.debug("A MANO with the same ID is already available in DB - Skipping");
             throw new AlreadyExistingEntityException(
-                    "A MANO with the same ID is already available in DB - Not acceptable");
+                    "A MANO with the same ID is already available in DB - Skipping");
         }
 
         if (mano.getPluginOperationalState() == null) {

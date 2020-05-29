@@ -17,6 +17,8 @@ package it.nextworks.nfvmano.catalogue.translators;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import it.nextworks.nfvmano.catalogue.plugins.siteInventory.SiteInventoryDriver;
+import it.nextworks.nfvmano.catalogue.plugins.siteInventory.model.NfvOrchestrator;
 import it.nextworks.nfvmano.catalogue.translators.tosca.ArchiveParser;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
@@ -37,6 +39,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
 import static org.junit.Assert.assertNotNull;
 
