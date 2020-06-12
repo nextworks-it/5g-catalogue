@@ -283,24 +283,6 @@ public class OnapPlugin extends MANOPlugin {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         List<OnapServiceSpecification> nsSpecificationList;
         List<File> nsPackages = new ArrayList<>();
-        File root = new File("/home/leonardo/Documents");
-        FilenameFilter zipFilter = (f, name) -> name.endsWith(".zip");
-        File[] zippedFiles = root.listFiles(zipFilter);
-        for(int i = 0; i < zippedFiles.length; i++) {
-            File nsPackageTmp = new File(zippedFiles[i].toPath().toString());
-            File targetFile = new File(String.format("%s/%s" , onapDir, zippedFiles[i].getName()));
-            try {
-                java.nio.file.Files.copy(
-                        nsPackageTmp.toPath(),
-                        targetFile.toPath(),
-                        StandardCopyOption.REPLACE_EXISTING);
-                Utilities.unzip(targetFile, new File(onapDir, "."));
-            } catch (IOException e) {
-                log.error("Failed to copy and unzip the file");
-            }
-            File unzippedNsPackage = new File(onapDir, "ONAP" + i);
-            nsPackages.add(unzippedNsPackage);
-        }
         nsSpecificationList = onapClient.getServicesSpecification();
         for(OnapServiceSpecification nsSpecification : nsSpecificationList){
             try {
