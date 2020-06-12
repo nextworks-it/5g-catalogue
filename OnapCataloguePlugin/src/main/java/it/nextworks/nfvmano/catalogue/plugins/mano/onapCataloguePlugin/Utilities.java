@@ -12,7 +12,7 @@ import java.util.zip.ZipFile;
 public class Utilities {
 
     public static File getNsDescriptorFile(File nsPackage) throws FailedOperationException {
-        File definitionsFolder = getDefinitionsFolder(nsPackage);
+        File definitionsFolder = new File(nsPackage, "Definitions");
         FilenameFilter fileTemplateFilter = (f, name) -> name.startsWith("service-") && name.endsWith("-template.yml");
         String[] files = definitionsFolder.list(fileTemplateFilter);
         if(files == null || files.length != 1)
@@ -22,7 +22,7 @@ public class Utilities {
 
     public static List<File> getVnfDescriptorFiles(File nsPackage, OnapNsDescriptor nsDescriptor) throws FailedOperationException{
         List<File> vnfDescriptorFiles = new ArrayList<>();
-        File definitionsFolder = getDefinitionsFolder(nsPackage);
+        File definitionsFolder = new File(nsPackage, "Definitions");
         //Map <nodeName, vfIdentifier>
         Map<String, String> nodeVfIdentifierMapping = nsDescriptor.getVFIdentifiers();
         Set<String> vfIdentifiersSet = new HashSet<>(nodeVfIdentifierMapping.values());
@@ -31,28 +31,17 @@ public class Utilities {
         return vnfDescriptorFiles;
     }
 
-    public static File getDefinitionsFolder(File nsPackage) throws FailedOperationException{
-        File serviceFolder = new File(nsPackage, "service");
-        FilenameFilter csarDirectoryFilter = (f, name) -> f.isDirectory() && name.endsWith("-csar");
-        String[] files = serviceFolder.list(csarDirectoryFilter);//get only the directory name
-        if(files == null || files.length != 1)
-            throw new FailedOperationException("Cannot obtain the Definitions folder");
-        return new File(serviceFolder, files[0] + "/Definitions");
-    }
-
     public static boolean isTargetMano (List<String> siteOrManoIds, MANO mano){
         if(siteOrManoIds.contains(mano.getManoId()) || siteOrManoIds.contains(mano.getManoSite()))
             return true;
         return false;
     }
 
-    public static String unzip(File zipfile, File directory) throws IOException {
-        String rootDir = null;
+    public static void unzip(File zipfile, File directory) throws IOException {
         ZipFile zfile = new ZipFile(zipfile);
         Enumeration<? extends ZipEntry> entries = zfile.entries();
         while (entries.hasMoreElements()) {
             ZipEntry entry = entries.nextElement();
-            rootDir = entry.getName().split("/")[0];//all the files are within a root directory
             File file = new File(directory, entry.getName());
             if (entry.isDirectory()) {
                 file.mkdirs();
@@ -66,7 +55,6 @@ public class Utilities {
                 }
             }
         }
-        return rootDir;
     }
 
     private static void copy(InputStream in, File file) throws IOException {

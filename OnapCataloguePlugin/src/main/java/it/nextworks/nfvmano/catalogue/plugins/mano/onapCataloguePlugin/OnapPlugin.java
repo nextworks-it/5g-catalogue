@@ -23,10 +23,7 @@ import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.Pat
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.ScopeType;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.*;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.onap.ONAP;
-import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.model.OnapNsDescriptor;
-import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.model.OnapObject;
-import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.model.OnapObjectType;
-import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.model.OnapVnfDescriptor;
+import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.model.*;
 import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.repos.OnapObjectRepository;
 import it.nextworks.nfvmano.libs.common.elements.KeyValuePair;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
@@ -184,8 +181,11 @@ public class OnapPlugin extends MANOPlugin {
             if(opStatus.equals(OperationStatus.SUCCESSFULLY_DONE)){
                 onapObject.setCatalogueId(infoId);
                 onapObjectRepository.saveAndFlush(onapObject);
-            }else
+            }
+            /*
+            else
                 onapObjectRepository.delete(onapObject);
+             */
         }
     }
 
@@ -281,22 +281,8 @@ public class OnapPlugin extends MANOPlugin {
     private void updateDB() throws FailedOperationException{
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        List<String> nsIds;
+        List<OnapServiceSpecification> nsSpecificationList;
         List<File> nsPackages = new ArrayList<>();
-        nsIds = onapClient.getNsIds();
-        for(String nsId : nsIds){
-            try {
-                File nsPackage = onapClient.getNsPackage(nsId, onapDir);
-                String unzippedPackageName = Utilities.unzip(nsPackage, new File(onapDir, "."));
-                nsPackages.add(new File(onapDir, unzippedPackageName));
-            }catch (IOException e) {
-                throw new FailedOperationException("Failed to unzip the file: " + e.getMessage());
-            }
-        }
-        //nsPackages = onapClient.getNsPackages(onapDir);//salva e fa unzip in onap dir, restituisce file unzipped
-        /*
-        //TODO to be removed
-        nsPackages = new ArrayList<>();
         File root = new File("/home/leonardo/Documents");
         FilenameFilter zipFilter = (f, name) -> name.endsWith(".zip");
         File[] zippedFiles = root.listFiles(zipFilter);
@@ -315,8 +301,17 @@ public class OnapPlugin extends MANOPlugin {
             File unzippedNsPackage = new File(onapDir, "ONAP" + i);
             nsPackages.add(unzippedNsPackage);
         }
-        //TODO
-        */
+        nsSpecificationList = onapClient.getServicesSpecification();
+        for(OnapServiceSpecification nsSpecification : nsSpecificationList){
+            try {
+                File nsPackage = onapClient.getNsPackage(nsSpecification, onapDir);
+                File unzippedNsPackage = new File(onapDir, nsSpecification.getNsName());
+                Utilities.unzip(nsPackage, unzippedNsPackage);
+                nsPackages.add(unzippedNsPackage);
+            }catch (IOException e) {
+                throw new FailedOperationException("Failed to unzip the file: " + e.getMessage());
+            }
+        }
         for(File nsPackage : nsPackages){
             File nsDescriptorFile = Utilities.getNsDescriptorFile(nsPackage);
             OnapNsDescriptor nsDescriptor;
@@ -406,8 +401,11 @@ public class OnapPlugin extends MANOPlugin {
                     if (notification.getOpStatus().equals(OperationStatus.SUCCESSFULLY_DONE)) {
                         onapObject.setCatalogueId(notification.getNsdInfoId());
                         onapObjectRepository.saveAndFlush(onapObject);
-                    } else
+                    }
+                    /*
+                    else
                         onapObjectRepository.delete(onapObject);
+                     */
                 }
             }
         }
@@ -451,8 +449,11 @@ public class OnapPlugin extends MANOPlugin {
                     if (notification.getOpStatus().equals(OperationStatus.SUCCESSFULLY_DONE)) {
                         onapObject.setCatalogueId(notification.getVnfPkgInfoId());
                         onapObjectRepository.saveAndFlush(onapObject);
-                    } else
+                    }
+                    /*
+                    else
                         onapObjectRepository.delete(onapObject);
+                     */
                 }
             }
         }

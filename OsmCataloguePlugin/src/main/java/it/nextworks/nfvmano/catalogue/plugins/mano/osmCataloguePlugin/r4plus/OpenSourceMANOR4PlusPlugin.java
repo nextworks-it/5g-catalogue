@@ -256,8 +256,10 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
             OsmInfoObject osmInfoObject = osmInfoObjectOptional.get();
             if(opStatus.equals(OperationStatus.SUCCESSFULLY_DONE))
                 translationInformationRepository.saveAndFlush(new OsmTranslationInformation(infoId, osmInfoObject.getId(), descriptorId, osmInfoObject.getDescriptorId(), descriptorVersion, osm.getManoId()));
+            /*
             else
                 osmInfoObjectRepository.delete(osmInfoObject);
+             */
         }
     }
 
@@ -620,8 +622,10 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                 if (osmInfoObject.isPresent()){
                     if(notification.getOpStatus().equals(OperationStatus.SUCCESSFULLY_DONE))
                         translationInformationRepository.saveAndFlush(new OsmTranslationInformation(notification.getNsdInfoId(), osmInfoObject.get().getId(), notification.getNsdId(), osmInfoObject.get().getDescriptorId(), notification.getNsdVersion(), osm.getManoId()));
+                    /*
                     else
                         osmInfoObjectRepository.delete(osmInfoObject.get());
+                     */
                 }
             }
         }
@@ -778,8 +782,10 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                 if(osmInfoObject.isPresent())
                     if(notification.getOpStatus().equals(OperationStatus.SUCCESSFULLY_DONE))
                         translationInformationRepository.saveAndFlush(new OsmTranslationInformation(notification.getVnfPkgInfoId(), osmInfoObject.get().getId(), notification.getVnfdId(), osmInfoObject.get().getDescriptorId(), notification.getVnfdVersion(), osm.getManoId()));
+                    /*
                     else
                         osmInfoObjectRepository.delete(osmInfoObject.get());
+                     */
             }
         }
     }

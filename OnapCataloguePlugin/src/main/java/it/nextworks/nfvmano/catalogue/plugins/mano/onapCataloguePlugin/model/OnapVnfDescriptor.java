@@ -40,6 +40,19 @@ public class OnapVnfDescriptor {
     }
 
     @JsonIgnore
+    public Map <String, Object> getVduNodes() throws IllegalArgumentException{
+        Map<String, Object> vduNodes = new HashMap<>();
+        Map<String, Object> nodeTemplates = getNodeTemplates();
+        for (Map.Entry<String, Object> nodeTemplate : nodeTemplates.entrySet()) {
+            Map<String, Object> node = (Map<String, Object>) nodeTemplate.getValue();
+            String nodeType = (String) node.get("type");
+            if (nodeType.startsWith("org.openecomp.resource.vfc.") && nodeType.contains("abstract.nodes"))
+                vduNodes.put(nodeTemplate.getKey(), node);
+        }
+        return vduNodes;
+    }
+
+    @JsonIgnore
     public Map<String, Object> getInputs(){
         return (Map <String, Object>) getTopologyTemplate().get("inputs");
     }
@@ -50,15 +63,29 @@ public class OnapVnfDescriptor {
     }
 
     @JsonIgnore
-    public String getImageName() throws IllegalArgumentException{
-        Map<String, String> imageDescription = (Map<String, String>) getInputs().get("image_name");
-        if(imageDescription == null)
-            throw new IllegalArgumentException("Cannot find image name in inputs parameter");
-        return imageDescription.get("default");
+    public String getImageName(String vduNodeName) throws IllegalArgumentException{
+        Map<String, Object> inputs = getInputs();
+        Map<String, Object> nodeTemplates = getNodeTemplates();
+        Map<String, Object> vduNode = (Map<String, Object>)nodeTemplates.get(vduNodeName);
+        Map<String, Object> properties = (Map<String, Object>)vduNode.get("properties");
+        Object vmImageName =  properties.get("vm_image_name");
+        if(vmImageName == null){
+            throw new IllegalArgumentException("Image name not specified for VDU " + vduNodeName);
+        }else if(vmImageName instanceof List) {
+            Object image = ((List) vmImageName).get(0);
+            Map<String, String> imageDescription = (Map<String, String>) inputs.get(((Map) image).get("get_input"));
+            return imageDescription.get("default");
+        }else if(vmImageName instanceof Map){
+            Map<String, String> imageDescription = (Map<String, String>) inputs.get(((Map) vmImageName).get("get_input"));
+            return imageDescription.get("default");
+        }else
+            throw new IllegalArgumentException("Illegal argument for image name in node : " + vduNodeName);
     }
 
     @JsonIgnore
-    public Integer getRam() throws IllegalArgumentException{
+    public Integer getRam(String vduNodeName) throws IllegalArgumentException{
+        //TODO change
+        Map<String, Object> inputs = getInputs();
         Map<String, String> ramDescription = (Map<String, String>) getInputs().get("vRam");
         if(ramDescription == null)
             throw new IllegalArgumentException("Cannot find vRam in inputs parameters");
@@ -66,7 +93,8 @@ public class OnapVnfDescriptor {
     }
 
     @JsonIgnore
-    public Integer getCpu() throws IllegalArgumentException{
+    public Integer getCpu(String vduNodeName) throws IllegalArgumentException{
+        //TODO change
         Map<String, String> cpuDescription = (Map<String, String>) getInputs().get("vCpu");
         if(cpuDescription == null)
             throw new IllegalArgumentException("Cannot find vCpu in inputs parameters");
@@ -74,7 +102,8 @@ public class OnapVnfDescriptor {
     }
 
     @JsonIgnore
-    public Integer getStorage() throws IllegalArgumentException{
+    public Integer getStorage(String vduNodeName) throws IllegalArgumentException{
+        //TODO change
         Map<String, String> storageDescription = (Map<String, String>) getInputs().get("storage");
         if(storageDescription == null)
             throw new IllegalArgumentException("Cannot find storage size in inputs parameters");
@@ -83,6 +112,7 @@ public class OnapVnfDescriptor {
 
     @JsonIgnore
     public String getMgmtCp() throws IllegalArgumentException{
+        //TODO maybe not needed, we can choose randomly the mgmt cp???
         Map<String, String> mgmtCpDescription = (Map<String, String>) getInputs().get("mgmt_port");
         if(mgmtCpDescription == null)
             throw new IllegalArgumentException("Cannot find management port in inputs parameters");
@@ -97,24 +127,25 @@ public class OnapVnfDescriptor {
         for (Map.Entry<String, Object> nodeTemplate : nodeTemplates.entrySet()){
             Map <String, Object> node = (Map <String, Object>) nodeTemplate.getValue();
             String nodeType = (String) node.get("type");
-            if(nodeType.startsWith("org.openecomp.resource.vfc.")){
+            if(nodeType.startsWith("org.openecomp.resource.vfc.") && nodeType.contains("abstract.nodes")){
                 Map<String, Object> properties = (Map <String, Object>) node.get("properties");
                 List<String> propertiesName = new ArrayList<>(properties.keySet());
-                List<String> cpNames = propertiesName.stream().filter(name -> name.endsWith("port_network")).collect(Collectors.toList());
+                List<String> cpNames = propertiesName.stream().filter(name -> name.matches("^port_.+_port.*_network$")).collect(Collectors.toList());
                 for(String cpName : cpNames){
                     Object cpProperties = properties.get(cpName);
+                    String cpNameRefactored = cpName.replaceAll("_port.*_network", "");
                     if(cpProperties instanceof List){
                         Object link = ((List) cpProperties).get(0);
                         if(link instanceof Map) {
                             Map<String, String> linkDescription = (Map<String, String>) inputs.get(((Map) link).get("get_input"));
-                            cpLinkAssociations.put(cpName, linkDescription.get("default"));
+                            cpLinkAssociations.put(cpNameRefactored, linkDescription.get("default"));
                         }else if(link instanceof String)
-                            cpLinkAssociations.put(cpName, findLinkName((String)link));
+                            cpLinkAssociations.put(cpNameRefactored, findLinkName((String)link));
                         else
                             throw new IllegalArgumentException("Illegal argument provided for port : " + cpName);
                     }else if(cpProperties instanceof Map){
                         Map<String, String> linkDescription = (Map<String, String>) inputs.get(((Map) cpProperties).get("get_input"));
-                        cpLinkAssociations.put(cpName, linkDescription.get("default"));
+                        cpLinkAssociations.put(cpNameRefactored, linkDescription.get("default"));
                     } else
                         throw new IllegalArgumentException("Illegal argument provided for port : " + cpName);
                 }
@@ -130,7 +161,9 @@ public class OnapVnfDescriptor {
         Map<String, Object> networkNode = (Map<String, Object>)nodeTemplates.get(networkNodeName);
         Map<String, Object> properties = (Map<String, Object>)networkNode.get("properties");
         Object networkName =  properties.get("network_name");
-        if(networkName instanceof List) {
+        if(networkName == null){
+            return networkNodeName;
+        }else if(networkName instanceof List) {
             Object link = ((List) networkName).get(0);
             Map<String, String> linkDescription = (Map<String, String>) inputs.get(((Map) link).get("get_input"));
             return linkDescription.get("default");

@@ -1,5 +1,6 @@
 package it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin;
 
+import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.model.OnapServiceSpecification;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,10 +34,11 @@ public class OnapDriver {
         ));
     }
 
-    public List<String> getNsIds() throws FailedOperationException{
+    public List<OnapServiceSpecification> getServicesSpecification() throws FailedOperationException{
+        log.info("Getting the list of onboarded Network Services");
         HttpEntity<?> getEntity = new HttpEntity<>(new HttpHeaders());
         try {
-            ResponseEntity<List<String>> httpResponse = restTemplate.exchange(baseUrl, HttpMethod.GET, getEntity, new ParameterizedTypeReference<List<String>>() {});
+            ResponseEntity<List<OnapServiceSpecification>> httpResponse = restTemplate.exchange(baseUrl, HttpMethod.GET, getEntity, new ParameterizedTypeReference<List<OnapServiceSpecification>>() {});
             if(httpResponse.getStatusCode() == HttpStatus.OK)
                 return new ArrayList<>(httpResponse.getBody());
             else
@@ -52,11 +54,12 @@ public class OnapDriver {
         }
     }
 
-    public File getNsPackage(String nsId, File onapDir) throws FailedOperationException, IOException {
-        String url = String.format("%s/%s", baseUrl, nsId);
+    public File getNsPackage(OnapServiceSpecification nsSpecification, File onapDir) throws FailedOperationException, IOException {
+        log.info("Getting Network Service package with ID {} and name {}", nsSpecification.getNsId(), nsSpecification.getNsName());
+        String url = String.format("%s/%s", baseUrl, nsSpecification.getNsId());
         try {
             byte[] downloadedBytes = restTemplate.getForObject(url, byte[].class);
-            File nsPackage = new File(onapDir, nsId + ".zip");
+            File nsPackage = new File(onapDir, nsSpecification.getNsName() + ".zip");
             FileOutputStream fos = new FileOutputStream(nsPackage);
             fos.write(downloadedBytes);
             fos.close();

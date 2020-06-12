@@ -5,13 +5,14 @@ services:
   zookeeper:
     image: wurstmeister/zookeeper
     restart: always
-      
+
   kafka:
-    image: wurstmeister/kafka:2.12-2.4.0
+    image: wurstmeister/kafka:2.12-2.5.0
     restart: always
     environment:
         KAFKA_LISTENERS: PLAINTEXT://:9092
         KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+        KAFKA_CREATE_TOPICS: "${CATALOGUE_SCOPE}catalogue-onboarding-local, ${CATALOGUE_SCOPE}catalogue-onboarding-remote"
     ports:
       - ${KAFKA_PORT}:9092
     depends_on:
@@ -30,6 +31,7 @@ services:
       - ${POSTGRES_PORT}:5432
 
   5gCatalogueApp:
+    container_name: 5gCatalogueApp
     image: 5g-catalogue-app:${CATALOGUE_VERSION}
     restart: always
     build: 
@@ -77,6 +79,7 @@ services:
       - kafka
 
   5gCatalogueGui:
+    container_name: 5gCatalogueGui
     image: 5g-catalogue-gui:${CATALOGUE_VERSION}
     restart: always
     build: 

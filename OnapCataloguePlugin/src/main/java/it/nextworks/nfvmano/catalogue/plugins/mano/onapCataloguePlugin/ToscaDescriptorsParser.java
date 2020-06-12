@@ -63,10 +63,6 @@ public class ToscaDescriptorsParser {
         if(name == null)
             throw new IllegalArgumentException("Descriptor without name");
         String resourceVendorRelease = (String)onapMetadata.get("resourceVendorRelease");
-        String imageName = onapVnfDescriptor.getImageName();
-        Integer vRam = 1024;//TODO onapVnfDescriptor.getRam();
-        Integer vCpu = 1;//TODO onapVnfDescriptor.getCpu();
-        Integer storage = 1;//TODO onapVnfDescriptor.getStorage();
         Map<String, String> cpLinkAssociations = onapVnfDescriptor.getConnectionPointLinkAssociations();
         if(cpLinkAssociations.size() == 0)
             throw new IllegalArgumentException("Descriptor without connection points");
@@ -100,7 +96,7 @@ public class ToscaDescriptorsParser {
             nodeTemplates.put(cp, new VnfExtCpNode(null, cpProperties, cpRequirements));//type: "tosca.nodes.nfv.VnfExtCp"
         }
 
-        //select ta random cp ad mgmt
+        //select ta random cp as mgmt
         if(!mgmtFound){
             List<LayerProtocol> layerProtocols = new ArrayList<>();
             layerProtocols.add(LayerProtocol.IPV4);
@@ -118,25 +114,32 @@ public class ToscaDescriptorsParser {
             nodeTemplates.replace(cpName, new VnfExtCpNode(null, cpProperties, cpRequirements));
         }
 
-        //For the moment consider only single VDU
-        log.debug("Creating VDUVirtualBlockStorageNode");
-        //Creating  VDUVirtualBlockStorageNode
-        VirtualBlockStorageData virtualBlockStorageData = new VirtualBlockStorageData(storage, null, false);
-        VDUVirtualBlockStorageProperties bsProperties = new VDUVirtualBlockStorageProperties(virtualBlockStorageData, null);
-        nodeTemplates.put(name + "_storage", new VDUVirtualBlockStorageNode(null, bsProperties));//type: "tosca.nodes.nfv.Vdu.VirtualBlockStorage"
+        Map<String, Object> vduNodes = onapVnfDescriptor.getVduNodes();
+        for(Map.Entry<String, Object> vduNode : vduNodes.entrySet()) {
+            String imageName = onapVnfDescriptor.getImageName(vduNode.getKey());
+            Integer vRam = 1024;//TODO onapVnfDescriptor.getRam(vduNode.getKey());
+            Integer vCpu = 1;//TODO onapVnfDescriptor.getCpu(vduNode.getKey());
+            Integer storage = 1;//TODO onapVnfDescriptor.getStorage(vduNode.getKey());
+            String vduName = vduNode.getKey().replace("abstract_", "");
+            log.debug("Creating VDUVirtualBlockStorageNode for vdu {}", vduName);
+            //Creating  VDUVirtualBlockStorageNode
+            VirtualBlockStorageData virtualBlockStorageData = new VirtualBlockStorageData(storage, null, false);
+            VDUVirtualBlockStorageProperties bsProperties = new VDUVirtualBlockStorageProperties(virtualBlockStorageData, null);
+            nodeTemplates.put(vduName + "_storage", new VDUVirtualBlockStorageNode(null, bsProperties));//type: "tosca.nodes.nfv.Vdu.VirtualBlockStorage"
 
-        log.debug("Creating VDUComputeNode");
-        //Creating VDUComputeNode
-        VduProfile vduProfile = new VduProfile(1, 1);
-        SwImageData swImageData = new SwImageData(imageName, resourceVendorRelease, null, null, null, null, null, null, null, null);
-        VDUComputeProperties vduProperties = new VDUComputeProperties(name + "_vdu", null, null, null, null, null, null, vduProfile, swImageData);
-        VirtualComputeCapabilityProperties vccProperties = new VirtualComputeCapabilityProperties(null, null, null, new VirtualMemory(vRam, null, null, false), new VirtualCpu(null, null, vCpu, null, null, null, null), null);
-        VirtualComputeCapability virtualComputeCapability = new VirtualComputeCapability(vccProperties);
-        VDUComputeCapabilities vduCapabilities = new VDUComputeCapabilities(virtualComputeCapability);
-        List<String> storages = new ArrayList<>();
-        storages.add(name + "_storage");
-        VDUComputeRequirements vduRequirements = new VDUComputeRequirements(null, storages);
-        nodeTemplates.put(name + "_vdu", new VDUComputeNode(null, vduProperties, vduCapabilities, vduRequirements));//type: "tosca.nodes.nfv.Vdu.Compute"
+            log.debug("Creating VDUComputeNode for vdu {}", vduName);
+            //Creating VDUComputeNode
+            VduProfile vduProfile = new VduProfile(1, 1);
+            SwImageData swImageData = new SwImageData(imageName, resourceVendorRelease, null, null, null, null, null, null, null, null);
+            VDUComputeProperties vduProperties = new VDUComputeProperties(vduName + "_vdu", null, null, null, null, null, null, vduProfile, swImageData);
+            VirtualComputeCapabilityProperties vccProperties = new VirtualComputeCapabilityProperties(null, null, null, new VirtualMemory(vRam, null, null, false), new VirtualCpu(null, null, vCpu, null, null, null, null), null);
+            VirtualComputeCapability virtualComputeCapability = new VirtualComputeCapability(vccProperties);
+            VDUComputeCapabilities vduCapabilities = new VDUComputeCapabilities(virtualComputeCapability);
+            List<String> storages = new ArrayList<>();
+            storages.add(vduName + "_storage");
+            VDUComputeRequirements vduRequirements = new VDUComputeRequirements(null, storages);
+            nodeTemplates.put(vduName + "_vdu", new VDUComputeNode(null, vduProperties, vduCapabilities, vduRequirements));//type: "tosca.nodes.nfv.Vdu.Compute"
+        }
 
         log.debug("Creating VNFNode");
         //Creating VNFNode

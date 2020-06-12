@@ -3,6 +3,6 @@
   "manoType": "ONAP",
   "manoSite": "ONAP_SITE",
   "pluginOperationalState": "ENABLED",
-  "ipAddress": "172.17.105.29",
-  "port": "8080"
+  "ipAddress": "127.0.0.1",
+  "port": "9999"
 }
