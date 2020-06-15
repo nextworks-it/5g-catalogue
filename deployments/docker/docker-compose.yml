@@ -11,10 +11,8 @@ services:
     restart: always
     environment:
         KAFKA_LISTENERS: PLAINTEXT://:9092
+        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
         KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-        KAFKA_CREATE_TOPICS: "${CATALOGUE_SCOPE}catalogue-onboarding-local, ${CATALOGUE_SCOPE}catalogue-onboarding-remote"
-    ports:
-      - ${KAFKA_PORT}:9092
     depends_on:
       - zookeeper
 
