@@ -35,6 +35,9 @@ RUN wget http://apache-mirror.rbc.ru/pub/apache/maven/maven-3/3.3.9/binaries/apa
 ENV MAVEN_HOME=/opt/maven/current 
 ENV PATH=$PATH:$MAVEN_HOME/bin
 
+# Proxy configuration for Maven
+COPY templates/settings.xml /opt/maven/current/conf/.
+
 # Install nfvo-sol-libs
 WORKDIR /home
 RUN git clone ${nfv_sol_libs_repo} nfv-sol-libs
