@@ -17,6 +17,7 @@ ARG mano_password=admin
 ARG mano_project=admin
 ARG public_catalogue_id=DEFAULT_CAT
 ARG public_catalogue_url=127.0.0.1
+ARG proxy_enabled=false
 
 # Update Ubuntu software repository
 RUN apk update
@@ -37,6 +38,7 @@ ENV PATH=$PATH:$MAVEN_HOME/bin
 
 # Proxy configuration for Maven
 COPY templates/settings.xml /opt/maven/current/conf/.
+RUN if [ "$proxy_enabled" = "false" ] ; then rm /opt/maven/current/conf/settings.xml; fi
 
 # Install nfvo-sol-libs
 WORKDIR /home

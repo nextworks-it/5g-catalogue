@@ -2,7 +2,7 @@
     <proxies>
         <proxy>
             <id>genproxy</id>
-            <active>${env.FIVEGEVE_IWL_PROXY}</active>
+            <active>true</active>
             <protocol>http</protocol>
             <host>163.162.8.137</host>
             <port>9777</port>

@@ -51,6 +51,7 @@ services:
         mano_project: ${MANO_PROJECT}
         public_catalogue_id: ${PUBLIC_CATALOGUE_ID}
         public_catalogue_url: ${PUBLIC_CATALOGUE_URL}
+        proxy_enabled: ${PROXY_ENABLED}
     volumes:
       - ./volumes/catalogue-app/catalogueStorage:/home/catalogueStorage
       - ./volumes/catalogue-app/osmStorage:/home/osmStorage
