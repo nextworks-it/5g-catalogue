@@ -23,6 +23,8 @@ import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.Cat
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.ScopeType;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class VnfPkgDeletionNotificationMessage extends CatalogueMessage {
@@ -33,6 +35,9 @@ public class VnfPkgDeletionNotificationMessage extends CatalogueMessage {
     private final String project;
 
     private String vnfName;
+
+    @JsonInclude(Include.NON_EMPTY)
+    private List<String> siteOrManoIds = new ArrayList<>();
 
     @JsonInclude(Include.NON_NULL)
     private String pluginId;
@@ -46,7 +51,8 @@ public class VnfPkgDeletionNotificationMessage extends CatalogueMessage {
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus,
-            @JsonProperty("pluginId") String pluginId
+            @JsonProperty("pluginId") String pluginId,
+            @JsonProperty("siteOrManoIds") List<String> siteOrManoIds
     ) {
         super(CatalogueMessageType.VNFPKG_DELETION_NOTIFICATION, operationId, scope, opStatus);
         this.vnfPkgInfoId = vnfPkgInfoId;
@@ -54,6 +60,10 @@ public class VnfPkgDeletionNotificationMessage extends CatalogueMessage {
         this.vnfdVersion = vnfdVersion;
         this.pluginId = pluginId;
         this.project = project;
+        if(siteOrManoIds != null)
+            this.siteOrManoIds.addAll(siteOrManoIds);
+        else
+            this.siteOrManoIds = null;
     }
 
     public VnfPkgDeletionNotificationMessage(
@@ -63,13 +73,18 @@ public class VnfPkgDeletionNotificationMessage extends CatalogueMessage {
             @JsonProperty("project") String project,
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
-            @JsonProperty("operationStatus") OperationStatus opStatus
+            @JsonProperty("operationStatus") OperationStatus opStatus,
+            @JsonProperty("siteOrManoIds") List<String> siteOrManoIds
     ) {
         super(CatalogueMessageType.VNFPKG_DELETION_NOTIFICATION, operationId, scope, opStatus);
         this.vnfPkgInfoId = vnfPkgInfoId;
         this.vnfdId = vnfdId;
         this.vnfdVersion = vnfdVersion;
         this.project = project;
+        if(siteOrManoIds != null)
+            this.siteOrManoIds.addAll(siteOrManoIds);
+        else
+            this.siteOrManoIds = null;
     }
 
     @JsonProperty("vnfPkgInfoId")
@@ -104,5 +119,10 @@ public class VnfPkgDeletionNotificationMessage extends CatalogueMessage {
     @JsonProperty("project")
     public String getProject() {
         return project;
+    }
+
+    @JsonProperty("siteOrManoIds")
+    public List<String> getSiteOrManoIds() {
+        return siteOrManoIds;
     }
 }

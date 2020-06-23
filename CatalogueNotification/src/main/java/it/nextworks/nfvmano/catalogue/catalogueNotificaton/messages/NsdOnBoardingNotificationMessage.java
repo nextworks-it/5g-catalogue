@@ -35,7 +35,7 @@ public class NsdOnBoardingNotificationMessage extends CatalogueMessage {
     private final String project;
 
     @JsonInclude(Include.NON_EMPTY)
-    private final List<String> siteOrManoIds = new ArrayList<>();
+    private List<String> siteOrManoIds = new ArrayList<>();
 
     @JsonInclude(Include.NON_NULL)
     private String pluginId;
@@ -68,6 +68,8 @@ public class NsdOnBoardingNotificationMessage extends CatalogueMessage {
         this.project = project;
         if(siteOrManoIds != null)
             this.siteOrManoIds.addAll(siteOrManoIds);
+        else
+            this.siteOrManoIds = null;
     }
 
     public NsdOnBoardingNotificationMessage(
@@ -90,6 +92,8 @@ public class NsdOnBoardingNotificationMessage extends CatalogueMessage {
         this.project = project;
         if(siteOrManoIds != null)
             this.siteOrManoIds.addAll(siteOrManoIds);
+        else
+            this.siteOrManoIds = null;
     }
 
     @JsonProperty("nsdInfoId")

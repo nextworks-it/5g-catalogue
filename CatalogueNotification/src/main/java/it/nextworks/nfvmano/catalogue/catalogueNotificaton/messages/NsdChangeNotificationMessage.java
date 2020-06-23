@@ -25,6 +25,8 @@ import it.nextworks.nfvmano.libs.common.elements.KeyValuePair;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class NsdChangeNotificationMessage extends CatalogueMessage {
@@ -34,6 +36,9 @@ public class NsdChangeNotificationMessage extends CatalogueMessage {
     private final String nsdId;
     private final KeyValuePair packagePath;
     private final String operationalState;
+
+    @JsonInclude(Include.NON_EMPTY)
+    private List<String> siteOrManoIds = new ArrayList<>();
 
     @JsonInclude(Include.NON_NULL)
     private String pluginId;
@@ -47,6 +52,7 @@ public class NsdChangeNotificationMessage extends CatalogueMessage {
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus,
             @JsonProperty("pluginId") String pluginId,
+            @JsonProperty("siteOrManoIds") List<String> siteOrManoIds,
             @JsonProperty("packagePath") KeyValuePair packagePath
     ) {
         super(CatalogueMessageType.NSD_CHANGE_NOTIFICATION, operationId, scope, opStatus);
@@ -55,6 +61,10 @@ public class NsdChangeNotificationMessage extends CatalogueMessage {
         this.operationalState = operationalState;
         this.pluginId = pluginId;
         this.packagePath = packagePath;
+        if(siteOrManoIds != null)
+            this.siteOrManoIds.addAll(siteOrManoIds);
+        else
+            this.siteOrManoIds = null;
     }
 
     @JsonProperty("nsdInfoId")
@@ -80,5 +90,10 @@ public class NsdChangeNotificationMessage extends CatalogueMessage {
     @JsonProperty("packagePath")
     public KeyValuePair getPackagePath() {
         return packagePath;
+    }
+
+    @JsonProperty("siteOrManoIds")
+    public List<String> getSiteOrManoIds() {
+        return siteOrManoIds;
     }
 }

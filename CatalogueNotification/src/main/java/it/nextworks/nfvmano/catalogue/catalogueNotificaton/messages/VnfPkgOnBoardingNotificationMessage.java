@@ -37,7 +37,7 @@ public class VnfPkgOnBoardingNotificationMessage extends CatalogueMessage {
     private final String project;
 
     @JsonInclude(Include.NON_EMPTY)
-    private final List<String> siteOrManoIds = new ArrayList<>();
+    private List<String> siteOrManoIds = new ArrayList<>();
 
     @JsonInclude(Include.NON_NULL)
     private String pluginId;
@@ -63,7 +63,9 @@ public class VnfPkgOnBoardingNotificationMessage extends CatalogueMessage {
         this.packagePath = packagePath;
         this.project = project;
         if(siteOrManoIds != null)
-         this.siteOrManoIds.addAll(siteOrManoIds);
+            this.siteOrManoIds.addAll(siteOrManoIds);
+        else
+            this.siteOrManoIds = null;
     }
 
     public VnfPkgOnBoardingNotificationMessage(
@@ -86,6 +88,8 @@ public class VnfPkgOnBoardingNotificationMessage extends CatalogueMessage {
         this.project = project;
         if(siteOrManoIds != null)
             this.siteOrManoIds.addAll(siteOrManoIds);
+        else
+            this.siteOrManoIds = null;
     }
 
     @JsonProperty("vnfPkgInfoId")

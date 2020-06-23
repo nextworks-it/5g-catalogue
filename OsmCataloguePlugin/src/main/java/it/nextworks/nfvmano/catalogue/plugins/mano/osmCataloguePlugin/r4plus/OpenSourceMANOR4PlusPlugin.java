@@ -332,7 +332,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                 if(catDescriptorId == null)
                     catDescriptorId = osmNs.getDescriptorId();
                 sendNotification(new NsdDeletionNotificationMessage(null, catDescriptorId, osmNs.getVersion(), "all",
-                            operationId, ScopeType.SYNC, OperationStatus.SENT, osm.getManoId()));
+                            operationId, ScopeType.SYNC, OperationStatus.SENT, osm.getManoId(), null));
                 osmInfoObjectRepository.delete(osmNs);
                 List<OsmTranslationInformation> translationInformationList = translationInformationRepository.findByOsmInfoIdAndOsmManoId(osmNs.getId(), osm.getManoId());
                 for(OsmTranslationInformation translationInformation : translationInformationList)
@@ -350,7 +350,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                 if(catDescriptorId == null)
                     catDescriptorId = osmVnf.getDescriptorId();
                 sendNotification(new VnfPkgDeletionNotificationMessage(null, catDescriptorId, osmVnf.getVersion(), "all",
-                            operationId, ScopeType.SYNC, OperationStatus.SENT, osm.getManoId()));
+                            operationId, ScopeType.SYNC, OperationStatus.SENT, osm.getManoId(), null));
                 osmInfoObjectRepository.delete(osmVnf);
                 List<OsmTranslationInformation> translationInformationList = translationInformationRepository.findByOsmInfoIdAndOsmManoId(osmVnf.getId(), osm.getManoId());
                 for(OsmTranslationInformation translationInformation : translationInformationList)
@@ -643,7 +643,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
         log.debug("Body: {}", notification);
         if (notification.getScope() == ScopeType.LOCAL) {
             log.info("{} - Received Nsd deletion notification for Nsd with ID {} and version {} for project {}", osm.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject());
-            if (translationInformationContainsCatInfoId(notification.getNsdInfoId()) && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
+            if (Utilities.isTargetMano(notification.getSiteOrManoIds(), osm) && translationInformationContainsCatInfoId(notification.getNsdInfoId()) && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
                 try {
                     String osmInfoPkgId = getOsmInfoId(notification.getNsdInfoId());
                     if(osmInfoPkgId == null)
@@ -655,20 +655,20 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                     log.info("{} - Successfully deleted Nsd with ID {} and version {} for project {}", osm.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject());
                     sendNotification(new NsdDeletionNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject(),
                             notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
-                            osm.getManoId()));
+                            osm.getManoId(), null));
                 } catch (Exception e) {
                     log.error("{} - Could not delete Nsd: {}", osm.getManoId(), e.getMessage());
                     log.debug("Error details: ", e);
                     sendNotification(new NsdDeletionNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject(),
                             notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
-                            osm.getManoId()));
+                            osm.getManoId(), null));
                 }
             } else {
                 if (this.getPluginOperationalState() == PluginOperationalState.DISABLED || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
                     log.debug("{} - NSD deletion skipped", osm.getManoId());
                     sendNotification(new NsdDeletionNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject(),
                             notification.getOperationId(), ScopeType.REMOTE, OperationStatus.RECEIVED,
-                            osm.getManoId()));
+                            osm.getManoId(), null));
                 }
             }
         }else if(notification.getScope() == ScopeType.SYNC){
@@ -801,7 +801,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
         log.debug("Body: {}", notification);
         if (notification.getScope() == ScopeType.LOCAL) {
             log.info("{} - Received Vnfd deletion notification for Vnfd with ID {} and version {} for project {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject());
-            if (translationInformationContainsCatInfoId(notification.getVnfPkgInfoId()) && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
+            if (Utilities.isTargetMano(notification.getSiteOrManoIds(), osm) && translationInformationContainsCatInfoId(notification.getVnfPkgInfoId()) && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
                 try {
                     String osmInfoPkgId = getOsmInfoId(notification.getVnfPkgInfoId());
                     if(osmInfoPkgId == null)
@@ -813,20 +813,20 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                     log.info("{} - Successfully deleted Vnfd with ID {} and version {} for project {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject());
                     sendNotification(new VnfPkgDeletionNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(),
                             notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
-                            osm.getManoId()));
+                            osm.getManoId(), null));
                 } catch (Exception e) {
                     log.error("{} - Could not delete Vnfd: {}", osm.getManoId(), e.getMessage());
                     log.debug("Error details: ", e);
                     sendNotification(new VnfPkgDeletionNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(),
                             notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
-                            osm.getManoId()));
+                            osm.getManoId(), null));
                 }
             } else {
                 if (this.getPluginOperationalState() == PluginOperationalState.DISABLED || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
                     log.debug("{} - VNF Pkg deletion skipped",  osm.getManoId());
                     sendNotification(new VnfPkgDeletionNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(),
                             notification.getOperationId(), ScopeType.REMOTE, OperationStatus.RECEIVED,
-                            osm.getManoId()));
+                            osm.getManoId(), null));
                 }
             }
         }else if(notification.getScope() == ScopeType.SYNC){

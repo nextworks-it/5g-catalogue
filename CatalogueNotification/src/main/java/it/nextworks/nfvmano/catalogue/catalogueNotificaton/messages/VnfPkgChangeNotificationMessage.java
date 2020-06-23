@@ -25,6 +25,8 @@ import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.Sco
 import it.nextworks.nfvmano.libs.common.elements.KeyValuePair;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class VnfPkgChangeNotificationMessage extends CatalogueMessage {
@@ -35,6 +37,9 @@ public class VnfPkgChangeNotificationMessage extends CatalogueMessage {
     private final KeyValuePair packagePath;
     private final String operationalState;
     private final PackageChangeType changeType;
+
+    @JsonInclude(Include.NON_EMPTY)
+    private List<String> siteOrManoIds = new ArrayList<>();
 
     @JsonInclude(Include.NON_NULL)
     private String pluginId;
@@ -49,7 +54,9 @@ public class VnfPkgChangeNotificationMessage extends CatalogueMessage {
             @JsonProperty("operationStatus") OperationStatus opStatus,
             @JsonProperty("changeType") PackageChangeType changeType,
             @JsonProperty("pluginId") String pluginId,
+            @JsonProperty("siteOrManoIds") List<String> siteOrManoIds,
             @JsonProperty("packagePath") KeyValuePair packagePath
+
     ) {
         super(CatalogueMessageType.VNFPKG_CHANGE_NOTIFICATION, operationId, scope, opStatus);
         this.vnfPkgInfoId = vnfPkgInfoId;
@@ -58,6 +65,10 @@ public class VnfPkgChangeNotificationMessage extends CatalogueMessage {
         this.changeType = changeType;
         this.pluginId = pluginId;
         this.packagePath = packagePath;
+        if(siteOrManoIds != null)
+            this.siteOrManoIds.addAll(siteOrManoIds);
+        else
+            this.siteOrManoIds = null;
     }
 
     @JsonProperty("vnfPkgInfoId")
@@ -88,5 +99,10 @@ public class VnfPkgChangeNotificationMessage extends CatalogueMessage {
     @JsonProperty("packagePath")
     public KeyValuePair getPackagePath() {
         return packagePath;
+    }
+
+    @JsonProperty("siteOrManoIds")
+    public List<String> getSiteOrManoIds() {
+        return siteOrManoIds;
     }
 }

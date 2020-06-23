@@ -128,6 +128,20 @@ public interface NsdApi {
                                 @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
                                 @ApiParam(value = "The payload body contains a copy of the file representing the NSD or a ZIP file that contains the file or multiple files representing the NSD, as specified above. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType);
 
+    @ApiOperation(value = "Update NSD", nickname = "updateNSD", notes = "The PATH method is used to update the content of a NSD. The NSD to be updated can be implemented as a single file or as a collection of multiple files, as defined in clause 5.4.4.3.2 of GS NFV-SOL 005. If the NSD is implemented in the form of multiple files, a ZIP file embedding these files shall be uploaded. If the NSD is implemented as a single file, either that file or a ZIP file embedding that file shall be uploaded. The \"Content-Type\" HTTP header in the PATCH request shall be set accordingly based on the format selection of the NSD. If the NSD to be uploaded is a text file, the \"Content-Type\" header is set to \"text/plain\". If the NSD to be uploaded is a zip file, the \"Content-Type\" header is set to \"application/zip\". This method shall follow the provisions specified in the Tables 5.4.4.3.3-1 and 5.4.4.3.3-2 of GS-NFV-SOL 005 for URI query parameters, request and response data structures, and response codes.", response = Object.class, tags = {})
+    @ApiResponses(value = {@ApiResponse(code = 202, message = "Status 202", response = Object.class),
+            @ApiResponse(code = 204, message = "The NSD content was successfully updated and validated (synchronous mode). The response body shall be empty."),
+            @ApiResponse(code = 400, message = "Status 400", response = ProblemDetails.class),
+            @ApiResponse(code = 404, message = "Status 404", response = ProblemDetails.class),
+            @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
+    @RequestMapping(value = "/nsd/v1/ns_descriptors/{nsdInfoId}/nsd_content", produces = {"application/json"}, consumes = {"application/json", "application/x-yaml",
+            "application/zip", "multipart/form-data"}, method = RequestMethod.PATCH)
+    ResponseEntity<?> updateNSD(@RequestParam(required = false) String project,
+                                @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+                                @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
+                                @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
+                                @ApiParam(value = "The payload body contains a copy of the file representing the NSD or a ZIP file that contains the file or multiple files representing the NSD, as specified above. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType);
+
     @ApiOperation(value = "Create PNFD Info", nickname = "createPNFDInfo", notes = "The POST method is used to create a new PNF descriptor resource.", response = PnfdInfo.class, tags = {})
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Status 201", response = PnfdInfo.class),
             @ApiResponse(code = 400, message = "Status 400", response = ProblemDetails.class),
