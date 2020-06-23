@@ -28,6 +28,8 @@ import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.Pat
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.ScopeType;
 import it.nextworks.nfvmano.catalogue.common.ConfigurationParameters;
 import it.nextworks.nfvmano.catalogue.engine.elements.ContentType;
+import it.nextworks.nfvmano.catalogue.engine.elements.NsdIdInvariantIdMapping;
+import it.nextworks.nfvmano.catalogue.engine.elements.NsdIdInvariantIdMappingRepository;
 import it.nextworks.nfvmano.catalogue.engine.resources.*;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.*;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.PackageOnboardingStateType;
@@ -74,6 +76,9 @@ public class NsdManagementService implements NsdManagementInterface {
 
     @Autowired
     private NsdInfoRepository nsdInfoRepo;
+
+    @Autowired
+    private NsdIdInvariantIdMappingRepository nsdIdInvariantIdMappingRepository;
 
     @Autowired
     private PnfdInfoRepository pnfdInfoRepo;
@@ -562,6 +567,13 @@ public class NsdManagementService implements NsdManagementInterface {
         nsdInfoResource.setRetrievedFromMANO(targetKvp.containsKey("isRetrievedFromMANO") && targetKvp.get("isRetrievedFromMANO").equals("yes"));
         nsdInfoResource.setMultiSite(targetKvp.containsKey("multiSite") && targetKvp.get("multiSite").equals("yes"));
 
+        if(targetKvp.containsKey("NSD_ID") && targetKvp.containsKey("NSD_INVARIANT_ID")){
+            NsdIdInvariantIdMapping mapping = new NsdIdInvariantIdMapping();
+            mapping.setNsdId(targetKvp.get("NSD_ID"));
+            mapping.setInvariantId(targetKvp.get("NSD_INVARIANT_ID"));
+            nsdIdInvariantIdMappingRepository.saveAndFlush(mapping);
+        }
+
         nsdInfoRepo.saveAndFlush(nsdInfoResource);
         UUID nsdInfoId = nsdInfoResource.getId();
         log.debug("Created NSD info with ID " + nsdInfoId);
@@ -655,11 +667,12 @@ public class NsdManagementService implements NsdManagementInterface {
 
                 List<Appd> appds = appdManagementService.getAssociatedAppD(nsdInfo.getId());
                 log.debug("The NSD info can be removed");
+                UUID nsdId = nsdInfo.getNsdId();
                 if (nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.ONBOARDED
                         || nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.LOCAL_ONBOARDED
                         || nsdInfo.getNsdOnboardingState() == NsdOnboardingStateType.PROCESSING) {
                     log.debug("The NSD info is associated to an onboarded NSD. Removing it");
-                    UUID nsdId = nsdInfo.getNsdId();
+
                     // dbWrapper.deleteNsd(nsdId);
 
                     try {
@@ -679,7 +692,7 @@ public class NsdManagementService implements NsdManagementInterface {
                         notificationManager.sendNsdDeletionNotification(msg);
                     }
                 }
-
+                
                 nsdInfoRepo.deleteById(id);
 
                 //Remove or update AppD if any
@@ -900,6 +913,10 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new NotAuthorizedOperationException(e.getMessage());
         }
 
+        Optional<NsdIdInvariantIdMapping> mapping = nsdIdInvariantIdMappingRepository.findByNsdId(nsdId.toString());
+        if(mapping.isPresent())
+            nsdId = UUID.fromString(mapping.get().getInvariantId());
+
         List<NsdInfoResource> nsdInfoResources;
         if(nsdId == null)
             nsdInfoResources = nsdInfoRepo.findAll();
@@ -1031,6 +1048,11 @@ public class NsdManagementService implements NsdManagementInterface {
             nsdInfo.setNsdOnboardingState(NsdOnboardingStateType.FAILED);
             nsdInfoRepo.saveAndFlush(nsdInfo);
             throw new NotPermittedOperationException("NSD info " + nsdInfoId + " not in CREATED onboarding state");
+        }
+
+        if(nsdInfo.getUserDefinedData().containsKey("NSD_ID") && nsdInfo.getUserDefinedData().containsKey("NSD_INVARIANT_ID")){
+            nsdInfoRepo.delete(nsdInfo);
+            return;
         }
 
         // convert to File
