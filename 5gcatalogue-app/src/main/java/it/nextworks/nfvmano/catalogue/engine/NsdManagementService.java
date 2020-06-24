@@ -568,11 +568,13 @@ public class NsdManagementService implements NsdManagementInterface {
         nsdInfoResource.setMultiSite(targetKvp.containsKey("multiSite") && targetKvp.get("multiSite").equals("yes"));
 
         if(targetKvp.containsKey("NSD_ID") && targetKvp.containsKey("NSD_INVARIANT_ID")){
+            log.debug("NsdInfo for mapping nsdId and InvariantId");
             NsdIdInvariantIdMapping mapping;
             String nsdId = targetKvp.get("NSD_ID");
             String invariantId = targetKvp.get("NSD_INVARIANT_ID");
             Optional<NsdIdInvariantIdMapping> mappingOptional = nsdIdInvariantIdMappingRepository.findByNsdId(nsdId);
             if(mappingOptional.isPresent()){
+                log.debug("Mapping already present, overriding invariantId");
                 mapping = mappingOptional.get();
                 mapping.setInvariantId(invariantId);
             }else {
@@ -928,10 +930,12 @@ public class NsdManagementService implements NsdManagementInterface {
 
         if(nsdId != null) {
             Optional<NsdIdInvariantIdMapping> mapping = nsdIdInvariantIdMappingRepository.findByNsdId(nsdId.toString());
-            if (mapping.isPresent())
+            if (mapping.isPresent()) {
+                log.debug("Overriding nsdId {} with {}", nsdId.toString(), mapping.get().getInvariantId());
                 nsdId = UUID.fromString(mapping.get().getInvariantId());
+            }
         }
-        
+
         List<NsdInfoResource> nsdInfoResources;
         if(nsdId == null)
             nsdInfoResources = nsdInfoRepo.findAll();
@@ -1066,10 +1070,12 @@ public class NsdManagementService implements NsdManagementInterface {
         }
 
         if(nsdInfo.getUserDefinedData().containsKey("NSD_ID") && nsdInfo.getUserDefinedData().containsKey("NSD_INVARIANT_ID")){
+            log.debug("Removing NsdInfo for mapping nsdId and invariantId");
             String nsdId = nsdInfo.getUserDefinedData().get("NSD_ID");
             String invariantId = nsdInfo.getUserDefinedData().get("NSD_INVARIANT_ID");
             List<NsdInfoResource> nsdInfoResourceList = nsdInfoRepo.findByNsdId(UUID.fromString(invariantId));
             if(nsdInfoResourceList.size() == 0){
+                log.debug("Nsd with ID {} not found", invariantId);
                 Optional<NsdIdInvariantIdMapping> mappingOptional = nsdIdInvariantIdMappingRepository.findByNsdId(nsdId);
                 mappingOptional.ifPresent(nsdIdInvariantIdMapping -> nsdIdInvariantIdMappingRepository.delete(nsdIdInvariantIdMapping));
                 nsdInfoRepo.delete(nsdInfo);

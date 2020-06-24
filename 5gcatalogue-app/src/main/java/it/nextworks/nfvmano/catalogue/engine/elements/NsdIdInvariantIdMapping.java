@@ -1,6 +1,7 @@
 package it.nextworks.nfvmano.catalogue.engine.elements;
 
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import java.util.UUID;
 
@@ -9,6 +10,7 @@ import java.util.UUID;
 public class NsdIdInvariantIdMapping {
 
     @Id
+    @GeneratedValue
     private Long id;
 
     String nsdId;
