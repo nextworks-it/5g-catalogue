@@ -926,10 +926,12 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new NotAuthorizedOperationException(e.getMessage());
         }
 
-        Optional<NsdIdInvariantIdMapping> mapping = nsdIdInvariantIdMappingRepository.findByNsdId(nsdId.toString());
-        if(mapping.isPresent())
-            nsdId = UUID.fromString(mapping.get().getInvariantId());
-
+        if(nsdId != null) {
+            Optional<NsdIdInvariantIdMapping> mapping = nsdIdInvariantIdMappingRepository.findByNsdId(nsdId.toString());
+            if (mapping.isPresent())
+                nsdId = UUID.fromString(mapping.get().getInvariantId());
+        }
+        
         List<NsdInfoResource> nsdInfoResources;
         if(nsdId == null)
             nsdInfoResources = nsdInfoRepo.findAll();
