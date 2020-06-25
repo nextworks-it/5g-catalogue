@@ -25,17 +25,16 @@ import it.nextworks.nfvmano.libs.common.elements.KeyValuePair;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class NsdChangeNotificationMessage extends CatalogueMessage {
 
 
     private final String nsdInfoId;
     private final String nsdId;
+    private final String nsdVersion;
     private final KeyValuePair packagePath;
-    private final String operationalState;
+    private final String project;
 
     @JsonInclude(Include.NON_EMPTY)
     private List<String> siteOrManoIds = new ArrayList<>();
@@ -43,12 +42,19 @@ public class NsdChangeNotificationMessage extends CatalogueMessage {
     @JsonInclude(Include.NON_NULL)
     private String pluginId;
 
+    @JsonInclude(Include.NON_EMPTY)
+    private Map<String, KeyValuePair> includedVnfds = new HashMap<>();
+
+    @JsonInclude(Include.NON_EMPTY)
+    private Map<String, KeyValuePair> includedPnfds = new HashMap<>();
+
     @JsonCreator
     public NsdChangeNotificationMessage(
             @JsonProperty("nsdInfoId") String nsdInfoId,
             @JsonProperty("nsdId") String nsdId,
+            @JsonProperty("nsdVersion") String nsdVersion,
+            @JsonProperty("project") String project,
             @JsonProperty("operationId") UUID operationId,
-            @JsonProperty("operationalState") String operationalState,
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus,
             @JsonProperty("pluginId") String pluginId,
@@ -58,9 +64,33 @@ public class NsdChangeNotificationMessage extends CatalogueMessage {
         super(CatalogueMessageType.NSD_CHANGE_NOTIFICATION, operationId, scope, opStatus);
         this.nsdInfoId = nsdInfoId;
         this.nsdId = nsdId;
-        this.operationalState = operationalState;
+        this.nsdVersion = nsdVersion;
         this.pluginId = pluginId;
         this.packagePath = packagePath;
+        this.project = project;
+        if(siteOrManoIds != null)
+            this.siteOrManoIds.addAll(siteOrManoIds);
+        else
+            this.siteOrManoIds = null;
+    }
+
+    public NsdChangeNotificationMessage(
+            @JsonProperty("nsdInfoId") String nsdInfoId,
+            @JsonProperty("nsdId") String nsdId,
+            @JsonProperty("nsdVersion") String nsdVersion,
+            @JsonProperty("project") String project,
+            @JsonProperty("operationId") UUID operationId,
+            @JsonProperty("scope") ScopeType scope,
+            @JsonProperty("operationStatus") OperationStatus opStatus,
+            @JsonProperty("siteOrManoIds") List<String> siteOrManoIds,
+            @JsonProperty("packagePath") KeyValuePair packagePath
+    ) {
+        super(CatalogueMessageType.NSD_CHANGE_NOTIFICATION, operationId, scope, opStatus);
+        this.nsdInfoId = nsdInfoId;
+        this.nsdId = nsdId;
+        this.nsdVersion = nsdVersion;
+        this.packagePath = packagePath;
+        this.project = project;
         if(siteOrManoIds != null)
             this.siteOrManoIds.addAll(siteOrManoIds);
         else
@@ -77,9 +107,14 @@ public class NsdChangeNotificationMessage extends CatalogueMessage {
         return nsdId;
     }
 
-    @JsonProperty("operationalState")
-    public String getOperationalState() {
-        return operationalState;
+    @JsonProperty("nsdVersion")
+    public String getNsdVersion() {
+        return nsdVersion;
+    }
+
+    @JsonProperty("project")
+    public String getProject() {
+        return project;
     }
 
     @JsonProperty("pluginId")
@@ -95,5 +130,21 @@ public class NsdChangeNotificationMessage extends CatalogueMessage {
     @JsonProperty("siteOrManoIds")
     public List<String> getSiteOrManoIds() {
         return siteOrManoIds;
+    }
+
+    public Map<String, KeyValuePair> getIncludedVnfds() {
+        return includedVnfds;
+    }
+
+    public void setIncludedVnfds(Map<String, KeyValuePair> includedVnfds) {
+        this.includedVnfds = includedVnfds;
+    }
+
+    public Map<String, KeyValuePair> getIncludedPnfds() {
+        return includedPnfds;
+    }
+
+    public void setIncludedPnfds(Map<String, KeyValuePair> includedPnfds) {
+        this.includedPnfds = includedPnfds;
     }
 }

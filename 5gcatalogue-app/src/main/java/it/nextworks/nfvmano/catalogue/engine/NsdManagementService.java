@@ -16,6 +16,7 @@
 package it.nextworks.nfvmano.catalogue.engine;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -215,7 +216,7 @@ public class NsdManagementService implements NsdManagementInterface {
                         log.info("Project {} - NSD with ID {} and version {} no longer present in MANO with ID {}", project.getProjectId(), nsdInfoResource.getNsdId(), nsdInfoResource.getNsdVersion(), manoPlugin.getPluginId());
                         if (nsdInfoResource.isRetrievedFromMANO()) {
                             try {
-                                updateNsdInfoOperationStatus(nsdInfoResource.getId().toString(), manoPlugin.getPluginId(), OperationStatus.RECEIVED, CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION);
+                                updateNsdInfoOperationStatus(nsdInfoResource.getId().toString(), manoPlugin.getPluginId(), OperationStatus.SUCCESSFULLY_DONE, CatalogueMessageType.NSD_DELETION_NOTIFICATION);
                                 Optional<NsdInfoResource> targetNsdInfoResource = nsdInfoRepo.findById(nsdInfoResource.getId());
                                 if (targetNsdInfoResource.isPresent() && !targetNsdInfoResource.get().getNsdOnboardingState().equals(NsdOnboardingStateType.ONBOARDED)) {
                                     log.info("Project {} - Going to delete NSD with ID {} and version {}", project.getProjectId(), nsdInfoResource.getNsdId(), nsdInfoResource.getNsdVersion());
@@ -373,7 +374,7 @@ public class NsdManagementService implements NsdManagementInterface {
                 NsdInfoResource nsdInfoResource = optionalNsdInfoResource.get();
                 if (nsdInfoResource.isRetrievedFromMANO()) {
                     try {
-                        updateNsdInfoOperationStatus(nsdInfoResource.getId().toString(), notification.getPluginId(), OperationStatus.RECEIVED, CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION);
+                        updateNsdInfoOperationStatus(nsdInfoResource.getId().toString(), notification.getPluginId(), OperationStatus.SUCCESSFULLY_DONE, CatalogueMessageType.NSD_DELETION_NOTIFICATION);
                         Optional<NsdInfoResource> targetNsdInfoResource = nsdInfoRepo.findById(nsdInfoResource.getId());
                         if (targetNsdInfoResource.isPresent() && !targetNsdInfoResource.get().getNsdOnboardingState().equals(NsdOnboardingStateType.ONBOARDED)) {
                             log.info("Project {} - Going to delete NSD with ID {} and version {}", project, nsdInfoResource.getNsdId(), nsdInfoResource.getNsdVersion());
@@ -1535,10 +1536,7 @@ public class NsdManagementService implements NsdManagementInterface {
             log.warn("Could not delete temporary NSD content file");
         }
 
-        if (isInternalRequest)
-            nsdInfo.setPublished(true);
-        else
-            nsdInfo.setPublished(false);
+        nsdInfo.setPublished(isInternalRequest);
 
         List<Appd> appds = appdManagementService.getAssociatedAppD(nsdInfo.getId());
         //Update AppD if any
@@ -1577,28 +1575,29 @@ public class NsdManagementService implements NsdManagementInterface {
             UUID operationId = insertOperationInfoInConsumersMap(nsdInfoId,
                     CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION, OperationStatus.SENT, failedOnboardedManoIds);
             nsdInfo.setAcknowledgedOnboardOpConsumers(operationIdToConsumersAck.get(operationId.toString()));
-
             NsdOnBoardingNotificationMessage onboardingMsg = new NsdOnBoardingNotificationMessage(nsdInfo.getId().toString(), nsdId.toString(), nsdInfo.getNsdVersion(), project,
                     operationId, ScopeType.LOCAL, OperationStatus.SENT, failedOnboardedManoIds, new KeyValuePair(rootDir + ConfigurationParameters.storageNsdsSubfolder + "/" + project + "/" + nsdId.toString() + "/" + nsdInfo.getNsdVersion(), PathType.LOCAL.toString()));
-
             onboardingMsg.setIncludedVnfds(includedVnfds);
             onboardingMsg.setIncludedPnfds(includedPnfds);
-
-            // send notification over kafka bus
             notificationManager.sendNsdOnBoardingNotification(onboardingMsg);
 
             operationId = insertOperationInfoInConsumersMap(nsdInfoId,
                     CatalogueMessageType.NSD_DELETION_NOTIFICATION, OperationStatus.SENT, toDeleteManoIds);
             nsdInfo.getAcknowledgedOnboardOpConsumers().putAll(operationIdToConsumersAck.get(operationId.toString()));
-
-            NsdDeletionNotificationMessage deletionMsg = new NsdDeletionNotificationMessage(nsdInfoId, oldNsdId.toString(),oldNsdVersion, project,
+            NsdDeletionNotificationMessage deletionMsg = new NsdDeletionNotificationMessage(nsdInfoId, oldNsdId.toString(), oldNsdVersion, project,
                     operationId, ScopeType.LOCAL, OperationStatus.SENT, toDeleteManoIds);
-
             notificationManager.sendNsdDeletionNotification(deletionMsg);
 
-            //TODO send update, manage deleteNotification (remove from user data if needed) and other stuff
-
+            operationId = insertOperationInfoInConsumersMap(nsdInfoId,
+                    CatalogueMessageType.NSD_CHANGE_NOTIFICATION, OperationStatus.SENT, alreadyOnboardedManoIds);
+            nsdInfo.getAcknowledgedOnboardOpConsumers().putAll(operationIdToConsumersAck.get(operationId.toString()));
+            NsdChangeNotificationMessage updateMsg = new NsdChangeNotificationMessage(nsdInfoId, oldNsdId.toString(), oldNsdVersion, project,
+                    operationId, ScopeType.LOCAL, OperationStatus.SENT, alreadyOnboardedManoIds, new KeyValuePair(rootDir + ConfigurationParameters.storageNsdsSubfolder + "/" + project + "/" + nsdId.toString() + "/" + nsdInfo.getNsdVersion(), PathType.LOCAL.toString()));
+            updateMsg.setIncludedVnfds(includedVnfds);
+            updateMsg.setIncludedPnfds(includedPnfds);
+            notificationManager.sendNsdChangeNotification(updateMsg);
         }
+
         nsdInfoRepo.saveAndFlush(nsdInfo);
         log.debug("NSD content uploaded and nsdOnBoardingNotification delivered");
     }
@@ -2296,7 +2295,6 @@ public class NsdManagementService implements NsdManagementInterface {
         log.debug("Retrieving nsdInfoResource {} from DB for updating with onboarding status info for plugin {}",
                 nsdInfoId, manoId);
         Optional<NsdInfoResource> optionalNsdInfoResource = nsdInfoRepo.findById(UUID.fromString(nsdInfoId));
-
         if (optionalNsdInfoResource.isPresent()) {
             try {
                 NsdInfoResource nsdInfoResource = optionalNsdInfoResource.get();
@@ -2308,17 +2306,16 @@ public class NsdManagementService implements NsdManagementInterface {
                 ackMap.put(manoId, new NotificationResource(nsdInfoId, messageType, opStatus, PluginType.MANO));
                 nsdInfoResource.setAcknowledgedOnboardOpConsumers(ackMap);
 
-                if (messageType == CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION) {
+                if (messageType == CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION || messageType == CatalogueMessageType.NSD_CHANGE_NOTIFICATION) {
                     if(!optionalNsdInfoResource.get().isRetrievedFromMANO()) {
                         if (opStatus.equals(OperationStatus.SUCCESSFULLY_DONE))
                             optionalNsdInfoResource.get().getUserDefinedData().put(manoId, "yes");
                         else
                             optionalNsdInfoResource.get().getUserDefinedData().put(manoId, "no");
                     }
-                    log.debug("Checking NSD with nsdInfoId {} onboarding state", nsdInfoId);
-                    nsdInfoResource.setNsdOnboardingState(checkNsdOnboardingState(nsdInfoId, ackMap));
                 }
-
+                log.debug("Checking NSD with nsdInfoId {} onboarding state", nsdInfoId);
+                nsdInfoResource.setNsdOnboardingState(checkNsdOnboardingState(nsdInfoId, ackMap));
                 log.debug("Updating NsdInfoResource {} with onboardingState {}", nsdInfoId,
                         nsdInfoResource.getNsdOnboardingState());
                 nsdInfoRepo.saveAndFlush(nsdInfoResource);
@@ -2326,7 +2323,7 @@ public class NsdManagementService implements NsdManagementInterface {
                 log.error("Error while updating NsdInfoResource with nsdInfoId: " + nsdInfoId);
                 log.error("Details: ", e);
             }
-        } else {
+        } else if (messageType != CatalogueMessageType.NSD_DELETION_NOTIFICATION){
             throw new NotExistingEntityException("NsdInfoResource " + nsdInfoId + " not present in DB");
         }
     }
@@ -2334,7 +2331,7 @@ public class NsdManagementService implements NsdManagementInterface {
     private NsdOnboardingStateType checkNsdOnboardingState(String nsdInfoId, Map<String, NotificationResource> ackMap) {
 
         for (Entry<String, NotificationResource> entry : ackMap.entrySet()) {
-            if (entry.getValue().getOperation() == CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION && entry.getValue().getPluginType() == PluginType.MANO) {
+            if ((entry.getValue().getOperation() == CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION || entry.getValue().getOperation() == CatalogueMessageType.NSD_CHANGE_NOTIFICATION) && entry.getValue().getPluginType() == PluginType.MANO) {
                 if (entry.getValue().getOpStatus() == OperationStatus.SUCCESSFULLY_DONE) {
                     log.info("NSD with nsdInfoId {} is onboarded in at least one MANO", nsdInfoId);
                     return NsdOnboardingStateType.ONBOARDED;
@@ -2382,7 +2379,8 @@ public class NsdManagementService implements NsdManagementInterface {
         Map<String, NotificationResource> acksMap = nsdInfoResource.getAcknowledgedOnboardOpConsumers();
         Map<String, NsdOnboardingStateType> manoIdToOnboardingStatus = new HashMap<>();
         for (Entry<String, NotificationResource> entry : acksMap.entrySet()) {
-            if (entry.getValue().getOperation() == CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION) {
+            if (entry.getValue().getOperation() == CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION ||
+                    entry.getValue().getOperation() == CatalogueMessageType.NSD_CHANGE_NOTIFICATION) {
                 NsdOnboardingStateType nsdOnboardingStateType = NsdOnboardingStateType.UPLOADING;
                 switch (entry.getValue().getOpStatus()) {
                     case SENT:

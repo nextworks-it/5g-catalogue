@@ -333,14 +333,14 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                             request.setOperationalState(PackageOperationalStateType.DISABLED);
                             updateVnfPkgInfo(request, vnfPkgInfoResource.getId().toString(), project, true);
                             deleteVnfPkgInfo(vnfPkgInfoResource.getId().toString(), project, true);
-                            notificationManager.sendVnfPkgDeletionNotification(new VnfPkgDeletionNotificationMessage(vnfPkgInfoResource.getId().toString(), notification.getVnfdId(), notification.getVnfdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.SUCCESSFULLY_DONE, notification.getPluginId()));
+                            notificationManager.sendVnfPkgDeletionNotification(new VnfPkgDeletionNotificationMessage(vnfPkgInfoResource.getId().toString(), notification.getVnfdId(), notification.getVnfdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.SUCCESSFULLY_DONE, notification.getPluginId(), null));
                         } else {
-                            notificationManager.sendVnfPkgDeletionNotification(new VnfPkgDeletionNotificationMessage(vnfPkgInfoResource.getId().toString(), notification.getVnfdId(), notification.getVnfdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.SUCCESSFULLY_DONE, notification.getPluginId()));
+                            notificationManager.sendVnfPkgDeletionNotification(new VnfPkgDeletionNotificationMessage(vnfPkgInfoResource.getId().toString(), notification.getVnfdId(), notification.getVnfdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.SUCCESSFULLY_DONE, notification.getPluginId(), null));
                             targetVnfPkgInfoResource.get().getUserDefinedData().put(notification.getPluginId(), "no");
                         }
                     }catch (NotPermittedOperationException e){
                         log.error("Project {} - Failed to delete VNFD with ID {} and version {}, it is not deletable", project, vnfPkgInfoResource.getVnfdId(), vnfPkgInfoResource.getVnfdVersion());
-                        VnfPkgDeletionNotificationMessage msg = new VnfPkgDeletionNotificationMessage(vnfPkgInfoResource.getId().toString(), notification.getVnfdId(), notification.getVnfdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.FAILED, notification.getPluginId());
+                        VnfPkgDeletionNotificationMessage msg = new VnfPkgDeletionNotificationMessage(vnfPkgInfoResource.getId().toString(), notification.getVnfdId(), notification.getVnfdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.FAILED, notification.getPluginId(), null);
                         List<String> siteOrManoIds = new ArrayList<>();
                         siteOrManoIds.add(notification.getPluginId());
                         VnfPkgOnBoardingNotificationMessage msg1 = new VnfPkgOnBoardingNotificationMessage(vnfPkgInfoResource.getId().toString(), vnfPkgInfoResource.getVnfdId().toString(), vnfPkgInfoResource.getVnfdVersion(), project, UUID.randomUUID(), ScopeType.LOCAL, OperationStatus.SENT, siteOrManoIds, new KeyValuePair(rootDir + ConfigurationParameters.storageVnfpkgsSubfolder + "/" + project + "/" + vnfPkgInfoResource.getVnfdId() + "/" + vnfPkgInfoResource.getVnfdVersion(), PathType.LOCAL.toString()));
@@ -355,7 +355,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                         log.error("Project {} - Failed to delete VNFD with ID {} and version {}", project, vnfPkgInfoResource.getVnfdId(), vnfPkgInfoResource.getVnfdVersion());
                         log.debug(null, e);
                         try {
-                            notificationManager.sendVnfPkgDeletionNotification(new VnfPkgDeletionNotificationMessage(vnfPkgInfoResource.getId().toString(), notification.getVnfdId(), notification.getVnfdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.FAILED, notification.getPluginId()));
+                            notificationManager.sendVnfPkgDeletionNotification(new VnfPkgDeletionNotificationMessage(vnfPkgInfoResource.getId().toString(), notification.getVnfdId(), notification.getVnfdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.FAILED, notification.getPluginId(), null));
                         }catch(FailedOperationException e1){
                             log.error(e1.getMessage());
                             log.error(e1.getMessage());
@@ -364,7 +364,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                 } else {
                     log.info("Project {} - Sending VNF Onboarding notification for VNFD with ID {} and version {} to MANO with ID {}", project, vnfPkgInfoResource.getVnfdId(), vnfPkgInfoResource.getVnfdVersion(), notification.getPluginId());
                     try {
-                        notificationManager.sendVnfPkgDeletionNotification(new VnfPkgDeletionNotificationMessage(vnfPkgInfoResource.getId().toString(), notification.getVnfdId(), notification.getVnfdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.FAILED, notification.getPluginId()));
+                        notificationManager.sendVnfPkgDeletionNotification(new VnfPkgDeletionNotificationMessage(vnfPkgInfoResource.getId().toString(), notification.getVnfdId(), notification.getVnfdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.FAILED, notification.getPluginId(), null));
                         List<String> siteOrManoIds = new ArrayList<>();
                         siteOrManoIds.add(notification.getPluginId());
                         notificationManager.sendVnfPkgOnBoardingNotification(new VnfPkgOnBoardingNotificationMessage(vnfPkgInfoResource.getId().toString(), vnfPkgInfoResource.getVnfdId().toString(), vnfPkgInfoResource.getVnfdVersion(), project, UUID.randomUUID(), ScopeType.LOCAL, OperationStatus.SENT, siteOrManoIds, new KeyValuePair(rootDir + ConfigurationParameters.storageVnfpkgsSubfolder + "/" + project + "/" + vnfPkgInfoResource.getVnfdId() + "/" + vnfPkgInfoResource.getVnfdVersion(), PathType.LOCAL.toString())));
@@ -375,7 +375,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                 }
             }else{
                 try {
-                    notificationManager.sendVnfPkgDeletionNotification(new VnfPkgDeletionNotificationMessage(null, notification.getVnfdId(), notification.getVnfdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.FAILED, notification.getPluginId()));
+                    notificationManager.sendVnfPkgDeletionNotification(new VnfPkgDeletionNotificationMessage(null, notification.getVnfdId(), notification.getVnfdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.FAILED, notification.getPluginId(), null));
                 }catch(FailedOperationException e1){
                     log.error(e1.getMessage());
                     log.error(e1.getMessage());
@@ -512,7 +512,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                     if(!vnfPkgInfoResource.isRetrievedFromMANO()) {
                         UUID operationId = insertOperationInfoInConsumersMap(vnfPkgInfoId,
                                 CatalogueMessageType.NSD_DELETION_NOTIFICATION, OperationStatus.SENT, null);
-                        VnfPkgDeletionNotificationMessage msg = new VnfPkgDeletionNotificationMessage(vnfPkgInfoId, vnfdId.toString(), vnfPkgInfoResource.getVnfdVersion(), project, operationId, ScopeType.LOCAL, OperationStatus.SENT);
+                        VnfPkgDeletionNotificationMessage msg = new VnfPkgDeletionNotificationMessage(vnfPkgInfoId, vnfdId.toString(), vnfPkgInfoResource.getVnfdVersion(), project, operationId, ScopeType.LOCAL, OperationStatus.SENT, null);
                         msg.setVnfName(vnfPkgInfoResource.getVnfProductName());
                         notificationManager.sendVnfPkgDeletionNotification(msg);
                     }

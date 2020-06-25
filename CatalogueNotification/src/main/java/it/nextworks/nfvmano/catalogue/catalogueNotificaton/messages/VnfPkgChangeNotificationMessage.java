@@ -34,9 +34,10 @@ public class VnfPkgChangeNotificationMessage extends CatalogueMessage {
 
     private final String vnfPkgInfoId;
     private final String vnfdId;
+    private final String vnfdVersion;
     private final KeyValuePair packagePath;
-    private final String operationalState;
     private final PackageChangeType changeType;
+    private final String project;
 
     @JsonInclude(Include.NON_EMPTY)
     private List<String> siteOrManoIds = new ArrayList<>();
@@ -48,23 +49,49 @@ public class VnfPkgChangeNotificationMessage extends CatalogueMessage {
     public VnfPkgChangeNotificationMessage(
             @JsonProperty("vnfPkgInfoId") String vnfPkgInfoId,
             @JsonProperty("vnfdId") String vnfdId,
+            @JsonProperty("vnfdVersion") String vnfdVersion,
+            @JsonProperty("project") String project,
             @JsonProperty("operationId") UUID operationId,
-            @JsonProperty("operationalState") String operationalState,
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus,
             @JsonProperty("changeType") PackageChangeType changeType,
             @JsonProperty("pluginId") String pluginId,
             @JsonProperty("siteOrManoIds") List<String> siteOrManoIds,
             @JsonProperty("packagePath") KeyValuePair packagePath
-
     ) {
         super(CatalogueMessageType.VNFPKG_CHANGE_NOTIFICATION, operationId, scope, opStatus);
         this.vnfPkgInfoId = vnfPkgInfoId;
         this.vnfdId = vnfdId;
-        this.operationalState = operationalState;
+        this.vnfdVersion = vnfdVersion;
         this.changeType = changeType;
         this.pluginId = pluginId;
         this.packagePath = packagePath;
+        this.project = project;
+        if(siteOrManoIds != null)
+            this.siteOrManoIds.addAll(siteOrManoIds);
+        else
+            this.siteOrManoIds = null;
+    }
+
+    public VnfPkgChangeNotificationMessage(
+            @JsonProperty("vnfPkgInfoId") String vnfPkgInfoId,
+            @JsonProperty("vnfdId") String vnfdId,
+            @JsonProperty("vnfdVersion") String vnfdVersion,
+            @JsonProperty("project") String project,
+            @JsonProperty("operationId") UUID operationId,
+            @JsonProperty("scope") ScopeType scope,
+            @JsonProperty("operationStatus") OperationStatus opStatus,
+            @JsonProperty("changeType") PackageChangeType changeType,
+            @JsonProperty("siteOrManoIds") List<String> siteOrManoIds,
+            @JsonProperty("packagePath") KeyValuePair packagePath
+    ) {
+        super(CatalogueMessageType.VNFPKG_CHANGE_NOTIFICATION, operationId, scope, opStatus);
+        this.vnfPkgInfoId = vnfPkgInfoId;
+        this.vnfdId = vnfdId;
+        this.vnfdVersion = vnfdVersion;
+        this.changeType = changeType;
+        this.packagePath = packagePath;
+        this.project = project;
         if(siteOrManoIds != null)
             this.siteOrManoIds.addAll(siteOrManoIds);
         else
@@ -81,9 +108,14 @@ public class VnfPkgChangeNotificationMessage extends CatalogueMessage {
         return vnfdId;
     }
 
-    @JsonProperty("operationalState")
-    public String getOperationalState() {
-        return operationalState;
+    @JsonProperty("vnfdVersion")
+    public String getVnfdVersion() {
+        return vnfdVersion;
+    }
+
+    @JsonProperty("project")
+    public String getProject() {
+        return project;
     }
 
     @JsonProperty("changeType")
