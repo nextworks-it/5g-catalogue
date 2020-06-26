@@ -60,11 +60,10 @@ function updatePnfdInfo(pnfdInfoId, elemId) {
     console.log("PnfdInfoModifications: " + json);
      var project = document.getElementById('project').innerHTML;
     if(this.useDefaultProject(project)){
-            patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/pnf_descriptors/" + pnfdInfoId, json, showResultMessage, ["PNFD with pnfdInfoId " + nsdInfoId + " successfully updated."]);
-
-        }else{
-            patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/pnf_descriptors/" + pnfdInfoId + "?project=" + getCookie("PROJECT"), json, showResultMessage, ["PNFD with pnfdInfoId " + nsdInfoId + " successfully updated."]);
-        }
+        patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/pnf_descriptors/" + pnfdInfoId, json, showResultMessage, ["PNFD with pnfdInfoId " + nsdInfoId + " successfully updated."]);
+    }else{
+        patchJsonRequestToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/pnf_descriptors/" + pnfdInfoId + "?project=" + getCookie("PROJECT"), json, showResultMessage, ["PNFD with pnfdInfoId " + nsdInfoId + " successfully updated."]);
+    }
     
 }
 
@@ -82,8 +81,11 @@ function createPnfdInfoId(file, resId) {
     // TODO: handle also userDefinedData
     var jsonObj = {"userDefinedData" : {} };
     var json = JSON.stringify(jsonObj, null, 4);
-    
-    postJsonToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/pnf_descriptors?project=" + getCookie("PROJECT"), json, uploadPnfdContent, [file, resId]);
+    if(this.useDefaultProject(project)){
+        postJsonToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/pnf_descriptors", json, uploadPnfdContent, [file, resId]);
+    }else{
+        postJsonToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/pnf_descriptors?project=" + getCookie("PROJECT"), json, uploadPnfdContent, [file, resId]);
+    }
 }
 
 function uploadPnfdContent(data, params) {

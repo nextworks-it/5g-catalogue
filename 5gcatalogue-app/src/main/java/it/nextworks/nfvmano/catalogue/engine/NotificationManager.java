@@ -98,6 +98,10 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
             NsdOnBoardingNotificationMessage castMsg = (NsdOnBoardingNotificationMessage) msg;
             acceptNsdOnBoardingNotification(castMsg);
         });
+        functor.put(CatalogueMessageType.NSD_CHANGE_NOTIFICATION, msg -> {
+            NsdChangeNotificationMessage castMsg = (NsdChangeNotificationMessage) msg;
+            acceptNsdChangeNotification(castMsg);
+        });
         functor.put(CatalogueMessageType.NSD_DELETION_NOTIFICATION, msg -> {
             NsdDeletionNotificationMessage castMsg = (NsdDeletionNotificationMessage) msg;
             acceptNsdDeletionNotification(castMsg);
@@ -170,8 +174,29 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
 
     @Override
     public void sendNsdChangeNotification(NsdChangeNotificationMessage notification)
-            throws MethodNotImplementedException {
-        throw new MethodNotImplementedException("sendNsdChangeNotification method not implemented");
+            throws FailedOperationException {
+        try {
+            log.info("Sending nsdOnChangeNotification for NSD " + notification.getNsdId());
+
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+            mapper.setSerializationInclusion(Include.NON_EMPTY);
+
+            String json = mapper.writeValueAsString(notification);
+
+            log.debug("Sending json message over kafka bus on topic " + localNotificationTopic + "\n" + json);
+
+            if (skipKafka) {
+                log.debug(" ---- TEST MODE: skipping post to kafka bus ----");
+            } else {
+                kafkaTemplate.send(localNotificationTopic, json);
+
+                log.debug("Message sent");
+            }
+        } catch (Exception e) {
+            log.error("Error while posting NsdChangeNotificationMessage to Kafka bus");
+            throw new FailedOperationException(e.getMessage());
+        }
     }
 
     @Override
