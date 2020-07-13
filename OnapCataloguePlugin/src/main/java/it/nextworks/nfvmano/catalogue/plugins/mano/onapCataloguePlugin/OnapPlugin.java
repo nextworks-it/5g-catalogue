@@ -95,7 +95,7 @@ public class OnapPlugin extends MANOPlugin {
         if(isManoSync()) {
             log.info("{} - Starting runtime synchronization, sync period every {} minutes", onap.getManoId(), syncPeriod);
             ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-            Runnable syncTask = this::ONAPSynchronization;
+            Runnable syncTask = this::RuntimeSynchronization;
             scheduler.scheduleAtFixedRate(syncTask, syncPeriod, syncPeriod, TimeUnit.MINUTES);
         }
     }
@@ -203,7 +203,8 @@ public class OnapPlugin extends MANOPlugin {
             return  null;
     }
 
-    private void ONAPSynchronization(){
+    @Override
+    public void RuntimeSynchronization(){
         log.info("{} - Runtime synchronization, started retrieving ONAP Vnf and Ns Pkgs", onap.getManoId());
         Long startSync = Instant.now().getEpochSecond();
 

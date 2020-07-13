@@ -90,6 +90,9 @@ public class DummyMANOPlugin extends MANOPlugin {
     }
 
     @Override
+    public void RuntimeSynchronization(){}
+
+    @Override
     public void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) {
         if (notification.getScope() == ScopeType.LOCAL) {
             NsdOnBoardingNotificationMessage response;

@@ -143,7 +143,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
         if(isManoSync()) {
             log.info("{} - Starting runtime synchronization, sync period every {} minutes", osm.getManoId(), syncPeriod);
             ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-            Runnable syncTask = this::OSMSynchronization;
+            Runnable syncTask = this::RuntimeSynchronization;
             scheduler.scheduleAtFixedRate(syncTask, syncPeriod, syncPeriod, TimeUnit.MINUTES);
         }
     }
@@ -273,7 +273,8 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
        return  getOsmInfoId(cataloguePkgInfoId);
     }
 
-    private void OSMSynchronization(){
+    @Override
+    public void RuntimeSynchronization(){
         log.info("{} - Runtime synchronization, started retrieving Osm Vnf and Ns Pkgs", osm.getManoId());
         Long startSync = Instant.now().getEpochSecond();
 

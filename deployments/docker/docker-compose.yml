@@ -54,7 +54,7 @@ services:
         proxy_enabled: ${PROXY_ENABLED}
     volumes:
       - ./volumes/catalogue-app/catalogueStorage:/home/catalogueStorage
-      - ./volumes/catalogue-app/osmStorage:/home/osmStorage
+      - ./volumes/catalogue-app/manoStorage:/home/manoStorage
     env_file:
      - 5g-catalogue-app/profiles/${CATALOGUE_PROFILE}.env
     environment:

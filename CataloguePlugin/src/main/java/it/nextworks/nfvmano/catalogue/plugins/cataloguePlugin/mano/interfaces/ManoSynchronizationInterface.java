@@ -68,4 +68,9 @@ public interface ManoSynchronizationInterface {
      * @return Mano Pkg info Id
      */
     String getManoPkgInfoId(String catalogueInfoId);
+
+    /**
+     * This method is used for the runtime synchronization of Catalogue and MANO Plugin.
+     */
+    void RuntimeSynchronization();
 }
