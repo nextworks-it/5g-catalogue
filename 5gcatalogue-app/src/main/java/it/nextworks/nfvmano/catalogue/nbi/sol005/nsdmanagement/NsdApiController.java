@@ -405,7 +405,7 @@ public class NsdApiController implements NsdApi {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
                 // TODO: check if we need to introduce the asynchronous mode
             } catch (NotPermittedOperationException | AlreadyExistingEntityException e) {
-                log.error("Impossible to upload NSD: " + e.getMessage());
+                log.error("Impossible to update NSD: " + e.getMessage());
                 return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
                         e.getMessage()), HttpStatus.CONFLICT);
             } catch (MalformattedElementException | FailedOperationException e) {

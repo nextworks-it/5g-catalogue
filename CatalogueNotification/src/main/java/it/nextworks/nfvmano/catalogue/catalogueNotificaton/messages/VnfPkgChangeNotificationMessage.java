@@ -36,7 +36,6 @@ public class VnfPkgChangeNotificationMessage extends CatalogueMessage {
     private final String vnfdId;
     private final String vnfdVersion;
     private final KeyValuePair packagePath;
-    private final PackageChangeType changeType;
     private final String project;
 
     @JsonInclude(Include.NON_EMPTY)
@@ -54,7 +53,6 @@ public class VnfPkgChangeNotificationMessage extends CatalogueMessage {
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus,
-            @JsonProperty("changeType") PackageChangeType changeType,
             @JsonProperty("pluginId") String pluginId,
             @JsonProperty("siteOrManoIds") List<String> siteOrManoIds,
             @JsonProperty("packagePath") KeyValuePair packagePath
@@ -63,7 +61,6 @@ public class VnfPkgChangeNotificationMessage extends CatalogueMessage {
         this.vnfPkgInfoId = vnfPkgInfoId;
         this.vnfdId = vnfdId;
         this.vnfdVersion = vnfdVersion;
-        this.changeType = changeType;
         this.pluginId = pluginId;
         this.packagePath = packagePath;
         this.project = project;
@@ -81,7 +78,6 @@ public class VnfPkgChangeNotificationMessage extends CatalogueMessage {
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus,
-            @JsonProperty("changeType") PackageChangeType changeType,
             @JsonProperty("siteOrManoIds") List<String> siteOrManoIds,
             @JsonProperty("packagePath") KeyValuePair packagePath
     ) {
@@ -89,7 +85,6 @@ public class VnfPkgChangeNotificationMessage extends CatalogueMessage {
         this.vnfPkgInfoId = vnfPkgInfoId;
         this.vnfdId = vnfdId;
         this.vnfdVersion = vnfdVersion;
-        this.changeType = changeType;
         this.packagePath = packagePath;
         this.project = project;
         if(siteOrManoIds != null)
@@ -116,11 +111,6 @@ public class VnfPkgChangeNotificationMessage extends CatalogueMessage {
     @JsonProperty("project")
     public String getProject() {
         return project;
-    }
-
-    @JsonProperty("changeType")
-    public PackageChangeType getChangeType() {
-        return changeType;
     }
 
     @JsonProperty("pluginId")

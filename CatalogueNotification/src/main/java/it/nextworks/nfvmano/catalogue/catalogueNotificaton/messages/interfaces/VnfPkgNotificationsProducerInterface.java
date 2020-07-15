@@ -40,7 +40,7 @@ public interface VnfPkgNotificationsProducerInterface {
      * @param notification notification about the state change of an VNF Pkg
      * @throws MethodNotImplementedException
      */
-    void sendVnfPkgChangeNotification(VnfPkgChangeNotificationMessage notification) throws MethodNotImplementedException;
+    void sendVnfPkgChangeNotification(VnfPkgChangeNotificationMessage notification) throws MethodNotImplementedException, FailedOperationException;
 
     /**
      * This method is called when an on-boarded VNF Pkg is deleted.

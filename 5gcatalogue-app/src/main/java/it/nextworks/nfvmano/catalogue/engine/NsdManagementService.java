@@ -1379,6 +1379,10 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new NotPermittedOperationException("NSD info " + nsdInfoId + " not in either ONBOARDED or LOCAL_ONBOARDED onboarding state.");
         }
 
+        if(!isInternalRequest && nsdInfo.isRetrievedFromMANO()){
+            throw new FailedOperationException("Cannot update NSD info, it has been retrieved from MANO");
+        }
+
         // convert to File
         File inputFile = null;
         try {
@@ -1462,7 +1466,7 @@ public class NsdManagementService implements NsdManagementInterface {
             }
 
             //Removing old files
-            if(!oldNsdId.equals(nsdInfo.getNsdId()) || oldNsdVersion.equals(nsdInfo.getNsdVersion()))
+            if(!oldNsdId.equals(nsdInfo.getNsdId()) || !oldNsdVersion.equals(nsdInfo.getNsdVersion()))
                 FileSystemStorageService.deleteNsd(project, oldNsdId.toString(), oldNsdVersion);
 
             log.debug("NSD file successfully stored");
@@ -1513,7 +1517,6 @@ public class NsdManagementService implements NsdManagementInterface {
             nsdInfo.addNsdPkgFilename(nsdFilename);
             nsdInfo.addNsdFilename(csarInfo.getDescriptorFilename());
         } else {
-
             nsdInfo.addNsdFilename(nsdFilename);
         }
 
@@ -1613,7 +1616,7 @@ public class NsdManagementService implements NsdManagementInterface {
         }
 
         nsdInfoRepo.saveAndFlush(nsdInfo);
-        log.debug("NSD content uploaded and nsdOnBoardingNotification delivered");
+        log.debug("NSD content updated");
     }
 
     @Override

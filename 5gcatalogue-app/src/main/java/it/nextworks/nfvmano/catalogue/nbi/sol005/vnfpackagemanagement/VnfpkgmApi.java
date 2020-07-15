@@ -156,6 +156,19 @@ public interface VnfpkgmApi {
                                    @ApiParam(value = "The payload body contains a VNF Package ZIP file. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType,
                                    @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization);
 
+    @ApiOperation(value = "Update VNF Package content", nickname = "updateVNFPkg", notes = "",  tags = {})
+    @ApiResponses(value = {@ApiResponse(code = 202, message = "Status 202", response = Object.class),
+            @ApiResponse(code = 204, message = "The VNF Package content was successfully updated and validated (synchronous mode). The response body shall be empty."),
+            @ApiResponse(code = 400, message = "Status 400", response = ProblemDetails.class),
+            @ApiResponse(code = 404, message = "Status 404", response = ProblemDetails.class),
+            @ApiResponse(code = 500, message = "Status 500", response = ProblemDetails.class)})
+    @RequestMapping(value = "/vnfpkgm/v1/vnf_packages/{vnfPkgId}/package_content", produces = {"application/json"}, consumes = {"application/zip", "multipart/form-data"}, method = RequestMethod.PATCH)
+    ResponseEntity<?> updateVNFPkg(@RequestParam(required = false) String project,
+                                @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+                                @ApiParam(value = "", required = true) @PathVariable("vnfPkgId") String vnfPkgId,
+                                @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
+                                @ApiParam(value = "The payload body contains a VNF Package ZIP file. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType);
+
     @ApiOperation(value = "Upload VNF Package content from URI.", nickname = "uploadVNFPkgFromURI", notes = "", tags = {})
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Status 200"),

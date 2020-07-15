@@ -923,7 +923,124 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
     @Override
     public void acceptVnfPkgChangeNotification(VnfPkgChangeNotificationMessage notification) {
         log.debug("Body: {}", notification);
-        log.info("{} - Received VNF Pkg change notification", osm.getManoId());
+        if (notification.getScope() == ScopeType.LOCAL) {
+            log.info("{} - Received VNF Pkg change notification for Vnfd with ID {} and version {} for project {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject());
+            if (Utilities.isTargetMano(notification.getSiteOrManoIds(), osm) && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
+                try {
+                    //Delete old package
+                    String osmInfoPkgId = getOsmInfoId(notification.getVnfPkgInfoId());
+                    if(osmInfoPkgId == null)
+                        throw new FailedOperationException("Could not find the corresponding Info ID in OSM");
+                    if(!deleteTranslationInformationEntry(notification.getVnfPkgInfoId()))
+                        throw new FailedOperationException("Could not delete the specified entry");
+                    if(!translationInformationContainsOsmInfoId(osmInfoPkgId))//If pkg is not present in other projects
+                        deleteVnfd(osmInfoPkgId, notification.getOperationId().toString());
+                    log.info("{} - Successfully deleted Vnfd with ID {} and version {} for project {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject());
+
+                    //Onboard new package
+                    String packagePath = notification.getPackagePath().getKey();
+                    File descriptor;
+                    File metadata;
+                    Set<String> metadataFileNames;
+                    String metadataFileName;
+                    if(notification.getPackagePath().getValue().equals(PathType.LOCAL.toString())) {
+                        Set<String> files = Utilities.listFiles(packagePath);
+                        if(files.size() != 1) {
+                            metadataFileNames = Utilities.listFiles(packagePath + "/TOSCA-Metadata/");
+                            //Consider only one metadata file is present
+                            metadataFileName = metadataFileNames.stream().filter(name -> name.endsWith(".meta")).findFirst().get();
+                            metadata = new File(packagePath + "/TOSCA-Metadata/" + metadataFileName);
+                            descriptor = new File(packagePath + "/" + Utilities.getMainServiceTemplateFromMetadata(metadata));
+                        }
+                        else if (files.iterator().next().endsWith(".yaml") || files.iterator().next().endsWith(".yml"))
+                            descriptor = new File(packagePath + "/" + files.iterator().next());
+                        else{
+                            throw new MalformattedElementException("Descriptor files not found");
+                        }
+                    }else{
+                        //TODO support also other PathType
+                        throw new MethodNotImplementedException("Path Type not currently supported");
+                    }
+
+                    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+                    DescriptorTemplate descriptorTemplate = mapper.readValue(descriptor, DescriptorTemplate.class);
+                    log.info("{} - Onboarding Vnfd with ID {} and version {} for project {}", osm.getManoId(), descriptorTemplate.getMetadata().getDescriptorId(), descriptorTemplate.getMetadata().getVersion(), notification.getProject());
+                    //Check if already present, uploaded for example from another project
+                    String osmDescriptorId = getOsmDescriptorId(descriptorTemplate.getMetadata().getDescriptorId(), descriptorTemplate.getMetadata().getVersion());
+                    if(osmDescriptorId == null)
+                        osmDescriptorId = descriptorTemplate.getMetadata().getDescriptorId();
+                    Optional<OsmInfoObject> osmInfoObjectOptional = osmInfoObjectRepository.findByDescriptorIdAndVersionAndOsmId(osmDescriptorId, descriptorTemplate.getMetadata().getVersion(), osm.getManoId());
+                    String osmInfoObjectId;
+                    if(!osmInfoObjectOptional.isPresent()) {
+                        //OSM cannot permit to onboard descriptors with same ID but different versions
+                        if(isTheFirstTranslationInformationEntry(descriptorTemplate.getMetadata().getDescriptorId()))
+                            osmDescriptorId = descriptorTemplate.getMetadata().getDescriptorId();
+                        else{
+                            osmDescriptorId = UUID.randomUUID().toString();
+                            descriptorTemplate.getMetadata().setDescriptorId(osmDescriptorId);
+                            //Consider only one NSNode present
+                            descriptorTemplate.getTopologyTemplate().getVNFNodes().values().iterator().next().getProperties().setDescriptorId(osmDescriptorId);
+                        }
+
+                        VnfdBuilder vnfdBuilder = new VnfdBuilder(logo);
+                        vnfdBuilder.parseDescriptorTemplate(descriptorTemplate, MANOType.OSMR4);
+                        OsmVNFPackage packageData = vnfdBuilder.getPackage();
+
+                        mapper = new ObjectMapper();
+                        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+
+                        log.debug("Translated VNFD: " + mapper.writeValueAsString(packageData));
+
+                        Set<String> fileNames = Utilities.listFiles(packagePath);
+                        //TODO take cloudinit file name from descriptor?
+                        //Consider only one manifest file is present
+                        String manifestPath = fileNames.stream().filter(name -> name.endsWith(".mf")).findFirst().get();
+                        File mf = new File(packagePath + "/" + manifestPath);
+
+                        String cloudInitPath = Utilities.getCloudInitFromManifest(mf);
+                        String monitoringPath = Utilities.getMonitoringFromManifest(mf);
+
+                        ArchiveBuilder archiver = new ArchiveBuilder(osmDir, logo);
+                        File cloudInit = null;
+                        if (cloudInitPath != null) {
+                            cloudInit = new File(packagePath + "/" + cloudInitPath);
+                        } else {
+                            log.debug("{} - No cloud-init file found for VNF with ID {} and version {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion());
+                        }
+                        File monitoring = null;
+                        if (monitoringPath != null) {
+                            monitoring = new File(packagePath + "/" + monitoringPath);
+                        } else {
+                            log.debug("{} - No monitoring file found for VNF with ID {} and version {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion());
+                        }
+                        File archive = archiver.makeNewArchive(packageData, "Generated by NXW Catalogue", cloudInit, monitoring);
+                        osmInfoObjectId = onBoardVnfPackage(archive, notification.getOperationId().toString());
+                        log.info("{} - Successfully uploaded Vnfd with ID {} and version {} for project {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject());
+                    }else
+                        osmInfoObjectId = osmInfoObjectOptional.get().getId();
+
+                    translationInformationRepository.saveAndFlush(new OsmTranslationInformation(notification.getVnfPkgInfoId(), osmInfoObjectId, descriptorTemplate.getMetadata().getDescriptorId(), osmDescriptorId, descriptorTemplate.getMetadata().getVersion(), osm.getManoId()));
+                    sendNotification(new VnfPkgChangeNotificationMessage(notification.getVnfPkgInfoId(), descriptorTemplate.getMetadata().getDescriptorId(), descriptorTemplate.getMetadata().getVersion(), notification.getProject(),
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
+                            osm.getManoId(), null,null));
+                }catch (Exception e) {
+                    log.error("{} - Could not change VNF Pkg: {}", osm.getManoId(), e.getMessage());
+                    log.debug("Error details: ", e);
+                    sendNotification(new VnfPkgChangeNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(),
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
+                            osm.getManoId(), null, null));
+                }
+            }else {
+                if (this.getPluginOperationalState() == PluginOperationalState.DISABLED || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
+                    log.debug("{} - VNF Pkg change skipped", osm.getManoId());
+                    sendNotification(new VnfPkgChangeNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(),
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.RECEIVED,
+                            osm.getManoId(), null,null));
+                }
+            }
+        }else if(notification.getScope() == ScopeType.SYNC){
+            log.info("{} - Received Sync Pkg change notification for VNFD with ID {} and version {} for project {} : {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(), notification.getOpStatus().toString());
+        }
     }
 
     @Override
