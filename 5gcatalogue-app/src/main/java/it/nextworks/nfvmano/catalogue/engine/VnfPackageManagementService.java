@@ -1001,6 +1001,11 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             throw new NotPermittedOperationException("VNF Pkg info " + vnfPkgInfoId + " not in either ONBOARDED or LOCAL_ONBOARDED onboarding state.");
         }
 
+        if ( vnfPkgInfoResource.getUsageState() != PackageUsageStateType.NOT_IN_USE)
+            throw new NotPermittedOperationException("VNF Pkg info " + vnfPkgInfoId + " cannot be updated because IN USE");
+        if (!vnfPkgInfoResource.getParentNsds().isEmpty())
+            throw new NotPermittedOperationException("VNF Pkg info " + vnfPkgInfoId + " cannot be updated because IN USE");
+
         if (contentType != ContentType.ZIP) {
             log.error("VNF Pkg upload request with wrong content-type");
             vnfPkgInfoResource.setOnboardingState(PackageOnboardingStateType.FAILED);
@@ -1153,6 +1158,9 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             for(MANOPlugin mano : pluginManger.manoDrivers.values())
                 if(vnfPkgInfoResource.getUserDefinedData().remove(mano.getPluginId()) == null)
                     vnfPkgInfoResource.getUserDefinedData().remove(mano.getMano().getManoSite());
+
+            if(alreadyOnboardedManoIds.isEmpty() && failedOnboardedManoIds.isEmpty())//in case is LocalOnboarded, send onborading request to all available MANOs
+                failedOnboardedManoIds.addAll(pluginManger.manoDrivers.keySet());
 
             UUID operationId;
             if(!failedOnboardedManoIds.isEmpty()) {

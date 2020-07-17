@@ -492,8 +492,9 @@ public class NsdManagementService implements NsdManagementInterface {
         Map<String, NotificationResource> onBoardingMap;
 
         String mano;
-        Iterator<String> manosIterator = availableManos.iterator();
+        Iterator<String> manosIterator;
         for(UUID vnfInfoId : nsdInfoResource.getVnfPkgIds()){
+            manosIterator = availableManos.iterator();
             Optional<VnfPkgInfoResource> vnfPkgInfoResource = vnfPkgInfoRepository.findById(vnfInfoId);
             if(vnfPkgInfoResource.isPresent()) {
                 onBoardingMap = vnfPkgInfoResource.get().getAcknowledgedOnboardOpConsumers();
@@ -505,8 +506,8 @@ public class NsdManagementService implements NsdManagementInterface {
             }
         }
         /* TODO uncomment when it will be possible to onboard the PNF on MANOs
-        manosIterator = availableManos.iterator();
         for(UUID pnfInfoId : nsdInfoResource.getPnfdInfoIds()){
+            manosIterator = availableManos.iterator();
             Optional<PnfdInfoResource> pnfdInfoResource = pnfdInfoRepo.findById(pnfInfoId);
             if(pnfdInfoResource.isPresent()){
                 onBoardingMap = pnfdInfoResource.get().getAcknowledgedOnboardOpConsumers();
@@ -518,8 +519,9 @@ public class NsdManagementService implements NsdManagementInterface {
             }
         }
          */
-        manosIterator = availableManos.iterator();
+
         for(UUID nestedNsdInfoId : nsdInfoResource.getNestedNsdInfoIds()){
+            manosIterator = availableManos.iterator();
             Optional<NsdInfoResource> nestedNsInfoResource = nsdInfoRepo.findById(nestedNsdInfoId);
             if(nestedNsInfoResource.isPresent()){
                 onBoardingMap = nestedNsInfoResource.get().getAcknowledgedOnboardOpConsumers();
@@ -1581,6 +1583,9 @@ public class NsdManagementService implements NsdManagementInterface {
             for(MANOPlugin mano : pluginManger.manoDrivers.values())
                 if(nsdInfo.getUserDefinedData().remove(mano.getPluginId()) == null)
                     nsdInfo.getUserDefinedData().remove(mano.getMano().getManoSite());
+
+            if(alreadyOnboardedManoIds.isEmpty() && failedOnboardedManoIds.isEmpty())//in case is LocalOnboarded, send onborading request to all available MANOs
+                failedOnboardedManoIds.addAll(manoIds);
 
             UUID operationId;
             if(!failedOnboardedManoIds.isEmpty()) {
