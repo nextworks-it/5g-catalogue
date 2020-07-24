@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import it.nextworks.nfvmano.catalogue.auth.AuthUtilities;
 import it.nextworks.nfvmano.catalogue.auth.projectmanagement.ProjectResource;
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.*;
@@ -390,6 +391,101 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                     log.error(e1.getMessage());
                     log.error(e1.getMessage());
                 }
+            }
+        }
+    }
+
+    public void runtimeVnfChange(VnfPkgChangeNotificationMessage notification){
+        List<String> projects = new ArrayList<>();
+        if(notification.getProject() == null || notification.getProject().equals("all")){
+            List<ProjectResource> projectResourceList = projectRepository.findAll();
+            for(ProjectResource projectResource : projectResourceList)
+                projects.add(projectResource.getProjectId());
+        }else
+            projects.add(notification.getProject());
+
+        List<String> onbordingProjects = new ArrayList<>();
+        for(String project : projects) {
+            Optional<VnfPkgInfoResource> optionalVnfPkgInfoResource = vnfPkgInfoRepository.findByVnfdIdAndVnfdVersionAndProjectId(UUID.fromString(notification.getVnfdId()), notification.getVnfdVersion(), project);
+            if (optionalVnfPkgInfoResource.isPresent()) {
+                VnfPkgInfoResource vnfPkgInfoResource = optionalVnfPkgInfoResource.get();
+                UUID vnfPkgInfoId = vnfPkgInfoResource.getId();
+                if (vnfPkgInfoResource.isRetrievedFromMANO()) {
+                    try {
+                        log.info("Project {} - Updating VNFD with ID {} and version {} retrieved from MANO with ID {}", project, notification.getVnfdId(), notification.getVnfdVersion(), notification.getPluginId());
+                        File vnfd;
+                        if (notification.getPackagePath().getValue().equals(PathType.LOCAL.toString())) {
+                            vnfd = new File(notification.getPackagePath().getKey());
+                        } else {
+                            throw new MethodNotImplementedException("Path Type not currently supported");
+                        }
+                        MultipartFile multipartFile = Utilities.createMultiPartFromFile(vnfd);
+                        updateVnfPkg(vnfPkgInfoId.toString(), multipartFile, ContentType.ZIP, true, project);
+                        updateVnfPkgInfoOperationStatus(vnfPkgInfoId.toString(), notification.getPluginId(), OperationStatus.SUCCESSFULLY_DONE, CatalogueMessageType.VNFPKG_CHANGE_NOTIFICATION);
+                        optionalVnfPkgInfoResource = vnfPkgInfoRepository.findById(vnfPkgInfoId);
+                        if(optionalVnfPkgInfoResource.isPresent()){
+                            vnfPkgInfoResource = optionalVnfPkgInfoResource.get();
+                            vnfPkgInfoResource.getUserDefinedData().put(notification.getPluginId(), "yes");
+                            vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
+                            notificationManager.sendVnfPkgChangeNotification(new VnfPkgChangeNotificationMessage(vnfPkgInfoId.toString(), vnfPkgInfoResource.getVnfdId().toString(), vnfPkgInfoResource.getVnfdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.SUCCESSFULLY_DONE, notification.getPluginId(), null, null));
+                        }else
+                            notificationManager.sendVnfPkgChangeNotification(new VnfPkgChangeNotificationMessage(vnfPkgInfoId.toString(), notification.getVnfdId(), notification.getVnfdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.FAILED, notification.getPluginId(), null, null));
+                    }catch (Exception e){
+                        log.error("Project {} - Failed to update VNFD with ID {} and version {}", project, vnfPkgInfoResource.getVnfdId(), vnfPkgInfoResource.getVnfdVersion());
+                        try {
+                            optionalVnfPkgInfoResource = vnfPkgInfoRepository.findById(vnfPkgInfoId);
+                            if(optionalVnfPkgInfoResource.isPresent()) {
+                                vnfPkgInfoResource = optionalVnfPkgInfoResource.get();
+                                vnfPkgInfoResource.getUserDefinedData().put(notification.getPluginId(), "no");
+                                vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
+                                updateVnfPkgInfoOperationStatus(vnfPkgInfoId.toString(), notification.getPluginId(), OperationStatus.FAILED, CatalogueMessageType.VNFPKG_CHANGE_NOTIFICATION);
+                            }
+                            notificationManager.sendVnfPkgChangeNotification(new VnfPkgChangeNotificationMessage(vnfPkgInfoId.toString(), notification.getVnfdId(), notification.getVnfdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.FAILED, notification.getPluginId(), null, null));
+                        } catch (Exception e1) {
+                            log.error(e1.getMessage());
+                            log.debug(null, e1);
+                        }
+                    }
+                } else {
+                    log.info("Project {} - Cannot update VNFD with ID {} and version {}, it is not retrieved from MANO", project, vnfPkgInfoResource.getVnfdId(), vnfPkgInfoResource.getVnfdVersion());
+                    try {
+                        optionalVnfPkgInfoResource.get().getUserDefinedData().put(notification.getPluginId(), "no");
+                        vnfPkgInfoRepository.saveAndFlush(optionalVnfPkgInfoResource.get());
+                        updateVnfPkgInfoOperationStatus(vnfPkgInfoResource.getId().toString(), notification.getPluginId(), OperationStatus.FAILED, CatalogueMessageType.VNFPKG_CHANGE_NOTIFICATION);
+                        notificationManager.sendVnfPkgChangeNotification(new VnfPkgChangeNotificationMessage(vnfPkgInfoResource.getId().toString(), notification.getVnfdId(), notification.getVnfdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.FAILED, notification.getPluginId(), null, null));
+                        log.debug("Project {} - Sending delete request for VNFD with ID {} and version {}", project, vnfPkgInfoResource.getVnfdId(), vnfPkgInfoResource.getVnfdVersion());
+                        List<String> siteOrManoIds = new ArrayList<>();
+                        siteOrManoIds.add(notification.getPluginId());
+                        notificationManager.sendVnfPkgDeletionNotification(new VnfPkgDeletionNotificationMessage(vnfPkgInfoResource.getId().toString(), vnfPkgInfoResource.getVnfdId().toString(), vnfPkgInfoResource.getVnfdVersion(), project, UUID.randomUUID(), ScopeType.LOCAL, OperationStatus.SENT, siteOrManoIds));
+                        onbordingProjects.add(project);
+                    } catch (Exception e1) {
+                        log.error(e1.getMessage());
+                        log.debug(null, e1);
+                    }
+                }
+            }else{
+                try {
+                    notificationManager.sendVnfPkgChangeNotification(new VnfPkgChangeNotificationMessage(null, notification.getVnfdId(), notification.getVnfdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.FAILED, notification.getPluginId(), null, null));
+                }catch(FailedOperationException e1){
+                    log.error(e1.getMessage());
+                    log.error(e1.getMessage());
+                }
+            }
+        }
+
+        for(String project : onbordingProjects) {
+            try {
+                Optional<VnfPkgInfoResource> optionalVnfPkgInfoResource = vnfPkgInfoRepository.findByVnfdIdAndVnfdVersionAndProjectId(UUID.fromString(notification.getVnfdId()), notification.getVnfdVersion(), project);
+                if(optionalVnfPkgInfoResource.isPresent()) {
+                    VnfPkgInfoResource vnfPkgInfoResource = optionalVnfPkgInfoResource.get();
+                    log.debug("Project {} - Sending on-boarding request for VNFD with ID {} and version {}", project, vnfPkgInfoResource.getVnfdId(), vnfPkgInfoResource.getVnfdVersion());
+                    List<String> siteOrManoIds = new ArrayList<>();
+                    siteOrManoIds.add(notification.getPluginId());
+                    notificationManager.sendVnfPkgOnBoardingNotification(new VnfPkgOnBoardingNotificationMessage(vnfPkgInfoResource.getId().toString() + "_update", vnfPkgInfoResource.getVnfdId().toString(), vnfPkgInfoResource.getVnfdVersion(), project, UUID.randomUUID(), ScopeType.LOCAL, OperationStatus.SENT, siteOrManoIds, new KeyValuePair(rootDir + ConfigurationParameters.storageVnfpkgsSubfolder + "/" + project + "/" + vnfPkgInfoResource.getVnfdId() + "/" + vnfPkgInfoResource.getVnfdVersion(), PathType.LOCAL.toString())));
+                }
+            }catch (Exception e1) {
+                log.error(e1.getMessage());
+                log.debug(null, e1);
             }
         }
     }
@@ -1001,10 +1097,10 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             throw new NotPermittedOperationException("VNF Pkg info " + vnfPkgInfoId + " not in either ONBOARDED or LOCAL_ONBOARDED onboarding state.");
         }
 
-        if ( vnfPkgInfoResource.getUsageState() != PackageUsageStateType.NOT_IN_USE)
+        if (vnfPkgInfoResource.getUsageState() != PackageUsageStateType.NOT_IN_USE)
             throw new NotPermittedOperationException("VNF Pkg info " + vnfPkgInfoId + " cannot be updated because IN USE");
         if (!vnfPkgInfoResource.getParentNsds().isEmpty())
-            throw new NotPermittedOperationException("VNF Pkg info " + vnfPkgInfoId + " cannot be updated because IN USE");
+            throw new NotPermittedOperationException("VNF Pkg info " + vnfPkgInfoId + " cannot be updated because there is at least one NS referencing it");
 
         if (contentType != ContentType.ZIP) {
             log.error("VNF Pkg upload request with wrong content-type");

@@ -270,6 +270,6 @@ public class VnfPkgInfoResource {
         if (usageState != PackageUsageStateType.NOT_IN_USE)
             throw new NotPermittedOperationException("VNF Pkg info " + this.id + " cannot be deleted because IN USE");
         if (!parentNsds.isEmpty())
-            throw new NotPermittedOperationException("VNF Pkg info " + this.id + " cannot be deleted because IN USE");
+            throw new NotPermittedOperationException("VNF Pkg info " + this.id + " cannot be deleted because there is at least one NS referencing it");
     }
 }

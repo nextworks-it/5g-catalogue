@@ -411,7 +411,7 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
                 break;
             case SYNC:
                 log.info("Project {} - Received request for Updating NSD with ID {} and version {} from MANO with ID {}", notification.getProject(), notification.getNsdId(), notification.getNsdVersion(), notification.getPluginId());
-                //nsdMgmtService.runtimeNsOnBoarding(notification);//TODO
+                nsdMgmtService.runtimeNsChange(notification);
                 break;
         }
     }
@@ -734,7 +734,7 @@ public class NotificationManager implements NsdNotificationsConsumerInterface, N
                 break;
             case SYNC:
                 log.info("Project {} - Received request for Onboarding VNFD with ID {} and version {} from MANO with ID {}", notification.getProject(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getPluginId());
-                //vnfPackageManagementService.runtimeVnfOnBoarding(notification); TODO
+                vnfPackageManagementService.runtimeVnfChange(notification);
                 break;
         }
     }

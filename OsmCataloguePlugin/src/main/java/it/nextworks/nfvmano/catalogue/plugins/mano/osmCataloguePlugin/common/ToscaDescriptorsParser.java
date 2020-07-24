@@ -168,14 +168,11 @@ public class ToscaDescriptorsParser {
         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
 
         OsmNSPackage osmNsPkg = mapper.readValue(new File(osmNsDescriptorPath), OsmNSPackage.class);
-
         if(osmNsPkg.getNsdCatalog().getNsds() == null || osmNsPkg.getNsdCatalog().getNsds().size() == 0)
             throw new IllegalArgumentException("No NS defined");
         if(osmNsPkg.getNsdCatalog().getNsds().size() != 1)
             throw new IllegalArgumentException("Too many NS defined");
-
         NSDescriptor osmNsDescriptor = osmNsPkg.getNsdCatalog().getNsds().get(0);
-
         LinkedHashMap<String, Node> nodeTemplates = new LinkedHashMap<>();
 
         log.debug("Creating NsVirtualLinkNodes");

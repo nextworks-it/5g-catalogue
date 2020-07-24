@@ -39,6 +39,7 @@ public class OsmInfoObject {
     private Long epoch;
     private String osmId;
     private OsmObjectType type;
+    private RecordState state = RecordState.NEW;
 
     @Transient
     private Map<String, Object> otherProperties = new HashMap<String, Object>();
@@ -98,6 +99,14 @@ public class OsmInfoObject {
 
     public void setType(OsmObjectType type) {
         this.type = type;
+    }
+
+    public RecordState getState() {
+        return state;
+    }
+
+    public void setState(RecordState state) {
+        this.state = state;
     }
 
     @JsonAnyGetter
