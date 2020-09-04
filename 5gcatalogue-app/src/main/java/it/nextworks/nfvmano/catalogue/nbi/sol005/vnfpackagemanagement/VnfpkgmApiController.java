@@ -425,7 +425,7 @@ public class VnfpkgmApiController implements VnfpkgmApi {
                     return new ResponseEntity<String>("Unable to parse file type that is not .zip",
                             HttpStatus.NOT_IMPLEMENTED);
                 }
-                vnfPackageManagementInterface.updateVnfPkg(vnfPkgId, body, type, false, project);
+                vnfPackageManagementInterface.updateVnfPkg(vnfPkgId, body, type, false, null, project);
                 log.debug("Update processing done");
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
                 // TODO: check if we need to introduce the asynchronous mode

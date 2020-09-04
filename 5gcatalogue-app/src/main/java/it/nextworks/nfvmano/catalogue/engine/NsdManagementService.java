@@ -172,7 +172,6 @@ public class NsdManagementService implements NsdManagementInterface {
                             CreateNsdInfoRequest request = new CreateNsdInfoRequest();
                             KeyValuePairs userDefinedData = new KeyValuePairs();
                             userDefinedData.put("isRetrievedFromMANO", "yes");
-                            userDefinedData.put(manoPlugin.getPluginId(), "yes");
                             request.setUserDefinedData(userDefinedData);
                             try {
                                 NsdInfo nsdInfo = createNsdInfo(request, project.getProjectId(), true);
@@ -197,8 +196,6 @@ public class NsdManagementService implements NsdManagementInterface {
                             NsdInfo nsdInfo = buildNsdInfo(optionalNsdInfoResource.get());
                             if (nsdInfo.getManoIdToOnboardingStatus().get(manoPlugin.getPluginId()) == null || !nsdInfo.getManoIdToOnboardingStatus().get(manoPlugin.getPluginId()).equals(NsdOnboardingStateType.ONBOARDED)) {
                                 try {
-                                    optionalNsdInfoResource.get().getUserDefinedData().put(manoPlugin.getPluginId(), "yes");
-                                    nsdInfoRepo.saveAndFlush(optionalNsdInfoResource.get());
                                     updateNsdInfoOperationStatus(nsdInfo.getId().toString(), manoPlugin.getPluginId(), OperationStatus.SUCCESSFULLY_DONE, CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION);
                                     manoPlugin.notifyOnboarding(nsdInfo.getId().toString(), nsdId, nsdVersion, project.getProjectId(), OperationStatus.SUCCESSFULLY_DONE);
                                 } catch (NotExistingEntityException e) {
@@ -224,11 +221,8 @@ public class NsdManagementService implements NsdManagementInterface {
                                     request.setNsdOperationalState(NsdOperationalStateType.DISABLED);
                                     updateNsdInfo(request, nsdInfoResource.getId().toString(), project.getProjectId(), true);
                                     deleteNsdInfo(nsdInfoResource.getId().toString(), project.getProjectId(), true);
-                                    manoPlugin.notifyDelete(nsdInfoResource.getId().toString(), nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(), project.getProjectId(), OperationStatus.SUCCESSFULLY_DONE);
-                                }else{
-                                    manoPlugin.notifyDelete(nsdInfoResource.getId().toString(), nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(), project.getProjectId(), OperationStatus.SUCCESSFULLY_DONE);
-                                    targetNsdInfoResource.get().getUserDefinedData().put(manoPlugin.getPluginId(), "no");
                                 }
+                                manoPlugin.notifyDelete(nsdInfoResource.getId().toString(), nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(), project.getProjectId(), OperationStatus.SUCCESSFULLY_DONE);
                             }catch (NotPermittedOperationException e){
                                 log.error("Project {} - Failed to delete NSD with ID {} and version {}, it is not deletable", project.getProjectId(), nsdInfoResource.getNsdId(), nsdInfoResource.getNsdVersion());
                                 manoPlugin.notifyDelete(nsdInfoResource.getId().toString(), nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(), project.getProjectId(), OperationStatus.FAILED);
@@ -309,7 +303,6 @@ public class NsdManagementService implements NsdManagementInterface {
                 CreateNsdInfoRequest request = new CreateNsdInfoRequest();
                 KeyValuePairs userDefinedData = new KeyValuePairs();
                 userDefinedData.put("isRetrievedFromMANO", "yes");
-                userDefinedData.put(notification.getPluginId(), "yes");
                 request.setUserDefinedData(userDefinedData);
                 try {
                     NsdInfo nsdInfo = createNsdInfo(request, project, true);
@@ -336,8 +329,6 @@ public class NsdManagementService implements NsdManagementInterface {
             }else {
                 log.info("Project {} - NSD with ID {} and version {} retrieved from MANO with ID {} is already present", project, notification.getNsdId(), notification.getNsdVersion(), notification.getPluginId());
                 try {
-                    optionalNsdInfoResource.get().getUserDefinedData().put(notification.getPluginId(), "yes");
-                    nsdInfoRepo.saveAndFlush(optionalNsdInfoResource.get());
                     updateNsdInfoOperationStatus(optionalNsdInfoResource.get().getId().toString(), notification.getPluginId(), OperationStatus.SUCCESSFULLY_DONE, CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION);
                     notificationManager.sendNsdOnBoardingNotification(new NsdOnBoardingNotificationMessage(optionalNsdInfoResource.get().getId().toString(), notification.getNsdId(), notification.getNsdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.SUCCESSFULLY_DONE, notification.getPluginId(), null,null));
                 } catch (Exception e) {
@@ -382,11 +373,8 @@ public class NsdManagementService implements NsdManagementInterface {
                             request.setNsdOperationalState(NsdOperationalStateType.DISABLED);
                             updateNsdInfo(request, nsdInfoResource.getId().toString(), project, true);
                             deleteNsdInfo(nsdInfoResource.getId().toString(), project, true);
-                            notificationManager.sendNsdDeletionNotification(new NsdDeletionNotificationMessage(nsdInfoResource.getId().toString(), notification.getNsdId(), notification.getNsdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.SUCCESSFULLY_DONE, notification.getPluginId(), null));
-                        } else {
-                            notificationManager.sendNsdDeletionNotification(new NsdDeletionNotificationMessage(nsdInfoResource.getId().toString(), notification.getNsdId(), notification.getNsdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.SUCCESSFULLY_DONE, notification.getPluginId(), null));
-                            targetNsdInfoResource.get().getUserDefinedData().put(notification.getPluginId(), "no");
                         }
+                        notificationManager.sendNsdDeletionNotification(new NsdDeletionNotificationMessage(nsdInfoResource.getId().toString(), notification.getNsdId(), notification.getNsdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.SUCCESSFULLY_DONE, notification.getPluginId(), null));
                     }catch (NotPermittedOperationException e){
                         log.error("Project {} - Failed to delete NSD with ID {} and version {}, it is not deletable", project, nsdInfoResource.getNsdId(), nsdInfoResource.getNsdVersion());
                         NsdDeletionNotificationMessage msg = new NsdDeletionNotificationMessage(nsdInfoResource.getId().toString(), notification.getNsdId(), notification.getNsdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.FAILED, notification.getPluginId(), null);
@@ -489,26 +477,18 @@ public class NsdManagementService implements NsdManagementInterface {
                             throw new MethodNotImplementedException("Path Type not currently supported");
                         }
                         MultipartFile multipartFile = Utilities.createMultiPartFromFile(nsd);
-                        updateNsd(nsdInfoId.toString(), multipartFile, ContentType.ZIP, true, project);
+                        updateNsd(nsdInfoId.toString(), multipartFile, ContentType.ZIP, true, notification.getPluginId(), project);
                         updateNsdInfoOperationStatus(nsdInfoId.toString(), notification.getPluginId(), OperationStatus.SUCCESSFULLY_DONE, CatalogueMessageType.NSD_CHANGE_NOTIFICATION);
                         optionalNsdInfoResource = nsdInfoRepo.findById(nsdInfoId);
                         if(optionalNsdInfoResource.isPresent()){
                             nsdInfoResource = optionalNsdInfoResource.get();
-                            nsdInfoResource.getUserDefinedData().put(notification.getPluginId(), "yes");
-                            nsdInfoRepo.saveAndFlush(nsdInfoResource);
                             notificationManager.sendNsdChangeNotification(new NsdChangeNotificationMessage(nsdInfoId.toString(), nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.SUCCESSFULLY_DONE, notification.getPluginId(), null, null));
                         }else
                             notificationManager.sendNsdChangeNotification(new NsdChangeNotificationMessage(nsdInfoId.toString(), notification.getNsdId(), notification.getNsdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.FAILED, notification.getPluginId(), null, null));
                     }catch (Exception e){
                         log.error("Project {} - Failed to update NSD with ID {} and version {}", project, nsdInfoResource.getNsdId(), nsdInfoResource.getNsdVersion());
                         try {
-                            optionalNsdInfoResource = nsdInfoRepo.findById(nsdInfoId);
-                            if(optionalNsdInfoResource.isPresent()) {
-                                nsdInfoResource = optionalNsdInfoResource.get();
-                                nsdInfoResource.getUserDefinedData().put(notification.getPluginId(), "no");
-                                nsdInfoRepo.saveAndFlush(nsdInfoResource);
-                                updateNsdInfoOperationStatus(nsdInfoId.toString(), notification.getPluginId(), OperationStatus.FAILED, CatalogueMessageType.NSD_CHANGE_NOTIFICATION);
-                            }
+                            updateNsdInfoOperationStatus(nsdInfoId.toString(), notification.getPluginId(), OperationStatus.FAILED, CatalogueMessageType.NSD_CHANGE_NOTIFICATION);
                             notificationManager.sendNsdChangeNotification(new NsdChangeNotificationMessage(nsdInfoId.toString(), notification.getNsdId(), notification.getNsdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.FAILED, notification.getPluginId(), null, null));
                         } catch (Exception e1) {
                             log.error(e1.getMessage());
@@ -518,8 +498,6 @@ public class NsdManagementService implements NsdManagementInterface {
                 } else {
                     log.info("Project {} - Cannot update NSD with ID {} and version {}, it is not retrieved from MANO", project, nsdInfoResource.getNsdId(), nsdInfoResource.getNsdVersion());
                     try {
-                        optionalNsdInfoResource.get().getUserDefinedData().put(notification.getPluginId(), "no");
-                        nsdInfoRepo.saveAndFlush(optionalNsdInfoResource.get());
                         updateNsdInfoOperationStatus(nsdInfoResource.getId().toString(), notification.getPluginId(), OperationStatus.FAILED, CatalogueMessageType.NSD_CHANGE_NOTIFICATION);
                         notificationManager.sendNsdChangeNotification(new NsdChangeNotificationMessage(nsdInfoResource.getId().toString(), notification.getNsdId(), notification.getNsdVersion(), project, notification.getOperationId(), ScopeType.SYNC, OperationStatus.FAILED, notification.getPluginId(), null, null));
                         log.debug("Project {} - Sending delete request for NSD with ID {} and version {}", project, nsdInfoResource.getNsdId(), nsdInfoResource.getNsdVersion());
@@ -1463,7 +1441,7 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
-    public synchronized void updateNsd(String nsdInfoId, MultipartFile nsd, ContentType contentType, boolean isInternalRequest, String project) throws MalformattedElementException, FailedOperationException, NotExistingEntityException, NotPermittedOperationException, AlreadyExistingEntityException, MethodNotImplementedException, NotAuthorizedOperationException{
+    public synchronized void updateNsd(String nsdInfoId, MultipartFile nsd, ContentType contentType, boolean isInternalRequest, String originalPluginId, String project) throws MalformattedElementException, FailedOperationException, NotExistingEntityException, NotPermittedOperationException, AlreadyExistingEntityException, MethodNotImplementedException, NotAuthorizedOperationException{
         log.debug("Processing request to update NSD content for NSD info " + nsdInfoId);
         if (project != null) {
             Optional<ProjectResource> projectOptional = projectRepository.findByProjectId(project);
@@ -1594,10 +1572,10 @@ public class NsdManagementService implements NsdManagementInterface {
             log.error("Unable to onboard NSD: " + e.getMessage());
             throw new AlreadyExistingEntityException("Unable to onboard NSD: " + e.getMessage());
         } catch (MalformattedElementException e) {
-            log.error("Unable to onboard NSD:" + e.getMessage());
+            log.error("Unable to onboard NSD: " + e.getMessage());
             throw new MalformattedElementException("Unable to onboard NSD:" + e.getMessage());
         } catch (NotAuthorizedOperationException e) {
-            log.error("Unable to onboard NSD:" + e.getMessage());
+            log.error("Unable to onboard NSD: " + e.getMessage());
             throw new NotAuthorizedOperationException("Unable to onboard NSD:" + e.getMessage());
         } catch (FailedOperationException e) {
             log.error("Unable to onboard NSD: " + e.getMessage());
@@ -1672,7 +1650,7 @@ public class NsdManagementService implements NsdManagementInterface {
         }
 
         // send notification over kafka bus
-        if(!nsdInfo.isRetrievedFromMANO() && !nsdInfo.isMultiSite()) {
+        if(!nsdInfo.isMultiSite()) {
             List<String> manoIds = checkWhereOnboardNS(nsdInfo);
             List<String> alreadyOnboardedManoIds = new ArrayList<>();
             List<String> failedOnboardedManoIds = new ArrayList<>();
@@ -1696,6 +1674,10 @@ public class NsdManagementService implements NsdManagementInterface {
 
             if(alreadyOnboardedManoIds.isEmpty() && failedOnboardedManoIds.isEmpty())//in case is LocalOnboarded, send onborading request to all available MANOs
                 failedOnboardedManoIds.addAll(manoIds);
+
+            //the update request is coming from a MANO, avoid sending update notification to that MANO
+            if(originalPluginId != null)
+                alreadyOnboardedManoIds.remove(originalPluginId);
 
             UUID operationId;
             if(!failedOnboardedManoIds.isEmpty()) {
@@ -2438,12 +2420,10 @@ public class NsdManagementService implements NsdManagementInterface {
                 nsdInfoResource.setAcknowledgedOnboardOpConsumers(ackMap);
 
                 if (messageType == CatalogueMessageType.NSD_ONBOARDING_NOTIFICATION || messageType == CatalogueMessageType.NSD_CHANGE_NOTIFICATION) {
-                    if(!optionalNsdInfoResource.get().isRetrievedFromMANO()) {
                         if (opStatus.equals(OperationStatus.SUCCESSFULLY_DONE))
                             optionalNsdInfoResource.get().getUserDefinedData().put(manoId, "yes");
                         else
                             optionalNsdInfoResource.get().getUserDefinedData().put(manoId, "no");
-                    }
                 }
                 log.debug("Checking NSD with nsdInfoId {} onboarding state", nsdInfoId);
                 nsdInfoResource.setNsdOnboardingState(checkNsdOnboardingState(nsdInfoId, ackMap));
