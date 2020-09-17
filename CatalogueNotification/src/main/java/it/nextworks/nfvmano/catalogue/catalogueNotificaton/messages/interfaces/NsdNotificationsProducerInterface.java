@@ -41,7 +41,7 @@ public interface NsdNotificationsProducerInterface {
      * @param notification notification about the change of an NSD
      * @throws MethodNotImplementedException
      */
-    void sendNsdChangeNotification(NsdChangeNotificationMessage notification) throws MethodNotImplementedException;
+    void sendNsdChangeNotification(NsdChangeNotificationMessage notification) throws FailedOperationException;
 
     /**
      * This method is called when a new NSD is deleted, after all the steps are done.

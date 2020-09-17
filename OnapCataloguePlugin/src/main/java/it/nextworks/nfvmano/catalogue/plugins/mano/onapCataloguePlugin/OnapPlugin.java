@@ -95,7 +95,7 @@ public class OnapPlugin extends MANOPlugin {
         if(isManoSync()) {
             log.info("{} - Starting runtime synchronization, sync period every {} minutes", onap.getManoId(), syncPeriod);
             ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-            Runnable syncTask = this::ONAPSynchronization;
+            Runnable syncTask = this::RuntimeSynchronization;
             scheduler.scheduleAtFixedRate(syncTask, syncPeriod, syncPeriod, TimeUnit.MINUTES);
         }
     }
@@ -203,7 +203,8 @@ public class OnapPlugin extends MANOPlugin {
             return  null;
     }
 
-    private void ONAPSynchronization(){
+    @Override
+    public void RuntimeSynchronization(){
         log.info("{} - Runtime synchronization, started retrieving ONAP Vnf and Ns Pkgs", onap.getManoId());
         Long startSync = Instant.now().getEpochSecond();
 
@@ -259,7 +260,7 @@ public class OnapPlugin extends MANOPlugin {
                 log.info("{} - Onap Ns Pkg with descriptor ID {} and version {} no longer present, deleting it", onap.getManoId(), onapNs.getDescriptorId(), onapNs.getVersion());
                 operationId = UUID.randomUUID();
                 sendNotification(new NsdDeletionNotificationMessage(null, onapNs.getDescriptorId(), onapNs.getVersion(), "all",
-                            operationId, ScopeType.SYNC, OperationStatus.SENT, onap.getManoId()));
+                            operationId, ScopeType.SYNC, OperationStatus.SENT, onap.getManoId(), null));
                 onapObjectRepository.delete(onapNs);
             }
         }
@@ -270,7 +271,7 @@ public class OnapPlugin extends MANOPlugin {
                 log.info("{} - Onap Vnf Pkg with descriptor ID {} and version {} no longer present, deleting it", onap.getManoId(), onapVnf.getDescriptorId(), onapVnf.getVersion());
                 operationId = UUID.randomUUID();
                 sendNotification(new VnfPkgDeletionNotificationMessage(null, onapVnf.getDescriptorId(), onapVnf.getVersion(), "all",
-                            operationId, ScopeType.SYNC, OperationStatus.SENT, onap.getManoId()));
+                            operationId, ScopeType.SYNC, OperationStatus.SENT, onap.getManoId(), null));
                 onapObjectRepository.delete(onapVnf);
             }
         }

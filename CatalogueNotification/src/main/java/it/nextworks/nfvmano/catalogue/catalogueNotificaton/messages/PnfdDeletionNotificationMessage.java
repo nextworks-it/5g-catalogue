@@ -23,6 +23,8 @@ import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.Cat
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.ScopeType;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class PnfdDeletionNotificationMessage extends CatalogueMessage {
@@ -31,6 +33,9 @@ public class PnfdDeletionNotificationMessage extends CatalogueMessage {
     private final String pnfdId;
     private final String pnfdVersion;
     private final String project;
+
+    @JsonInclude(Include.NON_EMPTY)
+    private List<String> siteOrManoIds = new ArrayList<>();
 
     @JsonInclude(Include.NON_NULL)
     private String pluginId;
@@ -44,7 +49,8 @@ public class PnfdDeletionNotificationMessage extends CatalogueMessage {
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus,
-            @JsonProperty("pluginId") String pluginId
+            @JsonProperty("pluginId") String pluginId,
+            @JsonProperty("siteOrManoIds") List<String> siteOrManoIds
     ) {
         super(CatalogueMessageType.PNFD_DELETION_NOTIFICATION, operationId, scope, opStatus);
         this.pnfdInfoId = pnfdInfoId;
@@ -52,6 +58,10 @@ public class PnfdDeletionNotificationMessage extends CatalogueMessage {
         this.pnfdVersion = pnfdVersion;
         this.pluginId = pluginId;
         this.project = project;
+        if(siteOrManoIds != null)
+            this.siteOrManoIds.addAll(siteOrManoIds);
+        else
+            this.siteOrManoIds = null;
     }
 
     public PnfdDeletionNotificationMessage(
@@ -61,13 +71,18 @@ public class PnfdDeletionNotificationMessage extends CatalogueMessage {
             @JsonProperty("project") String project,
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
-            @JsonProperty("operationStatus") OperationStatus opStatus
+            @JsonProperty("operationStatus") OperationStatus opStatus,
+            @JsonProperty("siteOrManoIds") List<String> siteOrManoIds
     ) {
         super(CatalogueMessageType.PNFD_DELETION_NOTIFICATION, operationId, scope, opStatus);
         this.pnfdInfoId = pnfdInfoId;
         this.pnfdId = pnfdId;
         this.pnfdVersion = pnfdVersion;
         this.project = project;
+        if(siteOrManoIds != null)
+            this.siteOrManoIds.addAll(siteOrManoIds);
+        else
+            this.siteOrManoIds = null;
     }
 
     @JsonProperty("pnfdInfoId")
@@ -94,4 +109,10 @@ public class PnfdDeletionNotificationMessage extends CatalogueMessage {
     public String getProject() {
         return project;
     }
+
+    @JsonProperty("siteOrManoIds")
+    public List<String> getSiteOrManoIds() {
+        return siteOrManoIds;
+    }
+
 }

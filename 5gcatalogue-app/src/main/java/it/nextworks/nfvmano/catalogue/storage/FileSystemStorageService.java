@@ -241,6 +241,8 @@ public class FileSystemStorageService {
             project = "admin";
         Path locationVersion = Paths.get(nsdsLocation + "/" + project + "/" + nsdId + "/" + version);
         FileSystemUtils.deleteRecursively(locationVersion.toFile());
+        Path locationNsd = Paths.get(nsdsLocation + "/" + project + "/" + nsdId);
+        //TODO delete folder if no files are in there
         log.debug("NSD with nsdId {} and version {} successfully removed from project {}", nsdId, version, project);
     }
 
@@ -250,6 +252,8 @@ public class FileSystemStorageService {
             project = "admin";
         Path locationVersion = Paths.get(vnfPkgsLocation + "/" + project + "/" + vnfdId + "/" + version);
         FileSystemUtils.deleteRecursively(locationVersion.toFile());
+        Path locationVnfd = Paths.get(vnfPkgsLocation + "/" + project + "/" + vnfdId);
+        //TODO delete folder if no files are in there
         log.debug("VNF Pkg with vnfdId {} and version {} successfully removed from project {}", vnfdId, version, project);
     }
 

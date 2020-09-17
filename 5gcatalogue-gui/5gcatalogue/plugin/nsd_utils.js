@@ -47,10 +47,8 @@ function deleteNsdInfo(nsdInfoId, resId) {
     var project = document.getElementById('project').innerHTML;
     if(this.useDefaultProject(project)){
     	deleteRequestToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/ns_descriptors/" + nsdInfoId, showResultMessage, ["NSD with nsdInfoID " + nsdInfoId + " successfully deleted."]);
-
     }else{
-	deleteRequestToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/ns_descriptors/" + nsdInfoId + "?project=" + getCookie("PROJECT"), showResultMessage, ["NSD with nsdInfoID " + nsdInfoId + " successfully deleted."]);
-   	
+	    deleteRequestToURLWithAuth("http://" + catalogueAddr + ":" + cataloguePort + "/nsd/v1/ns_descriptors/" + nsdInfoId + "?project=" + getCookie("PROJECT"), showResultMessage, ["NSD with nsdInfoID " + nsdInfoId + " successfully deleted."]);
     }
 }
 

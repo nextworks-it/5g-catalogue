@@ -22,7 +22,7 @@ For properly configuring the 5G Apps & Services Catalogue, the [.env](https://gi
 | PUBLIC_CATALOGUE_ID | Identifier of the Public 5G Apps & Services Catalogue |
 | PUBLIC_CATALOGUE_URL | URL of the Public 5G Apps & Services Catalogue |
 | MANO_ID | Identifier of the MANO |
-| MANO_TYPE | Three different MANOs are currently supported: OSMR4, OSMR5, OSMR6, OSMR7, ONAP |
+| MANO_TYPE | Two different MANOs are currently supported: OSM (from R4 to R8), ONAP |
 | MANO_SITE | Identifier of the site to which the MANO belongs |
 | MANO_IP | IP address of the MANO |
 | MANO_PORT | Port of the MANO |

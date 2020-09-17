@@ -51,6 +51,8 @@ public interface NsdManagementInterface {
 
     void uploadNsd(String nsdInfoId, MultipartFile nsd, ContentType contentType, boolean isInternalRequest, String project) throws Exception, FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException;
 
+    void updateNsd(String nsdInfoId, MultipartFile nsd, ContentType contentType, boolean isInternalRequest, String originalPluginId, String project) throws Exception, FailedOperationException, NotExistingEntityException, AlreadyExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException;
+
     PnfdInfo createPnfdInfo(CreatePnfdInfoRequest request, String project) throws FailedOperationException, MalformattedElementException, MethodNotImplementedException, NotAuthorizedOperationException;
 
     void deletePnfdInfo(String pnfdInfoId, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException, NotAuthorizedOperationException;

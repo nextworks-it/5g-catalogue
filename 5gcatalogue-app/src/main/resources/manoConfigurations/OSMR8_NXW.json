@@ -1,9 +1,9 @@
 {
-  "manoId": "NXW_OSMR6",
-  "manoType": "OSMR6",
+  "manoId": "NXW_OSMR8",
+  "manoType": "OSMR8",
   "manoSite": "NXW_OSM",
   "pluginOperationalState": "ENABLED",
-  "ipAddress": "10.30.8.120",
+  "ipAddress": "10.30.8.13",
   "port": "9999",
   "username": "admin",
   "password": "admin",

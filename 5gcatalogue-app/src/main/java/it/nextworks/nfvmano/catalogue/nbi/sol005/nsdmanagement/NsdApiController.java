@@ -368,6 +368,69 @@ public class NsdApiController implements NsdApi {
         }*/
     }
 
+    public ResponseEntity<?> updateNSD(@RequestParam(required = false) String project,
+                                @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+                                @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId,
+                                @ApiParam(value = "", required = true) @RequestParam("file") MultipartFile body,
+                                @ApiParam(value = "The payload body contains a copy of the file representing the NSD or a ZIP file that contains the file or multiple files representing the NSD, as specified above. The request shall set the \"Content-Type\" HTTP header as defined above.") @RequestHeader(value = "Content-Type", required = false) String contentType){
+        if(project == null)
+            project = defaultProject;
+
+        log.debug("Processing REST request for Updating NSD content in NSD info " + nsdInfoId);
+        String accept = request.getHeader("Accept");
+        //if (accept != null && accept.contains("application/json")) {
+        if (body.isEmpty()) {
+            return new ResponseEntity<String>("Error message: File is empty!", HttpStatus.BAD_REQUEST);
+        }
+
+        // TODO: the content-type as per SOL005 v2.4.1 should be text/plain or application/zip
+        if (!contentType.startsWith("multipart/form-data")) {
+            // TODO: to be implemented later on
+            return new ResponseEntity<String>("Unable to parse content " + contentType, HttpStatus.NOT_IMPLEMENTED);
+        } else {
+            try {
+                ContentType type = null;
+                log.debug("NSD content file name is: " + body.getOriginalFilename());
+                if (body.getOriginalFilename().endsWith("zip")) {
+                    type = ContentType.ZIP;
+                } else if (body.getOriginalFilename().endsWith("yaml")) {
+                    type = ContentType.YAML;
+                } else {
+                    // TODO: to be implemented later on
+                    return new ResponseEntity<String>("Unable to parse file type that is not .zip or .yaml",
+                            HttpStatus.NOT_IMPLEMENTED);
+                }
+                nsdManagementService.updateNsd(nsdInfoId, body, type, false, null, project);
+                log.debug("Update processing done");
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+                // TODO: check if we need to introduce the asynchronous mode
+            } catch (NotPermittedOperationException | AlreadyExistingEntityException e) {
+                log.error("Impossible to update NSD: " + e.getMessage());
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.CONFLICT.value(),
+                        e.getMessage()), HttpStatus.CONFLICT);
+            } catch (MalformattedElementException | FailedOperationException e) {
+                log.error("Impossible to update NSD: " + e.getMessage());
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.BAD_REQUEST.value(),
+                        e.getMessage()), HttpStatus.BAD_REQUEST);
+            } catch (NotExistingEntityException e) {
+                log.error("Impossible to update NSD: " + e.getMessage());
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.NOT_FOUND.value(),
+                        e.getMessage()), HttpStatus.NOT_FOUND);
+            } catch (NotAuthorizedOperationException e) {
+                return new ResponseEntity<ProblemDetails>(Utilities.buildProblemDetails(HttpStatus.FORBIDDEN.value(),
+                        e.getMessage()), HttpStatus.FORBIDDEN);
+            } catch (Exception e) {
+                log.error("General exception while updating NSD content: " + e.getMessage());
+                log.error("Details: ", e);
+                return new ResponseEntity<ProblemDetails>(
+                        Utilities.buildProblemDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                                e.getMessage()),
+                        HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
+    }
+
+
     public ResponseEntity<?> createPNFDInfo(
             @RequestParam(required = false) String project,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,

@@ -15,6 +15,8 @@
  */
 package it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.r4plus;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -23,14 +25,18 @@ import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.*;
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.PathType;
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.ScopeType;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginOperationalState;
-import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.*;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANO;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANOPlugin;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANOType;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.osm.OSM;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.common.*;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.repos.TranslationInformationRepository;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.repos.OsmInfoObjectRepository;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.repos.TranslationInformationRepository;
 import it.nextworks.nfvmano.libs.common.elements.KeyValuePair;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
-import it.nextworks.nfvmano.libs.common.exceptions.*;
+import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
+import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
+import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import it.nextworks.nfvmano.libs.osmr4PlusClient.OSMr4PlusClient;
@@ -39,6 +45,7 @@ import it.nextworks.nfvmano.libs.osmr4PlusDataModel.nsDescriptor.OsmNSPackage;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.osmManagement.IdObject;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.osmManagement.OsmInfoObject;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.osmManagement.OsmObjectType;
+import it.nextworks.nfvmano.libs.osmr4PlusDataModel.osmManagement.RecordState;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.vnfDescriptor.OsmVNFPackage;
 import org.rauschig.jarchivelib.ArchiveFormat;
 import org.rauschig.jarchivelib.Archiver;
@@ -79,7 +86,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                                       OsmInfoObjectRepository osmInfoObjectRepository, TranslationInformationRepository translationInformationRepository, String localTopic, String remoteTopic,
                                       KafkaTemplate<String, String> kafkaTemplate, Path osmDirPath, Path tmpDir, Path logoPath, boolean manoSync, long syncPeriod, boolean useVimNetworkName) {
         super(manoType, mano, kafkaBootstrapServers, localTopic, remoteTopic, kafkaTemplate, manoSync);
-        if (MANOType.OSMR4 != manoType && MANOType.OSMR5 != manoType && MANOType.OSMR6 != manoType && MANOType.OSMR7 != manoType) {
+        if (MANOType.OSMR4 != manoType && MANOType.OSMR5 != manoType && MANOType.OSMR6 != manoType && MANOType.OSMR7 != manoType && MANOType.OSMR8 != manoType) {
             throw new IllegalArgumentException("OSM R4+ plugin requires an OSM R4+ type MANO");
         }
         osm = (OSM) mano;
@@ -143,7 +150,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
         if(isManoSync()) {
             log.info("{} - Starting runtime synchronization, sync period every {} minutes", osm.getManoId(), syncPeriod);
             ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-            Runnable syncTask = this::OSMSynchronization;
+            Runnable syncTask = this::RuntimeSynchronization;
             scheduler.scheduleAtFixedRate(syncTask, syncPeriod, syncPeriod, TimeUnit.MINUTES);
         }
     }
@@ -273,12 +280,10 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
        return  getOsmInfoId(cataloguePkgInfoId);
     }
 
-    private void OSMSynchronization(){
+    @Override
+    public void RuntimeSynchronization(){
         log.info("{} - Runtime synchronization, started retrieving Osm Vnf and Ns Pkgs", osm.getManoId());
         Long startSync = Instant.now().getEpochSecond();
-
-        List<OsmInfoObject> oldOsmInfoObjectList = osmInfoObjectRepository.findByOsmId(osm.getManoId());
-        List<String> oldOsmInfoIdList = oldOsmInfoObjectList.stream().map(OsmInfoObject::getId).collect(Collectors.toList());
 
         try {
             updateDB(true, true, "all");
@@ -294,7 +299,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
 
         for(OsmInfoObject osmVnf : osmVnfList){
             //Upload new OSM Vnf Pkg
-            if(!oldOsmInfoIdList.contains(osmVnf.getId())){
+            if(osmVnf.getState().equals(RecordState.NEW) && osmVnf.getEpoch().compareTo(startSync) >= 0){
                 operationId = UUID.randomUUID();
                 try {
                     pkgPath = createVnfPkgTosca(osmVnf);
@@ -306,12 +311,51 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                 log.info("{} - Uploading TOSCA Vnf Pkg with descriptor ID {} and version {}", osm.getManoId(), osmVnf.getDescriptorId(), osmVnf.getVersion());
                     sendNotification(new VnfPkgOnBoardingNotificationMessage(null, osmVnf.getDescriptorId(), osmVnf.getVersion(), "all",
                             operationId, ScopeType.SYNC, OperationStatus.SENT, osm.getManoId(), null, new KeyValuePair(pkgPath, PathType.LOCAL.toString())));
+            }else if (osmVnf.getState().equals(RecordState.CHANGED) && osmVnf.getEpoch().compareTo(startSync) >= 0){//Update OSM Vnf Pkg
+                operationId = UUID.randomUUID();
+                try {
+                    pkgPath = createVnfPkgTosca(osmVnf);
+                }catch(Exception e){
+                    log.error("{} - Unable to generate TOSCA Vnf Pkg with descriptor ID {} and version {}: {}", osm.getManoId(), osmVnf.getDescriptorId(), osmVnf.getVersion(), e.getMessage());
+                    log.debug(null, e);
+                    continue;
+                }
+
+                //In case descriptorId and/or version have been changed, use old id and version to notify the change to Catalogue
+                List<OsmTranslationInformation> translationInformationList = translationInformationRepository.findByOsmInfoIdAndOsmManoId(osmVnf.getId(), osm.getManoId());
+                String catDescriptorId;
+                String catVersion;
+                if(!translationInformationList.isEmpty()) {
+                    catDescriptorId = translationInformationList.get(0).getCatDescriptorId();
+                    catVersion = translationInformationList.get(0).getDescriptorVersion();
+                }else{
+                    catDescriptorId = osmVnf.getDescriptorId();
+                    catVersion = osmVnf.getVersion();
+                }
+
+                log.info("{} - Updating TOSCA Vnf Pkg with descriptor ID {} and version {}", osm.getManoId(), osmVnf.getDescriptorId(), osmVnf.getVersion());
+                sendNotification(new VnfPkgChangeNotificationMessage(null, catDescriptorId, catVersion, "all",
+                        operationId, ScopeType.SYNC, OperationStatus.SENT, osm.getManoId(), null, new KeyValuePair(pkgPath, PathType.LOCAL.toString())));
             }
         }
 
         for(OsmInfoObject osmNs : osmNsList){
-            //Upload new OSM Ns Pkg
-            if(!oldOsmInfoIdList.contains(osmNs.getId())){
+            //Delete OSM Ns Pkg no longer present in OSM
+            if(osmNs.getEpoch().compareTo(startSync) < 0){
+                log.info("{} - Osm Ns Pkg with descriptor ID {} and version {} no longer present, deleting it", osm.getManoId(), osmNs.getDescriptorId(), osmNs.getVersion());
+                operationId = UUID.randomUUID();
+                String catDescriptorId = getCatDescriptorId(osmNs.getDescriptorId(), osmNs.getVersion());
+                if(catDescriptorId == null)
+                    catDescriptorId = osmNs.getDescriptorId();
+                sendNotification(new NsdDeletionNotificationMessage(null, catDescriptorId, osmNs.getVersion(), "all",
+                        operationId, ScopeType.SYNC, OperationStatus.SENT, osm.getManoId(), null));
+                osmInfoObjectRepository.delete(osmNs);
+                List<OsmTranslationInformation> translationInformationList = translationInformationRepository.findByOsmInfoIdAndOsmManoId(osmNs.getId(), osm.getManoId());
+                for(OsmTranslationInformation translationInformation : translationInformationList)
+                    translationInformationRepository.delete(translationInformation);
+                //TODO delete corresponding folder
+            } else if (osmNs.getState().equals(RecordState.NEW)){
+                //Upload new OSM Ns Pkg
                 operationId = UUID.randomUUID();
                 try {
                     pkgPath = createNsPkgTosca(osmNs);
@@ -323,21 +367,31 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                 log.info("{} - Uploading TOSCA Ns Pkg with descriptor ID {} and version {}", osm.getManoId(), osmNs.getDescriptorId(), osmNs.getVersion());
                 sendNotification(new NsdOnBoardingNotificationMessage(null, osmNs.getDescriptorId(), osmNs.getVersion(), "all",
                             operationId, ScopeType.SYNC, OperationStatus.SENT, osm.getManoId(), null, new KeyValuePair(pkgPath, PathType.LOCAL.toString())));
-            }
-            //Delete OSM Ns Pkg no longer present in OSM
-            if(osmNs.getEpoch().compareTo(startSync) < 0){
-                log.info("{} - Osm Ns Pkg with descriptor ID {} and version {} no longer present, deleting it", osm.getManoId(), osmNs.getDescriptorId(), osmNs.getVersion());
+            }else if (osmNs.getState().equals(RecordState.CHANGED)){//Update OSM Ns Pkg
                 operationId = UUID.randomUUID();
-                String catDescriptorId = getCatDescriptorId(osmNs.getDescriptorId(), osmNs.getVersion());
-                if(catDescriptorId == null)
-                    catDescriptorId = osmNs.getDescriptorId();
-                sendNotification(new NsdDeletionNotificationMessage(null, catDescriptorId, osmNs.getVersion(), "all",
-                            operationId, ScopeType.SYNC, OperationStatus.SENT, osm.getManoId()));
-                osmInfoObjectRepository.delete(osmNs);
+                try {
+                    pkgPath = createNsPkgTosca(osmNs);
+                }catch(Exception e){
+                    log.error("{} - Unable to generate TOSCA Ns Pkg with descriptor ID {} and version {}: {}", osm.getManoId(), osmNs.getDescriptorId(), osmNs.getVersion(), e.getMessage());
+                    log.debug(null, e);
+                    continue;
+                }
+
+                //In case descriptorId and/or version have been changed, use old id and version to notify the change to Catalogue
                 List<OsmTranslationInformation> translationInformationList = translationInformationRepository.findByOsmInfoIdAndOsmManoId(osmNs.getId(), osm.getManoId());
-                for(OsmTranslationInformation translationInformation : translationInformationList)
-                    translationInformationRepository.delete(translationInformation);
-                //TODO delete corresponding folder
+                String catDescriptorId;
+                String catVersion;
+                if(!translationInformationList.isEmpty()) {
+                    catDescriptorId = translationInformationList.get(0).getCatDescriptorId();
+                    catVersion = translationInformationList.get(0).getDescriptorVersion();
+                }else{
+                    catDescriptorId = osmNs.getDescriptorId();
+                    catVersion = osmNs.getVersion();
+                }
+
+                log.info("{} - Updating TOSCA Ns Pkg with descriptor ID {} and version {}", osm.getManoId(), osmNs.getDescriptorId(), osmNs.getVersion());
+                sendNotification(new NsdChangeNotificationMessage(null, catDescriptorId, catVersion, "all",
+                        operationId, ScopeType.SYNC, OperationStatus.SENT, osm.getManoId(), null, new KeyValuePair(pkgPath, PathType.LOCAL.toString())));
             }
         }
 
@@ -350,7 +404,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                 if(catDescriptorId == null)
                     catDescriptorId = osmVnf.getDescriptorId();
                 sendNotification(new VnfPkgDeletionNotificationMessage(null, catDescriptorId, osmVnf.getVersion(), "all",
-                            operationId, ScopeType.SYNC, OperationStatus.SENT, osm.getManoId()));
+                            operationId, ScopeType.SYNC, OperationStatus.SENT, osm.getManoId(), null));
                 osmInfoObjectRepository.delete(osmVnf);
                 List<OsmTranslationInformation> translationInformationList = translationInformationRepository.findByOsmInfoIdAndOsmManoId(osmVnf.getId(), osm.getManoId());
                 for(OsmTranslationInformation translationInformation : translationInformationList)
@@ -368,9 +422,8 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
         OSMHttpResponse response;
         Optional<OsmInfoObject> osmInfoObject;
         List<OsmInfoObject> packageInfoList = new ArrayList<>();
-        List<OsmInfoObject> aux = new ArrayList<>();
+        List<OsmInfoObject> aux;
         List<String> vnfPackageInfoIdList = new ArrayList<>();
-        List<String> nsPackageInfoIdList = new ArrayList<>();
 
         if(updateVNF) {
             log.info("{} - Updating Vnfs DB for project {}", osm.getManoId(), project);
@@ -386,7 +439,6 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
             response = osmClient.getNsdInfoList();
             aux = parseResponse(response, null, OsmInfoObject.class);
             packageInfoList.addAll(aux);
-            nsPackageInfoIdList = aux.stream().map(OsmInfoObject::getId).collect(Collectors.toList());
         }
 
         for(OsmInfoObject packageInfo : packageInfoList) {
@@ -394,39 +446,35 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                 osmInfoObject = osmInfoObjectRepository.findById(packageInfo.getId());
                 if (osmInfoObject.isPresent()) {
                     log.info("{} - OSM Pkg with descriptor ID {} and version {} already present in project {}", osm.getManoId(), packageInfo.getDescriptorId(), packageInfo.getVersion(), project);
-                    osmInfoObject.get().setEpoch(Instant.now().getEpochSecond());
-                    osmInfoObjectRepository.saveAndFlush(osmInfoObject.get());
-                    /*if(vnfPackageInfo.getAdmin().getModified().compareTo(osmInfoObject.get().getAdmin().getModified()) > 0){
-                    log.info("VNF Pkg Info with ID {} has been modified, updating it", vnfPackageInfo.getId());
-                    osmInfoObjectRepository.delete(osmInfoObject.get());
-                    vnfPackageInfo.setEpoch(Instant.now().getEpochSecond());
-                    vnfPackageInfo.setOsmId(osm.getManoId());
-                    osmInfoObjectRepository.saveAndFlush(vnfPackageInfo);
-                    log.info("Retrieving VNF Package content with ID {}", vnfPackageInfo.getId());
-                    osmClient.getVnfPackageContent(vnfPackageInfo.getId(), osmDirPath.toString());
-                    //TODO decompress archive and do other things
-                }else{
-                    osmInfoObject.get().setEpoch(Instant.now().getEpochSecond());
-                    osmInfoObjectRepository.saveAndFlush(osmInfoObject.get());
-                }*/
-                } else {
-                    log.info("{} - Retrieving OSM Pkg with descriptor ID {} and version {} from project {}", osm.getManoId(), packageInfo.getDescriptorId(), packageInfo.getVersion(), project);
-                    if(vnfPackageInfoIdList.contains(packageInfo.getId())) {
-                        response = osmClient.getVnfPackageContent(packageInfo.getId(), osmDirPath.toString());
-                        packageInfo.setType(OsmObjectType.VNF);
+                    if (packageInfo.getAdmin().getModified().compareTo(osmInfoObject.get().getAdmin().getModified()) <= 0) {
+                        osmInfoObject.get().setState(RecordState.UNCHANGED);
+                        osmInfoObject.get().setEpoch(Instant.now().getEpochSecond());
+                        osmInfoObjectRepository.saveAndFlush(osmInfoObject.get());
+                        continue;
+                    } else {
+                        packageInfo.setState(RecordState.CHANGED);
+                        if(!updateVNF || !updateNS) //avoid updating the Modified filed in case of startup sync, during startup sync in fact it is not possible to detect changes. If this filed is updated, during the runtime sync will be not possible to detect those changes as well
+                            packageInfo.getAdmin().setModified(osmInfoObject.get().getAdmin().getModified());
                     }
-                    else {
-                        response = osmClient.getNsdContent(packageInfo.getId(), osmDirPath.toString());
-                        packageInfo.setType(OsmObjectType.NS);
-                    }
-                    parseResponse(response, null, null);
-                    File archive = new File(osmDirPath.toString() + "/" + packageInfo.getId() + ".tar.gz");
-                    Archiver archiver = ArchiverFactory.createArchiver(ArchiveFormat.TAR, CompressionType.GZIP);
-                    archiver.extract(archive, new File(osmDirPath.toString()));
-                    packageInfo.setEpoch(Instant.now().getEpochSecond());
-                    packageInfo.setOsmId(osm.getManoId());
-                    osmInfoObjectRepository.saveAndFlush(packageInfo);
+                }else
+                    packageInfo.setState(RecordState.NEW);
+
+                log.info("{} - Retrieving OSM Pkg with descriptor ID {} and version {} from project {}", osm.getManoId(), packageInfo.getDescriptorId(), packageInfo.getVersion(), project);
+                if(vnfPackageInfoIdList.contains(packageInfo.getId())) {
+                    response = osmClient.getVnfPackageContent(packageInfo.getId(), osmDirPath.toString());
+                    packageInfo.setType(OsmObjectType.VNF);
                 }
+                else {
+                    response = osmClient.getNsdContent(packageInfo.getId(), osmDirPath.toString());
+                    packageInfo.setType(OsmObjectType.NS);
+                }
+                parseResponse(response, null, null);
+                File archive = new File(osmDirPath.toString() + "/" + packageInfo.getId() + ".tar.gz");
+                Archiver archiver = ArchiverFactory.createArchiver(ArchiveFormat.TAR, CompressionType.GZIP);
+                archiver.extract(archive, new File(osmDirPath.toString()));
+                packageInfo.setEpoch(Instant.now().getEpochSecond());
+                packageInfo.setOsmId(osm.getManoId());
+                osmInfoObjectRepository.saveAndFlush(packageInfo);
             } catch (FailedOperationException | IOException | IllegalStateException | IllegalArgumentException e) {
                 log.error("{} - Sync error: {}", osm.getManoId(), e.getMessage());
                 log.debug(null, e);
@@ -457,9 +505,25 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
 
     @Override
     public void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) {
-        log.debug("Body: {}", notification);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+
+        try {
+            String json = mapper.writeValueAsString(notification);
+            log.debug("RECEIVED MESSAGE: " + json);
+        } catch (JsonProcessingException e) {
+            log.error("Unable to parse received nsdOnboardingNotificationMessage: " + e.getMessage());
+        }
+
         if (notification.getScope() == ScopeType.LOCAL) {
             log.info("{} - Received NSD onboarding notification for Nsd with ID {} and version {} for project {}", osm.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject());
+            String nsdInfoId = notification.getNsdInfoId();
+            boolean forceOnboard = false;
+            if(nsdInfoId.endsWith("_update")){
+                forceOnboard = true;
+                nsdInfoId = nsdInfoId.replace("_update", "");
+            }
             if (Utilities.isTargetMano(notification.getSiteOrManoIds(), osm) && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
                 try {
                     String packagePath = notification.getPackagePath().getKey();
@@ -486,9 +550,194 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                         throw new MethodNotImplementedException("Path Type not currently supported");
                     }
 
-                    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+                    mapper = new ObjectMapper(new YAMLFactory());
                     DescriptorTemplate descriptorTemplate = mapper.readValue(descriptor, DescriptorTemplate.class);
 
+                    //Check if already present, uploaded for example from another project
+                    String osmDescriptorId = getOsmDescriptorId(descriptorTemplate.getMetadata().getDescriptorId(), descriptorTemplate.getMetadata().getVersion());
+                    if(osmDescriptorId == null)
+                        osmDescriptorId = descriptorTemplate.getMetadata().getDescriptorId();
+                    Optional<OsmInfoObject> osmInfoObjectOptional = osmInfoObjectRepository.findByDescriptorIdAndVersionAndOsmId(osmDescriptorId, descriptorTemplate.getMetadata().getVersion(), osm.getManoId());
+                    String osmInfoObjectId;
+                    if(!osmInfoObjectOptional.isPresent() || forceOnboard){//forceOnboard used in RuntimeNsChange
+                        //osmInfoObjectOptional.ifPresent(osmInfoObject -> osmInfoObjectRepository.delete(osmInfoObject));
+                        //OSM cannot permit to onboard descriptors with same ID but different versions
+                        if(isTheFirstTranslationInformationEntry(descriptorTemplate.getMetadata().getDescriptorId()))
+                            osmDescriptorId = descriptorTemplate.getMetadata().getDescriptorId();
+                        else{
+                            osmDescriptorId = UUID.randomUUID().toString();
+                            descriptorTemplate.getMetadata().setDescriptorId(osmDescriptorId);
+                            //Consider only one NSNode present
+                            descriptorTemplate.getTopologyTemplate().getNSNodes().values().iterator().next().getProperties().setDescriptorId(osmDescriptorId);
+                            descriptorTemplate.getTopologyTemplate().getNSNodes().values().iterator().next().getProperties().setInvariantId(osmDescriptorId);
+                        }
+
+                        NsdBuilder nsdBuilder = new NsdBuilder(logo, useVimNetworkName);
+                        List<DescriptorTemplate> includedVnfds = new ArrayList<>();
+                        for (KeyValuePair vnfPathPair : notification.getIncludedVnfds().values()) {
+                            if (vnfPathPair.getValue().equals(PathType.LOCAL.toString())) {
+                                packagePath = vnfPathPair.getKey();
+                                metadataFileNames = Utilities.listFiles(packagePath + "/TOSCA-Metadata/");
+                                //Consider only one metadata file is present
+                                metadataFileName = metadataFileNames.stream().filter(name -> name.endsWith(".meta")).findFirst().get();
+                                metadata = new File(packagePath + "/TOSCA-Metadata/" + metadataFileName);
+                                descriptor = new File(packagePath + "/" + Utilities.getMainServiceTemplateFromMetadata(metadata));
+                            } else {
+                                //TODO support also other PathType
+                                throw new MethodNotImplementedException("Path Type not currently supported");
+                            }
+                            includedVnfds.add(mapper.readValue(descriptor, DescriptorTemplate.class));
+                        }
+
+                        //OSM cannot permit to onboard descriptors with same ID but different versions
+                        List<VNFNode> vnfNodeList = new ArrayList<>(descriptorTemplate.getTopologyTemplate().getVNFNodes().values());
+                        for(DescriptorTemplate vnfd : includedVnfds){
+                            String translatedVnfdId = getOsmDescriptorId(vnfd.getMetadata().getDescriptorId(), vnfd.getMetadata().getVersion());
+                            if(translatedVnfdId == null)
+                                throw new FailedOperationException("Could not find the corresponding Descriptor ID in OSM");
+                            for(VNFNode vnfNode : vnfNodeList){
+                                if(vnfNode.getProperties().getDescriptorId().equals(vnfd.getMetadata().getDescriptorId()))
+                                    vnfNode.getProperties().setDescriptorId(translatedVnfdId);
+                            }
+                            vnfd.getMetadata().setDescriptorId(translatedVnfdId);
+                            vnfd.getTopologyTemplate().getVNFNodes().values().iterator().next().getProperties().setDescriptorId(translatedVnfdId);
+                        }
+
+                        nsdBuilder.parseDescriptorTemplate(descriptorTemplate, includedVnfds, MANOType.OSMR4);
+                        OsmNSPackage packageData = nsdBuilder.getPackage();
+
+                        mapper = new ObjectMapper();
+                        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+
+                        log.debug("{} - Translated NSD: {} ", osm.getManoId(), mapper.writeValueAsString(packageData));
+
+                        packagePath = notification.getPackagePath().getKey();
+                        Set<String> fileNames = Utilities.listFiles(packagePath);
+                        File monitoring = null;
+                        List<File> scripts = new ArrayList<>();
+                        //Consider only one manifest file is present if the NS is a Pkg
+                        if(fileNames.stream().filter(name -> name.endsWith(".mf")).count() != 0) {
+                            String manifestPath = fileNames.stream().filter(name -> name.endsWith(".mf")).findFirst().get();
+                            File mf = new File(packagePath + "/" + manifestPath);
+
+                            String monitoringPath = Utilities.getMonitoringFromManifest(mf);
+
+                            if (monitoringPath != null) {
+                                monitoring = new File(packagePath + "/" + monitoringPath);
+                            } else {
+                                log.debug("{} - No monitoring file found for NSD with ID {} and version {}", osm.getManoId(), notification.getNsdId(), notification.getNsdVersion());
+                            }
+
+                            List<String> scriptPaths = Utilities.getScriptsFromManifest(mf);
+                            if (scriptPaths.size() > 0) {
+                                for(String scriptPath : scriptPaths)
+                                    scripts.add(new File(packagePath + "/" + scriptPath));
+                            } else {
+                                log.debug("{} - No script files found for NS with ID {} and version {}", osm.getManoId(), notification.getNsdId(), notification.getNsdVersion());
+                            }
+                        }
+
+                        ArchiveBuilder archiver = new ArchiveBuilder(osmDir, logo);
+                        File archive = archiver.makeNewArchive(packageData, "Generated by NXW Catalogue", scripts, monitoring);
+
+                        osmInfoObjectId = onBoardNsPackage(archive, notification.getOperationId().toString());
+
+                        log.info("{} - Successfully uploaded Nsd with ID {} and version {} for project {}", osm.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject());
+                    }else
+                        osmInfoObjectId = osmInfoObjectOptional.get().getId();
+
+                    translationInformationRepository.saveAndFlush(new OsmTranslationInformation(nsdInfoId, osmInfoObjectId, notification.getNsdId(), osmDescriptorId, notification.getNsdVersion(), osm.getManoId()));
+                    sendNotification(new NsdOnBoardingNotificationMessage(nsdInfoId, notification.getNsdId(), notification.getNsdVersion(), notification.getProject(),
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
+                            osm.getManoId(), null,null));
+                } catch (Exception e) {
+                    log.error("{} - Could not onboard Nsd: {}", osm.getManoId(), e.getMessage());
+                    log.debug("Error details: ", e);
+                    sendNotification(new NsdOnBoardingNotificationMessage(nsdInfoId, notification.getNsdId(), notification.getNsdVersion(), notification.getProject(),
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
+                            osm.getManoId(), null,null));
+                }
+            } else {
+                if (this.getPluginOperationalState() == PluginOperationalState.DISABLED || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
+                    log.debug("{} - NSD onboarding skipped", osm.getManoId());
+                    sendNotification(new NsdOnBoardingNotificationMessage(nsdInfoId, notification.getNsdId(), notification.getNsdVersion(), notification.getProject(),
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.RECEIVED,
+                            osm.getManoId(), null,null));
+                }
+            }
+        }else if(notification.getScope() == ScopeType.SYNC){
+            log.info("{} - Received Sync Pkg onboarding notification for NSD with ID {} and version {} for project {} : {}", osm.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject(), notification.getOpStatus().toString());
+            if(notification.getPluginId().equals(osm.getManoId())) {
+                String osmDescriptorId = getOsmDescriptorId(notification.getNsdId(), notification.getNsdVersion());
+                if (osmDescriptorId == null)
+                    osmDescriptorId = notification.getNsdId();
+                Optional<OsmInfoObject> osmInfoObject = osmInfoObjectRepository.findByDescriptorIdAndVersionAndOsmId(osmDescriptorId, notification.getNsdVersion(), osm.getManoId());
+                if (osmInfoObject.isPresent()){
+                    if(notification.getOpStatus().equals(OperationStatus.SUCCESSFULLY_DONE))
+                        translationInformationRepository.saveAndFlush(new OsmTranslationInformation(notification.getNsdInfoId(), osmInfoObject.get().getId(), notification.getNsdId(), osmInfoObject.get().getDescriptorId(), notification.getNsdVersion(), osm.getManoId()));
+                    /*
+                    else
+                        osmInfoObjectRepository.delete(osmInfoObject.get());
+                     */
+                }
+            }
+        }
+    }
+
+    @Override
+    public void acceptNsdChangeNotification(NsdChangeNotificationMessage notification) {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+
+        try {
+            String json = mapper.writeValueAsString(notification);
+            log.debug("RECEIVED MESSAGE: " + json);
+        } catch (JsonProcessingException e) {
+            log.error("Unable to parse received nsdChangeNotificationMessage: " + e.getMessage());
+        }
+        if (notification.getScope() == ScopeType.LOCAL) {
+            log.info("{} - Received NSD change notification for Nsd with ID {} and version {} for project {}", osm.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject());
+            if (Utilities.isTargetMano(notification.getSiteOrManoIds(), osm) && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
+                try {
+                    //Delete old package
+                    String osmInfoPkgId = getOsmInfoId(notification.getNsdInfoId());
+                    if(osmInfoPkgId == null)
+                        throw new FailedOperationException("Could not find the corresponding Info ID in OSM");
+                    if(!deleteTranslationInformationEntry(notification.getNsdInfoId()))
+                        throw new FailedOperationException("Could not delete the specified entry");
+                    if(!translationInformationContainsOsmInfoId(osmInfoPkgId))//If pkg is not present in other projects
+                        deleteNsd(osmInfoPkgId, notification.getOperationId().toString());
+                    log.info("{} - Successfully deleted Nsd with ID {} and version {} for project {}", osm.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject());
+
+                    //Onboard new package
+                    String packagePath = notification.getPackagePath().getKey();
+                    File descriptor;
+                    File metadata;
+                    Set<String> metadataFileNames;
+                    String metadataFileName;
+                    if(notification.getPackagePath().getValue().equals(PathType.LOCAL.toString())) {
+                        Set<String> files = Utilities.listFiles(packagePath);
+                        if(files.size() != 1) {
+                            metadataFileNames = Utilities.listFiles(packagePath + "/TOSCA-Metadata/");
+                            //Consider only one metadata file is present
+                            metadataFileName = metadataFileNames.stream().filter(name -> name.endsWith(".meta")).findFirst().get();
+                            metadata = new File(packagePath + "/TOSCA-Metadata/" + metadataFileName);
+                            descriptor = new File(packagePath + "/" + Utilities.getMainServiceTemplateFromMetadata(metadata));
+                        }
+                        else if (files.iterator().next().endsWith(".yaml") || files.iterator().next().endsWith(".yml"))
+                            descriptor = new File(packagePath + "/" + files.iterator().next());
+                        else{
+                            throw new MalformattedElementException("Descriptor files not found");
+                        }
+                    }else{
+                        //TODO support also other PathType
+                        throw new MethodNotImplementedException("Path Type not currently supported");
+                    }
+
+                    mapper = new ObjectMapper(new YAMLFactory());
+                    DescriptorTemplate descriptorTemplate = mapper.readValue(descriptor, DescriptorTemplate.class);
+                    log.info("{} - Onboarding Nsd with ID {} and version {} for project {}", osm.getManoId(), descriptorTemplate.getMetadata().getDescriptorId(), descriptorTemplate.getMetadata().getVersion(), notification.getProject());
                     //Check if already present, uploaded for example from another project
                     String osmDescriptorId = getOsmDescriptorId(descriptorTemplate.getMetadata().getDescriptorId(), descriptorTemplate.getMetadata().getVersion());
                     if(osmDescriptorId == null)
@@ -546,18 +795,6 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
 
                         log.debug("{} - Translated NSD: {} ", osm.getManoId(), mapper.writeValueAsString(packageData));
 
-                        /*
-                        //TODO do we need to send the monitoring stuff to OSM?
-                        CSARInfo csarInfo = notification.getCsarInfo();
-                        if(csarInfo != null){
-                            File mf = FileSystemStorageService.loadNsPkgMfAsResource(descriptorTemplate.getMetadata().getDescriptorId(),
-                                    descriptorTemplate.getMetadata().getVersion(),
-                                    csarInfo.getMfFilename()).getFile();
-
-                            //continue...
-                        }
-                        */
-
                         packagePath = notification.getPackagePath().getKey();
                         Set<String> fileNames = Utilities.listFiles(packagePath);
                         File monitoring = null;
@@ -572,7 +809,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                             if (monitoringPath != null) {
                                 monitoring = new File(packagePath + "/" + monitoringPath);
                             } else {
-                                log.debug("{} - No monitoring file found for NSD with ID {} and version {}", osm.getManoId(), notification.getNsdId(), notification.getNsdVersion());
+                                log.debug("{} - No monitoring file found for NSD with ID {} and version {}", osm.getManoId(), descriptorTemplate.getMetadata().getDescriptorId(), descriptorTemplate.getMetadata().getVersion());
                             }
 
                             List<String> scriptPaths = Utilities.getScriptsFromManifest(mf);
@@ -580,7 +817,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                                 for(String scriptPath : scriptPaths)
                                     scripts.add(new File(packagePath + "/" + scriptPath));
                             } else {
-                                log.debug("{} - No script files found for NS with ID {} and version {}", osm.getManoId(), notification.getNsdId(), notification.getNsdVersion());
+                                log.debug("{} - No script files found for NS with ID {} and version {}", osm.getManoId(), descriptorTemplate.getMetadata().getDescriptorId(), descriptorTemplate.getMetadata().getVersion());
                             }
                         }
 
@@ -589,39 +826,44 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
 
                         osmInfoObjectId = onBoardNsPackage(archive, notification.getOperationId().toString());
 
-                        log.info("{} - Successfully uploaded Nsd with ID {} and version {} for project {}", osm.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject());
+                        log.info("{} - Successfully uploaded Nsd with ID {} and version {} for project {}", osm.getManoId(), descriptorTemplate.getMetadata().getDescriptorId(), descriptorTemplate.getMetadata().getVersion(), notification.getProject());
                     }else
                         osmInfoObjectId = osmInfoObjectOptional.get().getId();
 
-                    translationInformationRepository.saveAndFlush(new OsmTranslationInformation(notification.getNsdInfoId(), osmInfoObjectId, notification.getNsdId(), osmDescriptorId, notification.getNsdVersion(), osm.getManoId()));
-                    sendNotification(new NsdOnBoardingNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject(),
+                    translationInformationRepository.saveAndFlush(new OsmTranslationInformation(notification.getNsdInfoId(), osmInfoObjectId, descriptorTemplate.getMetadata().getDescriptorId(), osmDescriptorId, descriptorTemplate.getMetadata().getVersion(), osm.getManoId()));
+                    sendNotification(new NsdChangeNotificationMessage(notification.getNsdInfoId(), descriptorTemplate.getMetadata().getDescriptorId(), descriptorTemplate.getMetadata().getVersion(), notification.getProject(),
                             notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
                             osm.getManoId(), null,null));
-                } catch (Exception e) {
-                    log.error("{} - Could not onboard Nsd: {}", osm.getManoId(), e.getMessage());
-                    log.debug("Error details: ", e);
-                    sendNotification(new NsdOnBoardingNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject(),
-                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
-                            osm.getManoId(), null,null));
+                }catch (Exception e) {
+                        log.error("{} - Could not change Nsd: {}", osm.getManoId(), e.getMessage());
+                        log.debug("Error details: ", e);
+                        sendNotification(new NsdChangeNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject(),
+                                notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
+                                osm.getManoId(), null, null));
                 }
-            } else {
+            }else {
                 if (this.getPluginOperationalState() == PluginOperationalState.DISABLED || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
-                    log.debug("{} - NSD onboarding skipped", osm.getManoId());
-                    sendNotification(new NsdOnBoardingNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject(),
+                    log.debug("{} - NSD change skipped", osm.getManoId());
+                    sendNotification(new NsdChangeNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject(),
                             notification.getOperationId(), ScopeType.REMOTE, OperationStatus.RECEIVED,
                             osm.getManoId(), null,null));
                 }
             }
         }else if(notification.getScope() == ScopeType.SYNC){
-            log.info("{} - Received Sync Pkg onboarding notification for NSD with ID {} and version {} for project {} : {}", osm.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject(), notification.getOpStatus().toString());
+            log.info("{} - Received Sync Pkg change notification for NSD with ID {} and version {} for project {} : {}", osm.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject(), notification.getOpStatus().toString());
             if(notification.getPluginId().equals(osm.getManoId())) {
                 String osmDescriptorId = getOsmDescriptorId(notification.getNsdId(), notification.getNsdVersion());
                 if (osmDescriptorId == null)
                     osmDescriptorId = notification.getNsdId();
                 Optional<OsmInfoObject> osmInfoObject = osmInfoObjectRepository.findByDescriptorIdAndVersionAndOsmId(osmDescriptorId, notification.getNsdVersion(), osm.getManoId());
                 if (osmInfoObject.isPresent()){
-                    if(notification.getOpStatus().equals(OperationStatus.SUCCESSFULLY_DONE))
+                    if(notification.getOpStatus().equals(OperationStatus.SUCCESSFULLY_DONE)) {
+                        //Delete old record
+                        Optional<OsmTranslationInformation> translationInformationOptional = translationInformationRepository.findByCatInfoIdAndOsmManoId(notification.getNsdInfoId(), osm.getManoId());
+                        translationInformationOptional.ifPresent(osmTranslationInformation -> translationInformationRepository.delete(osmTranslationInformation));
+                        //Save new record
                         translationInformationRepository.saveAndFlush(new OsmTranslationInformation(notification.getNsdInfoId(), osmInfoObject.get().getId(), notification.getNsdId(), osmInfoObject.get().getDescriptorId(), notification.getNsdVersion(), osm.getManoId()));
+                    }
                     /*
                     else
                         osmInfoObjectRepository.delete(osmInfoObject.get());
@@ -631,44 +873,46 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
         }
     }
 
-    // TODO: to be implemented according to new descriptor format in OSMR4
-    @Override
-    public void acceptNsdChangeNotification(NsdChangeNotificationMessage notification) {
-        log.debug("Body: {}", notification);
-        log.info("{} - Received Nsd change notification", osm.getManoId());
-    }
-
     @Override
     public void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification) {
-        log.debug("Body: {}", notification);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+
+        try {
+            String json = mapper.writeValueAsString(notification);
+            log.debug("RECEIVED MESSAGE: " + json);
+        } catch (JsonProcessingException e) {
+            log.error("Unable to parse received nsdDeletionNotificationMessage: " + e.getMessage());
+        }
         if (notification.getScope() == ScopeType.LOCAL) {
             log.info("{} - Received Nsd deletion notification for Nsd with ID {} and version {} for project {}", osm.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject());
-            if (translationInformationContainsCatInfoId(notification.getNsdInfoId()) && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
+            if (Utilities.isTargetMano(notification.getSiteOrManoIds(), osm) && translationInformationContainsCatInfoId(notification.getNsdInfoId()) && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
                 try {
                     String osmInfoPkgId = getOsmInfoId(notification.getNsdInfoId());
                     if(osmInfoPkgId == null)
                         throw new FailedOperationException("Could not find the corresponding Info ID in OSM");
                     if(!deleteTranslationInformationEntry(notification.getNsdInfoId()))
-                        throw new FailedOperationException("Could bot delete the specified entry");
+                        throw new FailedOperationException("Could not delete the specified entry");
                     if(!translationInformationContainsOsmInfoId(osmInfoPkgId))//If pkg is not present in other projects
                         deleteNsd(osmInfoPkgId, notification.getOperationId().toString());
                     log.info("{} - Successfully deleted Nsd with ID {} and version {} for project {}", osm.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject());
                     sendNotification(new NsdDeletionNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject(),
                             notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
-                            osm.getManoId()));
+                            osm.getManoId(), null));
                 } catch (Exception e) {
                     log.error("{} - Could not delete Nsd: {}", osm.getManoId(), e.getMessage());
                     log.debug("Error details: ", e);
                     sendNotification(new NsdDeletionNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject(),
                             notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
-                            osm.getManoId()));
+                            osm.getManoId(), null));
                 }
             } else {
                 if (this.getPluginOperationalState() == PluginOperationalState.DISABLED || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
                     log.debug("{} - NSD deletion skipped", osm.getManoId());
                     sendNotification(new NsdDeletionNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject(),
                             notification.getOperationId(), ScopeType.REMOTE, OperationStatus.RECEIVED,
-                            osm.getManoId()));
+                            osm.getManoId(), null));
                 }
             }
         }else if(notification.getScope() == ScopeType.SYNC){
@@ -678,7 +922,23 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
 
     @Override
     public void acceptVnfPkgOnBoardingNotification(VnfPkgOnBoardingNotificationMessage notification) {
-        log.debug("Body: {}", notification);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+
+        try {
+            String json = mapper.writeValueAsString(notification);
+            log.debug("RECEIVED MESSAGE: " + json);
+        } catch (JsonProcessingException e) {
+            log.error("Unable to parse received vnfPkgOnboardingNotificationMessage: " + e.getMessage());
+        }
+        String vnfPkgInfoId = notification.getVnfPkgInfoId();
+        boolean forceOnboard = false;
+        if(vnfPkgInfoId.endsWith("_update")){
+            forceOnboard = true;
+            vnfPkgInfoId = vnfPkgInfoId.replace("_update", "");
+        }
+
         if (notification.getScope() == ScopeType.LOCAL) {
             log.info("{} - Received Vnfd onboarding notification for Vnfd with ID {} and version {} for project {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject());
             if (Utilities.isTargetMano(notification.getSiteOrManoIds(), osm) && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
@@ -696,7 +956,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                         throw new MethodNotImplementedException("Path Type not currently supported");
                     }
 
-                    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+                    mapper = new ObjectMapper(new YAMLFactory());
                     DescriptorTemplate descriptorTemplate = mapper.readValue(descriptor, DescriptorTemplate.class);
 
                     //Check if already present, uploaded for example from another project
@@ -705,7 +965,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                         osmDescriptorId = descriptorTemplate.getMetadata().getDescriptorId();
                     Optional<OsmInfoObject> osmInfoObjectOptional = osmInfoObjectRepository.findByDescriptorIdAndVersionAndOsmId(osmDescriptorId, descriptorTemplate.getMetadata().getVersion(), osm.getManoId());
                     String osmInfoObjectId;
-                    if(!osmInfoObjectOptional.isPresent()) {
+                    if(!osmInfoObjectOptional.isPresent() || forceOnboard) {//forceOnboard used in RuntimeVnfChange
                         //OSM cannot permit to onboard descriptors with same ID but different versions
                         if(isTheFirstTranslationInformationEntry(descriptorTemplate.getMetadata().getDescriptorId()))
                             osmDescriptorId = descriptorTemplate.getMetadata().getDescriptorId();
@@ -753,21 +1013,21 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                     }else
                         osmInfoObjectId = osmInfoObjectOptional.get().getId();
 
-                    translationInformationRepository.saveAndFlush(new OsmTranslationInformation(notification.getVnfPkgInfoId(), osmInfoObjectId, notification.getVnfdId(), osmDescriptorId, notification.getVnfdVersion(), osm.getManoId()));
-                    sendNotification(new VnfPkgOnBoardingNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(),
+                    translationInformationRepository.saveAndFlush(new OsmTranslationInformation(vnfPkgInfoId, osmInfoObjectId, notification.getVnfdId(), osmDescriptorId, notification.getVnfdVersion(), osm.getManoId()));
+                    sendNotification(new VnfPkgOnBoardingNotificationMessage(vnfPkgInfoId, notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(),
                             notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
                             osm.getManoId(), null,null));
                 } catch (Exception e) {
                     log.error("{} - Could not onboard Vnfd: {}", osm.getManoId(), e.getMessage());
                     log.debug("Error details: ", e);
-                    sendNotification(new VnfPkgOnBoardingNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(),
+                    sendNotification(new VnfPkgOnBoardingNotificationMessage(vnfPkgInfoId, notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(),
                             notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
                             osm.getManoId(), null,null));
                 }
             } else {
                 if (this.getPluginOperationalState() == PluginOperationalState.DISABLED || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
                     log.debug("{} - VNF Pkg onboarding skipped", osm.getManoId());
-                    sendNotification(new VnfPkgOnBoardingNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(),
+                    sendNotification(new VnfPkgOnBoardingNotificationMessage(vnfPkgInfoId, notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(),
                             notification.getOperationId(), ScopeType.REMOTE, OperationStatus.RECEIVED,
                             osm.getManoId(), null,null));
                 }
@@ -792,16 +1052,169 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
 
     @Override
     public void acceptVnfPkgChangeNotification(VnfPkgChangeNotificationMessage notification) {
-        log.debug("Body: {}", notification);
-        log.info("{} - Received VNF Pkg change notification", osm.getManoId());
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+
+        try {
+            String json = mapper.writeValueAsString(notification);
+            log.debug("RECEIVED MESSAGE: " + json);
+        } catch (JsonProcessingException e) {
+            log.error("Unable to parse received vnfPkgChangeNotificationMessage: " + e.getMessage());
+        }
+        if (notification.getScope() == ScopeType.LOCAL) {
+            log.info("{} - Received VNF Pkg change notification for Vnfd with ID {} and version {} for project {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject());
+            if (Utilities.isTargetMano(notification.getSiteOrManoIds(), osm) && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
+                try {
+                    //Delete old package
+                    String osmInfoPkgId = getOsmInfoId(notification.getVnfPkgInfoId());
+                    if(osmInfoPkgId == null)
+                        throw new FailedOperationException("Could not find the corresponding Info ID in OSM");
+                    if(!deleteTranslationInformationEntry(notification.getVnfPkgInfoId()))
+                        throw new FailedOperationException("Could not delete the specified entry");
+                    if(!translationInformationContainsOsmInfoId(osmInfoPkgId))//If pkg is not present in other projects
+                        deleteVnfd(osmInfoPkgId, notification.getOperationId().toString());
+                    log.info("{} - Successfully deleted Vnfd with ID {} and version {} for project {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject());
+
+                    //Onboard new package
+                    String packagePath = notification.getPackagePath().getKey();
+                    File descriptor;
+                    File metadata;
+                    Set<String> metadataFileNames;
+                    String metadataFileName;
+                    if(notification.getPackagePath().getValue().equals(PathType.LOCAL.toString())) {
+                        Set<String> files = Utilities.listFiles(packagePath);
+                        if(files.size() != 1) {
+                            metadataFileNames = Utilities.listFiles(packagePath + "/TOSCA-Metadata/");
+                            //Consider only one metadata file is present
+                            metadataFileName = metadataFileNames.stream().filter(name -> name.endsWith(".meta")).findFirst().get();
+                            metadata = new File(packagePath + "/TOSCA-Metadata/" + metadataFileName);
+                            descriptor = new File(packagePath + "/" + Utilities.getMainServiceTemplateFromMetadata(metadata));
+                        }
+                        else if (files.iterator().next().endsWith(".yaml") || files.iterator().next().endsWith(".yml"))
+                            descriptor = new File(packagePath + "/" + files.iterator().next());
+                        else{
+                            throw new MalformattedElementException("Descriptor files not found");
+                        }
+                    }else{
+                        //TODO support also other PathType
+                        throw new MethodNotImplementedException("Path Type not currently supported");
+                    }
+
+                    mapper = new ObjectMapper(new YAMLFactory());
+                    DescriptorTemplate descriptorTemplate = mapper.readValue(descriptor, DescriptorTemplate.class);
+                    log.info("{} - Onboarding Vnfd with ID {} and version {} for project {}", osm.getManoId(), descriptorTemplate.getMetadata().getDescriptorId(), descriptorTemplate.getMetadata().getVersion(), notification.getProject());
+                    //Check if already present, uploaded for example from another project
+                    String osmDescriptorId = getOsmDescriptorId(descriptorTemplate.getMetadata().getDescriptorId(), descriptorTemplate.getMetadata().getVersion());
+                    if(osmDescriptorId == null)
+                        osmDescriptorId = descriptorTemplate.getMetadata().getDescriptorId();
+                    Optional<OsmInfoObject> osmInfoObjectOptional = osmInfoObjectRepository.findByDescriptorIdAndVersionAndOsmId(osmDescriptorId, descriptorTemplate.getMetadata().getVersion(), osm.getManoId());
+                    String osmInfoObjectId;
+                    if(!osmInfoObjectOptional.isPresent()) {
+                        //OSM cannot permit to onboard descriptors with same ID but different versions
+                        if(isTheFirstTranslationInformationEntry(descriptorTemplate.getMetadata().getDescriptorId()))
+                            osmDescriptorId = descriptorTemplate.getMetadata().getDescriptorId();
+                        else{
+                            osmDescriptorId = UUID.randomUUID().toString();
+                            descriptorTemplate.getMetadata().setDescriptorId(osmDescriptorId);
+                            //Consider only one NSNode present
+                            descriptorTemplate.getTopologyTemplate().getVNFNodes().values().iterator().next().getProperties().setDescriptorId(osmDescriptorId);
+                        }
+
+                        VnfdBuilder vnfdBuilder = new VnfdBuilder(logo);
+                        vnfdBuilder.parseDescriptorTemplate(descriptorTemplate, MANOType.OSMR4);
+                        OsmVNFPackage packageData = vnfdBuilder.getPackage();
+
+                        mapper = new ObjectMapper();
+                        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+
+                        log.debug("Translated VNFD: " + mapper.writeValueAsString(packageData));
+
+                        Set<String> fileNames = Utilities.listFiles(packagePath);
+                        //TODO take cloudinit file name from descriptor?
+                        //Consider only one manifest file is present
+                        String manifestPath = fileNames.stream().filter(name -> name.endsWith(".mf")).findFirst().get();
+                        File mf = new File(packagePath + "/" + manifestPath);
+
+                        String cloudInitPath = Utilities.getCloudInitFromManifest(mf);
+                        String monitoringPath = Utilities.getMonitoringFromManifest(mf);
+
+                        ArchiveBuilder archiver = new ArchiveBuilder(osmDir, logo);
+                        File cloudInit = null;
+                        if (cloudInitPath != null) {
+                            cloudInit = new File(packagePath + "/" + cloudInitPath);
+                        } else {
+                            log.debug("{} - No cloud-init file found for VNF with ID {} and version {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion());
+                        }
+                        File monitoring = null;
+                        if (monitoringPath != null) {
+                            monitoring = new File(packagePath + "/" + monitoringPath);
+                        } else {
+                            log.debug("{} - No monitoring file found for VNF with ID {} and version {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion());
+                        }
+                        File archive = archiver.makeNewArchive(packageData, "Generated by NXW Catalogue", cloudInit, monitoring);
+                        osmInfoObjectId = onBoardVnfPackage(archive, notification.getOperationId().toString());
+                        log.info("{} - Successfully uploaded Vnfd with ID {} and version {} for project {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject());
+                    }else
+                        osmInfoObjectId = osmInfoObjectOptional.get().getId();
+
+                    translationInformationRepository.saveAndFlush(new OsmTranslationInformation(notification.getVnfPkgInfoId(), osmInfoObjectId, descriptorTemplate.getMetadata().getDescriptorId(), osmDescriptorId, descriptorTemplate.getMetadata().getVersion(), osm.getManoId()));
+                    sendNotification(new VnfPkgChangeNotificationMessage(notification.getVnfPkgInfoId(), descriptorTemplate.getMetadata().getDescriptorId(), descriptorTemplate.getMetadata().getVersion(), notification.getProject(),
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
+                            osm.getManoId(), null,null));
+                }catch (Exception e) {
+                    log.error("{} - Could not change VNF Pkg: {}", osm.getManoId(), e.getMessage());
+                    log.debug("Error details: ", e);
+                    sendNotification(new VnfPkgChangeNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(),
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
+                            osm.getManoId(), null, null));
+                }
+            }else {
+                if (this.getPluginOperationalState() == PluginOperationalState.DISABLED || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
+                    log.debug("{} - VNF Pkg change skipped", osm.getManoId());
+                    sendNotification(new VnfPkgChangeNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(),
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.RECEIVED,
+                            osm.getManoId(), null,null));
+                }
+            }
+        }else if(notification.getScope() == ScopeType.SYNC){
+            log.info("{} - Received Sync Pkg change notification for VNFD with ID {} and version {} for project {} : {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(), notification.getOpStatus().toString());
+            if(notification.getPluginId().equals(osm.getManoId())) {
+                String osmDescriptorId = getOsmDescriptorId(notification.getVnfdId(), notification.getVnfdVersion());
+                if(osmDescriptorId == null)
+                    osmDescriptorId = notification.getVnfdId();
+                Optional<OsmInfoObject> osmInfoObject = osmInfoObjectRepository.findByDescriptorIdAndVersionAndOsmId(osmDescriptorId, notification.getVnfdVersion(), osm.getManoId());
+                if(osmInfoObject.isPresent())
+                    if(notification.getOpStatus().equals(OperationStatus.SUCCESSFULLY_DONE)) {
+                        //Delete old record
+                        Optional<OsmTranslationInformation> translationInformationOptional = translationInformationRepository.findByCatInfoIdAndOsmManoId(notification.getVnfPkgInfoId(), osm.getManoId());
+                        translationInformationOptional.ifPresent(osmTranslationInformation -> translationInformationRepository.delete(osmTranslationInformation));
+                        //Save new record
+                        translationInformationRepository.saveAndFlush(new OsmTranslationInformation(notification.getVnfPkgInfoId(), osmInfoObject.get().getId(), notification.getVnfdId(), osmInfoObject.get().getDescriptorId(), notification.getVnfdVersion(), osm.getManoId()));
+                    }
+                        /*
+                    else
+                        osmInfoObjectRepository.delete(osmInfoObject.get());
+                     */
+            }
+        }
     }
 
     @Override
     public void acceptVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) {
-        log.debug("Body: {}", notification);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+
+        try {
+            String json = mapper.writeValueAsString(notification);
+            log.debug("RECEIVED MESSAGE: " + json);
+        } catch (JsonProcessingException e) {
+            log.error("Unable to parse received vnfPkgDeletionNotificationMessage: " + e.getMessage());
+        }
         if (notification.getScope() == ScopeType.LOCAL) {
             log.info("{} - Received Vnfd deletion notification for Vnfd with ID {} and version {} for project {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject());
-            if (translationInformationContainsCatInfoId(notification.getVnfPkgInfoId()) && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
+            if (Utilities.isTargetMano(notification.getSiteOrManoIds(), osm) && translationInformationContainsCatInfoId(notification.getVnfPkgInfoId()) && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
                 try {
                     String osmInfoPkgId = getOsmInfoId(notification.getVnfPkgInfoId());
                     if(osmInfoPkgId == null)
@@ -813,20 +1226,20 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                     log.info("{} - Successfully deleted Vnfd with ID {} and version {} for project {}", osm.getManoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject());
                     sendNotification(new VnfPkgDeletionNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(),
                             notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
-                            osm.getManoId()));
+                            osm.getManoId(), null));
                 } catch (Exception e) {
                     log.error("{} - Could not delete Vnfd: {}", osm.getManoId(), e.getMessage());
                     log.debug("Error details: ", e);
                     sendNotification(new VnfPkgDeletionNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(),
                             notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
-                            osm.getManoId()));
+                            osm.getManoId(), null));
                 }
             } else {
                 if (this.getPluginOperationalState() == PluginOperationalState.DISABLED || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
                     log.debug("{} - VNF Pkg deletion skipped",  osm.getManoId());
                     sendNotification(new VnfPkgDeletionNotificationMessage(notification.getVnfPkgInfoId(), notification.getVnfdId(), notification.getVnfdVersion(), notification.getProject(),
                             notification.getOperationId(), ScopeType.REMOTE, OperationStatus.RECEIVED,
-                            osm.getManoId()));
+                            osm.getManoId(), null));
                 }
             }
         }else if(notification.getScope() == ScopeType.SYNC){
@@ -836,13 +1249,31 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
 
     @Override
     public void acceptPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification) {
-        log.debug("Body: {}", notification);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+
+        try {
+            String json = mapper.writeValueAsString(notification);
+            log.debug("RECEIVED MESSAGE: " + json);
+        } catch (JsonProcessingException e) {
+            log.error("Unable to parse received pnfOnboardingNotificationMessage: " + e.getMessage());
+        }
         log.info("{} - Received PNFD onboarding notification", osm.getManoId());
     }
 
     @Override
     public void acceptPnfdDeletionNotification(PnfdDeletionNotificationMessage notification) {
-        log.debug("Body: {}", notification);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+
+        try {
+            String json = mapper.writeValueAsString(notification);
+            log.debug("RECEIVED MESSAGE: " + json);
+        } catch (JsonProcessingException e) {
+            log.error("Unable to parse received pnfDeletionNotificationMessage: " + e.getMessage());
+        }
         log.info("{} - Received PNFD deletion notification", osm.getManoId());
     }
 
@@ -854,7 +1285,12 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
         String osmNsdInfoId = content.getId();
         // Upload NS descriptor content
         httpResponse = osmClient.uploadNsdContent(osmNsdInfoId, file);
-        parseResponse(httpResponse, opId, null);
+        try {
+            parseResponse(httpResponse, opId, null);
+        }catch(FailedOperationException e){
+            osmClient.deleteNsd(osmNsdInfoId);
+            throw new FailedOperationException(e);
+        }
         //Store OsmPkfInfo
         httpResponse = osmClient.getNsdInfo(osmNsdInfoId);
         OsmInfoObject osmInfoObject = parseResponse(httpResponse, opId, OsmInfoObject.class).get(0);
@@ -890,7 +1326,12 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
         String osmVnfdInfoId = content.getId();
         // Upload VNF descriptor content
         httpResponse = osmClient.uploadVnfPackageContent(osmVnfdInfoId, file);
-        parseResponse(httpResponse, opId, null);
+        try {
+            parseResponse(httpResponse, opId, null);
+        }catch(FailedOperationException e){
+            osmClient.deleteVnfPackage(osmVnfdInfoId);
+            throw new FailedOperationException(e);
+        }
         //Store OsmPkfInfo
         httpResponse = osmClient.getVnfPackageInfo(osmVnfdInfoId);
         OsmInfoObject osmInfoObject = parseResponse(httpResponse, opId, OsmInfoObject.class).get(0);

@@ -90,6 +90,9 @@ public class DummyMANOPlugin extends MANOPlugin {
     }
 
     @Override
+    public void RuntimeSynchronization(){}
+
+    @Override
     public void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) {
         if (notification.getScope() == ScopeType.LOCAL) {
             NsdOnBoardingNotificationMessage response;
@@ -151,7 +154,8 @@ public class DummyMANOPlugin extends MANOPlugin {
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.SUCCESSFULLY_DONE,
-                        mano.getManoId()
+                        mano.getManoId(),
+                        null
                 );
             } else {
                 log.info("Skipping NSD deletion notification");
@@ -163,7 +167,8 @@ public class DummyMANOPlugin extends MANOPlugin {
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.RECEIVED,
-                        mano.getManoId()
+                        mano.getManoId(),
+                        null
                 );
             }
             sendNotification(response);
@@ -225,7 +230,8 @@ public class DummyMANOPlugin extends MANOPlugin {
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.SUCCESSFULLY_DONE,
-                        mano.getManoId()
+                        mano.getManoId(),
+                        null
                 );
             } else {
                 log.info("Skipping PNFD deletion notification");
@@ -237,7 +243,8 @@ public class DummyMANOPlugin extends MANOPlugin {
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.RECEIVED,
-                        mano.getManoId()
+                        mano.getManoId(),
+                        null
                 );
             }
             sendNotification(response);
@@ -307,7 +314,8 @@ public class DummyMANOPlugin extends MANOPlugin {
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.SUCCESSFULLY_DONE,
-                        mano.getManoId()
+                        mano.getManoId(),
+                        null
                 );
             } else {
                 log.info("Skipped VNF Pkg deletion notification");
@@ -319,7 +327,8 @@ public class DummyMANOPlugin extends MANOPlugin {
                         notification.getOperationId(),
                         ScopeType.REMOTE,
                         OperationStatus.RECEIVED,
-                        mano.getManoId()
+                        mano.getManoId(),
+                        null
                 );
             }
             sendNotification(response);

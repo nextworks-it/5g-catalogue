@@ -23,6 +23,8 @@ import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.Cat
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.ScopeType;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class NsdDeletionNotificationMessage extends CatalogueMessage {
@@ -31,6 +33,9 @@ public class NsdDeletionNotificationMessage extends CatalogueMessage {
     private final String nsdId;
     private final String nsdVersion;
     private final String project;
+
+    @JsonInclude(Include.NON_EMPTY)
+    private List<String> siteOrManoIds = new ArrayList<>();
 
     @JsonInclude(Include.NON_NULL)
     private String pluginId;
@@ -44,7 +49,8 @@ public class NsdDeletionNotificationMessage extends CatalogueMessage {
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
             @JsonProperty("operationStatus") OperationStatus opStatus,
-            @JsonProperty("pluginId") String pluginId
+            @JsonProperty("pluginId") String pluginId,
+            @JsonProperty("siteOrManoIds") List<String> siteOrManoIds
     ) {
         super(CatalogueMessageType.NSD_DELETION_NOTIFICATION, operationId, scope, opStatus);
         this.nsdInfoId = nsdInfoId;
@@ -52,6 +58,10 @@ public class NsdDeletionNotificationMessage extends CatalogueMessage {
         this.nsdVersion = nsdVersion;
         this.pluginId = pluginId;
         this.project = project;
+        if(siteOrManoIds != null)
+            this.siteOrManoIds.addAll(siteOrManoIds);
+        else
+            this.siteOrManoIds = null;
     }
 
     public NsdDeletionNotificationMessage(
@@ -61,13 +71,18 @@ public class NsdDeletionNotificationMessage extends CatalogueMessage {
             @JsonProperty("project") String project,
             @JsonProperty("operationId") UUID operationId,
             @JsonProperty("scope") ScopeType scope,
-            @JsonProperty("operationStatus") OperationStatus opStatus
+            @JsonProperty("operationStatus") OperationStatus opStatus,
+            @JsonProperty("siteOrManoIds") List<String> siteOrManoIds
     ) {
         super(CatalogueMessageType.NSD_DELETION_NOTIFICATION, operationId, scope, opStatus);
         this.nsdInfoId = nsdInfoId;
         this.nsdId = nsdId;
         this.nsdVersion = nsdVersion;
         this.project = project;
+        if(siteOrManoIds != null)
+            this.siteOrManoIds.addAll(siteOrManoIds);
+        else
+            this.siteOrManoIds = null;
     }
 
     @JsonProperty("nsdInfoId")
@@ -93,5 +108,10 @@ public class NsdDeletionNotificationMessage extends CatalogueMessage {
     @JsonProperty("project")
     public String getProject() {
         return project;
+    }
+
+    @JsonProperty("siteOrManoIds")
+    public List<String> getSiteOrManoIds() {
+        return siteOrManoIds;
     }
 }
