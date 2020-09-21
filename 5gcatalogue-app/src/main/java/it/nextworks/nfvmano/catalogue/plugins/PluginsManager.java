@@ -232,14 +232,15 @@ public class PluginsManager {
                     log.error("Unable to retrieve MANO configurations from site inventory: " + e.getMessage());
                 }
                 String newManoId = null;
-                try{
-                    if(nfvOrchestratorList != null) {
-                        for (NfvOrchestrator nfvOrchestrator : nfvOrchestratorList) {
+
+                if(nfvOrchestratorList != null) {
+                    for (NfvOrchestrator nfvOrchestrator : nfvOrchestratorList) {
+                        try {
                             MANO newMano = null;
                             newManoId = nfvOrchestrator.getName();
-                            if(newManoId == null)
+                            if (newManoId == null)
                                 log.error("Unable to retrieve MANO plugin configuration: MANO ID is null");
-                            else if(nfvOrchestrator.getType() == null || nfvOrchestrator.getCredentials() == null || nfvOrchestrator.getSite() == null || nfvOrchestrator.getVersion() == null || nfvOrchestrator.getOperationalState() == null || nfvOrchestrator.getCredentials().getHost() == null)
+                            else if (nfvOrchestrator.getType() == null || nfvOrchestrator.getCredentials() == null || nfvOrchestrator.getSite() == null || nfvOrchestrator.getVersion() == null || nfvOrchestrator.getOperationalState() == null || nfvOrchestrator.getCredentials().getHost() == null)
                                 log.error("Unable to retrieve MANO plugin configuration for MANO with ID {}", newManoId);
                             else {
                                 Credentials manoCredentials = nfvOrchestrator.getCredentials();
@@ -253,14 +254,14 @@ public class PluginsManager {
                                 log.debug("Creating MANO Plugin with manoId " + newMano.getManoId() + " from site inventory configuration");
                                 createMANOPlugin(newMano, true);
                             }
+                        }catch (AlreadyExistingEntityException e) {
+                            log.debug("MANO with manoId " + newManoId + " already present in DB");
+                        } catch (MethodNotImplementedException e) {
+                            log.error("Unsupported MANO type for MANO with manoId: " + newManoId);
+                        } catch (MalformattedElementException e) {
+                            log.error("Malformed MANO with manoId " + newManoId + ": " + e.getMessage());
                         }
                     }
-                }catch (AlreadyExistingEntityException e) {
-                    log.debug("MANO with manoId " + newManoId + " already present in DB");
-                } catch (MethodNotImplementedException e) {
-                    log.error("Unsupported MANO type for MANO with manoId: " + newManoId);
-                } catch (MalformattedElementException e) {
-                    log.error("Malformatted MANO with manoId " + newManoId + ": " + e.getMessage());
                 }
             }
 
