@@ -66,6 +66,7 @@ public interface NsdApi {
     @RequestMapping(value = "/nsd/v1/ns_descriptors/{nsdInfoId}", produces = {"application/json"}, method = RequestMethod.GET)
     ResponseEntity<?> getNSDInfo(
             @RequestParam(required = false) String project,
+            @RequestParam(required = false) String extraData,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId);
 

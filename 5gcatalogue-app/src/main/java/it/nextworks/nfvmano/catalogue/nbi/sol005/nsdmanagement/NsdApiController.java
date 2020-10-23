@@ -125,6 +125,7 @@ public class NsdApiController implements NsdApi {
 
     public ResponseEntity<?> getNSDInfo(
             @RequestParam(required = false) String project,
+            @RequestParam(required = false) String extraData,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @ApiParam(value = "", required = true) @PathVariable("nsdInfoId") String nsdInfoId) {
         if(project == null)
@@ -134,7 +135,7 @@ public class NsdApiController implements NsdApi {
         log.debug("Processing REST request to retrieve NSD info " + nsdInfoId);
         if (accept != null && accept.contains("application/json")) {
             try {
-                NsdInfo nsdInfo = nsdManagementService.getNsdInfo(nsdInfoId, project);
+                NsdInfo nsdInfo = nsdManagementService.getNsdInfo(nsdInfoId, project, extraData);
                 log.debug("NSD info retrieved");
                 return new ResponseEntity<NsdInfo>(nsdInfo, HttpStatus.OK);
             } catch (NotExistingEntityException e) {

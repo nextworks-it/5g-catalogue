@@ -952,7 +952,7 @@ public class NsdManagementService implements NsdManagementInterface {
     }
 
     @Override
-    public NsdInfo getNsdInfo(String nsdInfoId, String project) throws NotPermittedOperationException, NotExistingEntityException,
+    public NsdInfo getNsdInfo(String nsdInfoId, String project, String extraData) throws NotPermittedOperationException, NotExistingEntityException,
             MalformattedElementException, MethodNotImplementedException, NotAuthorizedOperationException, FailedOperationException {
         log.debug("Processing request to get an NSD info");
         if (project != null) {
@@ -977,6 +977,17 @@ public class NsdManagementService implements NsdManagementInterface {
 
         log.debug("Found NSD info resource with id: " + nsdInfoId);
         NsdInfo nsdInfo = buildNsdInfo(nsdInfoResource);
+        if(extraData != null && extraData.equals("manoInfoIds")){
+            Map<String, NotificationResource> onBoardingMap = nsdInfoResource.getAcknowledgedOnboardOpConsumers();
+            List<MANOPlugin> manos = new ArrayList<>(pluginManger.manoDrivers.values());
+            for(MANOPlugin mano : manos){
+                if (onBoardingMap.containsKey(mano.getPluginId()) && onBoardingMap.get(mano.getPluginId()).getOpStatus().equals(OperationStatus.SUCCESSFULLY_DONE)) {
+                    String manoInfoId = mano.getManoPkgInfoId(nsdInfoResource.getId().toString());
+                    if(manoInfoId != null)
+                        nsdInfo.getManoInfoIds().put(mano.getPluginId(), manoInfoId);
+                }
+            }
+        }
         log.debug("Built NSD info with id: " + nsdInfoId);
         return nsdInfo;
 
