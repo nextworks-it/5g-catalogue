@@ -22,14 +22,14 @@ COPY . /home/5g-catalogue/
 WORKDIR /home/5g-catalogue
 RUN git submodule update --init
 
-COPY ./deployments/docker/5g-catalogue-gui/templates/httpd.conf /usr/local/apache2/conf/
-COPY ./deployments/docker/5g-catalogue-gui/logos /home/logos
+RUN cp /home/5g-catalogue/deployments/docker/5g-catalogue-gui/templates/httpd.conf /usr/local/apache2/conf/
+RUN cp -r /home/5g-catalogue/deployments/docker/5g-catalogue-gui/logos /home/logos
 RUN cp /home/logos/${catalogue_profile}_logo.png /home/5g-catalogue/5gcatalogue-gui/5gcatalogue/images/
-COPY ./deployments/docker/5g-catalogue-gui/templates/side_top_bar_${catalogue_profile}.html /home/5g-catalogue/5gcatalogue-gui/5gcatalogue/templates/side_top_bar.html
+RUN cp /home/5g-catalogue/deployments/docker/5g-catalogue-gui/templates/side_top_bar_${catalogue_profile}.html /home/5g-catalogue/5gcatalogue-gui/5gcatalogue/templates/side_top_bar.html
 RUN sed -i "s|_KEYCLOAK_URL_|${keycloak_url}|g" /home/5g-catalogue/5gcatalogue-gui/5gcatalogue/templates/side_top_bar.html \
     && sed -i "s|_KEYCLOAK_REALM_|${keycloak_realm}|g" /home/5g-catalogue/5gcatalogue-gui/5gcatalogue/templates/side_top_bar.html \
     && sed -i "s|_KEYCLOAK_GUI_CLIENT_|${keycloak_gui_client}|g" /home/5g-catalogue/5gcatalogue-gui/5gcatalogue/templates/side_top_bar.html
-COPY ./deployments/docker/5g-catalogue-gui/templates/utils.js /home/5g-catalogue/5gcatalogue-gui/5gcatalogue/plugin/
+RUN cp /home/5g-catalogue/deployments/docker/5g-catalogue-gui/templates/utils.js /home/5g-catalogue/5gcatalogue-gui/5gcatalogue/plugin/
 RUN sed -i "s|_CATALOGUE_SERVER_PORT_|${catalogue_server_port}|g" /home/5g-catalogue/5gcatalogue-gui/5gcatalogue/plugin/utils.js \
     && sed -i "s|_CATALOGUE_SCOPE_|${catalogue_scope}|g" /home/5g-catalogue/5gcatalogue-gui/5gcatalogue/plugin/utils.js \
     && sed -i "s|_KEYCLOAK_ENABLED_|${keycloak_enabled}|g" /home/5g-catalogue/5gcatalogue-gui/5gcatalogue/plugin/utils.js

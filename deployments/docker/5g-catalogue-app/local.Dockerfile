@@ -34,8 +34,11 @@ RUN wget http://apache-mirror.rbc.ru/pub/apache/maven/maven-3/3.3.9/binaries/apa
 ENV MAVEN_HOME=/opt/maven/current 
 ENV PATH=$PATH:$MAVEN_HOME/bin
 
+RUN mkdir /home/5g-catalogue
+COPY . /home/5g-catalogue/
+
 # Proxy configuration for Maven
-COPY ./deployments/docker/5g-catalogue-app/templates/settings.xml /opt/maven/current/conf/.
+RUN cp /home/5g-catalogue/deployments/docker/5g-catalogue-app/templates/settings.xml /opt/maven/current/conf/
 RUN if [ "$proxy_enabled" = "false" ] ; then rm /opt/maven/current/conf/settings.xml; fi
 
 # Install nfvo-sol-libs
@@ -49,11 +52,8 @@ WORKDIR /home/nfv-sol-libs/NFV_MANO_SOL001_LIBS_DESCRIPTORS
 RUN mvn clean install
 
 # Install 5G Apps and Services Catalogue App
-RUN mkdir /home/5g-catalogue
-COPY . /home/5g-catalogue/
-WORKDIR /home/5g-catalogue
 RUN rm /home/5g-catalogue/5gcatalogue-app/src/main/resources/manoConfigurations/*.json
-COPY ./deployments/docker/5g-catalogue-app/templates/mano.json /home/5g-catalogue/5gcatalogue-app/src/main/resources/manoConfigurations/
+RUN cp /home/5g-catalogue/deployments/docker/5g-catalogue-app/templates/mano.json /home/5g-catalogue/5gcatalogue-app/src/main/resources/manoConfigurations/
 RUN sed -i "s|_MANO_ID_|${mano_id}|g" /home/5g-catalogue/5gcatalogue-app/src/main/resources/manoConfigurations/mano.json \
     && sed -i "s|_MANO_TYPE_|${mano_type}|g" /home/5g-catalogue/5gcatalogue-app/src/main/resources/manoConfigurations/mano.json \
     && sed -i "s|_MANO_SITE_|${mano_site}|g" /home/5g-catalogue/5gcatalogue-app/src/main/resources/manoConfigurations/mano.json \
@@ -63,13 +63,14 @@ RUN sed -i "s|_MANO_ID_|${mano_id}|g" /home/5g-catalogue/5gcatalogue-app/src/mai
     && sed -i "s|_MANO_PASSWORD_|${mano_password}|g" /home/5g-catalogue/5gcatalogue-app/src/main/resources/manoConfigurations/mano.json \
     && sed -i "s|_MANO_PROJECT_|${mano_project}|g" /home/5g-catalogue/5gcatalogue-app/src/main/resources/manoConfigurations/mano.json
 RUN rm /home/5g-catalogue/5gcatalogue-app/src/main/resources/catalogueConfigurations/*.json
-COPY ./deployments/docker/5g-catalogue-app/templates/publicCatalogue.json /home/5g-catalogue/5gcatalogue-app/src/main/resources/catalogueConfigurations/
+RUN cp /home/5g-catalogue/deployments/docker/5g-catalogue-app/templates/publicCatalogue.json /home/5g-catalogue/5gcatalogue-app/src/main/resources/catalogueConfigurations/
 RUN sed -i "s|_PUBLIC_CATALOGUE_ID_|${public_catalogue_id}|g" /home/5g-catalogue/5gcatalogue-app/src/main/resources/catalogueConfigurations/publicCatalogue.json \
     && sed -i "s|_PUBLIC_CATALOGUE_URL_|${public_catalogue_url}|g" /home/5g-catalogue/5gcatalogue-app/src/main/resources/catalogueConfigurations/publicCatalogue.json
+WORKDIR /home/5g-catalogue
 RUN mvn clean install
 
-COPY ./deployments/docker/5g-catalogue-app/logos /home/logos
-COPY ./deployments/docker/5g-catalogue-app/templates/application.properties /home/5g-catalogue/5gcatalogue-app/src/main/resources/
+RUN cp -r /home/5g-catalogue/deployments/docker/5g-catalogue-app/logos /home/logos
+RUN cp /home/5g-catalogue/deployments/docker/5g-catalogue-app/templates/application.properties /home/5g-catalogue/5gcatalogue-app/src/main/resources/
 
 # Configure environment
 RUN mkdir -p /var/log/5gcatalogue/ \
