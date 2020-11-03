@@ -28,8 +28,8 @@ public class OnapDriver {
     private RestTemplate restTemplate;
 
     public OnapDriver(String ipAddress, String port) {
-        baseUrl = String.format("http://%s:%s/service_specification", ipAddress, port);
-        this.restTemplate= new RestTemplate(new BufferingClientHttpRequestFactory(
+        this.baseUrl = String.format("http://%s:%s/service_specification", ipAddress, port);
+        this.restTemplate = new RestTemplate(new BufferingClientHttpRequestFactory(
                 new SimpleClientHttpRequestFactory()
         ));
     }

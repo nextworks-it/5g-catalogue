@@ -34,6 +34,7 @@ import javax.persistence.*;
         @JsonSubTypes.Type(value = OSM.class, name = "OSMR7"),
         @JsonSubTypes.Type(value = OSM.class, name = "OSMR8"),
         @JsonSubTypes.Type(value = ONAP.class, name = "ONAP"),
+        @JsonSubTypes.Type(value = ONAP.class, name = "SO_5GROWTH"),
         @JsonSubTypes.Type(value = DummyMano.class, name = "DUMMY")})
 public abstract class MANO {
 

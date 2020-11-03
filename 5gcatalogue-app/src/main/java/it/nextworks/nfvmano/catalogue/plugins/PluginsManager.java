@@ -26,11 +26,14 @@ import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginOperationalS
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginType;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.*;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.dummy.DummyMano;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.fivegrowth.FIVEGROWTH;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.onap.ONAP;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.osm.OSM;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.repos.MANORepository;
 import it.nextworks.nfvmano.catalogue.plugins.mano.DummyMANOPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.OnapPlugin;
+import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.repos.FivegrowthObjectRepository;
+import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.SOPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.repos.OnapObjectRepository;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.r4plus.OpenSourceMANOR4PlusPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.repos.OsmInfoObjectRepository;
@@ -170,6 +173,9 @@ public class PluginsManager {
     @Autowired
     private OnapObjectRepository onapObjectRepository;
 
+    @Autowired
+    private FivegrowthObjectRepository fivegrowthObjectRepository;
+
     public PluginsManager() {
 
     }
@@ -248,6 +254,8 @@ public class PluginsManager {
                                     newMano = new OSM(newManoId, manoCredentials.getHost(), String.valueOf(manoCredentials.getPort()), manoCredentials.getUsername(), manoCredentials.getPassword(), manoCredentials.getProject(), MANOType.valueOf(nfvOrchestrator.getType().toUpperCase() + nfvOrchestrator.getVersion().toUpperCase()), nfvOrchestrator.getSite().getName(), null);
                                 else if (nfvOrchestrator.getType().equalsIgnoreCase("ONAP"))
                                     newMano = new ONAP(newManoId, manoCredentials.getHost(), String.valueOf(manoCredentials.getPort()), MANOType.valueOf(nfvOrchestrator.getType().toUpperCase()), nfvOrchestrator.getSite().getName());
+                                else if (nfvOrchestrator.getType().equalsIgnoreCase("SO_5GROWTH"))
+                                    newMano = new FIVEGROWTH(newManoId, manoCredentials.getHost(), String.valueOf(manoCredentials.getPort()), MANOType.valueOf(nfvOrchestrator.getType().toUpperCase()), nfvOrchestrator.getSite().getName());
                                 else
                                     throw new MethodNotImplementedException("Unsupported MANO type");
                                 newMano.setPluginOperationalState(PluginOperationalState.valueOf(nfvOrchestrator.getOperationalState().toUpperCase()));
@@ -388,6 +396,9 @@ public class PluginsManager {
         } else if (mano.getManoType().equals(MANOType.ONAP)) {
             Path onapDir = Paths.get(manoDir, "/" + mano.getManoType().toString().toLowerCase());
             return new OnapPlugin(mano.getManoType(), mano, bootstrapServers, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, onapObjectRepository, onapDir, Paths.get(tmpDir), runtimeSync, manoSyncPeriod);
+        } else if (mano.getManoType().equals(MANOType.SO_5GROWTH)) {
+                Path soDir = Paths.get(manoDir, "/" + mano.getManoType().toString().toLowerCase());
+                return new SOPlugin(mano.getManoType(), mano, bootstrapServers, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, fivegrowthObjectRepository, soDir, Paths.get(tmpDir), runtimeSync, manoSyncPeriod);
         } else {
             throw new MalformattedElementException("Unsupported MANO type. Skipping");
         }
@@ -409,7 +420,7 @@ public class PluginsManager {
         log.debug("RECEIVED MANO:\nMANO ID: " + manoId + "\nMANO TYPE: " + type);
 
         if (type == MANOType.OSMR3 || type == MANOType.OSMR4 || type == MANOType.OSMR5 || type == MANOType.OSMR6 || type == MANOType.OSMR7 || type == MANOType.OSMR8) {
-            log.debug("Processing request for creating " + type + "Plugin");
+            log.debug("Processing request for creating " + type + " Plugin");
             OSM osm = (OSM) mano;
             OSM targetOsm = new OSM(
                     osm.getManoId(),
@@ -438,7 +449,7 @@ public class PluginsManager {
             }
             return String.valueOf(createdMano.getId());
         } else if (type == MANOType.ONAP) {
-            log.debug("Processing request for creating " + type + "Plugin");
+            log.debug("Processing request for creating " + type + " Plugin");
             ONAP onap = (ONAP) mano;
             ONAP targetOnap = new ONAP(
                     onap.getManoId(),
@@ -449,21 +460,46 @@ public class PluginsManager {
             );
             targetOnap.setPluginOperationalState(PluginOperationalState.ENABLED);
             targetOnap.isValid();
-            log.debug("Persisting OSM MANO with manoId: " + manoId);
+            log.debug("Persisting ONAP MANO with manoId: " + manoId);
             ONAP createdMano = MANORepository.saveAndFlush(targetOnap);
             log.debug("Onap MANO with manoId " + manoId + " successfully persisted");
             if(!isStartingPhase) {
-                log.debug("Instantiating Onap MANO with manoId: " + manoId);
+                log.debug("Instantiating ONAP MANO with manoId: " + manoId);
                 try {
                     addMANO(createdMano);
                 } catch (MalformattedElementException e) {
                     log.error("Unsupported MANO type");
                 }
-                log.debug("Onap MANO with manoId " + manoId + " successfully instantiated");
+                log.debug("ONAP MANO with manoId " + manoId + " successfully instantiated");
+            }
+            return String.valueOf(createdMano.getId());
+        } else if (type == MANOType.SO_5GROWTH) {
+            log.debug("Processing request for creating " + type + " Plugin");
+            FIVEGROWTH so = (FIVEGROWTH) mano;
+            FIVEGROWTH targetSo = new FIVEGROWTH(
+                    so.getManoId(),
+                    so.getIpAddress(),
+                    so.getPort(),
+                    type,
+                    so.getManoSite()
+            );
+            targetSo.setPluginOperationalState(PluginOperationalState.ENABLED);
+            targetSo.isValid();
+            log.debug("Persisting 5GROWTH MANO with manoId: " + manoId);
+            FIVEGROWTH createdMano = MANORepository.saveAndFlush(targetSo);
+            log.debug("5GROWTH MANO with manoId " + manoId + " successfully persisted");
+            if(!isStartingPhase) {
+                log.debug("Instantiating 5GROWTH MANO with manoId: " + manoId);
+                try {
+                    addMANO(createdMano);
+                } catch (MalformattedElementException e) {
+                    log.error("Unsupported MANO type");
+                }
+                log.debug("5GROWTH MANO with manoId " + manoId + " successfully instantiated");
             }
             return String.valueOf(createdMano.getId());
         } else if (type == MANOType.DUMMY) {
-            log.debug("Processing request for creating " + type + "Plugin");
+            log.debug("Processing request for creating " + type + " Plugin");
             DummyMano dummyMano = (DummyMano) mano;
             log.debug("Persisting DUMMY MANO with manoId: " + manoId);
             DummyMano createdMano = MANORepository.saveAndFlush(dummyMano);

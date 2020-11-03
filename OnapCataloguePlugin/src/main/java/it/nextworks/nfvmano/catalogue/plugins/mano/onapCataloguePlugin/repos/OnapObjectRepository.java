@@ -10,10 +10,10 @@ import java.util.Optional;
 public interface OnapObjectRepository extends JpaRepository<OnapObject, String> {
 
     Optional<OnapObject> findById(String id);
-    Optional<OnapObject> findByDescriptorIdAndTypeAndOnapId(String osmId, OnapObjectType type, String onapId);
+    Optional<OnapObject> findByDescriptorIdAndTypeAndOnapId(String descriptorId, OnapObjectType type, String onapId);
     List<OnapObject> findByOnapIdAndType(String onapId, OnapObjectType type);
     List<OnapObject> findByOnapId(String onapId);
-    Optional<OnapObject> findByDescriptorIdAndVersionAndOnapId(String osmId, String version, String onapId);
+    Optional<OnapObject> findByDescriptorIdAndVersionAndOnapId(String descriptorId, String version, String onapId);
     Optional<OnapObject> findByCatalogueIdAndOnapId(String catalogue, String onapId);
 
 }
