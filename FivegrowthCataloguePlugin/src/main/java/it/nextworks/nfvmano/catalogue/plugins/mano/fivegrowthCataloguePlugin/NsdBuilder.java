@@ -50,7 +50,7 @@ public class NsdBuilder {
 
     public NsdBuilder() { }
 
-    public Nsd parseDescriptorTemplate(DescriptorTemplate template, List<DescriptorTemplate> vnfds) throws MalformattedElementException {
+    public Nsd parseDescriptorTemplate(DescriptorTemplate template) throws MalformattedElementException {
         dt = template;
 
         if (!(dt.getTopologyTemplate().getNSNodes().size() == 1)) {
@@ -71,7 +71,6 @@ public class NsdBuilder {
         */
 
         Map<String, NsVirtualLinkNode> vlNodes = dt.getTopologyTemplate().getNsVirtualLinkNodes();
-        //List<NsVirtualLinkProperties> vlNodeProperties = vlNodes.values().stream().map(NsVirtualLinkNode::getProperties).collect(Collectors.toList());
 
         List<Sapd> sapdList = new ArrayList<>();
         SubstitutionMappingsRequirements substitutionMappingsRequirements = dt.getTopologyTemplate().getSubstituitionMappings().getRequirements();
@@ -149,10 +148,9 @@ public class NsdBuilder {
         }
 
         nsInstantiationLevelList.add(nsIl);
-        NsDf nsDf = new NsDf(null, nsNodeProperties.getName() + "_df", nsNodeProperties.getName() + "_fk", vnfProfileList, null, vlProfileList, null, null, nsInstantiationLevelList, "DEFAULT_IL", null, null);//TODO
+        NsDf nsDf = new NsDf(null, nsNodeProperties.getName() + "_df", nsNodeProperties.getName() + "_fk", vnfProfileList, null, vlProfileList, null, null, nsInstantiationLevelList, nsNodeProperties.getName() + "_il", null, null);
         nsDfList.add(nsDf);
 
-        Nsd nsd = new Nsd(nsNodeProperties.getDescriptorId(), nsNodeProperties.getDesigner(), nsNodeProperties.getVersion(), nsNodeProperties.getName(), nsNodeProperties.getInvariantId(), null, vnfdIds, null, sapdList, virtualLinkDescList, null, null, null, null, nsDfList, null);
-        return nsd;
+        return new Nsd(nsNodeProperties.getDescriptorId(), nsNodeProperties.getDesigner(), nsNodeProperties.getVersion(), nsNodeProperties.getName(), nsNodeProperties.getInvariantId(), null, vnfdIds, null, sapdList, virtualLinkDescList, null, null, null, null, nsDfList, null);
     }
 }

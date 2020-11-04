@@ -429,6 +429,7 @@ public class SOPlugin extends MANOPlugin {
                     if(!soInfoObjectOptional.isPresent() /*|| forceOnboard*/){//TODO forceOnboard used in RuntimeNsChange
                         NsdBuilder nsdBuilder = new NsdBuilder();
                         List<DescriptorTemplate> includedVnfds = new ArrayList<>();
+                        /*
                         for (KeyValuePair vnfPathPair : notification.getIncludedVnfds().values()) {
                             if (vnfPathPair.getValue().equals(PathType.LOCAL.toString())) {
                                 packagePath = vnfPathPair.getKey();
@@ -442,12 +443,11 @@ public class SOPlugin extends MANOPlugin {
                                 throw new MethodNotImplementedException("Path Type not currently supported");
                             }
                             includedVnfds.add(mapper.readValue(descriptor, DescriptorTemplate.class));
-                        }
+                        */
 
-                        Nsd nsd = nsdBuilder.parseDescriptorTemplate(descriptorTemplate, includedVnfds);
-                        String url = null;
+                        Nsd nsd = nsdBuilder.parseDescriptorTemplate(descriptorTemplate);
                         OnboardNsdRequest onboardNsdRequest = new OnboardNsdRequest(nsd, null);
-                        soInfoObjectId = soClient.onboardNsd(url, onboardNsdRequest);
+                        soInfoObjectId = soClient.onboardNsd(onboardNsdRequest);
 
                         SoObject infoObject = new SoObject();
                         infoObject.setVersion(nsd.getVersion());

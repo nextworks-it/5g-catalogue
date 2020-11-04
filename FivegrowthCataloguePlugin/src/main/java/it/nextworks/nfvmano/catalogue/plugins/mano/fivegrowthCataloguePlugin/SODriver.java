@@ -33,30 +33,23 @@ public class SODriver {
     private RestTemplate restTemplate;
 
     private String smUrl;
-    private String nsdServiceUrlTemplate;
-    private String vnfdServiceUrlTemplate;
-    private String appdServiceUrlTemplate;
-
 
     public SODriver(String ipAddress, String port) {
         this.smUrl = String.format("http://%s:%s/5gt/so/v1", ipAddress, port);
         this.restTemplate= new RestTemplate(new BufferingClientHttpRequestFactory(
                 new SimpleClientHttpRequestFactory()
         ));
-        this.nsdServiceUrlTemplate = smUrl + "/nfvo/nsdManagement";
-        this.vnfdServiceUrlTemplate = smUrl + "/nfvo/vnfdManagement";
-        this.appdServiceUrlTemplate = smUrl + "/nfvo/appdManagement";
     }
 
     //********************** NSD methods ********************************//
 
-    public String onboardNsd(String urlTemplate, OnboardNsdRequest request) throws MalformattedElementException, AlreadyExistingEntityException, FailedOperationException {
+    public String onboardNsd(OnboardNsdRequest request) throws MalformattedElementException, AlreadyExistingEntityException, FailedOperationException {
         log.debug("Building HTTP request to onboard NSD.");
         HttpHeaders header = new HttpHeaders();
         header.add("Content-Type", "application/json");
         HttpEntity<?> postEntity = new HttpEntity<>(request, header);
 
-        String url = this.smUrl + urlTemplate;
+        String url = this.smUrl + "/ns/nsdManagement/nsd";
 
         try {
             log.debug("Sending HTTP request to onboard NSD.");
