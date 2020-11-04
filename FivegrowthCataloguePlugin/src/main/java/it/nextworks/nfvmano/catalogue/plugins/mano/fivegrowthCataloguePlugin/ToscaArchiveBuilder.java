@@ -50,9 +50,6 @@ public class ToscaArchiveBuilder {
             File definitions = makeSubFolder(root, "Definitions");
             File files = makeSubFolder(root, "Files");
             File licenses = makeSubFolder(files, "Licences");
-            File monitoring = makeSubFolder(files, "Monitoring");
-            File scripts = makeSubFolder(files, "Scripts");
-            File tests = makeSubFolder(files, "Tests");
             File metadata = makeSubFolder(root, "TOSCA-Metadata");
 
             //Create standard files
@@ -120,9 +117,6 @@ public class ToscaArchiveBuilder {
             File definitions = makeSubFolder(root, "Definitions");
             File files = makeSubFolder(root, "Files");
             File licenses = makeSubFolder(files, "Licences");
-            File monitoring = makeSubFolder(files, "Monitoring");
-            File scripts = makeSubFolder(files, "Scripts");
-            File tests = makeSubFolder(files, "Tests");
             File metadata = makeSubFolder(root, "TOSCA-Metadata");
 
             //Create standard files

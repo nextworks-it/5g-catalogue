@@ -210,9 +210,32 @@ public class SODriver {
         }
     }
 
-    public List<SoVnfInfoObject> queryVnfPackagesInfo() {
-        List<SoVnfInfoObject> vnfInfoObjectList = new ArrayList<>();
+    public List<SoVnfInfoObject> queryVnfPackagesInfo() throws FailedOperationException{
+        log.debug("Building HTTP request to query VNF packages.");
+        HttpHeaders header = new HttpHeaders();
+        header.add("Accept", "application/json");
+        HttpEntity<?> getEntity = new HttpEntity<>(null, header);
 
-        return vnfInfoObjectList;
+        String url = this.smUrl + "/ns/vnfd";
+
+        try {
+            log.debug("Sending HTTP request to retrieve VNF Packages.");
+
+            ResponseEntity<List<SoVnfInfoObject>> httpResponse =
+                    restTemplate.exchange(url, HttpMethod.GET, getEntity, new ParameterizedTypeReference<List<SoVnfInfoObject>>() {});
+
+            log.debug("Response code: " + httpResponse.getStatusCode().toString());
+            HttpStatus code = httpResponse.getStatusCode();
+
+            if (code.equals(HttpStatus.OK)) {
+                log.debug("VNF packages correctly retrieved");
+                return httpResponse.getBody();
+            } else {
+                throw new FailedOperationException("Generic error during VNF packages retrieval at NFVO: " + httpResponse.getBody());
+            }
+        } catch (RestClientException e) {
+            log.debug("Error while interacting with NFVO.");
+            throw new FailedOperationException("Error while interacting with NFVO VNFD catalogue at url " + url);
+        }
     }
 }

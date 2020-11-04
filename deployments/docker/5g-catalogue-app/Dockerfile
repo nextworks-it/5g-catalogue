@@ -57,11 +57,11 @@ WORKDIR /home
 RUN git clone ${nfv_ifa_libs_repo} nfv-ifa-libs
 WORKDIR /home/nfv-ifa-libs
 RUN git checkout ${nfv_ifa_libs_version}
-WORKDIR /home/nfv-ifa-libs/NFV_MANO_LIBS_CATALOGUES_IF
-RUN mvn clean install
 WORKDIR /home/nfv-ifa-libs/NFV_MANO_LIBS_COMMON
 RUN mvn clean install
 WORKDIR /home/nfv-ifa-libs/NFV_MANO_LIBS_DESCRIPTORS
+RUN mvn clean install
+WORKDIR /home/nfv-ifa-libs/NFV_MANO_LIBS_CATALOGUES_IF
 RUN mvn clean install
 
 # Install 5G Apps and Services Catalogue App
