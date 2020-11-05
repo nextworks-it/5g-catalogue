@@ -6,11 +6,12 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import java.util.ArrayList;
 import java.util.List;
 
 public class SoNsQueryResponse {
 
-    private List<SoNsInfoObject> queryResult;
+    private List<SoNsInfoObject> queryResult = new ArrayList<>();
 
     public List<SoNsInfoObject> getQueryResult() {
         return queryResult;

@@ -68,24 +68,47 @@ public class ToscaDescriptorsParser {
         //Creating VnfExtCpNode and VirtualinkRequirements for SubstitutionMappingsRequirements
         LinkedHashMap<String, Node> nodeTemplates = new LinkedHashMap<>();
         List<VirtualLinkPair> virtualLink = new ArrayList<>();
-        int i = 0;
+        boolean mgmtFound = false;
+        String cpName = null;
         for(VnfExtCpd cp : vnfDescriptor.getVnfExtCpd()){
-            virtualLink.add(new VirtualLinkPair(cp.getCpdId(), cp.getCpdId()));
+            cpName = cp.getCpdId();
+            virtualLink.add(new VirtualLinkPair(cpName, cpName));
             List<LayerProtocol> layerProtocols = new ArrayList<>();
             layerProtocols.add(LayerProtocol.IPV4);
             List<CpProtocolData> protocolData = new ArrayList<>();
             protocolData.add(new CpProtocolData(LayerProtocol.IPV4, null));
             List<VirtualNetworkInterfaceRequirements> virtualNetworkInterfaceRequirements = new ArrayList<>();
             HashMap<String, String> interfaceRequirements = new HashMap<>();
-            if(i++ == 0)
+            it.nextworks.nfvmano.libs.ifa.descriptors.common.elements.AddressData addressData = cp.getAddressData().get(0); //Consider only one address data
+            if(addressData.isManagement()) {
+                mgmtFound = true;
                 interfaceRequirements.put("isManagement", "true");
+            }
             VirtualNetworkInterfaceRequirements virtualNetworkInterfaceRequirement = new VirtualNetworkInterfaceRequirements(null, null, false, interfaceRequirements, null);
             virtualNetworkInterfaceRequirements.add(virtualNetworkInterfaceRequirement);
-            VnfExtCpProperties cpProperties = new VnfExtCpProperties(null, layerProtocols, CpRole.LEAF, cp.getCpdId(), protocolData, false, virtualNetworkInterfaceRequirements);
+            VnfExtCpProperties cpProperties = new VnfExtCpProperties(null, layerProtocols, CpRole.LEAF, cp.getDescription(), protocolData, false, virtualNetworkInterfaceRequirements);
             List<String> externalVirtualLink = new ArrayList<>();
-            externalVirtualLink.add(cp.getCpdId());
+            externalVirtualLink.add(cpName);
             VnfExtCpRequirements cpRequirements = new  VnfExtCpRequirements(externalVirtualLink, null);
-            nodeTemplates.put(cp.getCpdId(), new VnfExtCpNode(null, cpProperties, cpRequirements));//type: "tosca.nodes.nfv.VnfExtCp"
+            nodeTemplates.put(cpName, new VnfExtCpNode(null, cpProperties, cpRequirements));//type: "tosca.nodes.nfv.VnfExtCp"
+        }
+
+        //select ta random cp as mgmt
+        if(!mgmtFound){
+            List<LayerProtocol> layerProtocols = new ArrayList<>();
+            layerProtocols.add(LayerProtocol.IPV4);
+            List<CpProtocolData> protocolData = new ArrayList<>();
+            protocolData.add(new CpProtocolData(LayerProtocol.IPV4, null));
+            List<VirtualNetworkInterfaceRequirements> virtualNetworkInterfaceRequirements = new ArrayList<>();
+            HashMap<String, String> interfaceRequirements = new HashMap<>();
+            interfaceRequirements.put("isManagement", "true");
+            VirtualNetworkInterfaceRequirements virtualNetworkInterfaceRequirement = new VirtualNetworkInterfaceRequirements(null, null, false, interfaceRequirements, null);
+            virtualNetworkInterfaceRequirements.add(virtualNetworkInterfaceRequirement);
+            VnfExtCpProperties cpProperties = new VnfExtCpProperties(null, layerProtocols, CpRole.LEAF, cpName, protocolData, false, virtualNetworkInterfaceRequirements);
+            List<String> externalVirtualLink = new ArrayList<>();
+            externalVirtualLink.add(cpName);
+            VnfExtCpRequirements cpRequirements = new  VnfExtCpRequirements(externalVirtualLink, null);
+            nodeTemplates.replace(cpName, new VnfExtCpNode(null, cpProperties, cpRequirements));
         }
 
         List<Vdu> vduNodes = vnfDescriptor.getVdu();
@@ -99,8 +122,8 @@ public class ToscaDescriptorsParser {
             Integer vRam = virtualComputeDesc.getVirtualMemory().getVirtualMemSize();
             Integer vCpu = virtualComputeDesc.getVirtualCpu().getNumVirtualCpu();
 
-            String vduName = vduNode.getVduName();
-            log.debug("Creating VDUVirtualBlockStorageNode for vdu {}", vduName);
+            String vduId = vduNode.getVduId();
+            log.debug("Creating VDUVirtualBlockStorageNode for vdu {}", vduId);
             for(VirtualStorageDesc virtualStorageDesc : virtualStorageDescList) {
                 //Creating  VDUVirtualBlockStorageNode
                 VirtualBlockStorageData virtualBlockStorageData = new VirtualBlockStorageData(virtualStorageDesc.getSizeOfStorage(), null, false);
@@ -108,25 +131,31 @@ public class ToscaDescriptorsParser {
                 nodeTemplates.put(virtualStorageDesc.getStorageId(), new VDUVirtualBlockStorageNode(null, bsProperties));//type: "tosca.nodes.nfv.Vdu.VirtualBlockStorage"
             }
 
-            log.debug("Creating VDUComputeNode for vdu {}", vduName);
+            log.debug("Creating VDUComputeNode for vdu {}", vduId);
             //Creating VDUComputeNode
-            it.nextworks.nfvmano.libs.ifa.descriptors.vnfd.VduProfile ifaVduProfile = df.getVduProfile().stream().filter(profile -> profile.getVduId().equals(vduNode.getVduId())).findAny().orElse(null);
+            it.nextworks.nfvmano.libs.ifa.descriptors.vnfd.VduProfile ifaVduProfile = df.getVduProfile().stream().filter(profile -> profile.getVduId().equals(vduId)).findAny().orElse(null);
             if(ifaVduProfile == null) //VDU profile not specified
                 continue;
             VduProfile vduProfile = new VduProfile(ifaVduProfile.getMinNumberOfInstances(), ifaVduProfile.getMaxNumberOfInstances());
             SwImageData swImageData = new SwImageData(imageName, resourceVendorRelease, imageDesc.getChecksum(), null, null, imageDesc.getMinDisk(), imageDesc.getMinRam(), imageDesc.getSize(), imageDesc.getOperatingSystem(), null);
-            VDUComputeProperties vduProperties = new VDUComputeProperties(vduName, null, null, null, null, null, null, vduProfile, swImageData);
+            VDUComputeProperties vduProperties = new VDUComputeProperties(vduId, null, null, null, null, null, null, vduProfile, swImageData);
             VirtualComputeCapabilityProperties vccProperties = new VirtualComputeCapabilityProperties(null, null, null, new VirtualMemory(vRam, null, null, false), new VirtualCpu(null, null, vCpu, null, null, null, null), null);
             VirtualComputeCapability virtualComputeCapability = new VirtualComputeCapability(vccProperties);
             VDUComputeCapabilities vduCapabilities = new VDUComputeCapabilities(virtualComputeCapability);
-            List<String> storages = new ArrayList<>(virtualStorageDescList.stream().map(VirtualStorageDesc::getStorageId).collect(Collectors.toList()));
+            List<String> storages = virtualStorageDescList.stream().map(VirtualStorageDesc::getStorageId).collect(Collectors.toList());
             VDUComputeRequirements vduRequirements = new VDUComputeRequirements(null, storages);
-            nodeTemplates.put(vduName, new VDUComputeNode(null, vduProperties, vduCapabilities, vduRequirements));//type: "tosca.nodes.nfv.Vdu.Compute"
+            nodeTemplates.put(vduId, new VDUComputeNode(null, vduProperties, vduCapabilities, vduRequirements));//type: "tosca.nodes.nfv.Vdu.Compute"
         }
 
         log.debug("Creating VNFNode");
         //Creating VNFNode
-        VnfProfile vnfProfile = new VnfProfile(df.getDefaultInstantiationLevelId(), null, null);
+        String defaultIl = df.getDefaultInstantiationLevelId();
+        if(defaultIl == null){
+            it.nextworks.nfvmano.libs.ifa.descriptors.vnfd.InstantiationLevel il = df.getInstantiationLevel().get(0); //Take the first il as default
+            if(il != null)
+                defaultIl = il.getLevelId();
+        }
+        VnfProfile vnfProfile = new VnfProfile(defaultIl, null, null);
         VNFProperties vnfProperties = new VNFProperties(id, version, resourceVendor, name, resourceVendorRelease, name, description, null, null, null, null, null, null, null, df.getFlavourId(), df.getDescription(), vnfProfile);
         nodeTemplates.put(name, new VNFNode(null, name, vnfProperties, null, null, null));//type: "tosca.nodes.nfv.VNF"
 

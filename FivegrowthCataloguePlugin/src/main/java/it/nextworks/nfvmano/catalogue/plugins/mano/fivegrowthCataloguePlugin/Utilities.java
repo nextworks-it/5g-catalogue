@@ -16,7 +16,7 @@ import java.util.zip.ZipFile;
 public class Utilities {
 
     public static boolean isTargetMano (List<String> siteOrManoIds, MANO mano){
-        if(siteOrManoIds.contains(mano.getManoId()) || siteOrManoIds.contains(mano.getManoSite()))
+        if(siteOrManoIds == null || siteOrManoIds.contains(mano.getManoId()) || siteOrManoIds.contains(mano.getManoSite()))
             return true;
         return false;
     }

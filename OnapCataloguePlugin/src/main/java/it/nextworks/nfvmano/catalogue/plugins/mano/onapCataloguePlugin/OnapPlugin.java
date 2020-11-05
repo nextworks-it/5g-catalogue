@@ -197,10 +197,7 @@ public class OnapPlugin extends MANOPlugin {
     @Override
     public String getManoPkgInfoId(String cataloguePkgInfoId){
         Optional<OnapObject> onapObjectOptional = onapObjectRepository.findByCatalogueIdAndOnapId(cataloguePkgInfoId, onap.getManoId());
-        if(onapObjectOptional.isPresent())
-            return onapObjectOptional.get().getDescriptorId();
-        else
-            return  null;
+        return onapObjectOptional.map(OnapObject::getDescriptorId).orElse(null);
     }
 
     @Override

@@ -4,7 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.model.SoNsInfoObject;
-import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.model.SoVnfInfoObject;
+import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.model.SoNsQueryResponse;
+import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.model.SoVnfQueryResponse;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.ifa.catalogues.interfaces.messages.*;
 import it.nextworks.nfvmano.libs.ifa.common.exceptions.AlreadyExistingEntityException;
@@ -124,10 +125,39 @@ public class SODriver {
 
     }
 
-    public List<SoNsInfoObject> queryNsds() {
-        List<SoNsInfoObject> nsInfoObjectList = new ArrayList<>();
+    public void deleteNsd(String nsdId, String nsdVersion) throws FailedOperationException {
+        log.debug("Building HTTP request to delete NSD.");
+        HttpHeaders header = new HttpHeaders();
+        header.add("Accept", "application/json");
+        HttpEntity<?> getEntity = new HttpEntity<>(null, header);
 
-        return nsInfoObjectList;
+        String url = this.smUrl + "/ns/nsd/" + nsdId + "/" + nsdVersion;
+
+        try {
+            log.debug("Sending HTTP request to delete NSD.");
+
+            ResponseEntity<QueryNsdResponse> httpResponse =
+                    restTemplate.exchange(url, HttpMethod.DELETE, getEntity, QueryNsdResponse.class);
+
+            HttpStatus code = httpResponse.getStatusCode();
+
+            if (code.equals(HttpStatus.OK)) {
+                log.debug("HttpStatus.OK!");
+            } else if (code.equals(HttpStatus.NOT_FOUND)) {
+                throw new FailedOperationException("Error during NSD retrieval at NFVO: " + httpResponse.getBody());
+            } else if (code.equals(HttpStatus.BAD_REQUEST)) {
+                throw new FailedOperationException("Error during NSD retrieval at NFVO: " + httpResponse.getBody());
+            } else {
+                throw new FailedOperationException("Generic error on NFVO during NSD retrieval");
+            }
+        } catch (RestClientException e3) {
+            log.debug("Error while interacting with NFVO.");
+            throw new FailedOperationException("Error while interacting with NFVO NSD catalogue at url " + url);
+        }
+    }
+
+    public SoNsQueryResponse queryNsds() {
+        return new SoNsQueryResponse();
     }
 
     //********************** VNF package methods ********************************//
@@ -210,7 +240,7 @@ public class SODriver {
         }
     }
 
-    public List<SoVnfInfoObject> queryVnfPackagesInfo() throws FailedOperationException{
+    public SoVnfQueryResponse queryVnfPackagesInfo() throws FailedOperationException{
         log.debug("Building HTTP request to query VNF packages.");
         HttpHeaders header = new HttpHeaders();
         header.add("Accept", "application/json");
@@ -221,8 +251,8 @@ public class SODriver {
         try {
             log.debug("Sending HTTP request to retrieve VNF Packages.");
 
-            ResponseEntity<List<SoVnfInfoObject>> httpResponse =
-                    restTemplate.exchange(url, HttpMethod.GET, getEntity, new ParameterizedTypeReference<List<SoVnfInfoObject>>() {});
+            ResponseEntity<SoVnfQueryResponse> httpResponse =
+                    restTemplate.exchange(url, HttpMethod.GET, getEntity, SoVnfQueryResponse.class);
 
             log.debug("Response code: " + httpResponse.getStatusCode().toString());
             HttpStatus code = httpResponse.getStatusCode();

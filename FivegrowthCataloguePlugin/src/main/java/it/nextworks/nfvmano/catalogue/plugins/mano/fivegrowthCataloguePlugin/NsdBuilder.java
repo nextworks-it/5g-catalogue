@@ -80,11 +80,14 @@ public class NsdBuilder {
 
         for(VirtualLinkPair vlp : sapdVirtualLinkPairs){
             boolean isMgmt = false;
+            boolean isExt = false;
             NsVirtualLinkNode vlNode = vlNodes.get(vlp.getVl());
             if(vlNode.getProperties() != null && vlNode.getProperties().isMgmtNet())
                 isMgmt = true;
+            if(vlNode.getProperties() != null && vlNode.getProperties().isExternalNet())
+                isExt = true;
             List<AddressData> addressDataList = new ArrayList<>();
-            AddressData addressData = new AddressData(AddressType.IP_ADDRESS, false, false, isMgmt, IpVersion.IPv4, 1);
+            AddressData addressData = new AddressData(AddressType.IP_ADDRESS, false, isExt, isMgmt, IpVersion.IPv4, 1);
             addressDataList.add(addressData);
             Sapd sapd = new Sapd(null, vlp.getCp(), LayerProtocol.IPV4, CpRole.ROOT, vlp.getCp(), addressDataList, false, vlp.getVl(), null);
             sapdList.add(sapd);
@@ -116,9 +119,12 @@ public class NsdBuilder {
             int minNumberOfInstances = 1;
             int maxNumberOfInstances = 1;
             if(solVnfProfile != null){
-                instantiation_level = solVnfProfile.getInstantiationLevel();
-                minNumberOfInstances = solVnfProfile.getMinNumberOfInstances();
-                maxNumberOfInstances = solVnfProfile.getMaxNumberOfInstances();
+                if(solVnfProfile.getInstantiationLevel() != null)
+                    instantiation_level = solVnfProfile.getInstantiationLevel();
+                if(solVnfProfile.getMinNumberOfInstances() != null)
+                    minNumberOfInstances = solVnfProfile.getMinNumberOfInstances();
+                if(solVnfProfile.getMaxNumberOfInstances() != null)
+                    maxNumberOfInstances = solVnfProfile.getMaxNumberOfInstances();
             }
             List<NsVirtualLinkConnectivity> nsVirtualLinkConnectivityList = new ArrayList<>();
             VNFRequirements vnfRequirements = vnfNode.getValue().getRequirements();
@@ -129,7 +135,7 @@ public class NsdBuilder {
                 NsVirtualLinkConnectivity nsVirtualLinkConnectivity = new NsVirtualLinkConnectivity((NsProfile) null, "vlp_" + vlRequirement.getValue(), cpIds);
                 nsVirtualLinkConnectivityList.add(nsVirtualLinkConnectivity);
             }
-            VnfProfile vnfProfile = new VnfProfile(null, "vnfp_" + vnfProperties.getDescriptorId(), vnfProperties.getDescriptorId(), flavorId, instantiation_level, minNumberOfInstances, maxNumberOfInstances, null, null, nsVirtualLinkConnectivityList);
+            VnfProfile vnfProfile = new VnfProfile(null, "vnfp_" + vnfNode.getKey(), vnfProperties.getDescriptorId(), flavorId, instantiation_level, minNumberOfInstances, maxNumberOfInstances, null, null, nsVirtualLinkConnectivityList);
             vnfProfileList.add(vnfProfile);
         }
 
