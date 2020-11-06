@@ -35,6 +35,7 @@ import it.nextworks.nfvmano.libs.common.elements.KeyValuePair;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import it.nextworks.nfvmano.libs.ifa.catalogues.interfaces.messages.OnboardNsdRequest;
 import it.nextworks.nfvmano.libs.ifa.descriptors.nsd.Nsd;
 import org.slf4j.Logger;
@@ -143,8 +144,10 @@ public class SOPlugin extends MANOPlugin {
     @Override
     public Map<String, List<String>> getAllNsd(String project) {
         log.info("{} - Startup synchronization, started retrieving 5GROWTH SO Ns Pkgs from project {}", so.getManoId(), project);
-        //Delete Onap Pkg no longer present in Onap and add to ids list the others
         Map<String, List<String>> ids = new HashMap<>();
+        List<SoObject> soObjectList = fivegrowthObjectRepository.findBySoIdAndType(so.getManoId(), SoObjectType.NS);
+        for(SoObject soObject : soObjectList)
+            ids.computeIfAbsent(soObject.getDescriptorId(), k -> new ArrayList<>()).add(soObject.getVersion());
         /*
         List<OnapObject> onapObjectList = fivegrowthObjectRepository.findByOnapIdAndType(onap.getManoId(), OnapObjectType.NS);
         for(OnapObject onapObject : onapObjectList){
@@ -400,11 +403,6 @@ public class SOPlugin extends MANOPlugin {
         if (notification.getScope() == ScopeType.LOCAL ){
             String nsdInfoId = notification.getNsdInfoId();
             log.info("{} - Received NSD onboarding notification for Nsd with ID {} and version {} for project {}", so.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject());
-            /*boolean forceOnboard = false;
-            if(nsdInfoId.endsWith("_update")){
-                forceOnboard = true;
-                nsdInfoId = nsdInfoId.replace("_update", "");
-            }*/
             if(Utilities.isTargetMano(notification.getSiteOrManoIds(), so) && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {//No need to send notification back if the plugin is not in the target MANOs
                 try{
                     String packagePath = notification.getPackagePath().getKey();
@@ -437,13 +435,12 @@ public class SOPlugin extends MANOPlugin {
                     //Check if already present, uploaded for example from another project
                     String descriptorId = descriptorTemplate.getMetadata().getDescriptorId();
                     Optional<SoObject> soInfoObjectOptional = fivegrowthObjectRepository.findByDescriptorIdAndVersionAndSoId(descriptorId, descriptorTemplate.getMetadata().getVersion(), so.getManoId());
-                    String soInfoObjectId;
-                    if(!soInfoObjectOptional.isPresent() /*|| forceOnboard*/){//TODO forceOnboard used in RuntimeNsChange
+                    if(!soInfoObjectOptional.isPresent()){
                         NsdBuilder nsdBuilder = new NsdBuilder();
 
                         Nsd nsd = nsdBuilder.parseDescriptorTemplate(descriptorTemplate);
                         OnboardNsdRequest onboardNsdRequest = new OnboardNsdRequest(nsd, null);
-                        soInfoObjectId = soClient.onboardNsd(onboardNsdRequest);
+                        String soInfoObjectId = soClient.onboardNsd(onboardNsdRequest); //soInfoObjectId == nsdId
 
                         //Store descriptor file
                         File descriptorFile = new File(soDir, nsd.getNsdIdentifier() + ".json");
@@ -499,13 +496,112 @@ public class SOPlugin extends MANOPlugin {
 
     @Override
     public void acceptNsdChangeNotification(NsdChangeNotificationMessage notification) {
-        log.debug("Body: {}", notification);
-        log.info("{} - Received Nsd change notification", so.getManoId());
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+        try {
+            String json = mapper.writeValueAsString(notification);
+            log.debug("RECEIVED MESSAGE: " + json);
+        } catch (JsonProcessingException e) {
+            log.error("Unable to parse received nsdDeletionNotificationMessage: " + e.getMessage());
+        }
+
+        if (notification.getScope() == ScopeType.LOCAL) {
+            log.info("{} - Received NSD change notification for Nsd with ID {} and version {} for project {}", so.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject());
+            if (Utilities.isTargetMano(notification.getSiteOrManoIds(), so) && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
+                try {
+                    //Onboard new package
+                    String packagePath = notification.getPackagePath().getKey();
+                    File descriptor;
+                    File metadata;
+                    Set<String> metadataFileNames;
+                    String metadataFileName;
+                    if(notification.getPackagePath().getValue().equals(PathType.LOCAL.toString())) {
+                        Set<String> files = Utilities.listFiles(packagePath);
+                        if(files.size() != 1) {
+                            metadataFileNames = Utilities.listFiles(packagePath + "/TOSCA-Metadata/");
+                            //Consider only one metadata file is present
+                            metadataFileName = metadataFileNames.stream().filter(name -> name.endsWith(".meta")).findFirst().get();
+                            metadata = new File(packagePath + "/TOSCA-Metadata/" + metadataFileName);
+                            descriptor = new File(packagePath + "/" + Utilities.getMainServiceTemplateFromMetadata(metadata));
+                        }
+                        else if (files.iterator().next().endsWith(".yaml") || files.iterator().next().endsWith(".yml"))
+                            descriptor = new File(packagePath + "/" + files.iterator().next());
+                        else{
+                            throw new MalformattedElementException("Descriptor files not found");
+                        }
+                    }else{
+                        //TODO support also other PathType
+                        throw new MethodNotImplementedException("Path Type not currently supported");
+                    }
+
+                    mapper = new ObjectMapper(new YAMLFactory());
+                    DescriptorTemplate descriptorTemplate = mapper.readValue(descriptor, DescriptorTemplate.class);
+                    log.info("{} - Onboarding Nsd with ID {} and version {} for project {}", so.getManoId(), descriptorTemplate.getMetadata().getDescriptorId(), descriptorTemplate.getMetadata().getVersion(), notification.getProject());
+                    Optional<SoObject> soInfoObjectOptional = fivegrowthObjectRepository.findByCatalogueIdAndSoId(notification.getNsdInfoId(), so.getManoId());
+                    if(soInfoObjectOptional.isPresent()) {//It must be present if so is the target mano
+                        //Delete old descriptor if id or version are different
+                        SoObject infoObject = soInfoObjectOptional.get();
+                        if(!infoObject.getDescriptorId().equals(descriptorTemplate.getMetadata().getDescriptorId()) || !infoObject.getVersion().equals(descriptorTemplate.getMetadata().getVersion()))
+                            soClient.deleteNsd(infoObject.getDescriptorId(), infoObject.getVersion());
+
+                        NsdBuilder nsdBuilder = new NsdBuilder();
+
+                        Nsd nsd = nsdBuilder.parseDescriptorTemplate(descriptorTemplate);
+                        OnboardNsdRequest onboardNsdRequest = new OnboardNsdRequest(nsd, null);
+                        String soInfoObjectId = soClient.onboardNsd(onboardNsdRequest); //soInfoObjectId == nsdId
+
+                        //Store descriptor file
+                        File descriptorFile = new File(soDir, nsd.getNsdIdentifier() + ".json");
+                        mapper = new ObjectMapper();
+                        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+                        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+                        mapper.writeValue(descriptorFile, nsd);
+
+                        infoObject.setVersion(nsd.getVersion());
+                        infoObject.setDescriptorId(nsd.getNsdIdentifier());
+                        infoObject.setEpoch(Instant.now().getEpochSecond());
+                        infoObject.setPath(descriptorFile.toPath().toString());
+                        fivegrowthObjectRepository.saveAndFlush(infoObject);
+                        log.info("{} - Successfully uploaded Nsd with ID {} and version {} for project {}", so.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject());
+
+                        sendNotification(new NsdChangeNotificationMessage(notification.getNsdInfoId(), descriptorTemplate.getMetadata().getDescriptorId(), descriptorTemplate.getMetadata().getVersion(), notification.getProject(),
+                                notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
+                                so.getManoId(), null,null));
+                    }
+                }catch (Exception e) {
+                    log.error("{} - Could not change Nsd: {}", so.getManoId(), e.getMessage());
+                    log.debug("Error details: ", e);
+                    sendNotification(new NsdChangeNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject(),
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
+                            so.getManoId(), null, null));
+                }
+            }else {
+                if (this.getPluginOperationalState() == PluginOperationalState.DISABLED || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
+                    log.debug("{} - NSD change skipped", so.getManoId());
+                    sendNotification(new NsdChangeNotificationMessage(notification.getNsdInfoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject(),
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.RECEIVED,
+                            so.getManoId(), null,null));
+                }
+            }
+        }else if(notification.getScope() == ScopeType.SYNC){
+            log.info("{} - Received Sync Pkg change notification for NSD with ID {} and version {} for project {} : {}", so.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject(), notification.getOpStatus().toString());
+            //NS sync disabled
+        }
     }
 
     @Override
     public void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification) {
-        log.debug("Body: {}", notification);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+        try {
+            String json = mapper.writeValueAsString(notification);
+            log.debug("RECEIVED MESSAGE: " + json);
+        } catch (JsonProcessingException e) {
+            log.error("Unable to parse received nsdDeletionNotificationMessage: " + e.getMessage());
+        }
+
         if (notification.getScope() == ScopeType.LOCAL) {
             log.info("{} - Received Nsd deletion notification for Nsd with ID {} and version {} for project {}", so.getManoId(), notification.getNsdId(), notification.getNsdVersion(), notification.getProject());
             Optional<SoObject> soObjectOptional = fivegrowthObjectRepository.findByDescriptorIdAndVersionAndSoId(notification.getNsdId(), notification.getNsdVersion(), so.getManoId());
