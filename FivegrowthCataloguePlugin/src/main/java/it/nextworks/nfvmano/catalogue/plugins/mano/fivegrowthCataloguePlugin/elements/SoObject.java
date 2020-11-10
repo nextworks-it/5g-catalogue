@@ -1,6 +1,6 @@
-package it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.model;
+package it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.elements;
 
-import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.model.SoObjectType;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.common.ManoObjectType;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -15,7 +15,7 @@ public class SoObject {
     private Long id;
     private String descriptorId;
     private String version;
-    private SoObjectType type;
+    private ManoObjectType type;
     private String catalogueId;
     private Long epoch;
     private String soId;
@@ -46,11 +46,11 @@ public class SoObject {
         this.version = version;
     }
 
-    public SoObjectType getType() {
+    public ManoObjectType getType() {
         return type;
     }
 
-    public void setType(SoObjectType type) {
+    public void setType(ManoObjectType type) {
         this.type = type;
     }
 

@@ -1,6 +1,6 @@
 package it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin;
 
-import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.model.OnapServiceSpecification;
+import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.elements.OnapServiceSpecification;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

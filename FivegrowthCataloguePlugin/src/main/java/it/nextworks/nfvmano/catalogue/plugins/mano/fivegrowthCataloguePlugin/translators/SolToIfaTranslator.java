@@ -13,24 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin;
+package it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.translators;
 
-import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANOType;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSProperties;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NsVirtualLink.NsVirtualLinkNode;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NsVirtualLink.NsVirtualLinkProperties;
-import it.nextworks.nfvmano.libs.descriptors.pnfd.nodes.PNF.PNFNode;
-import it.nextworks.nfvmano.libs.descriptors.pnfd.nodes.PNF.PNFProperties;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
-import it.nextworks.nfvmano.libs.descriptors.templates.SubstitutionMapping;
 import it.nextworks.nfvmano.libs.descriptors.templates.SubstitutionMappingsRequirements;
 import it.nextworks.nfvmano.libs.descriptors.templates.VirtualLinkPair;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFProperties;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFRequirements;
-import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VnfExtCp.VnfExtCpNode;
 import it.nextworks.nfvmano.libs.ifa.common.elements.QoS;
 import it.nextworks.nfvmano.libs.ifa.common.enums.*;
 import it.nextworks.nfvmano.libs.ifa.descriptors.common.elements.*;
@@ -38,29 +33,26 @@ import it.nextworks.nfvmano.libs.ifa.descriptors.nsd.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
 
-public class NsdBuilder {
+public class SolToIfaTranslator {
 
-    private static final Logger log = LoggerFactory.getLogger(NsdBuilder.class);
+    private static final Logger log = LoggerFactory.getLogger(SolToIfaTranslator.class);
     private DescriptorTemplate dt;
 
-    public NsdBuilder() { }
+    public SolToIfaTranslator() { }
 
-    public Nsd parseDescriptorTemplate(DescriptorTemplate template) throws MalformattedElementException {
-        dt = template;
-
-        if (!(dt.getTopologyTemplate().getNSNodes().size() == 1)) {
+    public static Nsd generateNsDescriptor(DescriptorTemplate nsdSol) throws MalformattedElementException {
+        if (!(nsdSol.getTopologyTemplate().getNSNodes().size() == 1)) {
             throw new IllegalArgumentException("Too many Nsds");
         }
 
-        NSNode nsNode = dt.getTopologyTemplate().getNSNodes().values().iterator().next();
+        NSNode nsNode = nsdSol.getTopologyTemplate().getNSNodes().values().iterator().next();
         NSProperties nsNodeProperties = nsNode.getProperties();
 
-        Map<String, VNFNode> vnfNodes = dt.getTopologyTemplate().getVNFNodes();
+        Map<String, VNFNode> vnfNodes = nsdSol.getTopologyTemplate().getVNFNodes();
         List<VNFProperties> vnfNodeProperties = vnfNodes.values().stream().map(VNFNode::getProperties).collect(Collectors.toList());
         List<String> vnfdIds = vnfNodeProperties.stream().map(VNFProperties::getDescriptorId).collect(Collectors.toList());
 
@@ -70,10 +62,10 @@ public class NsdBuilder {
         List<String> pnfdIds = pnfNodeProperties.stream().map(PNFProperties::getDescriptorId).collect(Collectors.toList());
         */
 
-        Map<String, NsVirtualLinkNode> vlNodes = dt.getTopologyTemplate().getNsVirtualLinkNodes();
+        Map<String, NsVirtualLinkNode> vlNodes = nsdSol.getTopologyTemplate().getNsVirtualLinkNodes();
 
         List<Sapd> sapdList = new ArrayList<>();
-        SubstitutionMappingsRequirements substitutionMappingsRequirements = dt.getTopologyTemplate().getSubstituitionMappings().getRequirements();
+        SubstitutionMappingsRequirements substitutionMappingsRequirements = nsdSol.getTopologyTemplate().getSubstituitionMappings().getRequirements();
         List<VirtualLinkPair> sapdVirtualLinkPairs = new ArrayList<>();
         if(substitutionMappingsRequirements != null)
             sapdVirtualLinkPairs.addAll(substitutionMappingsRequirements.getVirtualLink());
@@ -146,7 +138,7 @@ public class NsdBuilder {
             vnfToLevelMappingList.add(vnfToLevelMapping);
         }
 
-        NsLevel nsIl = new NsLevel((NsDf) null, nsNodeProperties.getName() + "_il", dt.getDescription(), vnfToLevelMappingList, null);
+        NsLevel nsIl = new NsLevel((NsDf) null, nsNodeProperties.getName() + "_il", nsdSol.getDescription(), vnfToLevelMappingList, null);
 
         for(VirtualLinkProfile virtualLinkProfile : vlProfileList){
             VirtualLinkToLevelMapping virtualLinkToLevelMapping = new VirtualLinkToLevelMapping(null, virtualLinkProfile.getVirtualLinkProfileId(), new LinkBitrateRequirements("1", "1"));

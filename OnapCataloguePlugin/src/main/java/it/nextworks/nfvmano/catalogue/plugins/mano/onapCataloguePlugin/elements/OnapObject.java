@@ -1,4 +1,6 @@
-package it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.model;
+package it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.elements;
+
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.common.ManoObjectType;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -13,7 +15,7 @@ public class OnapObject {
     private Long id;
     private String descriptorId;
     private String version;
-    private OnapObjectType type;
+    private ManoObjectType type;
     private String catalogueId;
     private Long epoch;
     private String onapId;
@@ -43,11 +45,11 @@ public class OnapObject {
         this.version = version;
     }
 
-    public OnapObjectType getType() {
+    public ManoObjectType getType() {
         return type;
     }
 
-    public void setType(OnapObjectType type) {
+    public void setType(ManoObjectType type) {
         this.type = type;
     }
 

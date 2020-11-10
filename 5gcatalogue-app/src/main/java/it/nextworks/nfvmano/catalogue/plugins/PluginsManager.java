@@ -35,7 +35,7 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.OnapPlugi
 import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.repos.FivegrowthObjectRepository;
 import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.SOPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.repos.OnapObjectRepository;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.r4plus.OpenSourceMANOR4PlusPlugin;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.plugins.r4plus.OpenSourceMANOR4PlusPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.repos.OsmInfoObjectRepository;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.repos.TranslationInformationRepository;
 import it.nextworks.nfvmano.catalogue.plugins.siteInventory.SiteInventoryDriver;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.r4plus;
+package it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.plugins.r4plus;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -28,10 +28,14 @@ import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginOperationalS
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANO;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANOPlugin;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANOType;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.common.ToscaArchiveBuilder;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.osm.OSM;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.common.*;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.elements.OsmTranslationInformation;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.repos.OsmInfoObjectRepository;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.repos.TranslationInformationRepository;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.translators.OsmToSolTranslator;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.translators.SolToOsmTranslator;
 import it.nextworks.nfvmano.libs.common.elements.KeyValuePair;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
@@ -484,23 +488,35 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
 
     private String createVnfPkgTosca (OsmInfoObject vnfPackageInfo) throws MalformattedElementException, IllegalStateException, IOException, IllegalArgumentException{
         log.info("{} - Creating TOSCA VNF Descriptor with ID {} and version {}", osm.getManoId(), vnfPackageInfo.getDescriptorId(), vnfPackageInfo.getVersion());
-        DescriptorTemplate vnfd = ToscaDescriptorsParser.generateVnfDescriptor(osmDirPath.toString() + "/" + vnfPackageInfo.getAdmin().getStorage().getDescriptor());
-        VNFNode vnfNode = vnfd.getTopologyTemplate().getVNFNodes().values().iterator().next();
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
+        mapper.enable(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT);
+        mapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        OsmVNFPackage vnfPkgOsm = mapper.readValue(new File(osmDirPath.toString() + "/" + vnfPackageInfo.getAdmin().getStorage().getDescriptor()), OsmVNFPackage.class);
+        DescriptorTemplate vnfdSol = OsmToSolTranslator.generateVnfDescriptor(vnfPkgOsm);
+        VNFNode vnfNode = vnfdSol.getTopologyTemplate().getVNFNodes().values().iterator().next();
         File cloudInit = null;
         if(vnfNode.getInterfaces() != null){
             cloudInit = new File(osmDirPath.toString() + "/" + vnfPackageInfo.getAdmin().getStorage().getPkgDir() + "/cloud_init/" + vnfNode.getInterfaces().getVnflcm().getInstantiate().getImplementation());
         }
         log.info("{} - Creating TOSCA VNF Pkg with descriptor ID {} and version {}", osm.getManoId(), vnfPackageInfo.getDescriptorId(), vnfPackageInfo.getVersion());
-        return ToscaArchiveBuilder.createVNFCSAR(vnfPackageInfo.getId(), vnfd, tmpDirPath.toString(), cloudInit);
+        return ToscaArchiveBuilder.createVNFCSAR(vnfPackageInfo.getId(), vnfdSol, tmpDirPath.toString(), cloudInit);
     }
 
     private String createNsPkgTosca (OsmInfoObject nsPackageInfo) throws MalformattedElementException, IllegalStateException, IOException, IllegalArgumentException{
         log.info("{} - Creating TOSCA NS Descriptor with ID {} and version {}", osm.getManoId(), nsPackageInfo.getDescriptorId(), nsPackageInfo.getVersion());
         List<OsmInfoObject> vnfInfoList = osmInfoObjectRepository.findByOsmIdAndType(osm.getManoId(), OsmObjectType.VNF);
         List<OsmTranslationInformation> translationInformationList = translationInformationRepository.findByOsmManoId(osm.getManoId());
-        DescriptorTemplate nsd = ToscaDescriptorsParser.generateNsDescriptor(osmDirPath.toString() + "/" + nsPackageInfo.getAdmin().getStorage().getDescriptor(), vnfInfoList, translationInformationList, osmDirPath);
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
+        mapper.enable(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT);
+        mapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        OsmNSPackage nsPkgOsm = mapper.readValue(new File(osmDirPath.toString() + "/" + nsPackageInfo.getAdmin().getStorage().getDescriptor()), OsmNSPackage.class);
+        DescriptorTemplate nsdSol = OsmToSolTranslator.generateNsDescriptor(nsPkgOsm, vnfInfoList, translationInformationList, osmDirPath);
         log.info("{} - Creating TOSCA NS Pkg with descriptor ID {} and version {}", osm.getManoId(), nsPackageInfo.getDescriptorId(), nsPackageInfo.getVersion());
-        return ToscaArchiveBuilder.createNSCSAR(nsPackageInfo.getId(), nsd, tmpDirPath.toString());
+        return ToscaArchiveBuilder.createNSCSAR(nsPackageInfo.getId(), nsdSol, tmpDirPath.toString());
     }
 
     @Override
@@ -572,7 +588,6 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                             descriptorTemplate.getTopologyTemplate().getNSNodes().values().iterator().next().getProperties().setInvariantId(osmDescriptorId);
                         }
 
-                        NsdBuilder nsdBuilder = new NsdBuilder(logo, useVimNetworkName);
                         List<DescriptorTemplate> includedVnfds = new ArrayList<>();
                         for (KeyValuePair vnfPathPair : notification.getIncludedVnfds().values()) {
                             if (vnfPathPair.getValue().equals(PathType.LOCAL.toString())) {
@@ -603,8 +618,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                             vnfd.getTopologyTemplate().getVNFNodes().values().iterator().next().getProperties().setDescriptorId(translatedVnfdId);
                         }
 
-                        nsdBuilder.parseDescriptorTemplate(descriptorTemplate, includedVnfds, MANOType.OSMR4);
-                        OsmNSPackage packageData = nsdBuilder.getPackage();
+                        OsmNSPackage packageData = SolToOsmTranslator.generateNsDescriptor(descriptorTemplate, includedVnfds, logo, useVimNetworkName, MANOType.OSMR4);
 
                         mapper = new ObjectMapper();
                         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
@@ -637,7 +651,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                             }
                         }
 
-                        ArchiveBuilder archiver = new ArchiveBuilder(osmDir, logo);
+                        OsmArchiveBuilder archiver = new OsmArchiveBuilder(osmDir, logo);
                         File archive = archiver.makeNewArchive(packageData, "Generated by NXW Catalogue", scripts, monitoring);
 
                         osmInfoObjectId = onBoardNsPackage(archive, notification.getOperationId().toString());
@@ -756,7 +770,6 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                             descriptorTemplate.getTopologyTemplate().getNSNodes().values().iterator().next().getProperties().setInvariantId(osmDescriptorId);
                         }
 
-                        NsdBuilder nsdBuilder = new NsdBuilder(logo, useVimNetworkName);
                         List<DescriptorTemplate> includedVnfds = new ArrayList<>();
                         for (KeyValuePair vnfPathPair : notification.getIncludedVnfds().values()) {
                             if (vnfPathPair.getValue().equals(PathType.LOCAL.toString())) {
@@ -787,8 +800,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                             vnfd.getTopologyTemplate().getVNFNodes().values().iterator().next().getProperties().setDescriptorId(translatedVnfdId);
                         }
 
-                        nsdBuilder.parseDescriptorTemplate(descriptorTemplate, includedVnfds, MANOType.OSMR4);
-                        OsmNSPackage packageData = nsdBuilder.getPackage();
+                        OsmNSPackage packageData = SolToOsmTranslator.generateNsDescriptor(descriptorTemplate, includedVnfds, logo, useVimNetworkName, MANOType.OSMR4);
 
                         mapper = new ObjectMapper();
                         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
@@ -821,7 +833,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                             }
                         }
 
-                        ArchiveBuilder archiver = new ArchiveBuilder(osmDir, logo);
+                        OsmArchiveBuilder archiver = new OsmArchiveBuilder(osmDir, logo);
                         File archive = archiver.makeNewArchive(packageData, "Generated by NXW Catalogue", scripts, monitoring);
 
                         osmInfoObjectId = onBoardNsPackage(archive, notification.getOperationId().toString());
@@ -976,9 +988,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                             descriptorTemplate.getTopologyTemplate().getVNFNodes().values().iterator().next().getProperties().setDescriptorId(osmDescriptorId);
                         }
 
-                        VnfdBuilder vnfdBuilder = new VnfdBuilder(logo);
-                        vnfdBuilder.parseDescriptorTemplate(descriptorTemplate, MANOType.OSMR4);
-                        OsmVNFPackage packageData = vnfdBuilder.getPackage();
+                        OsmVNFPackage packageData = SolToOsmTranslator.generateVnfDescriptor(descriptorTemplate, logo, MANOType.OSMR4);
 
                         mapper = new ObjectMapper();
                         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
@@ -994,7 +1004,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                         String cloudInitPath = Utilities.getCloudInitFromManifest(mf);
                         String monitoringPath = Utilities.getMonitoringFromManifest(mf);
 
-                        ArchiveBuilder archiver = new ArchiveBuilder(osmDir, logo);
+                        OsmArchiveBuilder archiver = new OsmArchiveBuilder(osmDir, logo);
                         File cloudInit = null;
                         if (cloudInitPath != null) {
                             cloudInit = new File(packagePath + "/" + cloudInitPath);
@@ -1121,9 +1131,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                             descriptorTemplate.getTopologyTemplate().getVNFNodes().values().iterator().next().getProperties().setDescriptorId(osmDescriptorId);
                         }
 
-                        VnfdBuilder vnfdBuilder = new VnfdBuilder(logo);
-                        vnfdBuilder.parseDescriptorTemplate(descriptorTemplate, MANOType.OSMR4);
-                        OsmVNFPackage packageData = vnfdBuilder.getPackage();
+                        OsmVNFPackage packageData = SolToOsmTranslator.generateVnfDescriptor(descriptorTemplate, logo, MANOType.OSMR4);
 
                         mapper = new ObjectMapper();
                         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
@@ -1139,7 +1147,7 @@ public class OpenSourceMANOR4PlusPlugin extends MANOPlugin {
                         String cloudInitPath = Utilities.getCloudInitFromManifest(mf);
                         String monitoringPath = Utilities.getMonitoringFromManifest(mf);
 
-                        ArchiveBuilder archiver = new ArchiveBuilder(osmDir, logo);
+                        OsmArchiveBuilder archiver = new OsmArchiveBuilder(osmDir, logo);
                         File cloudInit = null;
                         if (cloudInitPath != null) {
                             cloudInit = new File(packagePath + "/" + cloudInitPath);

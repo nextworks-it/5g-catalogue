@@ -3,9 +3,8 @@ package it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.model.SoNsInfoObject;
-import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.model.SoNsQueryResponse;
-import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.model.SoVnfQueryResponse;
+import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.elements.SoNsQueryResponse;
+import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.elements.SoVnfQueryResponse;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.ifa.catalogues.interfaces.messages.*;
 import it.nextworks.nfvmano.libs.ifa.common.exceptions.AlreadyExistingEntityException;
@@ -14,17 +13,12 @@ import it.nextworks.nfvmano.libs.ifa.common.exceptions.NotExistingEntityExceptio
 import it.nextworks.nfvmano.libs.ifa.common.messages.GeneralizedQueryRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.http.client.BufferingClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.*;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 public class SODriver {

@@ -17,6 +17,7 @@ package it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -25,19 +26,22 @@ import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.Pat
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.ScopeType;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginOperationalState;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.*;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.common.ManoObjectType;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.fivegrowth.FIVEGROWTH;
-import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.model.SoNsInfoObject;
-import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.model.SoObject;
-import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.model.SoVnfInfoObject;
+import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.elements.SoNsInfoObject;
+import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.elements.SoObject;
+import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.elements.SoVnfInfoObject;
 import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.repos.FivegrowthObjectRepository;
-import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.model.SoObjectType;
+import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.translators.IfaToSolTranslator;
+import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.translators.SolToIfaTranslator;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.common.ToscaArchiveBuilder;
 import it.nextworks.nfvmano.libs.common.elements.KeyValuePair;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
-import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import it.nextworks.nfvmano.libs.ifa.catalogues.interfaces.messages.OnboardNsdRequest;
 import it.nextworks.nfvmano.libs.ifa.descriptors.nsd.Nsd;
+import it.nextworks.nfvmano.libs.ifa.descriptors.vnfd.Vnfd;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -126,7 +130,7 @@ public class SOPlugin extends MANOPlugin {
         //Delete Vnf Pkg no longer present in SO and add to ids list the others
         Map<String, List<String>> ids = new HashMap<>();
 
-        List<SoObject> soObjectList = fivegrowthObjectRepository.findBySoIdAndType(so.getManoId(), SoObjectType.VNF);
+        List<SoObject> soObjectList = fivegrowthObjectRepository.findBySoIdAndType(so.getManoId(), ManoObjectType.VNF);
         for(SoObject soObject : soObjectList){
             if(soObject.getEpoch().compareTo(startSync) < 0){
                 log.info("{} - Vnf Pkg with descriptor ID {} and version {} no longer present in project {}", so.getManoId(), soObject.getDescriptorId(), soObject.getVersion(), project);
@@ -145,7 +149,7 @@ public class SOPlugin extends MANOPlugin {
     public Map<String, List<String>> getAllNsd(String project) {
         log.info("{} - Startup synchronization, started retrieving 5GROWTH SO Ns Pkgs from project {}", so.getManoId(), project);
         Map<String, List<String>> ids = new HashMap<>();
-        List<SoObject> soObjectList = fivegrowthObjectRepository.findBySoIdAndType(so.getManoId(), SoObjectType.NS);
+        List<SoObject> soObjectList = fivegrowthObjectRepository.findBySoIdAndType(so.getManoId(), ManoObjectType.NS);
         for(SoObject soObject : soObjectList)
             ids.computeIfAbsent(soObject.getDescriptorId(), k -> new ArrayList<>()).add(soObject.getVersion());
         /*
@@ -172,7 +176,7 @@ public class SOPlugin extends MANOPlugin {
 
         try{
             if(soObject.isPresent()){
-                if(soObject.get().getType().equals(SoObjectType.VNF))
+                if(soObject.get().getType().equals(ManoObjectType.VNF))
                     pkgPath = createVnfPkgTosca(soObject.get());
                 else
                     pkgPath = createNsPkgTosca(soObject.get());
@@ -227,8 +231,8 @@ public class SOPlugin extends MANOPlugin {
             return;
         }
 
-        List<SoObject> soVnfList = fivegrowthObjectRepository.findBySoIdAndType(so.getManoId(), SoObjectType.VNF);
-        List<SoObject> soNsList = fivegrowthObjectRepository.findBySoIdAndType(so.getManoId(), SoObjectType.NS);
+        List<SoObject> soVnfList = fivegrowthObjectRepository.findBySoIdAndType(so.getManoId(), ManoObjectType.VNF);
+        List<SoObject> soNsList = fivegrowthObjectRepository.findBySoIdAndType(so.getManoId(), ManoObjectType.NS);
         UUID operationId;
         String pkgPath;
 
@@ -331,7 +335,7 @@ public class SOPlugin extends MANOPlugin {
                     infoObject.setVersion(vnfdVersion);
                     infoObject.setDescriptorId(vnfdId);
                     infoObject.setSoId(so.getManoId());
-                    infoObject.setType(SoObjectType.VNF);
+                    infoObject.setType(ManoObjectType.VNF);
                     infoObject.setEpoch(Instant.now().getEpochSecond());
                     infoObject.setPath(descriptor.toPath().toString());
                 }
@@ -362,7 +366,7 @@ public class SOPlugin extends MANOPlugin {
                     infoObject.setVersion(nsdVersion);
                     infoObject.setDescriptorId(nsdId);
                     infoObject.setSoId(so.getManoId());
-                    infoObject.setType(SoObjectType.NS);
+                    infoObject.setType(ManoObjectType.NS);
                     infoObject.setEpoch(Instant.now().getEpochSecond());
                     infoObject.setPath(descriptor.toPath().toString());
                 }
@@ -376,16 +380,28 @@ public class SOPlugin extends MANOPlugin {
 
     private String createVnfPkgTosca (SoObject soObject) throws MalformattedElementException, IllegalStateException, IOException, IllegalArgumentException{
         log.info("{} - Creating TOSCA VNF Descriptor with ID {} and version {}", so.getManoId(), soObject.getDescriptorId(), soObject.getVersion());
-        DescriptorTemplate vnfd = ToscaDescriptorsParser.generateVnfDescriptor(soObject.getPath());
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
+        mapper.enable(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT);
+        mapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        Vnfd vnfdIfa = mapper.readValue(new File(soObject.getPath()), Vnfd.class);
+        DescriptorTemplate vnfdSol = IfaToSolTranslator.generateVnfDescriptor(vnfdIfa);
         log.info("{} - Creating TOSCA VNF Pkg with descriptor ID {} and version {}", so.getManoId(), soObject.getDescriptorId(), soObject.getVersion());
-        return ToscaArchiveBuilder.createVNFCSAR(vnfd, tmpDirPath.toString());
+        return ToscaArchiveBuilder.createVNFCSAR(vnfdSol.getMetadata().getDescriptorId(), vnfdSol, tmpDirPath.toString(), null);
     }
 
     private String createNsPkgTosca (SoObject soObject) throws MalformattedElementException, IllegalStateException, IOException, IllegalArgumentException{
         log.info("{} - Creating TOSCA NS Descriptor with ID {} and version {}", so.getManoId(), soObject.getDescriptorId(), soObject.getVersion());
-        DescriptorTemplate nsd = ToscaDescriptorsParser.generateNsDescriptor(soObject.getPath());
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
+        mapper.enable(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT);
+        mapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        Nsd nsdIfa = mapper.readValue(new File(soObject.getPath()), Nsd.class);
+        DescriptorTemplate nsdSol = IfaToSolTranslator.generateNsDescriptor(nsdIfa);
         log.info("{} - Creating TOSCA NS Pkg with descriptor ID {} and version {}", so.getManoId(), soObject.getDescriptorId(), soObject.getVersion());
-        return ToscaArchiveBuilder.createNSCSAR(nsd, tmpDirPath.toString());
+        return ToscaArchiveBuilder.createNSCSAR(nsdSol.getMetadata().getDescriptorId(), nsdSol, tmpDirPath.toString());
     }
 
     @Override
@@ -436,9 +452,7 @@ public class SOPlugin extends MANOPlugin {
                     String descriptorId = descriptorTemplate.getMetadata().getDescriptorId();
                     Optional<SoObject> soInfoObjectOptional = fivegrowthObjectRepository.findByDescriptorIdAndVersionAndSoId(descriptorId, descriptorTemplate.getMetadata().getVersion(), so.getManoId());
                     if(!soInfoObjectOptional.isPresent()){
-                        NsdBuilder nsdBuilder = new NsdBuilder();
-
-                        Nsd nsd = nsdBuilder.parseDescriptorTemplate(descriptorTemplate);
+                        Nsd nsd = SolToIfaTranslator.generateNsDescriptor(descriptorTemplate);
                         OnboardNsdRequest onboardNsdRequest = new OnboardNsdRequest(nsd, null);
                         String soInfoObjectId = soClient.onboardNsd(onboardNsdRequest); //soInfoObjectId == nsdId
 
@@ -453,7 +467,7 @@ public class SOPlugin extends MANOPlugin {
                         infoObject.setVersion(nsd.getVersion());
                         infoObject.setDescriptorId(nsd.getNsdIdentifier());
                         infoObject.setSoId(so.getManoId());
-                        infoObject.setType(SoObjectType.NS);
+                        infoObject.setType(ManoObjectType.NS);
                         infoObject.setEpoch(Instant.now().getEpochSecond());
                         infoObject.setCatalogueId(nsdInfoId);
                         infoObject.setPath(descriptorFile.toPath().toString());
@@ -545,9 +559,7 @@ public class SOPlugin extends MANOPlugin {
                         if(!infoObject.getDescriptorId().equals(descriptorTemplate.getMetadata().getDescriptorId()) || !infoObject.getVersion().equals(descriptorTemplate.getMetadata().getVersion()))
                             soClient.deleteNsd(infoObject.getDescriptorId(), infoObject.getVersion());
 
-                        NsdBuilder nsdBuilder = new NsdBuilder();
-
-                        Nsd nsd = nsdBuilder.parseDescriptorTemplate(descriptorTemplate);
+                        Nsd nsd = SolToIfaTranslator.generateNsDescriptor(descriptorTemplate);
                         OnboardNsdRequest onboardNsdRequest = new OnboardNsdRequest(nsd, null);
                         String soInfoObjectId = soClient.onboardNsd(onboardNsdRequest); //soInfoObjectId == nsdId
 

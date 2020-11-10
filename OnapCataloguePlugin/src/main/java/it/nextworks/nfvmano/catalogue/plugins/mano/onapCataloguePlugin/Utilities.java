@@ -1,7 +1,7 @@
 package it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin;
 
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANO;
-import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.model.OnapNsDescriptor;
+import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.elements.OnapNsDescriptor;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 
 import java.io.*;

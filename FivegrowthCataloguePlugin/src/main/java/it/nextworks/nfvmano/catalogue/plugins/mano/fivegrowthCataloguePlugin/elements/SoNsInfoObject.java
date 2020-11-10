@@ -1,24 +1,19 @@
-package it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.model;
+package it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.elements;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
-import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.model.SoObjectType;
-import it.nextworks.nfvmano.libs.ifa.descriptors.vnfd.Vnfd;
+import it.nextworks.nfvmano.libs.ifa.descriptors.nsd.Nsd;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SoVnfInfoObject {
+public class SoNsInfoObject {
 
     private boolean deletionPending;
     private String operationalState;
     private String usageState;
 
-    private Vnfd vnfd;
+    private Nsd nsd;
 
     private Map<String, Object> otherProperties = new HashMap<String, Object>();
 
@@ -46,12 +41,12 @@ public class SoVnfInfoObject {
         this.usageState = usageState;
     }
 
-    public Vnfd getVnfd() {
-        return vnfd;
+    public Nsd getNsd() {
+        return nsd;
     }
 
-    public void setVnfd(Vnfd vnfd) {
-        this.vnfd = vnfd;
+    public void setNsd(Nsd nsd) {
+        this.nsd = nsd;
     }
 
     @JsonAnyGetter
@@ -63,4 +58,5 @@ public class SoVnfInfoObject {
     public void set(String name, Object value) {
         otherProperties.put(name, value);
     }
+
 }

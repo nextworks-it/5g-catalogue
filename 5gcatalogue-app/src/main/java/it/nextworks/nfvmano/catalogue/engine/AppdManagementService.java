@@ -12,12 +12,11 @@ import it.nextworks.nfvmano.catalogue.engine.resources.AppPackageInfoResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.NsdInfoResource;
 import it.nextworks.nfvmano.catalogue.engine.resources.VnfPkgInfoResource;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.KeyValuePairs;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.NsdInfo;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.CreateVnfPkgInfoRequest;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.PackageOperationalStateType;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.VnfPkgInfo;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.VnfPkgInfoModifications;
-import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.common.ToscaArchiveBuilder;
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.common.ToscaArchiveBuilder;
 import it.nextworks.nfvmano.catalogue.repos.NsdInfoRepository;
 import it.nextworks.nfvmano.catalogue.repos.ProjectRepository;
 import it.nextworks.nfvmano.catalogue.repos.UserRepository;
@@ -33,7 +32,6 @@ import it.nextworks.nfvmano.libs.descriptors.capabilities.VirtualComputeCapabili
 import it.nextworks.nfvmano.libs.descriptors.elements.*;
 import it.nextworks.nfvmano.libs.descriptors.templates.*;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VDU.*;
-import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFInterfaces;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFProperties;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VnfExtCp.VnfExtCpNode;
@@ -48,7 +46,6 @@ import it.nextworks.nfvmano.libs.mec.catalogues.interfaces.messages.OnboardAppPa
 import it.nextworks.nfvmano.libs.mec.catalogues.interfaces.messages.QueryOnBoadedAppPkgInfoResponse;
 import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.io.FileUtils;
-import org.openstack4j.openstack.compute.domain.actions.FloatingIpActions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,7 +59,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.charset.Charset;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static it.nextworks.nfvmano.catalogue.engine.Utilities.checkUserProjects;
 

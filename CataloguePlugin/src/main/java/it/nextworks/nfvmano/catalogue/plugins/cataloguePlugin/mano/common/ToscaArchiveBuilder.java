@@ -1,14 +1,12 @@
-package it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin;
-
+package it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
-import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
-import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,32 +22,28 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import static com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature.*;
-
 public class ToscaArchiveBuilder {
 
     private static final Logger log = LoggerFactory.getLogger(ToscaArchiveBuilder.class);
 
-    public static String createVNFCSAR(DescriptorTemplate template, String tmpDir) throws IllegalStateException{
-        String vnfName = "descriptor";
-        String vnfPackagePath;
-
+    public static String createVNFCSAR(String packageIdentifier, DescriptorTemplate template, String tmpDir, File cloudInit) throws IllegalStateException{
         Date date = new Date();
         long time = date.getTime();
         Timestamp ts = new Timestamp(time);
         List<String> strings = new ArrayList<>();
 
         try{
-            if (template.getTopologyTemplate().getVNFNodes().size() != 1)
-                throw new IllegalArgumentException("Too many VNF defined");
+            String vnfName = template.getTopologyTemplate().getVNFNodes().keySet().iterator().next();
 
-            vnfName = template.getTopologyTemplate().getVNFNodes().keySet().iterator().next();
-
+            log.debug("Creating folder structure");
             //Create directories
-            File root = makeFolder(tmpDir,vnfName + "_" + template.getMetadata().getDescriptorId());
+            File root = makeFolder(tmpDir,vnfName + "_" + packageIdentifier);
             File definitions = makeSubFolder(root, "Definitions");
             File files = makeSubFolder(root, "Files");
             File licenses = makeSubFolder(files, "Licences");
+            File monitoring = makeSubFolder(files, "Monitoring");
+            File scripts = makeSubFolder(files, "Scripts");
+            File tests = makeSubFolder(files, "Tests");
             File metadata = makeSubFolder(root, "TOSCA-Metadata");
 
             //Create standard files
@@ -59,7 +53,12 @@ public class ToscaArchiveBuilder {
             strings.add("\tvnf_provider_id: " + template.getMetadata().getVendor());
             strings.add("\tvnf_package_version: " + template.getMetadata().getVersion());
             strings.add(String.format("\tvnf_release_date_time: %1$TD %1$TT", ts));
-
+            if(cloudInit != null) {
+                strings.add("\nconfiguration:");
+                strings.add("\tcloud_init:");
+                strings.add("\t\tSource: Files/Scripts/" + cloudInit.getName());
+                copyFile(scripts, cloudInit);
+            }
             Files.write(manifest.toPath(), strings);
             strings.clear();
             File license = new File(licenses, "LICENSE");
@@ -81,48 +80,45 @@ public class ToscaArchiveBuilder {
             //Create descriptor files
             File descriptorFile = new File(definitions, vnfName + ".yaml");
             final YAMLFactory yamlFactory = new YAMLFactory()
-                    .configure(USE_NATIVE_TYPE_ID, false)
-                    .configure(USE_NATIVE_OBJECT_ID, false)
-                    .configure(WRITE_DOC_START_MARKER, false);
+                    .configure(YAMLGenerator.Feature.USE_NATIVE_TYPE_ID, false)
+                    .configure(YAMLGenerator.Feature.USE_NATIVE_OBJECT_ID, false)
+                    .configure(YAMLGenerator.Feature.WRITE_DOC_START_MARKER, false);
             ObjectMapper mapper = new ObjectMapper(yamlFactory);
             mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
             mapper.writeValue(descriptorFile, template);
 
-            vnfPackagePath = compress(root.toPath().toString());
-        } catch (IOException | IllegalArgumentException | MalformattedElementException e) {
+            log.debug("Creating CSAR archive");
+            return compress(root.toPath().toString());//returns package path
+        } catch (IOException | MalformattedElementException e) {
             throw new IllegalStateException(String.format("Could not write files. Error: %s", e.getMessage()));
         }
-
-        return vnfPackagePath;
     }
 
-    public static String createNSCSAR(DescriptorTemplate template, String tmpDir) throws IllegalStateException{
-        String serviceName = "descriptor";
-        String servicePackagePath;
-
+    public static String createNSCSAR(String packageIdentifier, DescriptorTemplate template, String tmpDir) throws IllegalStateException{
         Date date = new Date();
         long time = date.getTime();
         Timestamp ts = new Timestamp(time);
         List<String> strings = new ArrayList<>();
 
         try{
-            if (template.getTopologyTemplate().getNSNodes().size() != 1)
-                throw new IllegalArgumentException("Too many NS defined");
+            String nsName = template.getTopologyTemplate().getNSNodes().keySet().iterator().next();
 
-            serviceName = template.getTopologyTemplate().getNSNodes().keySet().iterator().next();
-
+            log.debug("Creating folder structure");
             //Create directories
-            File root = makeFolder(tmpDir,serviceName + "_" + template.getMetadata().getDescriptorId());
+            File root = makeFolder(tmpDir,nsName + "_" + packageIdentifier);
             File definitions = makeSubFolder(root, "Definitions");
             File files = makeSubFolder(root, "Files");
             File licenses = makeSubFolder(files, "Licences");
+            File monitoring = makeSubFolder(files, "Monitoring");
+            File scripts = makeSubFolder(files, "Scripts");
+            File tests = makeSubFolder(files, "Tests");
             File metadata = makeSubFolder(root, "TOSCA-Metadata");
 
             //Create standard files
-            File manifest = new File(root, serviceName + ".mf");
+            File manifest = new File(root, nsName + ".mf");
             strings.add("metadata:");
-            strings.add("\tns_name: " + serviceName);
+            strings.add("\tns_name: " + nsName);
             strings.add("\tns_vendor_id: " + template.getMetadata().getVendor());
             strings.add("\tns_version: " + template.getMetadata().getVersion());
             strings.add(String.format("\tns_release_date_time: %1$TD %1$TT", ts));
@@ -135,35 +131,32 @@ public class ToscaArchiveBuilder {
             strings.add(String.format("%1$TD %1$TT - New NS Package according to ETSI GS NFV-SOL004 v 2.5.1", ts));
             Files.write(changeLog.toPath(), strings);
             strings.clear();
-            File certificate = new File(files, serviceName + ".cert");
+            File certificate = new File(files, nsName + ".cert");
             Files.write(certificate.toPath(), strings);
             File toscaMetadata = new File(metadata, "TOSCA.meta");
             strings.add("TOSCA-Meta-File-Version: 1.0");
             strings.add("CSAR-Version: 1.1");
             strings.add("CreatedBy: 5GCity-SDK");
-            strings.add("Entry-Definitions: Definitions/"+ serviceName + ".yaml");
+            strings.add("Entry-Definitions: Definitions/"+ nsName + ".yaml");
             Files.write(toscaMetadata.toPath(), strings);
             strings.clear();
 
             //Create descriptor files
-            File descriptorFile = new File(definitions, serviceName + ".yaml");
+            File descriptorFile = new File(definitions, nsName + ".yaml");
             final YAMLFactory yamlFactory = new YAMLFactory()
-                    .configure(USE_NATIVE_TYPE_ID, false)
-                    .configure(USE_NATIVE_OBJECT_ID, false)
-                    .configure(WRITE_DOC_START_MARKER, false);
+                    .configure(YAMLGenerator.Feature.USE_NATIVE_TYPE_ID, false)
+                    .configure(YAMLGenerator.Feature.USE_NATIVE_OBJECT_ID, false)
+                    .configure(YAMLGenerator.Feature.WRITE_DOC_START_MARKER, false);
             ObjectMapper mapper = new ObjectMapper(yamlFactory);
             mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
             mapper.writeValue(descriptorFile, template);
 
-            servicePackagePath = compress(root.toPath().toString());
+            log.debug("Creating CSAR archive");
+            return compress(root.toPath().toString()); //returns package path
         } catch (IOException | MalformattedElementException e) {
-            throw new IllegalStateException(
-                    String.format("Could not write files. Error: %s", e.getMessage())
-            );
+            throw new IllegalStateException(String.format("Could not write files. Error: %s", e.getMessage()));
         }
-
-        return servicePackagePath;
     }
 
     public static File makeFolder(String root, String name) {
