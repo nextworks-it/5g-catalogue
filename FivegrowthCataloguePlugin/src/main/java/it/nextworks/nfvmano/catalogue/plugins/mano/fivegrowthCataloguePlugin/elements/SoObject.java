@@ -1,4 +1,6 @@
-package it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.model;
+package it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.elements;
+
+import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.common.ManoObjectType;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -6,18 +8,19 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 @Entity
-public class OnapObject {
+public class SoObject {
 
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
     private Long id;
     private String descriptorId;
     private String version;
-    private OnapObjectType type;
+    private ManoObjectType type;
     private String catalogueId;
     private Long epoch;
-    private String onapId;
-    private String path;
+    private String soId;
+
+    private String path; //TODO remove??
 
     public Long getId() {
         return id;
@@ -43,11 +46,11 @@ public class OnapObject {
         this.version = version;
     }
 
-    public OnapObjectType getType() {
+    public ManoObjectType getType() {
         return type;
     }
 
-    public void setType(OnapObjectType type) {
+    public void setType(ManoObjectType type) {
         this.type = type;
     }
 
@@ -59,12 +62,12 @@ public class OnapObject {
         this.epoch = epoch;
     }
 
-    public String getOnapId() {
-        return onapId;
+    public String getSoId() {
+        return soId;
     }
 
-    public void setOnapId(String onapId) {
-        this.onapId = onapId;
+    public void setSoId(String soId) {
+        this.soId = soId;
     }
 
     public String getPath() {

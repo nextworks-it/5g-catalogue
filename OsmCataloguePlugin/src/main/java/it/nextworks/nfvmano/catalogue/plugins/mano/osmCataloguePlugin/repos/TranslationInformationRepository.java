@@ -1,6 +1,6 @@
 package it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.repos;
 
-import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.common.OsmTranslationInformation;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.elements.OsmTranslationInformation;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

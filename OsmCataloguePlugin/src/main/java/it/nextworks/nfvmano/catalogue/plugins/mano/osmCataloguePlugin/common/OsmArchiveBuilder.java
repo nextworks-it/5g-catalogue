@@ -39,14 +39,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
-public class ArchiveBuilder {
+public class OsmArchiveBuilder {
 
-    private static final Logger log = LoggerFactory.getLogger(ArchiveBuilder.class);
+    private static final Logger log = LoggerFactory.getLogger(OsmArchiveBuilder.class);
 
     private final File tmpDir;
     private final File defaultLogo;
 
-    public ArchiveBuilder(File tmpDir, File defaultLogo) {
+    public OsmArchiveBuilder(File tmpDir, File defaultLogo) {
         this.tmpDir = tmpDir;
         this.defaultLogo = defaultLogo;
     }

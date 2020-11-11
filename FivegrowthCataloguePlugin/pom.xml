@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>it.nextworks.nfvmano.catalogue.plugins</groupId>
-    <artifactId>CataloguePlugin</artifactId>
+    <groupId>it.nextworks.nfvmano.catalogue.plugins.mano</groupId>
+    <artifactId>FivegrowthCataloguePlugin</artifactId>
     <version>1.0-SNAPSHOT</version>
     <build>
         <plugins>
@@ -21,8 +21,8 @@
     </build>
     <packaging>jar</packaging>
 
-    <name>CataloguePlugin</name>
-    <description>Catalogue Plugin Implementation</description>
+    <name>FivegrowthCataloguePlugin</name>
+    <description>5Growth SO Catalogue Plugin Implementation</description>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -30,38 +30,45 @@
         <version>2.0.3.RELEASE</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    
+
     <dependencies>
         <dependency>
-            <groupId>it.nextworks.nfvmano.catalogue</groupId>
-            <artifactId>CatalogueNotification</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>it.nextworks.nfvmano.catalogue.plugins</groupId>
+            <artifactId>CataloguePlugin</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
 
-        <!-- JPA -->
+        <!-- NFV IFA libs dependencies -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
+            <groupId>it.nextworks.nfvmano</groupId>
+            <artifactId>NfvManoLibsCataloguesIf</artifactId>
+            <version>0.0.2-SNAPSHOT</version>
         </dependency>
 
-        <!-- Hibernate -->
         <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-core</artifactId>
-            <version>5.3.6.Final</version>
+            <groupId>it.nextworks.nfvmano</groupId>
+            <artifactId>NfvManoLibsCommon</artifactId>
+            <version>0.0.2-SNAPSHOT</version>
         </dependency>
 
-        <!-- Jackson -->
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.10.0</version>
+            <groupId>it.nextworks.nfvmano</groupId>
+            <artifactId>NfvManoLibsDescriptors</artifactId>
+            <version>0.0.2-SNAPSHOT</version>
         </dependency>
 
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-yaml</artifactId>
-            <version>2.10.0</version>
+            <version>2.9.8</version>
+            <scope>compile</scope>
         </dependency>
+
     </dependencies>
+
 </project>

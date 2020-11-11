@@ -14,7 +14,7 @@
  * limitations under the License.
  *//*
 
-package it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.r3;
+package it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.plugins.r3;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;

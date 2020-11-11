@@ -1,29 +1,24 @@
-package it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin;
+package it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.translators;
 
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.model.OnapNsDescriptor;
-import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.model.OnapObject;
-import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.model.OnapVnfDescriptor;
+import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.elements.OnapNsDescriptor;
+import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.elements.OnapVnfDescriptor;
 import it.nextworks.nfvmano.libs.common.enums.CpRole;
 import it.nextworks.nfvmano.libs.common.enums.FlowPattern;
 import it.nextworks.nfvmano.libs.common.enums.LayerProtocol;
-import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.descriptors.capabilities.VirtualComputeCapability;
 import it.nextworks.nfvmano.libs.descriptors.capabilities.VirtualComputeCapabilityProperties;
 import it.nextworks.nfvmano.libs.descriptors.elements.*;
-import it.nextworks.nfvmano.libs.descriptors.interfaces.LcmOperation;
-import it.nextworks.nfvmano.libs.descriptors.interfaces.Vnflcm;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSProperties;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NsVirtualLink.NsVirtualLinkNode;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NsVirtualLink.NsVirtualLinkProperties;
 import it.nextworks.nfvmano.libs.descriptors.templates.*;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VDU.*;
-import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFInterfaces;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFProperties;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFRequirements;
@@ -36,23 +31,13 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
-public class ToscaDescriptorsParser {
+public class OnapToSolTranslator {
 
-    private static final Logger log = LoggerFactory.getLogger(ToscaDescriptorsParser.class);
+    private static final Logger log = LoggerFactory.getLogger(OnapToSolTranslator.class);
 
-    public static DescriptorTemplate generateVnfDescriptor(String descriptorPath) throws IOException, IllegalArgumentException {
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        mapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
-        mapper.enable(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT);
-        mapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
-        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
-
-        OnapVnfDescriptor onapVnfDescriptor = mapper.readValue(new File(descriptorPath), OnapVnfDescriptor.class);
-        Map<String, Object> onapMetadata = onapVnfDescriptor.getMetadata();
+    public static DescriptorTemplate generateVnfDescriptor(OnapVnfDescriptor vnfdOnap) throws IOException, IllegalArgumentException {
+        Map<String, Object> onapMetadata = vnfdOnap.getMetadata();
         String id = (String)onapMetadata.get("UUID");
         if(id == null)
             throw new IllegalArgumentException("Descriptor without ID");
@@ -63,7 +48,7 @@ public class ToscaDescriptorsParser {
         if(name == null)
             throw new IllegalArgumentException("Descriptor without name");
         String resourceVendorRelease = (String)onapMetadata.get("resourceVendorRelease");
-        Map<String, String> cpLinkAssociations = onapVnfDescriptor.getConnectionPointLinkAssociations();
+        Map<String, String> cpLinkAssociations = vnfdOnap.getConnectionPointLinkAssociations();
         if(cpLinkAssociations.size() == 0)
             throw new IllegalArgumentException("Descriptor without connection points");
         String mgmtCp = "cp_name";//TODO onapVnfDescriptor.getMgmtCp();
@@ -114,9 +99,9 @@ public class ToscaDescriptorsParser {
             nodeTemplates.replace(cpName, new VnfExtCpNode(null, cpProperties, cpRequirements));
         }
 
-        Map<String, Object> vduNodes = onapVnfDescriptor.getVduNodes();
+        Map<String, Object> vduNodes = vnfdOnap.getVduNodes();
         for(Map.Entry<String, Object> vduNode : vduNodes.entrySet()) {
-            String imageName = onapVnfDescriptor.getImageName(vduNode.getKey());
+            String imageName = vnfdOnap.getImageName(vduNode.getKey());
             Integer vRam = 1024;//TODO onapVnfDescriptor.getRam(vduNode.getKey());
             Integer vCpu = 1;//TODO onapVnfDescriptor.getCpu(vduNode.getKey());
             Integer storage = 1;//TODO onapVnfDescriptor.getStorage(vduNode.getKey());
@@ -157,20 +142,18 @@ public class ToscaDescriptorsParser {
         Metadata metadata = new Metadata(id, resourceVendor, version);
 
         //Creating DescriptorTemplate
-        DescriptorTemplate vnfd = new DescriptorTemplate("tosca_sol001_v0_10", null, description, metadata, null, null, null, topologyTemplate);
 
-        return vnfd;
+        return new DescriptorTemplate("tosca_sol001_v0_10", null, description, metadata, null, null, null, topologyTemplate);
     }
 
-    public static DescriptorTemplate generateNsDescriptor(String descriptorPath) throws IOException, IllegalArgumentException {
+    public static DescriptorTemplate generateNsDescriptor(OnapNsDescriptor nsdOnap, String descriptorPath) throws IOException, IllegalArgumentException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
         mapper.enable(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT);
         mapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
 
-        OnapNsDescriptor onapNsDescriptor = mapper.readValue(new File(descriptorPath), OnapNsDescriptor.class);
-        Map<String, Object> nsMetadata = onapNsDescriptor.getMetadata();
+        Map<String, Object> nsMetadata = nsdOnap.getMetadata();
         String nsdId = (String)nsMetadata.get("UUID");
         if(nsdId == null)
             throw new IllegalArgumentException("Ns Descriptor without ID");
@@ -191,7 +174,7 @@ public class ToscaDescriptorsParser {
         //Map <nodeName, descriptors>
         Map<String, OnapVnfDescriptor> nodeDescriptorMapping = new HashMap<>();
         //Map <nodeName, vfIdentifier>
-        Map<String, String> nodeVfIdentifierMapping = onapNsDescriptor.getVFIdentifiers();
+        Map<String, String> nodeVfIdentifierMapping = nsdOnap.getVFIdentifiers();
         for(Map.Entry<String, String> vfIdentifier : nodeVfIdentifierMapping.entrySet())
             nodeDescriptorMapping.put(vfIdentifier.getKey(), mapper.readValue(new File(definitionsFolder + "resource-" + vfIdentifier.getValue() + "-template.yml"), OnapVnfDescriptor.class));
 
@@ -260,8 +243,7 @@ public class ToscaDescriptorsParser {
         Metadata metadata = new Metadata(nsdId, nsdVendor, nsdVersion);
 
         //Creating DescriptorTemplate
-        DescriptorTemplate nsd = new DescriptorTemplate("tosca_sol001_v0_10", null, nsdDescription, metadata, null, null, null, topologyTemplate);
 
-        return nsd;
+        return new DescriptorTemplate("tosca_sol001_v0_10", null, nsdDescription, metadata, null, null, null, topologyTemplate);
     }
 }

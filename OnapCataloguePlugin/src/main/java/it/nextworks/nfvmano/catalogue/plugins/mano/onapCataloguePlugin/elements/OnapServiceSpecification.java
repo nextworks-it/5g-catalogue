@@ -1,4 +1,4 @@
-package it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.model;
+package it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.elements;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

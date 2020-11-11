@@ -30,6 +30,9 @@ kafka.skip.send=false
 | ------ | ------ |
 | NfvManoLibsSol001Common | [README](https://github.com/nextworks-it/nfv-sol-libs) |
 | NfvManoLibsSol001Descriptors | [README](https://github.com/nextworks-it/nfv-sol-libs) |
+| NfvManoLibsCommon | [README](https://github.com/nextworks-it/nfv-ifa-libs) |
+| NfvManoLibsDescriptors | [README](https://github.com/nextworks-it/nfv-ifa-libs) |
+| NfvManoLibsCatalogueIf | [README](https://github.com/nextworks-it/nfv-ifa-libs) |
 | J-OSMClient | [README](https://github.com/girtel/J-OSMClient) |
 | OpenStack4j | [README](https://github.com/ContainX/openstack4j) |
 
@@ -43,6 +46,7 @@ Run the "bootstrap" script for setting up the environment:
 - Create the Catalogue log folder, "/var/log/5gcatalogue"
 - Install PostgresSQL (if not present) and create the Catalogue DB, "cataloguedb"
 - Clone and install "NfvManoLibsSol001Common" and "NfvManoLibsSol001Descriptors" libs
+- Clone and install "NfvManoLibsCommon", "NfvManoLibsDescriptors" and NfvManoLibsCatalogueIf libs
 
 ```
 $ ./bootstrap.sh env-dep

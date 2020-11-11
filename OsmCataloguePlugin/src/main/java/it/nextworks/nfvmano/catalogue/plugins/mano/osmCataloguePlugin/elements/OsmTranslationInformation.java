@@ -1,4 +1,4 @@
-package it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.common;
+package it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.elements;
 
 
 import javax.persistence.*;

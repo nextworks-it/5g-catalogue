@@ -1,7 +1,7 @@
 package it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin;
 
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANO;
-import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.model.OnapNsDescriptor;
+import it.nextworks.nfvmano.catalogue.plugins.mano.onapCataloguePlugin.elements.OnapNsDescriptor;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 
 import java.io.*;
@@ -32,7 +32,7 @@ public class Utilities {
     }
 
     public static boolean isTargetMano (List<String> siteOrManoIds, MANO mano){
-        if(siteOrManoIds.contains(mano.getManoId()) || siteOrManoIds.contains(mano.getManoSite()))
+        if(siteOrManoIds == null || siteOrManoIds.contains(mano.getManoId()) || siteOrManoIds.contains(mano.getManoSite()))
             return true;
         return false;
     }
