@@ -218,7 +218,16 @@ public class OsmToSolTranslator {
                 vnfNodeName = osmVnfDescriptor.getShortName();
             VNFProperties vnfProperties = new VNFProperties(catVnfDescriptorId, osmVnfDescriptor.getVersion(), osmVnfDescriptor.getVendor(), vnfNodeName, "1.0", vnfNodeName, osmVnfDescriptor.getDescription(), null, null, null, null, null, null, null, vnfNodeName + "_flavor", vnfNodeName + " flavor", null);
             VNFRequirements vnfRequirements = new VNFRequirements(virtualLinkRequirements.get(vnfd.getVnfdIdentifierReference()));
-            nodeTemplates.put(vnfNodeName, new VNFNode(null, vnfNodeName, vnfProperties, vnfRequirements, null, null));//type: "tosca.nodes.nfv.VNF"
+            VNFNode oldVnfNode = (VNFNode)nodeTemplates.put(vnfNodeName, new VNFNode(null, vnfNodeName, vnfProperties, vnfRequirements, null, null));//type: "tosca.nodes.nfv.VNF"
+            if(oldVnfNode != null) {//same VNF present more than one
+                //Generate random string
+                Random random = new Random();
+                String generatedString = random.ints(97, 123)//97 letter 'a', 122 letter 'z'
+                        .limit(3)
+                        .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                        .toString();
+                nodeTemplates.put(vnfNodeName + "_" + generatedString, oldVnfNode);
+            }
         }
 
         log.debug("Creating NSNode");

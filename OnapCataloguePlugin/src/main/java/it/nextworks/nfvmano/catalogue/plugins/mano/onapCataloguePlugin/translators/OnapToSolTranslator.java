@@ -223,7 +223,16 @@ public class OnapToSolTranslator {
             String resourceVendorRelease = (String)vnfMetadata.get("resourceVendorRelease");
             VNFProperties vnfProperties = new VNFProperties(vnfdId, vnfdVersion, vnfdResourceVendor, vnfdName, resourceVendorRelease, vnfdName, vnfdDescription, null, null, null, null, null, null, null, vnfdName + "_flavor", vnfdName + " flavor", null);
             VNFRequirements vnfRequirements = new VNFRequirements(virtualLinkRequirements.get(vnfdId));
-            nodeTemplates.put(nodeEntry.getKey(), new VNFNode(null, vnfdName, vnfProperties, vnfRequirements, null, null));//type: "tosca.nodes.nfv.VNF"
+            VNFNode oldVnfNode = (VNFNode)nodeTemplates.put(nodeEntry.getKey(), new VNFNode(null, vnfdName, vnfProperties, vnfRequirements, null, null));//type: "tosca.nodes.nfv.VNF"
+            if(oldVnfNode != null) {//same VNF present more than one
+                //Generate random string
+                Random random = new Random();
+                String generatedString = random.ints(97, 123)//97 letter 'a', 122 letter 'z'
+                        .limit(3)
+                        .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                        .toString();
+                nodeTemplates.put(nodeEntry.getKey() + "_" + generatedString, oldVnfNode);
+            }
         }
 
         log.debug("Creating NSNode");

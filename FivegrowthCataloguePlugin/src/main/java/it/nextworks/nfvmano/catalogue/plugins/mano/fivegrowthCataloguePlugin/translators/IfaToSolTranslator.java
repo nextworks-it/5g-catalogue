@@ -235,7 +235,16 @@ public class IfaToSolTranslator {
                             vnfVirtualLink.put(cpId, vlDesc);
                     }
                     VNFRequirements vnfRequirements = new VNFRequirements(vnfVirtualLink);
-                    nodeTemplates.put(vnfdId, new VNFNode(null, null, vnfProperties, vnfRequirements, null, null));
+                    VNFNode oldVnfNode = (VNFNode)nodeTemplates.put(vnfdId, new VNFNode(null, null, vnfProperties, vnfRequirements, null, null));
+                    if(oldVnfNode != null) {//same VNF present more than one
+                        //Generate random string
+                        Random random = new Random();
+                        String generatedString = random.ints(97, 123)//97 letter 'a', 122 letter 'z'
+                                .limit(3)
+                                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                                .toString();
+                        nodeTemplates.put(vnfdId + "_" + generatedString, oldVnfNode);
+                    }
                 }
             }
         }
