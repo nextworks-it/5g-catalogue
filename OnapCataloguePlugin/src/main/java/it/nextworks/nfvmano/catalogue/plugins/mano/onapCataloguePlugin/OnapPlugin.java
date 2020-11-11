@@ -482,13 +482,4 @@ public class OnapPlugin extends MANOPlugin {
         log.debug("Body: {}", notification);
         log.info("{} - Received PNFD deletion notification", onap.getManoId());
     }
-
-    private File loadFile(String filename) {
-        ClassLoader classLoader = getClass().getClassLoader();
-        URL resource = classLoader.getResource(filename);
-        if (resource == null) {
-            throw new IllegalArgumentException(String.format("Invalid resource %s", filename));
-        }
-        return new File(resource.getFile());
-    }
 }

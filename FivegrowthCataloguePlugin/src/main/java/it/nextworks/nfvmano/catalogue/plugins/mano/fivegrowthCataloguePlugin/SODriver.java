@@ -150,8 +150,33 @@ public class SODriver {
         }
     }
 
-    public SoNsQueryResponse queryNsds() {
-        return new SoNsQueryResponse();
+    public SoNsQueryResponse queryNsds() throws FailedOperationException{
+        log.debug("Building HTTP request to query NSDs.");
+        HttpHeaders header = new HttpHeaders();
+        header.add("Accept", "application/json");
+        HttpEntity<?> getEntity = new HttpEntity<>(null, header);
+
+        String url = this.smUrl + "/ns/nsd";
+
+        try {
+            log.debug("Sending HTTP request to retrieve NSDs.");
+
+            ResponseEntity<SoNsQueryResponse> httpResponse =
+                    restTemplate.exchange(url, HttpMethod.GET, getEntity, SoNsQueryResponse.class);
+
+            log.debug("Response code: " + httpResponse.getStatusCode().toString());
+            HttpStatus code = httpResponse.getStatusCode();
+
+            if (code.equals(HttpStatus.OK)) {
+                log.debug("NSDs correctly retrieved");
+                return httpResponse.getBody();
+            } else {
+                throw new FailedOperationException("Generic error during NSDs retrieval at NFVO: " + httpResponse.getBody());
+            }
+        } catch (RestClientException e) {
+            log.debug("Error while interacting with NFVO.");
+            throw new FailedOperationException("Error while interacting with NFVO NSD catalogue at url " + url);
+        }
     }
 
     //********************** VNF package methods ********************************//

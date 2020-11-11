@@ -1,26 +1,36 @@
 package it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.translators;
 
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.SODriver;
+import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.elements.SoVnfInfoObject;
+import it.nextworks.nfvmano.catalogue.plugins.mano.fivegrowthCataloguePlugin.elements.SoVnfQueryResponse;
 import it.nextworks.nfvmano.libs.common.enums.CpRole;
+import it.nextworks.nfvmano.libs.common.enums.FlowPattern;
 import it.nextworks.nfvmano.libs.common.enums.LayerProtocol;
+import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.descriptors.capabilities.VirtualComputeCapability;
 import it.nextworks.nfvmano.libs.descriptors.capabilities.VirtualComputeCapabilityProperties;
 import it.nextworks.nfvmano.libs.descriptors.elements.*;
+import it.nextworks.nfvmano.libs.descriptors.elements.VnfProfile;
+import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSInterfaces;
+import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
+import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSProperties;
+import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSRequirements;
+import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NsVirtualLink.NsVirtualLinkNode;
+import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NsVirtualLink.NsVirtualLinkProperties;
 import it.nextworks.nfvmano.libs.descriptors.templates.*;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VDU.*;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFProperties;
+import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFRequirements;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VnfExtCp.VnfExtCpNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VnfExtCp.VnfExtCpProperties;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VnfExtCp.VnfExtCpRequirements;
+import it.nextworks.nfvmano.libs.ifa.common.exceptions.NotExistingEntityException;
 import it.nextworks.nfvmano.libs.ifa.descriptors.common.elements.SwImageDesc;
 import it.nextworks.nfvmano.libs.ifa.descriptors.common.elements.VirtualComputeDesc;
+import it.nextworks.nfvmano.libs.ifa.descriptors.common.elements.VirtualLinkProfile;
 import it.nextworks.nfvmano.libs.ifa.descriptors.common.elements.VirtualStorageDesc;
-import it.nextworks.nfvmano.libs.ifa.descriptors.nsd.Nsd;
+import it.nextworks.nfvmano.libs.ifa.descriptors.nsd.*;
 import it.nextworks.nfvmano.libs.ifa.descriptors.vnfd.Vdu;
 import it.nextworks.nfvmano.libs.ifa.descriptors.vnfd.VnfDf;
 import it.nextworks.nfvmano.libs.ifa.descriptors.vnfd.VnfExtCpd;
@@ -28,7 +38,6 @@ import it.nextworks.nfvmano.libs.ifa.descriptors.vnfd.Vnfd;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -37,7 +46,7 @@ public class IfaToSolTranslator {
 
     private static final Logger log = LoggerFactory.getLogger(IfaToSolTranslator.class);
 
-    public static DescriptorTemplate generateVnfDescriptor(Vnfd vnfdIfa) throws IOException, IllegalArgumentException {
+    public static DescriptorTemplate generateVnfDescriptor(Vnfd vnfdIfa) throws IllegalArgumentException {
         String id = vnfdIfa.getVnfdId();
         if(id == null)
             throw new IllegalArgumentException("Descriptor without ID");
@@ -50,9 +59,10 @@ public class IfaToSolTranslator {
         String resourceVendorRelease = vnfdIfa.getVnfSoftwareVersion();
         VnfDf df = vnfdIfa.getDeploymentFlavour().get(0); //Consider only one df
 
+        LinkedHashMap<String, Node> nodeTemplates = new LinkedHashMap<>();
+
         log.debug("Creating VnfExtCpNode");
         //Creating VnfExtCpNode and VirtualinkRequirements for SubstitutionMappingsRequirements
-        LinkedHashMap<String, Node> nodeTemplates = new LinkedHashMap<>();
         List<VirtualLinkPair> virtualLink = new ArrayList<>();
         boolean mgmtFound = false;
         String cpName = null;
@@ -159,8 +169,142 @@ public class IfaToSolTranslator {
         return new DescriptorTemplate("tosca_sol001_v0_10", null, description, metadata, null, null, null, topologyTemplate);
     }
 
-    public static DescriptorTemplate generateNsDescriptor(Nsd nsdIfa) throws IOException, IllegalArgumentException {
-        DescriptorTemplate nsd = null;
-        return nsd;
+    public static DescriptorTemplate generateNsDescriptor(Nsd nsdIfa, SODriver soClient) throws IllegalArgumentException {
+        //No field for identifying the default df, select the first one
+        NsDf defaultDf = nsdIfa.getNsDf().get(0);
+        NsLevel defaultIl;
+        try{
+            defaultIl = defaultDf.getDefaultInstantiationLevel();
+        }catch(NotExistingEntityException e){
+            throw new IllegalArgumentException(e);
+        }
+        String description = defaultIl.getDescription();
+        String nsDescriptorId = nsdIfa.getNsdIdentifier();
+        String nsdName = nsdIfa.getNsdName();
+        String nsdDesigner = nsdIfa.getDesigner();
+
+        LinkedHashMap<String, Node> nodeTemplates = new LinkedHashMap<>();
+
+        log.debug("Creating NsVirtualLinkNodes");
+        List<String> virtualLinkProfileIds = new ArrayList<>();
+        for (VirtualLinkToLevelMapping virtualLinkToLevelMapping : defaultIl.getVirtualLinkToLevelMapping() ) {
+            virtualLinkProfileIds.add(virtualLinkToLevelMapping.getVirtualLinkProfileId());
+        }
+        Map<String, String> vlProfileToLinkDesc = new HashMap<>();
+        for (String vlProfileId : virtualLinkProfileIds) {
+            for (VirtualLinkProfile virtualLinkProfile : defaultDf.getVirtualLinkProfile()) {
+                if (vlProfileId.equals(virtualLinkProfile.getVirtualLinkProfileId())) {
+                    vlProfileToLinkDesc.put(vlProfileId, virtualLinkProfile.getVirtualLinkDescId());
+                }
+            }
+        }
+
+        for(Map.Entry<String, String> entry : vlProfileToLinkDesc.entrySet()) {
+            String virtualLinkDescId = entry.getValue();
+            NsVirtualLinkDesc virtualLinkDesc = nsdIfa.getVirtualLinkDesc().stream().filter(vlDesc -> vlDesc.getVirtualLinkDescId().equals(virtualLinkDescId)).findAny().orElse(null);
+            if(virtualLinkDesc == null)//nsVirtualLinkDesc not specified
+                continue;
+            VlProfile vlProfile = new VlProfile(new LinkBitrateRequirements(1000000, 10000), new LinkBitrateRequirements(100000, 10000), null, null);
+            List<LayerProtocol> layerProtocols = new ArrayList<>();
+            layerProtocols.add(LayerProtocol.IPV4);
+            ConnectivityType connectivityType = new ConnectivityType(layerProtocols, FlowPattern.LINE);
+            NsVirtualLinkProperties vlProperties = new NsVirtualLinkProperties(null, virtualLinkDesc.getDescription(), vlProfile, connectivityType, null);
+            vlProperties.setExternalNet(isVirtualLinkExternal(nsdIfa, virtualLinkDescId));
+            vlProperties.setMgmtNet(isVirtualLinkManagement(nsdIfa, virtualLinkDescId));
+            nodeTemplates.put(virtualLinkDescId, new NsVirtualLinkNode(null, vlProperties, null));
+        }
+
+        log.debug("Creating VNFNodes");
+        //Creating VNFNodes only for VNFs belonging to the default il
+        List<String> vnfProfileIds = new ArrayList<>();
+        for (VnfToLevelMapping vnfToLevelMapping : defaultIl.getVnfToLevelMapping() ) {
+            vnfProfileIds.add(vnfToLevelMapping.getVnfProfileId());
+        }
+        for (String vnfProfileId : vnfProfileIds) {
+            for(it.nextworks.nfvmano.libs.ifa.descriptors.nsd.VnfProfile vnfProfile : defaultDf.getVnfProfile()) {
+                if (vnfProfileId.equals(vnfProfile.getVnfProfileId())) {
+                    String vnfdId = vnfProfile.getVnfdId();
+                    String vnfdVersion = getVnfdVersion(vnfdId, soClient);
+                    if(vnfdVersion == null)
+                        continue; //cannot find the corresponding vnfd version
+                    VNFProperties vnfProperties = new VNFProperties(vnfdId, vnfdVersion, nsdDesigner, vnfProfile.getVnfProfileId(), "1.0", null, null, null, null, null, null, null, null, null, vnfProfile.getFlavourId(), vnfProfile.getFlavourId() + " flavor", new VnfProfile(vnfProfile.getInstantiationLevel(), vnfProfile.getMinNumberOfInstances(), vnfProfile.getMaxNumberOfInstances()));
+                    Map<String, String> vnfVirtualLink= new HashMap<>();
+                    for (NsVirtualLinkConnectivity nsVirtualLinkConnectivity : vnfProfile.getNsVirtualLinkConnectivity()){
+                        String vlDesc = vlProfileToLinkDesc.get(nsVirtualLinkConnectivity.getVirtualLinkProfileId());
+                        for (String cpId : nsVirtualLinkConnectivity.getCpdId())
+                            vnfVirtualLink.put(cpId, vlDesc);
+                    }
+                    VNFRequirements vnfRequirements = new VNFRequirements(vnfVirtualLink);
+                    nodeTemplates.put(vnfdId, new VNFNode(null, null, vnfProperties, vnfRequirements, null, null));
+                }
+            }
+        }
+
+        log.debug("Creating NSNode");
+        //Creating NSNode
+        NSProperties nsProperties = new NSProperties(nsDescriptorId, nsdIfa.getDesigner(), nsdIfa.getVersion(), nsdName, nsdIfa.getNsdInvariantId());
+        nodeTemplates.put(nsdName + "_ns", new NSNode(null, nsProperties, null));
+
+        //Creating SubstitutionMappings
+        List<VirtualLinkPair> virtualLink = new ArrayList<>();
+        for (Sapd sapd : nsdIfa.getSapd()) {
+            VirtualLinkPair virtualLinkPair = new VirtualLinkPair(sapd.getCpdId(), sapd.getNsVirtualLinkDescId());
+            virtualLink.add(virtualLinkPair);
+        }
+        SubstitutionMappingsRequirements requirements = new SubstitutionMappingsRequirements(null, virtualLink);
+        SubstitutionMappings substitutionMappings = new SubstitutionMappings(null, "tosca.nodes.nfv.NS", null, requirements, null);
+
+        //Creating TopologyTemplate
+        TopologyTemplate topologyTemplate = new TopologyTemplate(null, substitutionMappings, null, nodeTemplates, null, null);
+
+        //Creating Metadata
+        Metadata metadata = new Metadata(nsDescriptorId , nsdIfa.getDesigner(), nsdIfa.getVersion());
+
+        //Creating DescriptorTemplate
+        return new DescriptorTemplate("tosca_simple_yaml_1_2", null, description, metadata, topologyTemplate);
+    }
+
+    private static boolean isVirtualLinkManagement(Nsd nsd, String virtualLinkDescId){
+        log.debug("Determining if link is management");
+        List<Sapd> saps = nsd.getSapd();
+        if(saps != null && !saps.isEmpty()){
+            for(Sapd sap : saps){
+                if(sap.getNsVirtualLinkDescId().equals(virtualLinkDescId))
+                    for(it.nextworks.nfvmano.libs.ifa.descriptors.common.elements.AddressData address: sap.getAddressData()){
+                        if(address.isManagement())
+                            return true;
+                    }
+            }
+        }
+        return false;
+    }
+
+    private static boolean isVirtualLinkExternal(Nsd nsd, String virtualLinkDescId ){
+        log.debug("Determining if link is external");
+        List<Sapd> saps = nsd.getSapd();
+        if(saps != null && !saps.isEmpty()){
+            for(Sapd sap : saps){
+                if(sap.getNsVirtualLinkDescId().equals(virtualLinkDescId))
+                    for(it.nextworks.nfvmano.libs.ifa.descriptors.common.elements.AddressData address: sap.getAddressData()){
+                        if(address.isFloatingIpActivated())
+                            return true;
+                    }
+            }
+        }
+        return false;
+    }
+
+    private static String getVnfdVersion(String vnfdId, SODriver soClient) {
+        String vnfdVersion = null;
+        try {
+            List<SoVnfInfoObject> vnfPkgs = soClient.queryVnfPackagesInfo().getQueryResult();
+            for (SoVnfInfoObject vnfInfoObject : vnfPkgs) {
+                if (vnfInfoObject.getVnfd().getVnfdId().equals(vnfdId))
+                    vnfdVersion = vnfInfoObject.getVnfd().getVnfdVersion();
+            }
+            return vnfdVersion;
+        }catch(FailedOperationException e){
+            return null;
+        }
     }
 }

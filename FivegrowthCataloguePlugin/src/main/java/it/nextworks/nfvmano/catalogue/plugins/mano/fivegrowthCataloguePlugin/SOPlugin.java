@@ -74,8 +74,6 @@ public class SOPlugin extends MANOPlugin {
 
     private FivegrowthObjectRepository fivegrowthObjectRepository;
 
-    private Long startSync;
-
     public SOPlugin(MANOType manoType, MANO mano, String kafkaBootstrapServers, String localTopic, String remoteTopic,
                     KafkaTemplate<String, String> kafkaTemplate, FivegrowthObjectRepository fivegrowthObjectRepository, Path soDirPath, Path tmpDir, boolean manoSync, long syncPeriod) {
         super(manoType, mano, kafkaBootstrapServers, localTopic, remoteTopic, kafkaTemplate, manoSync);
@@ -117,8 +115,7 @@ public class SOPlugin extends MANOPlugin {
     @Override
     public Map<String, List<String>> getAllVnfd(String project){
         log.info("{} - Startup synchronization, started retrieving 5GROWTH SO Vnf Pkgs from project {}", so.getManoId(), project);
-
-        this.startSync = Instant.now().getEpochSecond();
+        Long startSync = Instant.now().getEpochSecond();
 
         try {
             updateDB(true, false);
@@ -136,34 +133,39 @@ public class SOPlugin extends MANOPlugin {
                 log.info("{} - Vnf Pkg with descriptor ID {} and version {} no longer present in project {}", so.getManoId(), soObject.getDescriptorId(), soObject.getVersion(), project);
                 fivegrowthObjectRepository.delete(soObject);
             }else{
-                ids.computeIfAbsent(soObject.getDescriptorId(), k -> new ArrayList<>()).add(soObject.getVersion());//ids.put(onapObject.getDescriptorId(), onapObject.getVersion());
+                ids.computeIfAbsent(soObject.getDescriptorId(), k -> new ArrayList<>()).add(soObject.getVersion());
             }
         }
 
         log.info("{} - Startup synchronization, finished retrieving Vnf Pkgs from project {}", so.getManoId(), project);
-
         return ids;
     }
 
     @Override
     public Map<String, List<String>> getAllNsd(String project) {
         log.info("{} - Startup synchronization, started retrieving 5GROWTH SO Ns Pkgs from project {}", so.getManoId(), project);
+        Long startSync = Instant.now().getEpochSecond();
+
+        try {
+            updateDB(false, true);
+        } catch(FailedOperationException e){
+            log.error("{} - {}", so.getManoId(), e.getMessage());
+            return null;
+        }
+
+        //Delete Ns Pkg no longer present in SO and add to ids list the others
         Map<String, List<String>> ids = new HashMap<>();
         List<SoObject> soObjectList = fivegrowthObjectRepository.findBySoIdAndType(so.getManoId(), ManoObjectType.NS);
-        for(SoObject soObject : soObjectList)
-            ids.computeIfAbsent(soObject.getDescriptorId(), k -> new ArrayList<>()).add(soObject.getVersion());
-        /*
-        List<OnapObject> onapObjectList = fivegrowthObjectRepository.findByOnapIdAndType(onap.getManoId(), OnapObjectType.NS);
-        for(OnapObject onapObject : onapObjectList){
-            if(onapObject.getEpoch().compareTo(this.startSync) < 0){
-                log.info("{} - Onap Ns Pkg with descriptor ID {} and version {} no longer present in project {}", onap.getManoId(), onapObject.getDescriptorId(), onapObject.getVersion(), project);
-                fivegrowthObjectRepository.delete(onapObject);
+        for(SoObject soObject : soObjectList){
+            if(soObject.getEpoch().compareTo(startSync) < 0){
+                log.info("{} - Ns Pkg with descriptor ID {} and version {} no longer present in project {}", so.getManoId(), soObject.getDescriptorId(), soObject.getVersion(), project);
+                fivegrowthObjectRepository.delete(soObject);
             }else{
-                ids.computeIfAbsent(onapObject.getDescriptorId(), k -> new ArrayList<>()).add(onapObject.getVersion());//ids.put(onapObject.getDescriptorId(), onapObject.getVersion());
+                ids.computeIfAbsent(soObject.getDescriptorId(), k -> new ArrayList<>()).add(soObject.getVersion());
             }
         }
-        log.info("{} - Startup synchronization, finished retrieving ONAP Ns Pkgs from project {}", onap.getManoId(), project);
-        */
+
+        log.info("{} - Startup synchronization, finished retrieving Ns Pkgs from project {}", so.getManoId(), project);
         return ids;
     }
 
@@ -188,7 +190,6 @@ public class SOPlugin extends MANOPlugin {
         }
 
         log.info("{} - Uploading TOSCA Pkg with descriptor ID {} and version {} to project {}", so.getManoId(), descriptorId, descriptorVersion, project);
-
         return new KeyValuePair(pkgPath, PathType.LOCAL.toString());
     }
 
@@ -253,7 +254,6 @@ public class SOPlugin extends MANOPlugin {
             }
         }
 
-        /* //NS sync not activated
         for(SoObject soNs : soNsList){
             //upload new Ns Pkgs
             if(!oldSoIdList.contains(soNs.getDescriptorId())){
@@ -278,7 +278,6 @@ public class SOPlugin extends MANOPlugin {
                 fivegrowthObjectRepository.delete(soNs);
             }
         }
-        */
 
         for(SoObject soVnf : soVnfList) {
             //Delete Vnf Pkg no longer present
@@ -352,11 +351,11 @@ public class SOPlugin extends MANOPlugin {
                 String nsdVersion = nsInfoObject.getNsd().getVersion();
                 infoObjectOptional = fivegrowthObjectRepository.findByDescriptorIdAndVersionAndSoId(nsdId, nsdVersion, so.getManoId());
                 if (infoObjectOptional.isPresent()) {
-                    log.info("{} - Vnf Pkg with descriptor ID {} and version {} already present", so.getManoId(), nsdId, nsdVersion);
+                    log.info("{} - Ns Pkg with descriptor ID {} and version {} already present", so.getManoId(), nsdId, nsdVersion);
                     infoObject = infoObjectOptional.get();
                     infoObject.setEpoch(Instant.now().getEpochSecond());
                 }else{
-                    log.info("{} - Found new Vnf Pkg with descriptor ID {} and version {}", so.getManoId(), nsdId, nsdVersion);
+                    log.info("{} - Found new Ns Pkg with descriptor ID {} and version {}", so.getManoId(), nsdId, nsdVersion);
                     //Store descriptor file
                     File descriptor = new File(soDir, nsdId + ".json");
                     mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
@@ -378,7 +377,7 @@ public class SOPlugin extends MANOPlugin {
         }
     }
 
-    private String createVnfPkgTosca (SoObject soObject) throws MalformattedElementException, IllegalStateException, IOException, IllegalArgumentException{
+    private String createVnfPkgTosca (SoObject soObject) throws IllegalStateException, IOException, IllegalArgumentException{
         log.info("{} - Creating TOSCA VNF Descriptor with ID {} and version {}", so.getManoId(), soObject.getDescriptorId(), soObject.getVersion());
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
@@ -391,7 +390,7 @@ public class SOPlugin extends MANOPlugin {
         return ToscaArchiveBuilder.createVNFCSAR(vnfdSol.getMetadata().getDescriptorId(), vnfdSol, tmpDirPath.toString(), null);
     }
 
-    private String createNsPkgTosca (SoObject soObject) throws MalformattedElementException, IllegalStateException, IOException, IllegalArgumentException{
+    private String createNsPkgTosca (SoObject soObject) throws IllegalStateException, IOException, IllegalArgumentException {
         log.info("{} - Creating TOSCA NS Descriptor with ID {} and version {}", so.getManoId(), soObject.getDescriptorId(), soObject.getVersion());
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
@@ -399,7 +398,7 @@ public class SOPlugin extends MANOPlugin {
         mapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
         Nsd nsdIfa = mapper.readValue(new File(soObject.getPath()), Nsd.class);
-        DescriptorTemplate nsdSol = IfaToSolTranslator.generateNsDescriptor(nsdIfa);
+        DescriptorTemplate nsdSol = IfaToSolTranslator.generateNsDescriptor(nsdIfa, soClient);
         log.info("{} - Creating TOSCA NS Pkg with descriptor ID {} and version {}", so.getManoId(), soObject.getDescriptorId(), soObject.getVersion());
         return ToscaArchiveBuilder.createNSCSAR(nsdSol.getMetadata().getDescriptorId(), nsdSol, tmpDirPath.toString());
     }
@@ -699,14 +698,5 @@ public class SOPlugin extends MANOPlugin {
     public void acceptPnfdDeletionNotification(PnfdDeletionNotificationMessage notification) {
         log.debug("Body: {}", notification);
         log.info("{} - Received PNFD deletion notification", so.getManoId());
-    }
-
-    private File loadFile(String filename) {
-        ClassLoader classLoader = getClass().getClassLoader();
-        URL resource = classLoader.getResource(filename);
-        if (resource == null) {
-            throw new IllegalArgumentException(String.format("Invalid resource %s", filename));
-        }
-        return new File(resource.getFile());
     }
 }
