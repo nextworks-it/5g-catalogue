@@ -1480,8 +1480,8 @@ public class NsdManagementService implements NsdManagementInterface {
             if(siteOrManoIds.size() == 0)
                 siteOrManoIds.addAll(pluginManger.manoDrivers.keySet());
             siteOrManoIds.removeIf(id -> !manoIds.contains(id));
-            if(siteOrManoIds.size() == 0)
-                throw new FailedOperationException("No suitable manos found");
+            /*    if(siteOrManoIds.size() == 0)
+                throw new FailedOperationException("No suitable manos found"); */
 
             for(MANOPlugin mano : pluginManger.manoDrivers.values())
                 if(nsdInfo.getUserDefinedData().remove(mano.getPluginId()) == null)

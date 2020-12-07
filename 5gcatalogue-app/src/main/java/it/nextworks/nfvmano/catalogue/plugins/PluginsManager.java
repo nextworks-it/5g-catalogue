@@ -254,7 +254,7 @@ public class PluginsManager {
                                     newMano = new OSM(newManoId, manoCredentials.getHost(), String.valueOf(manoCredentials.getPort()), manoCredentials.getUsername(), manoCredentials.getPassword(), manoCredentials.getProject(), MANOType.valueOf(nfvOrchestrator.getType().toUpperCase() + nfvOrchestrator.getVersion().toUpperCase()), nfvOrchestrator.getSite().getName(), null);
                                 else if (nfvOrchestrator.getType().equalsIgnoreCase("ONAP"))
                                     newMano = new ONAP(newManoId, manoCredentials.getHost(), String.valueOf(manoCredentials.getPort()), MANOType.valueOf(nfvOrchestrator.getType().toUpperCase()), nfvOrchestrator.getSite().getName());
-                                else if (nfvOrchestrator.getType().equalsIgnoreCase("SO_5GROWTH"))
+                                else if (nfvOrchestrator.getType().equalsIgnoreCase("5gr-so"))
                                     newMano = new FIVEGROWTH(newManoId, manoCredentials.getHost(), String.valueOf(manoCredentials.getPort()), MANOType.valueOf(nfvOrchestrator.getType().toUpperCase()), nfvOrchestrator.getSite().getName());
                                 else
                                     throw new MethodNotImplementedException("Unsupported MANO type");
