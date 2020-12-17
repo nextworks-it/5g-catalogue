@@ -66,6 +66,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
+
 @Service
 public class PluginsManager {
 
@@ -255,7 +256,7 @@ public class PluginsManager {
                                 else if (nfvOrchestrator.getType().equalsIgnoreCase("ONAP"))
                                     newMano = new ONAP(newManoId, manoCredentials.getHost(), String.valueOf(manoCredentials.getPort()), MANOType.valueOf(nfvOrchestrator.getType().toUpperCase()), nfvOrchestrator.getSite().getName());
                                 else if (nfvOrchestrator.getType().equalsIgnoreCase("5gr-so"))
-                                    newMano = new FIVEGROWTH(newManoId, manoCredentials.getHost(), String.valueOf(manoCredentials.getPort()), MANOType.valueOf(nfvOrchestrator.getType().toUpperCase()), nfvOrchestrator.getSite().getName());
+                                    newMano = new FIVEGROWTH(newManoId, manoCredentials.getHost(), String.valueOf(manoCredentials.getPort()), MANOType.SO_5GROWTH, nfvOrchestrator.getSite().getName());
                                 else
                                     throw new MethodNotImplementedException("Unsupported MANO type");
                                 newMano.setPluginOperationalState(PluginOperationalState.valueOf(nfvOrchestrator.getOperationalState().toUpperCase()));
@@ -396,7 +397,7 @@ public class PluginsManager {
         } else if (mano.getManoType().equals(MANOType.ONAP)) {
             Path onapDir = Paths.get(manoDir, "/" + mano.getManoType().toString().toLowerCase());
             return new OnapPlugin(mano.getManoType(), mano, bootstrapServers, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, onapObjectRepository, onapDir, Paths.get(tmpDir), runtimeSync, manoSyncPeriod);
-        } else if (mano.getManoType().equals(MANOType.SO_5GROWTH)) {
+        } else if (mano.getManoType().equals(SO_5GROWTH)) {
                 Path soDir = Paths.get(manoDir, "/" + mano.getManoType().toString().toLowerCase());
                 return new SOPlugin(mano.getManoType(), mano, bootstrapServers, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, fivegrowthObjectRepository, soDir, Paths.get(tmpDir), runtimeSync, manoSyncPeriod);
         } else {
@@ -473,7 +474,7 @@ public class PluginsManager {
                 log.debug("ONAP MANO with manoId " + manoId + " successfully instantiated");
             }
             return String.valueOf(createdMano.getId());
-        } else if (type == MANOType.SO_5GROWTH) {
+        } else if (type == SO_5GROWTH) {
             log.debug("Processing request for creating " + type + " Plugin");
             FIVEGROWTH so = (FIVEGROWTH) mano;
             FIVEGROWTH targetSo = new FIVEGROWTH(
