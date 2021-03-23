@@ -1033,6 +1033,8 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new NotAuthorizedOperationException(e.getMessage());
         }
 
+
+        //ONAP REMAPPING
         if(nsdId != null) {
             Optional<NsdIdInvariantIdMapping> mapping = nsdIdInvariantIdMappingRepository.findByNsdId(nsdId.toString());
             if (mapping.isPresent()) {
@@ -2326,11 +2328,21 @@ public class NsdManagementService implements NsdManagementInterface {
 
             if(nsdId.equals(nsd.getMetadata().getDescriptorId()) && version.equals(nsd.getMetadata().getVersion()))
                 continue;
-
+            //TODO: check ONAP mapping
             Optional<NsdInfoResource> optional = nsdInfoRepo.findByNsdIdAndNsdVersionAndProjectId(UUID.fromString(nsdId), version, project);
             if (!optional.isPresent()) {
-                throw new NotExistingEntityException("Nested NSD for nsdId " + nsdId + " and version " + version + " not find in project " + project);
+                log.debug("NSD not present, checking by invariant ID ");
+                Optional<NsdIdInvariantIdMapping> mapping = nsdIdInvariantIdMappingRepository.findByNsdId(nsdId.toString());
+                if (mapping.isPresent()) {
+                    log.debug("Overriding nsdId {} with {}", nsdId.toString(), mapping.get().getInvariantId());
+                    UUID nsdInvariantId = UUID.fromString(mapping.get().getInvariantId());
+                    optional = nsdInfoRepo.findByNsdIdAndNsdVersionAndProjectId(nsdInvariantId, version, project);
+                    if(!optional.isPresent())
+                        throw new NotExistingEntityException("Nested NSD for nsdId " + nsdId + " and version " + version + " not find in project " + project);
+                    nsdId = nsdInvariantId.toString();
+                }else   throw new NotExistingEntityException("Nested NSD for nsdId " + nsdId + " and version " + version + " not find in project " + project);
             }
+
 
             NsdInfoResource nsdInfoResource = optional.get();
             List<String> nsdFileNames = nsdInfoResource.getNsdFilename();
