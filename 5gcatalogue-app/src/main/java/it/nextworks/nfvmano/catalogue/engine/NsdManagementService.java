@@ -2339,7 +2339,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     optional = nsdInfoRepo.findByNsdIdAndNsdVersionAndProjectId(nsdInvariantId, version, project);
                     if(!optional.isPresent())
                         throw new NotExistingEntityException("Nested NSD for nsdId " + nsdId + " and version " + version + " not find in project " + project);
-
+                    nsdId = nsdInvariantId.toString();
                 }else   throw new NotExistingEntityException("Nested NSD for nsdId " + nsdId + " and version " + version + " not find in project " + project);
             }
 
