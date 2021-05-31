@@ -933,15 +933,15 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             if (!Utilities.isUUID(vnfPkgId_string)) {
                 throw new MalformattedElementException("VNFD id not in UUID format");
             }
+            vnfdId = UUID.fromString(vnfPkgId_string);
 
             if(dms == DataModelSpec.SOL001) {
                 VNFNode vnfNode = dt.getTopologyTemplate().getVNFNodes().values().iterator().next();//For the moment assume only one VNF node
                 if (!version.equals(vnfNode.getProperties().getDescriptorVersion()) ||
-                        !dt.getMetadata().getDescriptorId().equals(vnfNode.getProperties().getDescriptorId()))
+                        !dt.getMetadata().getDescriptorId().equals(vnfNode.getProperties().getDescriptorId())) {
                     throw new MalformattedElementException("Descriptor ID and version specified into metadata are not aligned with those specified into VNFNode");
+                }
             }
-
-            vnfdId = UUID.fromString(vnfPkgId_string);
 
             if(dms == DataModelSpec.SOL001) {
                 Map<String, VnfExtCpNode> vnfExtCpNodes = dt.getTopologyTemplate().getVnfExtCpNodes();
@@ -991,6 +991,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                 throw new AlreadyExistingEntityException("A VNFD with the same id and version already exists in the project");
 
             vnfPkgInfoResource.setVnfdId(vnfdId);
+
             if(dms == DataModelSpec.SOL001)
                 log.debug("VNFD in Pkg successfully parsed - its content is: \n"
                         + DescriptorsParser.descriptorTemplateToString(dt));
@@ -1152,49 +1153,95 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
 
         it.nextworks.nfvmano.catalogue.engine.Utilities.checkZipArchive(vnfPkg);
 
-        String vnfPkgFilename = null;
+        CSARInfo csarInfo;
+        DataModelSpec dms;
+
         DescriptorTemplate dt = null;
-        CSARInfo csarInfo = null;
-        UUID vnfdId = null;
+        Vnfd vnfd = null;
+
         UUID oldVnfdId;
+        UUID vnfdId;
         String oldVnfdVersion;
-        String vnfPkgId_string;
-        Optional<VnfPkgInfoResource> optionalVnfPkgInfoResource;
-        PackageOnboardingStateType onboardingStateType = PackageOnboardingStateType.UPLOADING;
+        String version;
+
+        String vnfPkgFilename;
 
         try {
             csarInfo = archiveParser.archiveToCSARInfo(project, vnfPkg, DescriptorType.VNFD, false);
-            dt = csarInfo.getMst();
+            dms = csarInfo.getDataModelSpec();
 
-            vnfPkgId_string = dt.getMetadata().getDescriptorId();
+            if(dms == DataModelSpec.SOL001)
+                dt = csarInfo.getMst();
+            else
+                vnfd = csarInfo.getVnfd();
+
+            String vnfPkgId_string;
+            if(dms == DataModelSpec.SOL001)
+                vnfPkgId_string = dt.getMetadata().getDescriptorId();
+            else
+                vnfPkgId_string = vnfd.getId();
+
+            if(dms == DataModelSpec.SOL001)
+                version = dt.getMetadata().getVersion();
+            else
+                version = vnfd.getVersion();
+
             if (!Utilities.isUUID(vnfPkgId_string)) {
                 throw new MalformattedElementException("VNFD id not in UUID format");
             }
             vnfdId = UUID.fromString(vnfPkgId_string);
 
-            VNFNode vnfNode = dt.getTopologyTemplate().getVNFNodes().values().iterator().next();//For the moment assume only one VNF node
-            if(!dt.getMetadata().getVersion().equals(vnfNode.getProperties().getDescriptorVersion()) ||
-                    !dt.getMetadata().getDescriptorId().equals(vnfNode.getProperties().getDescriptorId()))
-                throw new MalformattedElementException("Descriptor ID and version specified into metadata are not aligned with those specified into VNFNode");
-
-            Map<String, VnfExtCpNode> vnfExtCpNodes = dt.getTopologyTemplate().getVnfExtCpNodes();
-            if(vnfExtCpNodes.isEmpty())
-                throw new MalformattedElementException("No External Connection Points defined");
-            List<String> mgmtCps = new ArrayList<>();
-            for(Map.Entry<String, VnfExtCpNode> cpNode : vnfExtCpNodes.entrySet()) {
-                if (cpNode.getValue().getProperties().getVirtualNetworkInterfaceRequirements().isEmpty())
-                    continue;
-                Map<String, String> interfaceRequirements = cpNode.getValue().getProperties().getVirtualNetworkInterfaceRequirements().get(0).getNetworkInterfaceRequirements();
-                if (interfaceRequirements.containsKey("isManagement") && interfaceRequirements.get("isManagement").equalsIgnoreCase("true"))
-                    mgmtCps.add(cpNode.getKey());
+            if(dms == DataModelSpec.SOL001) {
+                VNFNode vnfNode = dt.getTopologyTemplate().getVNFNodes().values().iterator().next();//For the moment assume only one VNF node
+                if (!version.equals(vnfNode.getProperties().getDescriptorVersion()) ||
+                        !dt.getMetadata().getDescriptorId().equals(vnfNode.getProperties().getDescriptorId()))
+                    throw new MalformattedElementException("Descriptor ID and version specified into metadata are not aligned with those specified into VNFNode");
             }
-            if(mgmtCps.size() == 0)
-                throw new MalformattedElementException("Please define a management Connection Point");
-            else if (mgmtCps.size() > 1)
-                throw new MalformattedElementException("Multiple management Connection Points are not allowed");
 
-            if(!vnfPkgInfoResource.getVnfdId().equals(vnfdId) || !vnfPkgInfoResource.getVnfdVersion().equals(dt.getMetadata().getVersion())) {
-                optionalVnfPkgInfoResource = vnfPkgInfoRepository.findByVnfdIdAndVnfdVersionAndProjectId(vnfdId, dt.getMetadata().getVersion(), project);
+            if(dms == DataModelSpec.SOL001) {
+                Map<String, VnfExtCpNode> vnfExtCpNodes = dt.getTopologyTemplate().getVnfExtCpNodes();
+                if (vnfExtCpNodes.isEmpty())
+                    throw new MalformattedElementException("No External Connection Points defined");
+                List<String> mgmtCps = new ArrayList<>();
+                for (Map.Entry<String, VnfExtCpNode> cpNode : vnfExtCpNodes.entrySet()) {
+                    if (cpNode.getValue().getProperties().getVirtualNetworkInterfaceRequirements().isEmpty())
+                        continue;
+                    Map<String, String> interfaceRequirements = cpNode.getValue().getProperties().getVirtualNetworkInterfaceRequirements().get(0).getNetworkInterfaceRequirements();
+                    if (interfaceRequirements.containsKey("isManagement") && interfaceRequirements.get("isManagement").equalsIgnoreCase("true"))
+                        mgmtCps.add(cpNode.getKey());
+                }
+                if (mgmtCps.size() == 0)
+                    throw new MalformattedElementException("Please define a management Connection Point");
+                else if (mgmtCps.size() > 1)
+                    throw new MalformattedElementException("Multiple management Connection Points are not allowed");
+            } else {
+                List<ExtCpd> extCpds = vnfd.getExtCpd();
+                if(extCpds.isEmpty())
+                    throw new MalformattedElementException("No External Connection Points defined");
+                List<String> mgmtCps = new ArrayList<>();
+                for(ExtCpd extCpd : extCpds) {
+                    List<VirtualNetworkInterfaceRequirementSchema> virtualNetworkInterfaceRequirements =
+                            extCpd.getVirtualNetworkInterfaceRequirementSchemas();
+                    if(virtualNetworkInterfaceRequirements.isEmpty())
+                        continue;
+                    List<NetworkInterfaceRequirementsSchema> networkInterfaceRequirements =
+                            virtualNetworkInterfaceRequirements.get(0).getNetworkInterfaceRequirements();
+                    mgmtCps = networkInterfaceRequirements
+                            .stream()
+                            .filter(nir -> nir.getKey().equals("isManagement") &&
+                                    nir.getValue().equalsIgnoreCase("true"))
+                            .map(NetworkInterfaceRequirementsSchema::getValue)
+                            .collect(Collectors.toList());
+                }
+                if(mgmtCps.size() == 0)
+                    throw new MalformattedElementException("Please define a management Connection Point");
+                else if (mgmtCps.size() > 1)
+                    throw new MalformattedElementException("Multiple management Connection Points are not allowed");
+            }
+
+            if(!vnfPkgInfoResource.getVnfdId().equals(vnfdId) || !vnfPkgInfoResource.getVnfdVersion().equals(version)) {
+                Optional<VnfPkgInfoResource> optionalVnfPkgInfoResource =
+                        vnfPkgInfoRepository.findByVnfdIdAndVnfdVersionAndProjectId(vnfdId, version, project);
                 if (optionalVnfPkgInfoResource.isPresent())
                     throw new AlreadyExistingEntityException("An VNF Pkg with the same id and version already exists in the project");
             }
@@ -1203,21 +1250,22 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             oldVnfdVersion = vnfPkgInfoResource.getVnfdVersion();
 
             vnfPkgInfoResource.setVnfdId(vnfdId);
-            vnfPkgInfoResource.setVnfdVersion(dt.getMetadata().getVersion());
+            vnfPkgInfoResource.setVnfdVersion(version);
 
-            log.debug("VNF Pkg successfully parsed - its content is: \n"
-                    + DescriptorsParser.descriptorTemplateToString(dt));
+            if(dms == DataModelSpec.SOL001)
+                log.debug("VNF Pkg successfully parsed - its content is: \n"
+                        + DescriptorsParser.descriptorTemplateToString(dt));
+            else
+                log.debug("VNFD in Pkg successfully parsed - its content is: \n" + vnfd.toString());
 
-            vnfPkgFilename = FileSystemStorageService.storePkg(project, vnfPkgInfoResource.getVnfdId().toString(), vnfPkgInfoResource.getVnfdVersion(), vnfPkg, DescriptorType.VNFD);
+            vnfPkgFilename =
+                    FileSystemStorageService.storePkg(project, vnfdId.toString(), version, vnfPkg, DescriptorType.VNFD);
 
-            if(contentType.equals(ContentType.ZIP)) {
-                byte[] bytes = vnfPkg.getBytes();
-                archiveParser.unzip(new ByteArrayInputStream(bytes), project, dt.getMetadata().getDescriptorId(),
-                        dt.getMetadata().getVersion(), DescriptorType.VNFD);
-            }
+            byte[] bytes = vnfPkg.getBytes();
+            archiveParser.unzip(new ByteArrayInputStream(bytes), project, vnfPkgId_string, version, DescriptorType.VNFD);
 
             //Removing old files
-            if(!oldVnfdId.equals(vnfPkgInfoResource.getVnfdId()) || !oldVnfdVersion.equals(vnfPkgInfoResource.getVnfdVersion()))
+            if(!oldVnfdId.equals(vnfdId) || !oldVnfdVersion.equals(version))
                 FileSystemStorageService.deleteVnfPkg(project, oldVnfdId.toString(), oldVnfdVersion);
 
             log.debug("VNF Pkg file successfully stored");
@@ -1235,9 +1283,8 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             throw new FailedOperationException("Unable to onboard VNF Pkg: " + e.getMessage());
         }
 
-        if (vnfPkgFilename == null || dt == null) {
-            onboardingStateType = PackageOnboardingStateType.FAILED;
-            vnfPkgInfoResource.setOnboardingState(onboardingStateType);
+        if (vnfPkgFilename == null) {
+            vnfPkgInfoResource.setOnboardingState(PackageOnboardingStateType.FAILED);
             vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
             throw new FailedOperationException("Invalid internal structures");
         }
@@ -1245,22 +1292,30 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         log.debug("Updating VNF Pkg info");
         vnfPkgInfoResource.setOnboardingState(PackageOnboardingStateType.LOCAL_ONBOARDED);
         vnfPkgInfoResource.setOperationalState(PackageOperationalStateType.ENABLED);
-        vnfPkgInfoResource.setVnfProvider(dt.getMetadata().getVendor());
 
-        Map<String, VNFNode> vnfNodes = dt.getTopologyTemplate().getVNFNodes();
+        if(dms == DataModelSpec.SOL001)
+            vnfPkgInfoResource.setVnfProvider(dt.getMetadata().getVendor());
+        else
+            vnfPkgInfoResource.setVnfProvider(vnfd.getProvider());
+
+
         String vnfName = "";
-        if (vnfNodes.size() == 1) {
-            for (Map.Entry<String, VNFNode> vnfNode : vnfNodes.entrySet()) {
-                vnfName = vnfNode.getValue().getProperties().getProductName();
-            }
-        } else {
-            Map<String, String> subMapsProperties = dt.getTopologyTemplate().getSubstituitionMappings().getProperties();
-            for (Map.Entry<String, String> entry : subMapsProperties.entrySet()) {
-                if (entry.getKey().equalsIgnoreCase("productName")) {
-                    vnfName = entry.getValue();
+        if(dms == DataModelSpec.SOL001) {
+            Map<String, VNFNode> vnfNodes = dt.getTopologyTemplate().getVNFNodes();
+            if (vnfNodes.size() == 1) {
+                for (Map.Entry<String, VNFNode> vnfNode : vnfNodes.entrySet()) {
+                    vnfName = vnfNode.getValue().getProperties().getProductName();
+                }
+            } else {
+                Map<String, String> subMapsProperties = dt.getTopologyTemplate().getSubstituitionMappings().getProperties();
+                for (Map.Entry<String, String> entry : subMapsProperties.entrySet()) {
+                    if (entry.getKey().equalsIgnoreCase("productName")) {
+                        vnfName = entry.getValue();
+                    }
                 }
             }
-        }
+        } else
+            vnfName = vnfd.getProductName();
 
         log.debug("VNF Pkg name: " + vnfName);
         vnfPkgInfoResource.setVnfProductName(vnfName);
@@ -1313,7 +1368,7 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                     operationId, ScopeType.LOCAL, OperationStatus.SENT, alreadyOnboardedManoIds, new KeyValuePair(rootDir + ConfigurationParameters.storageVnfpkgsSubfolder + "/" + project + "/" + vnfdId.toString() + "/" + vnfPkgInfoResource.getVnfdVersion(), PathType.LOCAL.toString()));
             notificationManager.sendVnfPkgChangeNotification(updateMsg);
         }
-        
+
         vnfPkgInfoRepository.saveAndFlush(vnfPkgInfoResource);
         log.debug("VNF Pkg content updated");
     }
