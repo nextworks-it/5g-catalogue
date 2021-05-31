@@ -1,5 +1,5 @@
 {
-  "id": "CSR",
+  "id": "08661c38-20c6-4f8f-9b76-a8b67dc5181c",
   "provider": "Nextworks s.r.l",
   "product-name": "complex-vnf",
   "software-version": "1.0",
@@ -145,12 +145,23 @@
         "vdu-id": "data-plane",
         "cpd": "in"
       },
-      "layer-protocol": ["ipv4"]
+      "layer-protocol": ["ipv4"],
+      "virtual-network-interface-requirement": [
+        {
+          "network-interface-requirements": [
+            {
+              "key": "isManagement", 
+              "value": "true"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "mgmt",
       "int-virtual-link-desc": "mgmt",
-      "layer-protocol": ["ipv4"]
+      "layer-protocol": ["ipv4"],
+      "virtual-network-interface-requirement": []
     },
     {
       "id": "out",
@@ -158,7 +169,8 @@
         "vdu-id": "data-plane",
         "cpd": "out"
       },
-      "layer-protocol": ["ipv4"]
+      "layer-protocol": ["ipv4"],
+      "virtual-network-interface-requirement": []
     }
   ],
   "df": [
