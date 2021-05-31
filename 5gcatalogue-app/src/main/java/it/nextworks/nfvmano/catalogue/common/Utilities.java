@@ -16,13 +16,6 @@
 package it.nextworks.nfvmano.catalogue.common;
 
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.ProblemDetails;
-import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
-import org.apache.commons.fileupload.disk.DiskFileItem;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.commons.CommonsMultipartFile;
-
-import java.io.File;
-import java.io.IOException;
 
 public class Utilities {
 

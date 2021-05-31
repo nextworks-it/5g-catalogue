@@ -28,6 +28,7 @@ import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.Cat
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.PathType;
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.ScopeType;
 import it.nextworks.nfvmano.catalogue.common.ConfigurationParameters;
+import it.nextworks.nfvmano.catalogue.common.enums.DescriptorType;
 import it.nextworks.nfvmano.catalogue.engine.elements.ContentType;
 import it.nextworks.nfvmano.catalogue.engine.elements.NsdIdInvariantIdMapping;
 import it.nextworks.nfvmano.catalogue.engine.elements.NsdIdInvariantIdMappingRepository;
@@ -239,7 +240,7 @@ public class NsdManagementService implements NsdManagementInterface {
                                         throw new FailedOperationException("Found more than one file for NSD in YAML format. Error");
                                     }
                                     String nsdFilename = nsdFilenames.get(0);
-                                    Resource dtFile = FileSystemStorageService.loadFileAsResource(project.getProjectId(), nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(), nsdFilename, false);
+                                    Resource dtFile = FileSystemStorageService.loadFileAsResource(project.getProjectId(), nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(), nsdFilename, DescriptorType.NSD);
                                     DescriptorTemplate dt = mapper.readValue(dtFile.getFile(), DescriptorTemplate.class);
                                     Map<String, KeyValuePair> includedVnfds = checkVNFPkgs(dt, project.getProjectId());
                                     Map<String, KeyValuePair> includedPnfds = checkPNFDs(dt, project.getProjectId());
@@ -269,7 +270,7 @@ public class NsdManagementService implements NsdManagementInterface {
                                     throw new FailedOperationException("Found more than one file for NSD in YAML format. Error");
                                 }
                                 String nsdFilename = nsdFilenames.get(0);
-                                Resource dtFile = FileSystemStorageService.loadFileAsResource(project.getProjectId(), nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(), nsdFilename, false);
+                                Resource dtFile = FileSystemStorageService.loadFileAsResource(project.getProjectId(), nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(), nsdFilename, DescriptorType.NSD);
                                 DescriptorTemplate dt = mapper.readValue(dtFile.getFile(), DescriptorTemplate.class);
                                 Map<String, KeyValuePair> includedVnfds = checkVNFPkgs(dt, project.getProjectId());
                                 Map<String, KeyValuePair> includedPnfds = checkPNFDs(dt, project.getProjectId());
@@ -391,7 +392,7 @@ public class NsdManagementService implements NsdManagementInterface {
                                 throw new FailedOperationException("Found more than one file for NSD in YAML format. Error");
                             }
                             String nsdFilename = nsdFilenames.get(0);
-                            Resource dtFile = FileSystemStorageService.loadFileAsResource(project, nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(), nsdFilename, false);
+                            Resource dtFile = FileSystemStorageService.loadFileAsResource(project, nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(), nsdFilename, DescriptorType.NSD);
                             DescriptorTemplate dt = mapper.readValue(dtFile.getFile(), DescriptorTemplate.class);
                             Map<String, KeyValuePair> includedVnfds = checkVNFPkgs(dt, project);
                             Map<String, KeyValuePair> includedPnfds = checkPNFDs(dt, project);
@@ -427,7 +428,7 @@ public class NsdManagementService implements NsdManagementInterface {
                             throw new FailedOperationException("Found more than one file for NSD in YAML format. Error");
                         }
                         String nsdFilename = nsdFilenames.get(0);
-                        Resource dtFile = FileSystemStorageService.loadFileAsResource(project, nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(), nsdFilename, false);
+                        Resource dtFile = FileSystemStorageService.loadFileAsResource(project, nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(), nsdFilename, DescriptorType.NSD);
                         DescriptorTemplate dt = mapper.readValue(dtFile.getFile(), DescriptorTemplate.class);
                         Map<String, KeyValuePair> includedVnfds = checkVNFPkgs(dt, project);
                         Map<String, KeyValuePair> includedPnfds = checkPNFDs(dt, project);
@@ -537,7 +538,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     }
                     log.debug("Project {} - Sending on-boarding request for NSD with ID {} and version {}", project, nsdInfoResource.getNsdId(), nsdInfoResource.getNsdVersion());
                     String nsdFilename = nsdFilenames.get(0);
-                    Resource dtFile = FileSystemStorageService.loadFileAsResource(project, nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(), nsdFilename, false);
+                    Resource dtFile = FileSystemStorageService.loadFileAsResource(project, nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(), nsdFilename, DescriptorType.NSD);
                     DescriptorTemplate dt = mapper.readValue(dtFile.getFile(), DescriptorTemplate.class);
                     Map<String, KeyValuePair> includedVnfds = checkVNFPkgs(dt, project);
                     Map<String, KeyValuePair> includedPnfds = checkPNFDs(dt, project);
@@ -870,7 +871,7 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new FailedOperationException("Found more than one file for NSD in YAML format. Error");
         }
         String nsdFilename = nsdFilenames.get(0);
-        return storageService.loadFileAsResource(project, nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdFilename, false);
+        return storageService.loadFileAsResource(project, nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdFilename, DescriptorType.NSD);
     }
 
     @Override
@@ -923,7 +924,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     throw new FailedOperationException("Found more than one file for NSD in YAML format");
                 }
                 String nsdFilename = nsdFilenames.get(0);
-                return storageService.loadFileAsResource(project, nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdFilename, false);
+                return storageService.loadFileAsResource(project, nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdFilename, DescriptorType.NSD);
 
                 /*
                  * //String nsdString = DescriptorsParser.descriptorTemplateToString(nsd);
@@ -941,7 +942,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     throw new FailedOperationException("Found more than one file for NSD in YAML format. Error");
                 }
                 String nsdFilename = nsdFilenames.get(0);
-                return storageService.loadFileAsResource(project, nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdFilename, false);
+                return storageService.loadFileAsResource(project, nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdFilename, DescriptorType.NSD);
             }
             default: {
                 log.error("Content type not yet supported");
@@ -1231,7 +1232,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     //File nsdFile = convertToFile(nsdMpFile);
                     //dt = DescriptorsParser.fileToDescriptorTemplate(nsdFile);
 
-                    csarInfo = archiveParser.archiveToCSARInfo(project, nsd, false, true);
+                    csarInfo = archiveParser.archiveToCSARInfo(project, nsd, DescriptorType.NSD, true);
                     dt = csarInfo.getMst();
 
                     //TODO remove
@@ -1354,7 +1355,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     // pre-set nsdinfo attributes to properly store NSDs
                     nsdInfo.setNsdVersion(dt.getMetadata().getVersion());
 
-                    nsdFilename = storageService.storePkg(project, nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsd, false);
+                    nsdFilename = storageService.storePkg(project, nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsd, DescriptorType.NSD);
 
                     log.debug("NSD file successfully stored");
 
@@ -1570,7 +1571,7 @@ public class NsdManagementService implements NsdManagementInterface {
                 case ZIP:
                     log.info("NSD file is in format: zip");
                     checkZipArchive(nsd);
-                    csarInfo = archiveParser.archiveToCSARInfo(project, nsd, false, false);
+                    csarInfo = archiveParser.archiveToCSARInfo(project, nsd, DescriptorType.NSD, false);
                     dt = csarInfo.getMst();
                     break;
                 case YAML:
@@ -1615,11 +1616,12 @@ public class NsdManagementService implements NsdManagementInterface {
             log.debug("NSD successfully parsed - its content is: \n"
                     + DescriptorsParser.descriptorTemplateToString(dt));
 
-            nsdFilename = FileSystemStorageService.storePkg(project, nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsd, false);
+            nsdFilename = FileSystemStorageService.storePkg(project, nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsd, DescriptorType.NSD);
 
             if(contentType.equals(ContentType.ZIP)) {
                 byte[] bytes = nsd.getBytes();
-                archiveParser.unzip(new ByteArrayInputStream(bytes), project, dt, false);
+                archiveParser.unzip(new ByteArrayInputStream(bytes), project, dt.getMetadata().getDescriptorId(),
+                        dt.getMetadata().getVersion(), DescriptorType.NSD);
             }
 
             //Removing old files
@@ -1934,7 +1936,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     throw new FailedOperationException("Found more than one file for PNFD in YAML format. Error");
                 }
                 String pnfdFilename = pnfdFilenames.get(0);
-                Resource pnfd = storageService.loadFileAsResource(project, pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfdFilename, false);
+                Resource pnfd = storageService.loadFileAsResource(project, pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfdFilename, DescriptorType.PNFD);
 
                 return pnfd;
             }
@@ -2101,7 +2103,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     // pre-set pnfdInfo attributes to properly store PNFDs
                     pnfdInfo.setPnfdVersion(dt.getMetadata().getVersion());
 
-                    pnfdFilename = storageService.storePkg(project, pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfdMpFile, false);
+                    pnfdFilename = storageService.storePkg(project, pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfdMpFile, DescriptorType.PNFD);
 
                     // change contentType to YAML as nsd file is no more zip from now on
                     contentType = ContentType.YAML;
@@ -2169,7 +2171,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     // pre-set pnfdInfo attributes to properly store PNFDs
                     pnfdInfo.setPnfdVersion(dt.getMetadata().getVersion());
 
-                    pnfdFilename = storageService.storePkg(project, pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfd, false);
+                    pnfdFilename = storageService.storePkg(project, pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfd, DescriptorType.PNFD);
 
                     log.debug("PNFD file successfully stored");
 
@@ -2353,7 +2355,7 @@ public class NsdManagementService implements NsdManagementInterface {
             String fileName = nsdFileNames.get(0);
 
             log.debug("Searching NSD {} with nsdId {} and version {} in project {}", fileName, nsdId, version, project);
-            File nsd_file = storageService.loadFileAsResource(project, nsdId, version, fileName, false).getFile();
+            File nsd_file = storageService.loadFileAsResource(project, nsdId, version, fileName, DescriptorType.NSD).getFile();
             DescriptorTemplate nestedNsd = descriptorsParser.fileToDescriptorTemplate(nsd_file);
 
             log.debug("Nested NSD successfully parsed - its content is: \n"
@@ -2396,7 +2398,7 @@ public class NsdManagementService implements NsdManagementInterface {
             String fileName = vnfPkgInfoResource.getVnfdFilename();
 
             log.debug("Searching VNFD {} with vnfdId {} and version {} in project {}", fileName, vnfdId, version, project);
-            File vnfd_file = storageService.loadFileAsResource(project, vnfdId, version, fileName, true).getFile();
+            File vnfd_file = storageService.loadFileAsResource(project, vnfdId, version, fileName, DescriptorType.VNFD).getFile();
             DescriptorTemplate vnfd = descriptorsParser.fileToDescriptorTemplate(vnfd_file);
 
             log.debug("VNFD successfully parsed - its content is: \n"
@@ -2452,7 +2454,7 @@ public class NsdManagementService implements NsdManagementInterface {
             String fileName = pnfdInfoResource.getPnfdFilename().get(0);
 
             log.debug("Searching PNFD {} with pnfdId {} and version {}", fileName, pnfdId, version);
-            File pnfd_file = storageService.loadFileAsResource(project, pnfdId, version, fileName, false).getFile();
+            File pnfd_file = storageService.loadFileAsResource(project, pnfdId, version, fileName, DescriptorType.PNFD).getFile();
             DescriptorTemplate pnfd = descriptorsParser.fileToDescriptorTemplate(pnfd_file);
 
             log.debug("PNFD successfully parsed - its content is: \n"

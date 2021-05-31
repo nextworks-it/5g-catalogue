@@ -16,6 +16,7 @@
 package it.nextworks.nfvmano.catalogue.storage;
 
 import it.nextworks.nfvmano.catalogue.common.ConfigurationParameters;
+import it.nextworks.nfvmano.catalogue.common.enums.DescriptorType;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.NotExistingEntityException;
@@ -53,7 +54,7 @@ public class FileSystemStorageService {
     public FileSystemStorageService() {
     }
 
-    public static String storePkg(String project, String descriptorId, String version, MultipartFile file, boolean isVnfPkg) throws MalformattedElementException, FailedOperationException {
+    public static String storePkg(String project, String descriptorId, String version, MultipartFile file, DescriptorType descriptorType) throws MalformattedElementException, FailedOperationException {
         if(project == null)
             project = "admin";
         String filename = StringUtils.cleanPath(file.getOriginalFilename());
@@ -70,7 +71,7 @@ public class FileSystemStorageService {
 
             Path locationRoot;
             Path locationVersion;
-            if (isVnfPkg) {
+            if (descriptorType == DescriptorType.VNFD) {
                 locationRoot = Paths.get(vnfPkgsLocation + "/" + project + "/" + descriptorId);
                 locationVersion = Paths.get(vnfPkgsLocation + "/" + project + "/" + descriptorId + "/" + version);
             } else {
@@ -96,7 +97,7 @@ public class FileSystemStorageService {
         }
     }
 
-    public static String storePkgElement(ZipInputStream zis, ZipEntry element, String project, String descriptorId, String version, boolean isVnfPkg) throws FailedOperationException {
+    public static String storePkgElement(ZipInputStream zis, ZipEntry element, String project, String descriptorId, String version, DescriptorType descriptorType) throws FailedOperationException {
         log.debug("Received request for storing element in Pkg with descriptor Id {} and version {} into project {}", descriptorId, version, project);
         if(project == null)
             project = "admin";
@@ -106,7 +107,7 @@ public class FileSystemStorageService {
         byte[] buffer = new byte[1024];
 
         Path locationVersion;
-        if (isVnfPkg)
+        if (descriptorType == DescriptorType.VNFD)
             locationVersion = Paths.get(vnfPkgsLocation + "/" + project + "/" + descriptorId + "/" + version);
         else
             locationVersion = Paths.get(nsdsLocation + "/" + project + "/" + descriptorId + "/" + version);
@@ -114,7 +115,7 @@ public class FileSystemStorageService {
         if (filename.endsWith("/")) {
             log.debug("Zip entry is a directory: " + filename);
             Path newDir;
-            if (isVnfPkg)
+            if (descriptorType == DescriptorType.VNFD)
                 newDir = Paths.get(vnfPkgsLocation + "/" + project + "/" + descriptorId + "/" + version + "/" + filename);
             else {
                 newDir = Paths.get(nsdsLocation + "/" + project + "/" + descriptorId + "/" + version + "/" + filename);
@@ -134,11 +135,11 @@ public class FileSystemStorageService {
 
             if (filename.contains("/")) {
                 log.debug("Zip entry is located in a subdirectory: " + filename);
-                if (isVnfPkg)
+                if (descriptorType == DescriptorType.VNFD)
                     dirPath = vnfPkgsLocation + "/" + project + "/" + descriptorId + "/" + version + "/" + filename.substring(0, filename.lastIndexOf("/"));
                 else
                     dirPath = nsdsLocation + "/" + project + "/" + descriptorId + "/" + version + "/" + filename.substring(0, filename.lastIndexOf("/"));
-                //create subdirectorie if doesn't exist
+                //create subdirectories if doesn't exist
                 if (!Files.isDirectory(Paths.get(dirPath), LinkOption.NOFOLLOW_LINKS)) {
                     try {
                         Files.createDirectories(Paths.get(dirPath));
@@ -155,7 +156,7 @@ public class FileSystemStorageService {
             } else {
                 log.debug("Zip entry is located at the root: " + filename);
                 newFile = newFile(locationVersion.toString(), filename);
-                log.debug("File {} sucessfully created: {}", filename, newFile.getAbsolutePath());
+                log.debug("File {} successfully created: {}", filename, newFile.getAbsolutePath());
             }
 
             FileOutputStream fos;
@@ -190,13 +191,13 @@ public class FileSystemStorageService {
         return location.resolve(filename);
     }
 
-    public static Resource loadFileAsResource(String project, String id, String version, String filename, boolean isVnfPkg) throws NotExistingEntityException {
+    public static Resource loadFileAsResource(String project, String id, String version, String filename, DescriptorType descriptorType) throws NotExistingEntityException {
         log.debug("Searching file " + filename);
         if(project == null)
             project = "admin";
         try {
             Path file = null;
-            if (isVnfPkg) {
+            if (descriptorType == DescriptorType.VNFD) {
                 file = loadFile(vnfPkgsLocation, project, id, version, filename);
             } else {
                 file = loadFile(nsdsLocation, project, id, version, filename);

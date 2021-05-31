@@ -15,10 +15,15 @@
  */
 package it.nextworks.nfvmano.catalogue.translators.tosca;
 
+import it.nextworks.nfvmano.catalogue.common.enums.DataModelSpec;
+import it.nextworks.nfvmano.catalogue.common.enums.DescriptorType;
 import it.nextworks.nfvmano.catalogue.storage.FileSystemStorageService;
 import it.nextworks.nfvmano.catalogue.translators.tosca.elements.CSARInfo;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
+import it.nextworks.nfvmano.libs.descriptors.sol006.Nsd;
+import it.nextworks.nfvmano.libs.descriptors.sol006.Pnfd;
+import it.nextworks.nfvmano.libs.descriptors.sol006.Vnfd;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.slf4j.Logger;
@@ -29,6 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -65,7 +71,7 @@ public class ArchiveParser {
         admittedFolders.add("Files/Monitoring/");
     }
 
-    public CSARInfo archiveToCSARInfo(String project, MultipartFile file, boolean isVnfPkg, boolean store)
+    public CSARInfo archiveToCSARInfo(String project, MultipartFile file, DescriptorType descriptorType, boolean store)
             throws IOException, MalformattedElementException, FailedOperationException {
 
         CSARInfo csarInfo = new CSARInfo();
@@ -74,8 +80,6 @@ public class ArchiveParser {
         ByteArrayOutputStream manifest = null;
         ByteArrayOutputStream mainServiceTemplate;
         Map<String, ByteArrayOutputStream> templates = new HashMap<>();
-
-        DescriptorTemplate dt = null;
 
         if (!file.isEmpty()) {
             byte[] bytes = file.getBytes();
@@ -107,7 +111,7 @@ public class ArchiveParser {
                     } else if (fileName.toLowerCase().endsWith(".meta")) {
                         metadata = outStream;
                         csarInfo.setMetaFilename(fileName);
-                    } else if (fileName.toLowerCase().endsWith(".yaml")) {
+                    } else if (fileName.toLowerCase().endsWith(".yaml") || fileName.toLowerCase().endsWith(".json")) {
                         templates.put(fileName, outStream);
                     } else {
                         // TODO: process remaining content
@@ -148,33 +152,73 @@ public class ArchiveParser {
                 }
             }
 
+            String descriptorId = null;
+            String version = null;
             if (mainServiceTemplate != null) {
                 log.debug("Going to parse main service template...");
                 String mst_content = mainServiceTemplate.toString("UTF-8");
-                dt = descriptorsParser.stringToDescriptorTemplate(mst_content);
-                csarInfo.setMst(dt);
-                log.debug("Main service template with descriptor Id {} and verions {} successfully parsed", dt.getMetadata().getDescriptorId(), dt.getMetadata().getVersion());
+
+                DataModelSpec dataModelSpec =
+                        getDataModelSpecFromManifest(csarInfo.getMfFilename(), manifest.toByteArray());
+                csarInfo.setDataModelSpec(dataModelSpec);
+
+                if(dataModelSpec == DataModelSpec.SOL001) {
+                    DescriptorTemplate dt = descriptorsParser.stringToDescriptorTemplate(mst_content);
+                    csarInfo.setMst(dt);
+                    descriptorId = dt.getMetadata().getDescriptorId();
+                    version = dt.getMetadata().getVersion();
+                    log.debug("Main service template with descriptor Id {} and version {} successfully parsed",
+                            descriptorId, version);
+                } else {
+                    if(descriptorType == DescriptorType.VNFD) {
+                        Vnfd vnfd = descriptorsParser.stringToSol006(mst_name, mst_content, Vnfd.class);
+                        csarInfo.setVnfd(vnfd);
+                        descriptorId = vnfd.getId();
+                        version = vnfd.getVersion();
+                        log.debug("Main service template with descriptor Id {} and version {} successfully parsed",
+                                descriptorId, version);
+                    }
+                    else if(descriptorType == DescriptorType.PNFD) {
+                        Pnfd pnfd = descriptorsParser.stringToSol006(mst_name, mst_content, Pnfd.class);
+                        csarInfo.setPnfd(pnfd);
+                        descriptorId = pnfd.getId();
+                        version = pnfd.getVersion();
+                        log.debug("Main service template with descriptor Id {} and version {} successfully parsed",
+                                descriptorId, version);
+                    } else {
+                        Nsd nsd = descriptorsParser.stringToSol006(mst_name, mst_content, Nsd.class);
+                        csarInfo.setNsd(nsd);
+                        descriptorId = nsd.getId();
+                        version = nsd.getVersion();
+                        log.debug("Main service template with descriptor Id {} and version {} successfully parsed",
+                                descriptorId, version);
+                    }
+                }
             }
 
             if (store) {
                 try {
-                    String packageFilename = storageService.storePkg(project, dt.getMetadata().getDescriptorId(), dt.getMetadata().getVersion(), file, isVnfPkg);
+                    String packageFilename =
+                            storageService.storePkg(project, descriptorId, version, file, descriptorType);
                     csarInfo.setPackageFilename(packageFilename);
                     log.debug("Stored Pkg: " + packageFilename);
                 } catch (FailedOperationException e) {
-                    log.error("Failure while storing Pkg with descriptor Id " + dt.getMetadata().getDescriptorId() + ": " + e.getMessage());
-                    throw new FailedOperationException("Failure while storing Pkg with descriptor Id " + dt.getMetadata().getDescriptorId() + ": " + e.getMessage());
+                    log.error("Failure while storing Pkg with descriptor Id " + descriptorId + ": " + e.getMessage());
+                    throw new FailedOperationException("Failure while storing Pkg with descriptor Id " + descriptorId +
+                            ": " + e.getMessage());
                 }
 
                 try {
-                    unzip(new ByteArrayInputStream(bytes), project, dt, isVnfPkg);
+                    unzip(new ByteArrayInputStream(bytes), project, descriptorId, version, descriptorType);
                 } catch (FailedOperationException e) {
-                    log.error("Failure while unzipping Pkg with descriptor Id " + dt.getMetadata().getDescriptorId() + ": " + e.getMessage());
-                    throw new FailedOperationException("Failure while unzipping Pkg with descriptor Id " + dt.getMetadata().getDescriptorId() + ": " + e.getMessage());
+                    log.error("Failure while unzipping Pkg with descriptor Id " + descriptorId + ": " + e.getMessage());
+                    throw new FailedOperationException("Failure while unzipping Pkg with descriptor Id " +
+                            descriptorId + ": " + e.getMessage());
                 }
             }
 
-            mainServiceTemplate.close();
+            if(mainServiceTemplate != null)
+                mainServiceTemplate.close();
             metadata.close();
             manifest.close();
             for (Map.Entry<String, ByteArrayOutputStream> template : templates.entrySet()) {
@@ -186,9 +230,10 @@ public class ArchiveParser {
         return csarInfo;
     }
 
-    private String getMainServiceTemplateFromMetadata(byte[] metadata) throws IOException, MalformattedElementException {
+    private String getMainServiceTemplateFromMetadata(byte[] metadata) throws IOException {
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(metadata), "UTF-8"));
+        BufferedReader reader =
+                new BufferedReader(new InputStreamReader(new ByteArrayInputStream(metadata), StandardCharsets.UTF_8));
 
         log.debug("Going to parse TOSCA.meta...");
 
@@ -200,7 +245,7 @@ public class ArchiveParser {
                 if (line == null) {
                     break;
                 } else {
-                    String regex = "^Entry-Definitions: (Definitions\\/[^\\\\]*\\.yaml)$";
+                    String regex = "^Entry-Definitions: (Definitions\\/[^\\\\]*\\.(yaml|json))$";
                     if (line.matches(regex)) {
                         Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
                         Matcher matcher = pattern.matcher(line);
@@ -217,13 +262,58 @@ public class ArchiveParser {
         return mst_name;
     }
 
-    public void unzip(InputStream archive, String project, DescriptorTemplate dt, boolean isVnfPkg) throws IOException, FailedOperationException, MalformattedElementException {
+    private DataModelSpec getDataModelSpecFromManifest(String mfFilename, byte[] manifest)
+            throws IOException, MalformattedElementException {
+
+        BufferedReader reader =
+                new BufferedReader(new InputStreamReader(new ByteArrayInputStream(manifest), StandardCharsets.UTF_8));
+
+        log.debug("Going to parse " + mfFilename + "...");
+
+        String dataModelSpec = null;
+
+        String line;
+        String regex = "^[ \t]*datamodel_spec: ([^\\\\]*)$";
+        Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+        boolean found = false;
+        try {
+            while((line = reader.readLine()) != null) {
+                if(line.matches(regex)) {
+                    Matcher matcher = pattern.matcher(line);
+                    if(matcher.find()) {
+                        dataModelSpec = matcher.group(1);
+                        found = true;
+                        break;
+                    }
+                }
+            }
+        } finally {
+            reader.close();
+        }
+
+        if(!found)
+            return DataModelSpec.SOL001;
+
+        DataModelSpec dms = DataModelSpec.fromValue(dataModelSpec);
+        if(dms == null) {
+            String msg = "Invalid datamodel_spec field inside " + mfFilename + ": specify SOL001 or SOL006.";
+            log.error(msg);
+            throw new MalformattedElementException(msg);
+        }
+
+        return dms;
+    }
+
+    public void unzip(InputStream archive, String project, String descriptorId,
+                      String version, DescriptorType descriptorType)
+            throws IOException, FailedOperationException, MalformattedElementException {
         ZipInputStream zis = new ZipInputStream(archive);
         ZipEntry zipEntry = zis.getNextEntry();
         String element_filename;
         while (zipEntry != null) {
             log.debug("Storing CSAR element: " + zipEntry.getName());
-            element_filename = storageService.storePkgElement(zis, zipEntry, project, dt.getMetadata().getDescriptorId(), dt.getMetadata().getVersion(), isVnfPkg);
+            element_filename =
+                    storageService.storePkgElement(zis, zipEntry, project, descriptorId, version, descriptorType);
             log.debug("Stored Pkg element: " + element_filename);
             zipEntry = zis.getNextEntry();
         }

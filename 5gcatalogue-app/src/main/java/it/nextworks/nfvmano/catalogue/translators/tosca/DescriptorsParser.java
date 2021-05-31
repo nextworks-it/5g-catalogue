@@ -74,4 +74,16 @@ public class DescriptorsParser {
 
         return descriptorTemplate;
     }
+
+    public <T> T stringToSol006(String mstName, String descriptor, Class<T> type) throws IOException {
+
+        ObjectMapper mapper;
+
+        if(mstName.endsWith(".yaml"))
+            mapper = new ObjectMapper(new YAMLFactory());
+        else
+            mapper = new ObjectMapper();
+
+        return mapper.readValue(descriptor, type);
+    }
 }

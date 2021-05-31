@@ -17,10 +17,10 @@ package it.nextworks.nfvmano.catalogue.translators;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import it.nextworks.nfvmano.catalogue.plugins.siteInventory.SiteInventoryDriver;
-import it.nextworks.nfvmano.catalogue.plugins.siteInventory.model.NfvOrchestrator;
+import it.nextworks.nfvmano.catalogue.common.enums.DescriptorType;
 import it.nextworks.nfvmano.catalogue.translators.tosca.ArchiveParser;
 import it.nextworks.nfvmano.catalogue.translators.tosca.DescriptorsParser;
+import it.nextworks.nfvmano.libs.descriptors.sol006.Vnfd;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -30,16 +30,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.multipart.MultipartFile;
-import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -95,15 +94,13 @@ public class ToscaTranslatorTests {
     }
 
     @Test
-    @Ignore
     public void parseArchive() throws Exception {
         ClassLoader classLoader = getClass().getClassLoader();
         File archive = new File(classLoader.getResource("Descriptors/cirros_vnf/cirros_vnf.zip").getFile());
         FileInputStream input = new FileInputStream(archive);
-        MultipartFile mp_file = new MockMultipartFile(archive.getName(), input);
+        MultipartFile mp_file = new MockMultipartFile(archive.getName(), archive.getName(), null, input);
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-
-        DescriptorTemplate dt = archiveParser.archiveToCSARInfo("admin", mp_file, true, false).getMst();
+        DescriptorTemplate dt = archiveParser.archiveToCSARInfo("admin", mp_file, DescriptorType.VNFD, true).getMst();
 
         assertNotNull(dt);
 
@@ -111,5 +108,22 @@ public class ToscaTranslatorTests {
         System.out.println("Successfull parsing. Parsed VNFD: ");
         System.out.println(mapper.writeValueAsString(dt));
         System.out.println("===============================================================================================\n");
+    }
+
+    @Test
+    public void parseVnfArchiveWithSOL006Descriptor() throws Exception {
+        ClassLoader classLoader = getClass().getClassLoader();
+        File archive = new File(classLoader.getResource("Descriptors/csr_vnf/csr_vnf.zip").getFile());
+        FileInputStream input = new FileInputStream(archive);
+        MultipartFile mp_file = new MockMultipartFile(archive.getName(), archive.getName(), null, input);
+
+        Vnfd vnfd = archiveParser.archiveToCSARInfo("admin", mp_file, DescriptorType.VNFD, true).getVnfd();
+
+        assertNotNull(vnfd);
+
+        System.out.println("\n=======================================================================================");
+        System.out.println("Successfull parsing. Parsed VNFD: ");
+        System.out.println(vnfd.toString());
+        System.out.println("=======================================================================================\n");
     }
 }
