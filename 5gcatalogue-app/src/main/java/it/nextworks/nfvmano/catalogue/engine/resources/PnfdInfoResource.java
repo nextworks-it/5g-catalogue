@@ -43,6 +43,12 @@ public class PnfdInfoResource {
     @Cascade(org.hibernate.annotations.CascadeType.ALL)
     private Map<String, NotificationResource> acknowledgedOnboardOpConsumers = new HashMap<>();
 
+    private String pnfPkgFilename;
+
+    private String metaFilename;
+
+    private String manifestFilename;
+
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @ElementCollection(fetch = FetchType.EAGER)
     @Fetch(FetchMode.SELECT)
@@ -164,6 +170,18 @@ public class PnfdInfoResource {
     public void setAcknowledgedOnboardOpConsumers(Map<String, NotificationResource> acknowledgedOnboardOpConsumers) {
         this.acknowledgedOnboardOpConsumers = acknowledgedOnboardOpConsumers;
     }
+
+    public String getPnfPkgFilename() { return pnfPkgFilename; }
+
+    public void setPnfPkgFilename(String pnfPkgFilename) { this.pnfPkgFilename = pnfPkgFilename; }
+
+    public String getMetaFilename() { return metaFilename; }
+
+    public void setMetaFilename(String metaFilename) { this.metaFilename = metaFilename; }
+
+    public String getManifestFilename() { return manifestFilename; }
+
+    public void setManifestFilename(String manifestFilename) { this.manifestFilename = manifestFilename; }
 
     public List<String> getParentNsds() {
         return parentNsds;

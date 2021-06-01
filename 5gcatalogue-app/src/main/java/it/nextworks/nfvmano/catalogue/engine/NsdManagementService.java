@@ -28,13 +28,13 @@ import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.Cat
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.PathType;
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.ScopeType;
 import it.nextworks.nfvmano.catalogue.common.ConfigurationParameters;
+import it.nextworks.nfvmano.catalogue.common.enums.DataModelSpec;
 import it.nextworks.nfvmano.catalogue.common.enums.DescriptorType;
 import it.nextworks.nfvmano.catalogue.engine.elements.ContentType;
 import it.nextworks.nfvmano.catalogue.engine.elements.NsdIdInvariantIdMapping;
 import it.nextworks.nfvmano.catalogue.engine.elements.NsdIdInvariantIdMappingRepository;
 import it.nextworks.nfvmano.catalogue.engine.resources.*;
 import it.nextworks.nfvmano.catalogue.nbi.sol005.nsdmanagement.elements.*;
-import it.nextworks.nfvmano.catalogue.nbi.sol005.vnfpackagemanagement.elements.PackageOnboardingStateType;
 import it.nextworks.nfvmano.catalogue.plugins.PluginsManager;
 import it.nextworks.nfvmano.catalogue.plugins.catalogue2catalogue.C2COnboardingStateType;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.PluginType;
@@ -53,6 +53,7 @@ import it.nextworks.nfvmano.libs.common.enums.UsageState;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
 import it.nextworks.nfvmano.libs.descriptors.pnfd.nodes.PNF.PNFNode;
+import it.nextworks.nfvmano.libs.descriptors.sol006.Pnfd;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import it.nextworks.nfvmano.libs.mec.catalogues.descriptors.appd.Appd;
@@ -1928,6 +1929,15 @@ public class NsdManagementService implements NsdManagementInterface {
 
         ContentType ct = pnfdInfo.getContentType();
         switch (ct) {
+            case ZIP: {
+                String pnfPkgFilename = pnfdInfo.getPnfPkgFilename();
+                if(pnfPkgFilename == null) {
+                    log.error("Found zero file for PNF Pkg in ZIP format");
+                    throw new FailedOperationException("Found zero file for PNF Pkg in ZIP format");
+                }
+
+                return storageService.loadFileAsResource(project, pnfdId.toString(), pnfdInfo.getPnfdVersion(), pnfPkgFilename, DescriptorType.PNFD);
+            }
             case YAML: {
                 // try {
                 List<String> pnfdFilenames = pnfdInfo.getPnfdFilename();
@@ -2053,84 +2063,75 @@ public class NsdManagementService implements NsdManagementInterface {
             throw new NotPermittedOperationException("PNFD info " + pnfdInfoId + " not in CREATED onboarding state");
         }
 
-        // convert to File
-        File inputFile = null;
-        try {
-            inputFile = convertToFile(pnfd);
-        } catch (Exception e) {
-            log.error("Error while parsing PNFD in zip format: " + e.getMessage());
-            pnfdInfo.setPnfdOnboardingState(PnfdOnboardingStateType.FAILED);
-            pnfdInfoRepo.saveAndFlush(pnfdInfo);
-            throw new MalformattedElementException("Error while parsing PNFD");
-        }
+        DataModelSpec dms;
 
+        DescriptorTemplate dt = null;
+        Pnfd pnfdSol006 = null;
+
+        String pnfPkgFilename = null;
         String pnfdFilename;
-        DescriptorTemplate dt;
-        UUID pnfdId;
 
-        PnfdOnboardingStateType onboardingStateType = PnfdOnboardingStateType.UPLOADING;
+        UUID pnfdId;
+        String version;
+
+        PnfdOnboardingStateType onboardingStateType;
 
         switch (contentType) {
             case ZIP: {
                 try {
                     log.info("PNFD file is in format: zip");
 
-                    // TODO: assuming for now one single file into the zip
-                    MultipartFile pnfdMpFile = extractFile(inputFile);
-                    // convert to File
-                    File pnfdFile = convertToFile(pnfdMpFile);
+                    checkZipArchive(pnfd);
 
-                    dt = descriptorsParser.fileToDescriptorTemplate(pnfdFile);
+                    CSARInfo csarInfo = archiveParser.archiveToCSARInfo(project, pnfd, DescriptorType.PNFD, true);
+                    dms = csarInfo.getDataModelSpec();
 
-                    String pnfdId_string = dt.getMetadata().getDescriptorId();
+                    if(dms == DataModelSpec.SOL001)
+                        dt = csarInfo.getMst();
+                    else
+                        pnfdSol006 = csarInfo.getPnfd();
 
-                    if (!Utilities.isUUID(pnfdId_string)) {
-                        throw new MalformattedElementException("PNFD id not in UUID format");
-                    }
+                    pnfPkgFilename = csarInfo.getPackageFilename();
+                    pnfdFilename = csarInfo.getDescriptorFilename();
 
+                    String pnfdId_string;
+                    if(dms == DataModelSpec.SOL001)
+                        pnfdId_string = dt.getMetadata().getDescriptorId();
+                    else
+                        pnfdId_string = pnfdSol006.getId();
+                    if(!Utilities.isUUID(pnfdId_string))
+                        throw new MalformattedElementException("PNFD id not in UUID format.");
                     pnfdId = UUID.fromString(pnfdId_string);
 
-                    Optional<PnfdInfoResource> optionalPnfdInfoResource = pnfdInfoRepo.findByPnfdIdAndPnfdVersionAndProjectId(pnfdId, dt.getMetadata().getVersion(), project);
+                    if(dms == DataModelSpec.SOL001)
+                        version = dt.getMetadata().getVersion();
+                    else
+                        version = pnfdSol006.getVersion();
+
+                    Optional<PnfdInfoResource> optionalPnfdInfoResource = pnfdInfoRepo.findByPnfdIdAndPnfdVersionAndProjectId(pnfdId, version, project);
                     if (optionalPnfdInfoResource.isPresent()) {
                         throw new AlreadyExistingEntityException("A PNFD with the same id and version already exists in the project");
                     }
 
-                    pnfdInfo.setPnfdId(pnfdId);
+                    pnfdInfo.setPnfPkgFilename(pnfPkgFilename);
+                    pnfdInfo.addPnfdFilename(pnfdFilename);
+                    pnfdInfo.setMetaFilename(csarInfo.getMetaFilename());
+                    pnfdInfo.setManifestFilename(csarInfo.getMfFilename());
 
-                    log.debug("PNFD successfully parsed - its content is: \n"
-                            + DescriptorsParser.descriptorTemplateToString(dt));
+                    if(dms == DataModelSpec.SOL001)
+                        log.debug("PNFD successfully parsed - its content is: \n"
+                                + DescriptorsParser.descriptorTemplateToString(dt));
+                    else
+                        log.debug("PNFD successfully parsed - its content is: \n"
+                                + pnfdSol006.toString());
 
-                    // pre-set pnfdInfo attributes to properly store PNFDs
-                    pnfdInfo.setPnfdVersion(dt.getMetadata().getVersion());
-
-                    pnfdFilename = storageService.storePkg(project, pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfdMpFile, DescriptorType.PNFD);
-
-                    // change contentType to YAML as nsd file is no more zip from now on
-                    contentType = ContentType.YAML;
-
-                    log.debug("PNFD file successfully stored");
-                    // clean tmp files
-                    if (!pnfdFile.delete()) {
-                        log.warn("Could not delete temporary PNFD zip content file");
-                    }
-                } catch (IOException e) {
+                    log.debug("PNF Pkg file successfully stored: " + pnfPkgFilename);
+                } catch (IOException | MalformattedElementException e) {
                     log.error("Error while parsing PNFD in zip format: " + e.getMessage());
                     onboardingStateType = PnfdOnboardingStateType.FAILED;
                     pnfdInfo.setPnfdOnboardingState(onboardingStateType);
                     pnfdInfoRepo.saveAndFlush(pnfdInfo);
                     throw new MalformattedElementException("Error while parsing PNFD");
-                } catch (MalformattedElementException e) {
-                    log.error("Error while parsing PNFD in zip format: " + e.getMessage());
-                    onboardingStateType = PnfdOnboardingStateType.FAILED;
-                    pnfdInfo.setPnfdOnboardingState(onboardingStateType);
-                    pnfdInfoRepo.saveAndFlush(pnfdInfo);
-                    throw new MalformattedElementException("Error while parsing PNFD");
-                } catch (FailedOperationException e) {
-                    log.error("Error while storing PNFD in zip format: " + e.getMessage());
-                    onboardingStateType = PnfdOnboardingStateType.FAILED;
-                    pnfdInfo.setPnfdOnboardingState(onboardingStateType);
-                    pnfdInfoRepo.saveAndFlush(pnfdInfo);
-                    throw new FailedOperationException("Error while storing PNFD");
                 } catch (AlreadyExistingEntityException e) {
                     onboardingStateType = PnfdOnboardingStateType.FAILED;
                     pnfdInfo.setPnfdOnboardingState(onboardingStateType);
@@ -2149,39 +2150,47 @@ public class NsdManagementService implements NsdManagementInterface {
                 try {
                     log.info("PNFD file is in format: yaml");
 
+                    // convert to File
+                    File inputFile = null;
+                    try {
+                        inputFile = convertToFile(pnfd);
+                    } catch (Exception e) {
+                        log.error("Error while parsing PNFD: " + e.getMessage());
+                        pnfdInfo.setPnfdOnboardingState(PnfdOnboardingStateType.FAILED);
+                        pnfdInfoRepo.saveAndFlush(pnfdInfo);
+                        throw new MalformattedElementException("Error while parsing PNFD");
+                    }
+
+                    dms = DataModelSpec.SOL001;
                     dt = descriptorsParser.fileToDescriptorTemplate(inputFile);
 
                     String pnfdId_string = dt.getMetadata().getDescriptorId();
-
                     if (!Utilities.isUUID(pnfdId_string)) {
                         throw new MalformattedElementException("PNFD id not in UUID format");
                     }
-
                     pnfdId = UUID.fromString(pnfdId_string);
+
+                    version = dt.getMetadata().getVersion();
 
                     Optional<PnfdInfoResource> optionalPnfdInfoResource = pnfdInfoRepo.findByPnfdIdAndPnfdVersionAndProjectId(pnfdId, dt.getMetadata().getVersion(), project);
                     if (optionalPnfdInfoResource.isPresent()) {
                         throw new AlreadyExistingEntityException("A PNFD with the same id and version already exists in project");
                     }
 
-                    pnfdInfo.setPnfdId(pnfdId);
+                    pnfdFilename = storageService.storePkg(project, pnfdId_string, version, pnfd, DescriptorType.PNFD);
+
+                    pnfdInfo.addPnfdFilename(pnfdFilename);
 
                     log.debug("PNFD successfully parsed - its content is: \n"
                             + DescriptorsParser.descriptorTemplateToString(dt));
-                    // pre-set pnfdInfo attributes to properly store PNFDs
-                    pnfdInfo.setPnfdVersion(dt.getMetadata().getVersion());
-
-                    pnfdFilename = storageService.storePkg(project, pnfdInfo.getPnfdId().toString(), pnfdInfo.getPnfdVersion(), pnfd, DescriptorType.PNFD);
 
                     log.debug("PNFD file successfully stored");
 
-                } catch (IOException e) {
-                    log.error("Error while parsing PNFD in yaml format: " + e.getMessage());
-                    onboardingStateType = PnfdOnboardingStateType.FAILED;
-                    pnfdInfo.setPnfdOnboardingState(onboardingStateType);
-                    pnfdInfoRepo.saveAndFlush(pnfdInfo);
-                    throw new MalformattedElementException("Error while parsing PNFD");
-                } catch (MalformattedElementException e) {
+                    // clean tmp files
+                    if (!inputFile.delete()) {
+                        log.warn("Could not delete temporary PNFD content file");
+                    }
+                } catch (IOException | MalformattedElementException e) {
                     log.error("Error while parsing PNFD in yaml format: " + e.getMessage());
                     onboardingStateType = PnfdOnboardingStateType.FAILED;
                     pnfdInfo.setPnfdOnboardingState(onboardingStateType);
@@ -2205,41 +2214,60 @@ public class NsdManagementService implements NsdManagementInterface {
             }
         }
 
-        if (pnfdFilename == null || dt == null) {
-            onboardingStateType = PnfdOnboardingStateType.FAILED;
-            pnfdInfo.setPnfdOnboardingState(onboardingStateType);
-            pnfdInfoRepo.saveAndFlush(pnfdInfo);
-            throw new FailedOperationException("Invalid internal structures");
+        if(dms == DataModelSpec.SOL001) {
+            if (pnfdFilename == null) {
+                onboardingStateType = PnfdOnboardingStateType.FAILED;
+                pnfdInfo.setPnfdOnboardingState(onboardingStateType);
+                pnfdInfoRepo.saveAndFlush(pnfdInfo);
+                throw new FailedOperationException("Invalid internal structures");
+            }
+        } else {
+            if(pnfPkgFilename == null) {
+                onboardingStateType = PnfdOnboardingStateType.FAILED;
+                pnfdInfo.setPnfdOnboardingState(onboardingStateType);
+                pnfdInfoRepo.saveAndFlush(pnfdInfo);
+                throw new FailedOperationException("Invalid internal structures");
+            }
         }
 
         log.debug("Updating PNFD info");
+
+        pnfdInfo.setPnfdId(pnfdId);
+        pnfdInfo.setPnfdVersion(version);
+
         pnfdInfo.setPnfdOnboardingState(PnfdOnboardingStateType.LOCAL_ONBOARDED);
-        pnfdInfo.setPnfdProvider(dt.getMetadata().getVendor());
-        pnfdInfo.setPnfdInvariantId(UUID.fromString(dt.getMetadata().getDescriptorId()));
-        Map<String, PNFNode> pnfNodes = dt.getTopologyTemplate().getPNFNodes();
+
+        if(dms == DataModelSpec.SOL001)
+            pnfdInfo.setPnfdProvider(dt.getMetadata().getVendor());
+        else
+            pnfdInfo.setPnfdProvider(pnfdSol006.getProvider());
+
+        if(dms == DataModelSpec.SOL001)
+            pnfdInfo.setPnfdInvariantId(pnfdId);
+        else
+            pnfdInfo.setPnfdInvariantId(UUID.fromString(pnfdSol006.getInvariantId()));
+
         String pnfdName = "";
-        if (pnfNodes.size() == 1) {
-            for (Entry<String, PNFNode> pnfNode : pnfNodes.entrySet()) {
-                pnfdName = pnfNode.getValue().getProperties().getName();
-            }
-        } else {
-            Map<String, String> subMapsProperties = dt.getTopologyTemplate().getSubstituitionMappings().getProperties();
-            for (Map.Entry<String, String> entry : subMapsProperties.entrySet()) {
-                if (entry.getKey().equalsIgnoreCase("name")) {
-                    pnfdName = entry.getValue();
+        if(dms == DataModelSpec.SOL001) {
+            Map<String, PNFNode> pnfNodes = dt.getTopologyTemplate().getPNFNodes();
+            if (pnfNodes.size() == 1) {
+                for (Entry<String, PNFNode> pnfNode : pnfNodes.entrySet()) {
+                    pnfdName = pnfNode.getValue().getProperties().getName();
+                }
+            } else {
+                Map<String, String> subMapsProperties = dt.getTopologyTemplate().getSubstituitionMappings().getProperties();
+                for (Map.Entry<String, String> entry : subMapsProperties.entrySet()) {
+                    if (entry.getKey().equalsIgnoreCase("name")) {
+                        pnfdName = entry.getValue();
+                    }
                 }
             }
-        }
+        } else
+            pnfdName = pnfdSol006.getName();
 
         log.debug("PNFD name: " + pnfdName);
         pnfdInfo.setPnfdName(pnfdName);
         pnfdInfo.setContentType(contentType);
-        pnfdInfo.addPnfdFilename(pnfdFilename);
-
-        // clean tmp files
-        if (!inputFile.delete()) {
-            log.warn("Could not delete temporary PNFD content file");
-        }
 
         List<String> siteOrManoIds = new ArrayList<>();
         Map<String, String> userDefinedData = pnfdInfo.getUserDefinedData();
@@ -2270,8 +2298,8 @@ public class NsdManagementService implements NsdManagementInterface {
         log.debug("PNFD info updated");
 
         //TODO modify
-        PnfdOnBoardingNotificationMessage msg = new PnfdOnBoardingNotificationMessage(pnfdInfo.getId().toString(), pnfdId.toString(), dt.getMetadata().getVersion(), project,
-                operationId, ScopeType.LOCAL, OperationStatus.SENT, siteOrManoIds, new KeyValuePair(rootDir + ConfigurationParameters.storageNsdsSubfolder + "/" + project + "/" + pnfdInfo.getPnfdId().toString() + "/" + pnfdInfo.getPnfdVersion(), PathType.LOCAL.toString()));
+        PnfdOnBoardingNotificationMessage msg = new PnfdOnBoardingNotificationMessage(pnfdInfo.getId().toString(), pnfdId.toString(), version, project,
+                operationId, ScopeType.LOCAL, OperationStatus.SENT, siteOrManoIds, new KeyValuePair(rootDir + ConfigurationParameters.storageNsdsSubfolder + "/" + project + "/" + pnfdId.toString() + "/" + version, PathType.LOCAL.toString()));
 
         // send notification over kafka bus
         notificationManager.sendPnfdOnBoardingNotification(msg);
