@@ -31,6 +31,8 @@ public interface NsdInfoRepository extends JpaRepository<NsdInfoResource, UUID> 
 
     List<NsdInfoResource> findByNsdIdAndNsdVersion(UUID nsdId, String nsdVersion);
 
+    Optional<NsdInfoResource> findByNsdIdAndProjectId(UUID nsdId, String projectId);
+
     Optional<NsdInfoResource> findByNsdIdAndNsdVersionAndProjectId(UUID nsdId, String nsdVersion, String projectId);
 
     List<NsdInfoResource> findByProjectId(String projectId);

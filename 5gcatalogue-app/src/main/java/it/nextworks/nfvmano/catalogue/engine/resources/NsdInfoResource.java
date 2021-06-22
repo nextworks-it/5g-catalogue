@@ -74,6 +74,10 @@ public class NsdInfoResource {
     @Fetch(FetchMode.SELECT)
     private List<String> nsdPkgFilename = new ArrayList<>();
 
+    private String metaFilename;
+
+    private String manifestFilename;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @Fetch(FetchMode.SELECT)
     private Map<String, String> userDefinedData = new HashMap<>();
@@ -249,6 +253,14 @@ public class NsdInfoResource {
     public void addNsdPkgFilename(String nsdPkgFilename) {
         this.nsdPkgFilename.add(nsdPkgFilename);
     }
+
+    public String getManifestFilename() { return manifestFilename; }
+
+    public void setManifestFilename(String manifestFilename) { this.manifestFilename = manifestFilename; }
+
+    public String getMetaFilename() { return metaFilename; }
+
+    public void setMetaFilename(String metaFilename) { this.metaFilename = metaFilename; }
 
     public Map<String, NotificationResource> getAcknowledgedOnboardOpConsumers() {
         return acknowledgedOnboardOpConsumers;

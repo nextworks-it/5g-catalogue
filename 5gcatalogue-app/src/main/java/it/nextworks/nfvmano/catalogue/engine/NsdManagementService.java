@@ -53,7 +53,9 @@ import it.nextworks.nfvmano.libs.common.enums.UsageState;
 import it.nextworks.nfvmano.libs.common.exceptions.*;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
 import it.nextworks.nfvmano.libs.descriptors.pnfd.nodes.PNF.PNFNode;
+import it.nextworks.nfvmano.libs.descriptors.sol006.Nsd;
 import it.nextworks.nfvmano.libs.descriptors.sol006.Pnfd;
+import it.nextworks.nfvmano.libs.descriptors.sol006.Vnfd;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import it.nextworks.nfvmano.libs.mec.catalogues.descriptors.appd.Appd;
@@ -1194,31 +1196,27 @@ public class NsdManagementService implements NsdManagementInterface {
             return;
         }
 
-        // convert to File
-        File inputFile = null;
-        try {
-            inputFile = convertToFile(nsd);
-        } catch (Exception e) {
-            log.error("Error while parsing NSD: " + e.getMessage());
-            nsdInfo.setNsdOnboardingState(NsdOnboardingStateType.FAILED);
-            nsdInfoRepo.saveAndFlush(nsdInfo);
-            throw new MalformattedElementException("Error while parsing NSD");
-        }
+        DataModelSpec dms;
 
+        DescriptorTemplate dt = null;
+        Nsd nsdSol006 = null;
+
+        String nsdPkgFilename = null;
         String nsdFilename;
-        DescriptorTemplate dt;
-        UUID nsdId;
 
-        // pre-set nsdinfo attributes to properly store NSDs
-        // UUID nsdId = UUID.randomUUID();
+        UUID nsdId;
+        String version;
+
+        NsdOnboardingStateType onboardingStateType;
 
         Map<String, KeyValuePair> nestedNsds;
         Map<String, KeyValuePair> includedVnfds;
         Map<String, KeyValuePair> includedPnfds;
-        NsdOnboardingStateType onboardingStateType = NsdOnboardingStateType.UPLOADING;
 
-        CSARInfo csarInfo = null;
-        NSNode nsNode;
+        // pre-set nsdinfo attributes to properly store NSDs
+        // UUID nsdId = UUID.randomUUID();
+
+        NSNode nsNode = null;
 
         switch (contentType) {
             case ZIP: {
@@ -1227,61 +1225,75 @@ public class NsdManagementService implements NsdManagementInterface {
 
                     checkZipArchive(nsd);
 
-                    // TODO: assuming for now one single file into the zip
-                    //MultipartFile nsdMpFile = extractFile(inputFile);
-                    // convert to File
-                    //File nsdFile = convertToFile(nsdMpFile);
-                    //dt = DescriptorsParser.fileToDescriptorTemplate(nsdFile);
+                    CSARInfo csarInfo = archiveParser.archiveToCSARInfo(project, nsd, DescriptorType.NSD, true);
+                    dms = csarInfo.getDataModelSpec();
 
-                    csarInfo = archiveParser.archiveToCSARInfo(project, nsd, DescriptorType.NSD, true);
-                    dt = csarInfo.getMst();
+                    if(dms == DataModelSpec.SOL001)
+                        dt = csarInfo.getMst();
+                    else
+                        nsdSol006 = csarInfo.getNsd();
 
-                    //TODO remove
-                    Map<String, NSNode> nsNodeMap = dt.getTopologyTemplate().getNSNodes();
-                    if(nsNodeMap.size() != 1 && !nsdInfo.isMultiSite())
+                    nsdPkgFilename = csarInfo.getPackageFilename();
+                    nsdFilename = csarInfo.getDescriptorFilename();
+
+                    if(dms == DataModelSpec.SOL001) {
+                        Map<String, NSNode> nsNodeMap = dt.getTopologyTemplate().getNSNodes();
+                        if (nsNodeMap.size() != 1 && !nsdInfo.isMultiSite())
+                            throw new MalformattedElementException("Composite NSs can currently be only multi-site");
+                    } else if(nsdSol006.getNestedNsdId() != null && nsdSol006.getNestedNsdId().size() != 1 && !nsdInfo.isMultiSite())
                         throw new MalformattedElementException("Composite NSs can currently be only multi-site");
 
-                    nsdFilename = csarInfo.getPackageFilename();
-
-                    nestedNsds = checkNestedNSDs(dt, project);
-                    includedVnfds = checkVNFPkgs(dt, project);
-                    includedPnfds = checkPNFDs(dt, project);
-
-                    String nsdId_string = dt.getMetadata().getDescriptorId();
-
-                    if (!Utilities.isUUID(nsdId_string)) {
-                        throw new MalformattedElementException("NSD id not in UUID format");
+                    if(dms == DataModelSpec.SOL001) {
+                        nestedNsds = checkNestedNSDs(dt, project);
+                        includedVnfds = checkVNFPkgs(dt, project);
+                        includedPnfds = checkPNFDs(dt, project);
+                    } else {
+                        nestedNsds = checkNestedNsdsSol006(nsdSol006, project);
+                        includedVnfds = checkVNFPkgsSol006(nsdSol006, project);
+                        includedPnfds = checkPNFDsSol006(nsdSol006, project);
                     }
 
-                    //NSNode nsNode = dt.getTopologyTemplate().getNSNodes().values().iterator().next();//For the moment assume only one NS node
-                    nsNode = getCompositeNsNode(dt);
-                    if(nsNode == null)
-                        throw new MalformattedElementException("Descriptor ID and version specified in metadata are not aligned with those specified into NSNode");
-
+                    String nsdId_string;
+                    if(dms == DataModelSpec.SOL001)
+                        nsdId_string = dt.getMetadata().getDescriptorId();
+                    else
+                        nsdId_string = nsdSol006.getId();
+                    if(!Utilities.isUUID(nsdId_string))
+                        throw new MalformattedElementException("NSD id not in UUID format");
                     nsdId = UUID.fromString(nsdId_string);
 
-                    Optional<NsdInfoResource> optionalNsdInfoResource = nsdInfoRepo.findByNsdIdAndNsdVersionAndProjectId(nsdId, dt.getMetadata().getVersion(), project);
-                    if (optionalNsdInfoResource.isPresent())
-                        throw new AlreadyExistingEntityException("An NSD with the same id and version already exists in the project");
+                    if(dms == DataModelSpec.SOL001)
+                        version = dt.getMetadata().getVersion();
+                    else
+                        version = nsdSol006.getVersion();
 
-                    nsdInfo.setNsdId(nsdId);
+                    if(dms == DataModelSpec.SOL001) {
+                        nsNode = getCompositeNsNode(dt);
+                        if (nsNode == null) {
+                            throw new MalformattedElementException("Descriptor ID and version specified in metadata are not aligned with those specified into NSNode");
+                        }
+                    }
 
-                    log.debug("NSD successfully parsed - its content is: \n"
-                            + DescriptorsParser.descriptorTemplateToString(dt));
+                    if(dms == DataModelSpec.SOL001) {
+                        if(nsdInfoRepo.findByNsdIdAndNsdVersionAndProjectId(nsdId, dt.getMetadata().getVersion(), project).isPresent())
+                            throw new AlreadyExistingEntityException("An NSD with the same id and version already exists in the project");
+                    } else {
+                        if(nsdInfoRepo.findByNsdIdAndProjectId(nsdId, project).isPresent())
+                            throw new AlreadyExistingEntityException("A SOL006 NSD with the same id already exists in the project");
+                    }
 
-                    // pre-set nsdinfo attributes to properly store NSDs
-                    nsdInfo.setNsdVersion(dt.getMetadata().getVersion());
+                    nsdInfo.addNsdPkgFilename(nsdPkgFilename);
+                    nsdInfo.addNsdFilename(nsdFilename);
+                    nsdInfo.setMetaFilename(csarInfo.getMetaFilename());
+                    nsdInfo.setManifestFilename(csarInfo.getMfFilename());
 
-                    //nsdFilename = storageService.storeNsd(nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsdMpFile);
-
-                    // change contentType to YAML as nsd file is no more zip from now on
-                    //contentType = ContentType.YAML;
+                    if(dms == DataModelSpec.SOL001)
+                        log.debug("NSD successfully parsed - its content is: \n"
+                                + DescriptorsParser.descriptorTemplateToString(dt));
+                    else
+                        log.debug("NSD successfully parsed - its content is: \n" + nsdSol006.toString());
 
                     log.debug("NSD file successfully stored");
-                    // clean tmp files
-                    //if (!nsdFile.delete()) {
-                    // log.warn("Could not delete temporary NSD zip content file");
-                    //}
                 } catch (IOException e) {
                     log.error("Error while parsing NSD in zip format: " + e.getMessage());
                     onboardingStateType = NsdOnboardingStateType.FAILED;
@@ -1308,12 +1320,6 @@ public class NsdManagementService implements NsdManagementInterface {
                     nsdInfo.setNsdOnboardingState(onboardingStateType);
                     nsdInfoRepo.saveAndFlush(nsdInfo);
                     throw new AlreadyExistingEntityException(e.getMessage());
-                } catch (Exception e) {
-                    onboardingStateType = NsdOnboardingStateType.FAILED;
-                    nsdInfo.setNsdOnboardingState(onboardingStateType);
-                    nsdInfoRepo.saveAndFlush(nsdInfo);
-                    log.error("Error while parsing NSD in zip format: " + e.getMessage());
-                    throw new MalformattedElementException("Error while parsing NSD: " + e.getMessage());
                 }
                 break;
             }
@@ -1321,6 +1327,18 @@ public class NsdManagementService implements NsdManagementInterface {
                 try {
                     log.info("NSD file is in format: yaml");
 
+                    // convert to File
+                    File inputFile;
+                    try {
+                        inputFile = convertToFile(nsd);
+                    } catch (Exception e) {
+                        log.error("Error while parsing NSD: " + e.getMessage());
+                        nsdInfo.setNsdOnboardingState(NsdOnboardingStateType.FAILED);
+                        nsdInfoRepo.saveAndFlush(nsdInfo);
+                        throw new MalformattedElementException("Error while parsing NSD");
+                    }
+
+                    dms = DataModelSpec.SOL001;
                     dt = descriptorsParser.fileToDescriptorTemplate(inputFile);
 
                     //TODO remove
@@ -1333,33 +1351,36 @@ public class NsdManagementService implements NsdManagementInterface {
                     includedPnfds = checkPNFDs(dt, project);
 
                     String nsdId_string = dt.getMetadata().getDescriptorId();
-
                     if (!Utilities.isUUID(nsdId_string)) {
                         throw new MalformattedElementException("NSD id not in UUID format");
                     }
+                    nsdId = UUID.fromString(nsdId_string);
+
+                    version = dt.getMetadata().getVersion();
 
                     nsNode = getCompositeNsNode(dt);
-                    if(nsNode == null)
+                    if(nsNode == null) {
                         throw new MalformattedElementException("Descriptor ID and version specified in metadata are not aligned with those specified into NSNode");
-
-                    nsdId = UUID.fromString(nsdId_string);
+                    }
 
                     Optional<NsdInfoResource> optionalNsdInfoResource = nsdInfoRepo.findByNsdIdAndNsdVersionAndProjectId(nsdId, dt.getMetadata().getVersion(), project);
                     if (optionalNsdInfoResource.isPresent()) {
                         throw new AlreadyExistingEntityException("An NSD with the same id and version already exists in the project");
                     }
 
-                    nsdInfo.setNsdId(nsdId);
+                    nsdFilename = storageService.storePkg(project, nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsd, DescriptorType.NSD);
+
+                    nsdInfo.addNsdFilename(nsdFilename);
 
                     log.debug("NSD successfully parsed - its content is: \n"
                             + DescriptorsParser.descriptorTemplateToString(dt));
-                    // pre-set nsdinfo attributes to properly store NSDs
-                    nsdInfo.setNsdVersion(dt.getMetadata().getVersion());
-
-                    nsdFilename = storageService.storePkg(project, nsdInfo.getNsdId().toString(), nsdInfo.getNsdVersion(), nsd, DescriptorType.NSD);
 
                     log.debug("NSD file successfully stored");
 
+                    // clean tmp files
+                    if (!inputFile.delete()) {
+                        log.warn("Could not delete temporary NSD content file");
+                    }
                 } catch (IOException e) {
                     log.error("Error while parsing NSD in yaml format: " + e.getMessage());
                     onboardingStateType = NsdOnboardingStateType.FAILED;
@@ -1399,33 +1420,49 @@ public class NsdManagementService implements NsdManagementInterface {
             }
         }
 
-        if (nsdFilename == null || dt == null) {
-            onboardingStateType = NsdOnboardingStateType.FAILED;
-            nsdInfo.setNsdOnboardingState(onboardingStateType);
-            nsdInfoRepo.saveAndFlush(nsdInfo);
-            throw new FailedOperationException("Invalid internal structures");
+        if(dms == DataModelSpec.SOL001) {
+            if (nsdFilename == null) {
+                onboardingStateType = NsdOnboardingStateType.FAILED;
+                nsdInfo.setNsdOnboardingState(onboardingStateType);
+                nsdInfoRepo.saveAndFlush(nsdInfo);
+                throw new FailedOperationException("Invalid internal structures");
+            }
+        } else {
+            if(nsdPkgFilename == null) {
+                onboardingStateType = NsdOnboardingStateType.FAILED;
+                nsdInfo.setNsdOnboardingState(onboardingStateType);
+                nsdInfoRepo.saveAndFlush(nsdInfo);
+                throw new FailedOperationException("Invalid internal structures");
+            }
         }
 
         log.debug("Updating NSD info");
-        // nsdInfo.setNsdId(nsdId);
-        // updated when we will implement also the package uploading
+
+        nsdInfo.setNsdId(nsdId);
+        nsdInfo.setNsdVersion(version);
+
         nsdInfo.setNsdOnboardingState(NsdOnboardingStateType.LOCAL_ONBOARDED);
         nsdInfo.setNsdOperationalState(NsdOperationalStateType.ENABLED);
-        nsdInfo.setNsdDesigner(dt.getMetadata().getVendor());
-        nsdInfo.setNsdInvariantId(UUID.fromString(dt.getMetadata().getDescriptorId()));
 
-        String nsdName = nsNode.getProperties().getName();
+        if(dms == DataModelSpec.SOL001)
+            nsdInfo.setNsdDesigner(dt.getMetadata().getVendor());
+        else
+            nsdInfo.setNsdDesigner(nsdSol006.getDesigner());
+
+        if(dms == DataModelSpec.SOL001)
+            nsdInfo.setNsdInvariantId(UUID.fromString(dt.getMetadata().getDescriptorId()));
+        else
+            nsdInfo.setNsdInvariantId(UUID.fromString(nsdSol006.getInvariantId()));
+
+        String nsdName;
+        if(dms == DataModelSpec.SOL001)
+            nsdName = nsNode.getProperties().getName();
+        else
+            nsdName = nsdSol006.getName();
 
         log.debug("NSD name: " + nsdName);
         nsdInfo.setNsdName(nsdName);
-        // nsdInfo.setNsdVersion(dt.getMetadata().getVersion());
         nsdInfo.setContentType(contentType);
-        if (csarInfo != null) {
-            nsdInfo.addNsdPkgFilename(nsdFilename);
-            nsdInfo.addNsdFilename(csarInfo.getDescriptorFilename());
-        } else {
-            nsdInfo.addNsdFilename(nsdFilename);
-        }
 
         List<UUID> nestedNsdIds = new ArrayList<>();
         for (String nestedNsdId : nestedNsds.keySet()) {
@@ -1448,16 +1485,11 @@ public class NsdManagementService implements NsdManagementInterface {
         }
         nsdInfo.setPnfdInfoIds(pnfdIds);
 
-        // clean tmp files
-        if (!inputFile.delete()) {
-            log.warn("Could not delete temporary NSD content file");
-        }
-
         if (isInternalRequest)
             nsdInfo.setPublished(true);
         else
             nsdInfo.setPublished(false);
-        
+
         List<Appd> appds = appdManagementService.getAssociatedAppD(nsdInfo.getId());
         //Update AppD if any
         for(Appd appd : appds){
@@ -1503,6 +1535,7 @@ public class NsdManagementService implements NsdManagementInterface {
             // send notification over kafka bus
             notificationManager.sendNsdOnBoardingNotification(msg);
         }
+
         nsdInfoRepo.saveAndFlush(nsdInfo);
         log.debug("NSD content uploaded and nsdOnBoardingNotification delivered");
     }
@@ -2396,6 +2429,54 @@ public class NsdManagementService implements NsdManagementInterface {
         return nestedNsds;
     }
 
+    public Map<String, KeyValuePair> checkNestedNsdsSol006(Nsd nsd, String project)
+            throws FailedOperationException, NotExistingEntityException, IOException {
+        log.debug("Checking nested NS availability for NSD " + nsd.getId() + " with version " + nsd.getVersion());
+
+        if (project != null) {
+            Optional<ProjectResource> projectOptional = projectRepository.findByProjectId(project);
+            if (!projectOptional.isPresent()) {
+                log.error("Project with id " + project + " does not exist");
+                throw new FailedOperationException("Project with id " + project + " does not exist");
+            }
+        }
+
+        List<String> nestedNsdIds = nsd.getNestedNsdId();
+        if(nestedNsdIds == null)
+            return Collections.emptyMap();
+        Map<String, KeyValuePair> nestedNsds = new HashMap<>();
+
+        for(String nestedNsdId : nestedNsdIds) {
+            // TODO check ONAP mapping
+            Optional<NsdInfoResource> optional =
+                    nsdInfoRepo.findByNsdIdAndProjectId(UUID.fromString(nestedNsdId), project);
+            if(!optional.isPresent())
+                throw new NotExistingEntityException("Nested NSD for nsdId " + nestedNsdId +
+                        " not find in project " + project);
+            NsdInfoResource nsdInfoResource = optional.get();
+            String version = nsdInfoResource.getNsdVersion();
+
+            List<String> nsdFileNames = nsdInfoResource.getNsdFilename();
+            if (nsdFileNames.size() != 1) {
+                log.error("Found zero or more than one file for NSD in YAML format. Error");
+                throw new FailedOperationException("Found more than one file for NSD in YAML format. Error");
+            }
+            String fileName = nsdFileNames.get(0);
+
+            log.debug("Searching NSD {} with nsdId {} and version {} in project {}", fileName, nestedNsdId, version, project);
+            File nsd_file = storageService.loadFileAsResource(project, nestedNsdId, version, fileName, DescriptorType.NSD).getFile();
+            Nsd nestedNsd = descriptorsParser.fileToSol006(nsd_file, Nsd.class);
+
+            log.debug("Nested NSD successfully parsed - its content is: \n" + nestedNsd.toString());
+
+            if (!nestedNsds.containsKey(nestedNsdId))
+                nestedNsds.put(nestedNsdId, new KeyValuePair(rootDir + ConfigurationParameters.storageNsdsSubfolder +
+                                "/" + project + "/" + nestedNsdId + "/" + version, PathType.LOCAL.toString()));
+        }
+
+        return nestedNsds;
+    }
+
     public Map<String, KeyValuePair> checkVNFPkgs(DescriptorTemplate nsd, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, IOException, NotPermittedOperationException, NotAuthorizedOperationException {
 
         log.debug("Checking VNF Pkgs availability for NSD " + nsd.getMetadata().getDescriptorId() + " with version " + nsd.getMetadata().getVersion());
@@ -2452,6 +2533,62 @@ public class NsdManagementService implements NsdManagementInterface {
         return includedVnfds;
     }
 
+    public Map<String, KeyValuePair> checkVNFPkgsSol006(Nsd nsd, String project)
+            throws FailedOperationException, NotExistingEntityException, IOException, NotPermittedOperationException {
+        log.debug("Checking VNF Pkgs availability for NSD " + nsd.getId() + " with version " + nsd.getVersion());
+
+        if (project != null) {
+            Optional<ProjectResource> projectOptional = projectRepository.findByProjectId(project);
+            if (!projectOptional.isPresent()) {
+                log.error("Project with id " + project + " does not exist");
+                throw new FailedOperationException("Project with id " + project + " does not exist");
+            }
+        }
+
+        List<String> vnfdIds = nsd.getVnfdId();
+        if(vnfdIds == null)
+            return Collections.emptyMap();
+        Map<String, KeyValuePair> includedVnfds = new HashMap<>();
+        List<VnfPkgInfoResource> vnfPkgInfoResources = new ArrayList<>();
+
+        for(String vnfdId : vnfdIds) {
+            Optional<VnfPkgInfoResource> optional =
+                    vnfPkgInfoRepository.findByVnfdIdAndProjectId(UUID.fromString(vnfdId), project);
+            if (!optional.isPresent())
+                throw new NotExistingEntityException("VNFD filename for vnfdId " + vnfdId +
+                        " not find in project " + project);
+
+            VnfPkgInfoResource vnfPkgInfoResource = optional.get();
+            String version = vnfPkgInfoResource.getVnfdVersion();
+            String fileName = vnfPkgInfoResource.getVnfdFilename();
+
+            log.debug("Searching VNFD {} with vnfdId {} and version {} in project {}", fileName, vnfdId, version, project);
+            File vnfd_file = storageService.loadFileAsResource(project, vnfdId, version, fileName, DescriptorType.VNFD).getFile();
+            Vnfd vnfd = descriptorsParser.fileToSol006(vnfd_file, Vnfd.class);
+
+            log.debug("VNFD successfully parsed - its content is: \n" + vnfd.toString());
+
+            if (!includedVnfds.containsKey(vnfPkgInfoResource.getId().toString())) {
+                includedVnfds.put(vnfPkgInfoResource.getId().toString(),
+                        new KeyValuePair(rootDir + ConfigurationParameters.storageVnfpkgsSubfolder + "/" +
+                                project + "/" + vnfdId + "/" + version, PathType.LOCAL.toString()));
+                vnfPkgInfoResources.add(vnfPkgInfoResource);
+            }
+
+            if (includedVnfds.isEmpty())
+                throw new NotPermittedOperationException("VNFDs listed in NSD are not available in Catalogue's storage");
+        }
+
+        for (VnfPkgInfoResource resource : vnfPkgInfoResources) {
+            List<String> parentNsds = resource.getParentNsds();
+            parentNsds.add(nsd.getId());
+            resource.setParentNsds(parentNsds);
+            vnfPkgInfoRepository.saveAndFlush(resource);
+        }
+
+        return includedVnfds;
+    }
+
     public Map<String, KeyValuePair> checkPNFDs(DescriptorTemplate nsd, String project) throws FailedOperationException, NotExistingEntityException, MalformattedElementException, IOException, NotPermittedOperationException, NotAuthorizedOperationException {
 
         log.debug("Checking PNFDs availability for NSD " + nsd.getMetadata().getDescriptorId() + " with version " + nsd.getMetadata().getVersion());
@@ -2501,6 +2638,62 @@ public class NsdManagementService implements NsdManagementInterface {
         for (PnfdInfoResource resource : pnfdInfoResources) {
             List<String> parentNsds = resource.getParentNsds();
             parentNsds.add(nsd.getMetadata().getDescriptorId());
+            resource.setParentNsds(parentNsds);
+            pnfdInfoRepo.saveAndFlush(resource);
+        }
+
+        return includedPnfds;
+    }
+
+    public Map<String, KeyValuePair> checkPNFDsSol006(Nsd nsd, String project)
+            throws FailedOperationException, NotExistingEntityException, IOException, NotPermittedOperationException {
+        log.debug("Checking PNFDs availability for NSD " + nsd.getId() + " with version " + nsd.getVersion());
+
+        if (project != null) {
+            Optional<ProjectResource> projectOptional = projectRepository.findByProjectId(project);
+            if (!projectOptional.isPresent()) {
+                log.error("Project with id " + project + " does not exist");
+                throw new FailedOperationException("Project with id " + project + " does not exist");
+            }
+        }
+
+        List<String> pnfdIds = nsd.getPnfdId();
+        if(pnfdIds == null)
+            return Collections.emptyMap();
+        Map<String, KeyValuePair> includedPnfds = new HashMap<>();
+        List<PnfdInfoResource> pnfdInfoResources = new ArrayList<>();
+
+        for(String pnfdId : pnfdIds) {
+            Optional<PnfdInfoResource> optional =
+                    pnfdInfoRepo.findByPnfdIdAndProjectId(UUID.fromString(pnfdId), project);
+            if (!optional.isPresent())
+                throw new NotExistingEntityException("PNFD filename for pnfdId " + pnfdId +
+                        " not find in project " + project);
+
+            PnfdInfoResource pnfdInfoResource = optional.get();
+            String version = pnfdInfoResource.getPnfdVersion();
+            String fileName = pnfdInfoResource.getPnfdFilename().get(0);
+
+            log.debug("Searching PNFD {} with pnfdId {} and version {}", fileName, pnfdId, version);
+            File pnfd_file = storageService.loadFileAsResource(project, pnfdId, version, fileName, DescriptorType.PNFD).getFile();
+            Pnfd pnfd = descriptorsParser.fileToSol006(pnfd_file, Pnfd.class);
+
+            log.debug("PNFD successfully parsed - its content is: \n" + pnfd.toString());
+
+            if (!includedPnfds.containsKey(pnfdInfoResource.getId().toString())) {
+                includedPnfds.put(pnfdInfoResource.getId().toString(),
+                        new KeyValuePair(rootDir + ConfigurationParameters.storageNsdsSubfolder + "/" +
+                                project + "/" + pnfdId + "/" + version, PathType.LOCAL.toString()));
+                pnfdInfoResources.add(pnfdInfoResource);
+            }
+
+            if (includedPnfds.isEmpty())
+                throw new NotPermittedOperationException("PNFDs listed in NSD are not available in Catalogue's storage");
+        }
+
+        for (PnfdInfoResource resource : pnfdInfoResources) {
+            List<String> parentNsds = resource.getParentNsds();
+            parentNsds.add(nsd.getId());
             resource.setParentNsds(parentNsds);
             pnfdInfoRepo.saveAndFlush(resource);
         }

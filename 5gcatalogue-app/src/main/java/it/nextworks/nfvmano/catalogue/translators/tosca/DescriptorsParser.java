@@ -21,6 +21,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import it.nextworks.nfvmano.libs.descriptors.sol006.Nsd;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,6 +64,20 @@ public class DescriptorsParser {
         DescriptorTemplate descriptorTemplate = mapper.readValue(file, DescriptorTemplate.class);
 
         return descriptorTemplate;
+    }
+
+    public <T> T fileToSol006(File file, Class<T> type) throws IOException {
+
+        ObjectMapper mapper;
+
+        if(file.getName().endsWith(".yaml"))
+            mapper = new ObjectMapper(new YAMLFactory());
+        else
+            mapper = new ObjectMapper();
+
+        mapper.configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true);
+
+        return mapper.readValue(file, type);
     }
 
     public DescriptorTemplate stringToDescriptorTemplate(String descriptor)
