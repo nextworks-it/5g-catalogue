@@ -3,6 +3,7 @@ metadata:
 	ns_provider_id: NXW
 	ns_package_version: 1.15
 	ns_release_date_time: 2017-01-01T10:00+03:00
+	datamodel_spec: SOL006
 
 monitoring:
 	main_monitoring_descriptor:

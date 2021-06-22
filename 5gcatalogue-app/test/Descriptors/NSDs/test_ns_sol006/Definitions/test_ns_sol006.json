@@ -1,0 +1,218 @@
+{
+  "id": "5edd564f-9c24-4ad7-9806-ae9c893a0e0b",
+  "vnfd-id": [ "08661c38-20c6-4f8f-9b76-a8b67dc5181c" ],
+  "pnfd-id": [ "ffa1ef83-bcbf-4214-8aa2-62f117beb22e" ],
+  "sapd": [
+    {
+      "id": "inside"
+    },
+    {
+      "id": "management",
+      "virtual-link-desc": "mgmt"
+    },
+    {
+      "id": "outside",
+      "vnf": {
+        "vnfd-id": "08661c38-20c6-4f8f-9b76-a8b67dc5181c",
+        "ext-cpd-id": "left"
+      }
+    }
+  ],
+  "virtual-link-desc": [
+    {
+      "id": "fw2dpi",
+      "connectivity-type": {
+        "layer-protocol": ["ethernet"]
+      },
+      "df": [{
+        "id": "normal",
+        "qos": {
+          "latency": "0",
+          "packet-delay-variation": "0"
+        }
+      }]
+    },
+    {
+      "id": "mgmt",
+      "connectivity-type": {
+        "layer-protocol": ["ipv4"]
+      },
+      "df": [{
+        "id": "normal",
+        "qos": {
+          "latency": "0",
+          "packet-delay-variation": "0"
+        }
+      }]
+    },
+    {
+      "id": "r2fw",
+      "connectivity-type": {
+        "layer-protocol": ["ethernet"]
+      },
+      "df": [{
+        "id": "normal",
+        "qos": {
+          "latency": "0",
+          "packet-delay-variation": "0"
+        }
+      }]
+    }
+  ],
+  "df": [
+    {
+      "id": "router-fw",
+      "vnf-profile": [
+        {
+          "id": "router",
+          "vnfd-id": "08661c38-20c6-4f8f-9b76-a8b67dc5181c",
+          "flavour-id": "normal",
+          "instantiation-level": "single",
+          "min-number-of-instances": "1",
+          "max-number-of-instances": "1",
+          "virtual-link-connectivity": [
+            {
+              "virtual-link-profile-id": "mgmt",
+              "constituent-cpd-id": [{
+                "constituent-base-element-id": "router",
+                "constituent-cpd-id": "management"
+              }]
+            },
+            {
+              "virtual-link-profile-id": "r2fw",
+              "constituent-cpd-id": [{
+                "constituent-base-element-id": "router",
+                "constituent-cpd-id": "right"
+              }]
+            }
+          ]
+        }
+      ],
+      "virtual-link-profile": [
+        {
+          "id": "mgmt",
+          "virtual-link-desc-id": "mgmt",
+          "flavour-id": "normal",
+          "max-bitrate-requirements": {
+            "root": "1000"
+          },
+          "min-bitrate-requirements": {
+            "root": "0"
+          }
+        },
+        {
+          "id": "r2fw",
+          "virtual-link-desc-id": "r2fw",
+          "flavour-id": "normal",
+          "max-bitrate-requirements": {
+            "root": "10000000"
+          },
+          "min-bitrate-requirements": {
+            "root": "0"
+          }
+        }
+      ],
+      "ns-instantiation-level": [{
+        "id": "normal",
+        "description": "Single FW and Router",
+        "vnf-to-level-mapping": [
+          {
+            "vnf-profile-id": "firewall",
+            "number-of-instances": "1"
+          },
+          {
+            "vnf-profile-id": "router",
+            "number-of-instances": "1"
+          }
+        ]
+      }]
+    },
+    {
+      "id": "router-fw-dpi",
+      "vnf-profile": [
+        {
+          "id": "router",
+          "vnfd-id": "08661c38-20c6-4f8f-9b76-a8b67dc5181c",
+          "flavour-id": "normal",
+          "instantiation-level": "single",
+          "min-number-of-instances": "1",
+          "max-number-of-instances": "1",
+          "virtual-link-connectivity": [
+            {
+              "virtual-link-profile-id": "mgmt",
+              "constituent-cpd-id": [{
+                "constituent-base-element-id": "router",
+                "constituent-cpd-id": "management"
+              }]
+            },
+            {
+              "virtual-link-profile-id": "r2fw",
+              "constituent-cpd-id": [{
+                "constituent-base-element-id": "router",
+                "constituent-cpd-id": "right"
+              }]
+            }
+          ]
+        }
+      ],
+      "pnf-profile": [{
+        "id": "physical-dpi",
+        "pnfd-id": "physical-dpi",
+        "virtual-link-connectivity": [{
+          "virtual-link-profile-id": "fw2dpi",
+          "constituent-cpd-id": [{
+            "constituent-base-element-id": "physical-dpi",
+            "constituent-cpd-id": "outside"
+          }]
+        }]
+      }],
+      "virtual-link-profile": [
+        {
+          "id": "fw2dpi",
+          "virtual-link-desc-id": "fw2dpi",
+          "flavour-id": "normal",
+          "max-bitrate-requirements": {
+            "root": "1000000"
+          },
+          "min-bitrate-requirements": {
+            "root": "0"
+          }
+        },
+        {
+          "id": "mgmt",
+          "virtual-link-desc-id": "mgmt",
+          "flavour-id": "normal",
+          "max-bitrate-requirements": {
+            "root": "1000"
+          },
+          "min-bitrate-requirements": {
+            "root": "0"
+          }
+        },
+        {
+          "id": "r2fw",
+          "virtual-link-desc-id": "r2fw",
+          "flavour-id": "normal",
+          "max-bitrate-requirements": {
+            "root": "1000000"
+          },
+          "min-bitrate-requirements": {
+            "root": "0"
+          }
+        }
+      ],
+      "ns-instantiation-level":[ {
+        "id": "normal",
+        "description": "Router+FW+Physical DPI",
+        "vnf-to-level-mapping": [
+          {
+            "vnf-profile-id": "firewall",
+            "number-of-instances": "1"
+          },
+          {
+            "vnf-profile-id": "router",
+            "number-of-instances": "1"
+          }]
+      }]
+    }]
+}

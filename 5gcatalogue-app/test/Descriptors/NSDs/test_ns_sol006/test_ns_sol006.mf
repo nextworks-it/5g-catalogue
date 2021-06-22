@@ -1,0 +1,6 @@
+metadata:
+    vnf_product_name: test_ns_sol006
+    vnf_provider_id: NXW
+    vnf_package_version: 1.0
+    vnf_release_date_time: 2021-06-22T15:16+02:00
+    datamodel_spec: SOL006

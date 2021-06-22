@@ -1,0 +1,1 @@
+22/06/2021 - test NS Package according to ETSI GS NFV-SOL006 v2.6.1
