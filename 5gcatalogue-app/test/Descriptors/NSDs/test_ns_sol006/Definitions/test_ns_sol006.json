@@ -1,7 +1,9 @@
 {
   "id": "5edd564f-9c24-4ad7-9806-ae9c893a0e0b",
+  "invariant-id": "676d6c07-4c77-4473-9ea1-2b4fa93fd0f2",
   "vnfd-id": [ "08661c38-20c6-4f8f-9b76-a8b67dc5181c" ],
   "pnfd-id": [ "ffa1ef83-bcbf-4214-8aa2-62f117beb22e" ],
+  "version": "1.0",
   "sapd": [
     {
       "id": "inside"

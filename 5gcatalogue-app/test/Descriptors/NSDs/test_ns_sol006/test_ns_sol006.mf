@@ -1,6 +1,18 @@
 metadata:
-    vnf_product_name: test_ns_sol006
-    vnf_provider_id: NXW
-    vnf_package_version: 1.0
-    vnf_release_date_time: 2021-06-22T15:16+02:00
+    ns_name: test_ns_sol006
+    ns_provider_id: NXW
+    ns_package_version: 1.0
+    ns_release_date_time: 2021-06-22T15:16+02:00
     datamodel_spec: SOL006
+
+monitoring:
+	main_monitoring_descriptor:
+		Source: Files/Monitoring/monitoringParameters.json
+
+actions:
+	main_actions_descriptor:
+		Source: Files/Monitoring/actions.json
+
+actionRules:
+	main_actionRules_descriptor:
+		Source: Files/Monitoring/actionRules.json
