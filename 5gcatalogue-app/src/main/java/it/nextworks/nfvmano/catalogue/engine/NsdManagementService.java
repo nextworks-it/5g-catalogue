@@ -2214,9 +2214,12 @@ public class NsdManagementService implements NsdManagementInterface {
                     else
                         version = pnfdSol006.getVersion();
 
-                    Optional<PnfdInfoResource> optionalPnfdInfoResource = pnfdInfoRepo.findByPnfdIdAndPnfdVersionAndProjectId(pnfdId, version, project);
-                    if (optionalPnfdInfoResource.isPresent()) {
-                        throw new AlreadyExistingEntityException("A PNFD with the same id and version already exists in the project");
+                    if(dms == DataModelSpec.SOL001) {
+                        if(pnfdInfoRepo.findByPnfdIdAndPnfdVersionAndProjectId(pnfdId, version, project).isPresent())
+                            throw new AlreadyExistingEntityException("A PNFD with the same id and version already exists in the project");
+                    } else {
+                        if(pnfdInfoRepo.findByPnfdIdAndProjectId(pnfdId, project).isPresent())
+                            throw new AlreadyExistingEntityException("A SOL006 PNFD with the same id already exists in the project");
                     }
 
                     pnfdInfo.setPnfPkgFilename(pnfPkgFilename);

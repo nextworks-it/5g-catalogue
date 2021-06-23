@@ -984,11 +984,13 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                     throw new MalformattedElementException("Multiple management Connection Points are not allowed");
             }
 
-            Optional<VnfPkgInfoResource> optionalVnfPkgInfoResource;
-            optionalVnfPkgInfoResource = vnfPkgInfoRepository.findByVnfdIdAndVnfdVersionAndProjectId(vnfdId,
-                    version, project);
-            if (optionalVnfPkgInfoResource.isPresent())
-                throw new AlreadyExistingEntityException("A VNFD with the same id and version already exists in the project");
+            if(dms == DataModelSpec.SOL001) {
+                if(vnfPkgInfoRepository.findByVnfdIdAndVnfdVersionAndProjectId(vnfdId, version, project).isPresent())
+                    throw new AlreadyExistingEntityException("A VNFD with the same id and version already exists in the project");
+            } else {
+                if(vnfPkgInfoRepository.findByVnfdIdAndProjectId(vnfdId, project).isPresent())
+                    throw new AlreadyExistingEntityException("A SOL006 VNFD with the same id already exists in the project");
+            }
 
             vnfPkgInfoResource.setVnfdId(vnfdId);
 
