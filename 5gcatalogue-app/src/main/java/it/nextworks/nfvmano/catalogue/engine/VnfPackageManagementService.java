@@ -1241,27 +1241,31 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                     throw new MalformattedElementException("Multiple management Connection Points are not allowed");
             }
 
-            if(!vnfPkgInfoResource.getVnfdId().equals(vnfdId) || !vnfPkgInfoResource.getVnfdVersion().equals(version)) {
-                Optional<VnfPkgInfoResource> optionalVnfPkgInfoResource =
-                        vnfPkgInfoRepository.findByVnfdIdAndVnfdVersionAndProjectId(vnfdId, version, project);
-                if (optionalVnfPkgInfoResource.isPresent())
-                    throw new AlreadyExistingEntityException("An VNF Pkg with the same id and version already exists in the project");
-            }
-
             oldVnfdId = vnfPkgInfoResource.getVnfdId();
             oldVnfdVersion = vnfPkgInfoResource.getVnfdVersion();
+
+            if(dms == DataModelSpec.SOL001) {
+                if (!oldVnfdId.equals(vnfdId) || !oldVnfdVersion.equals(version)) {
+                    Optional<VnfPkgInfoResource> optionalVnfPkgInfoResource =
+                            vnfPkgInfoRepository.findByVnfdIdAndVnfdVersionAndProjectId(vnfdId, version, project);
+                    if (optionalVnfPkgInfoResource.isPresent())
+                        throw new AlreadyExistingEntityException("An VNF Pkg with the same id and version already exists in the project");
+                }
+            } else {
+                if(oldVnfdId.equals(vnfdId) && !oldVnfdVersion.equals(version))
+                    throw new MalformattedElementException("VNFD ID must change when the version is changed (SOL006).");
+
+                if(!oldVnfdId.equals(vnfdId)) {
+                    Optional<VnfPkgInfoResource> optionalVnfPkgInfoResource = vnfPkgInfoRepository.findByVnfdIdAndProjectId(vnfdId, project);
+                    if(optionalVnfPkgInfoResource.isPresent())
+                        throw new AlreadyExistingEntityException("A SOL006 VNFD with the same id already exists in the project");
+                }
+            }
 
             vnfPkgInfoResource.setVnfdId(vnfdId);
             vnfPkgInfoResource.setVnfdVersion(version);
 
-            if(dms == DataModelSpec.SOL001)
-                log.debug("VNF Pkg successfully parsed - its content is: \n"
-                        + DescriptorsParser.descriptorTemplateToString(dt));
-            else
-                log.debug("VNFD in Pkg successfully parsed - its content is: \n" + vnfd.toString());
-
-            vnfPkgFilename =
-                    FileSystemStorageService.storePkg(project, vnfdId.toString(), version, vnfPkg, DescriptorType.VNFD);
+            vnfPkgFilename = FileSystemStorageService.storePkg(project, vnfPkgId_string, version, vnfPkg, DescriptorType.VNFD);
 
             byte[] bytes = vnfPkg.getBytes();
             archiveParser.unzip(new ByteArrayInputStream(bytes), project, vnfPkgId_string, version, DescriptorType.VNFD);
@@ -1269,6 +1273,12 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
             //Removing old files
             if(!oldVnfdId.equals(vnfdId) || !oldVnfdVersion.equals(version))
                 FileSystemStorageService.deleteVnfPkg(project, oldVnfdId.toString(), oldVnfdVersion);
+
+            if(dms == DataModelSpec.SOL001)
+                log.debug("VNF Pkg successfully parsed - its content is: \n"
+                        + DescriptorsParser.descriptorTemplateToString(dt));
+            else
+                log.debug("VNFD in Pkg successfully parsed - its content is: \n" + vnfd.toString());
 
             log.debug("VNF Pkg file successfully stored");
         } catch (IOException e) {
