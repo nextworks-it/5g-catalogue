@@ -1,0 +1,91 @@
+{
+    "id": "5d14868f-4603-4fd9-a540-ec9939d340e3",
+    "product-name": "edge_cache_vnfd",
+    "product-info-name": "edge_cache_vnfd",
+    "product-info-description": "Edge Cache VNF for testing purpose.",
+    "provider": "NXW",
+    "version": "1.0",
+    "ext-cpd": [
+        {
+            "id": "ens3",
+            "description": "upf-net",
+            "int-cpd": {
+                "vdu-id": "edge_cache_vnfd-VM",
+                "cpd": "in"
+            },
+            "layer-protocol": [
+                "ipv4"
+            ],
+            "virtual-network-interface-requirement": [
+                {
+                    "network-interface-requirements": [
+                        {
+                            "key": "isManagement",
+                            "value": "true"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "ens7",
+            "description": "cdn-net",
+            "int-cpd": {
+                "vdu-id": "edge_cache_vnfd-VM",
+                "cpd": "out"
+            },
+            "layer-protocol": [
+                "ipv4"
+            ]
+        }
+    ],
+    "virtual-compute-desc": [
+        {
+            "id": "CP",
+            "virtual-memory": {
+                "size": "2048"
+            },
+            "virtual-cpu": {
+                "num-virtual-cpu": "2"
+            }
+        }
+    ],
+    "virtual-storage-desc": [
+        {
+            "id": "root",
+            "type-of-storage": "root-storage",
+            "size-of-storage": "28"
+        }
+    ],
+    "sw-image-desc": [
+        {
+            "id": "CP",
+            "image": "icom_hostgw"
+        }
+    ],
+    "vdu": [
+        {
+            "id": "edge_cache_vnfd-VM",
+            "name": "edge_cache_vnfd-VM",
+            "virtual-compute-desc": "CP",
+            "virtual-storage-desc": [
+                "root"
+            ],
+            "sw-image-desc": "CP",
+            "int-cpd": [
+                {
+                    "id": "in",
+                    "layer-protocol": [
+                        "ipv4"
+                    ]
+                },
+                {
+                    "id": "out",
+                    "layer-protocol": [
+                        "ipv4"
+                    ]
+                }
+            ]
+        }
+    ]
+}
