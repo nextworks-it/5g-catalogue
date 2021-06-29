@@ -146,22 +146,22 @@
         "cpd": "in"
       },
       "layer-protocol": ["ipv4"],
-      "virtual-network-interface-requirement": [
-        {
-          "network-interface-requirements": [
-            {
-              "key": "isManagement", 
-              "value": "true"
-            }
-          ]
-        }
-      ]
+      "virtual-network-interface-requirement": []
     },
     {
       "id": "mgmt",
       "int-virtual-link-desc": "mgmt",
       "layer-protocol": ["ipv4"],
-      "virtual-network-interface-requirement": []
+      "virtual-network-interface-requirement": [
+        {
+          "network-interface-requirements": [
+            {
+              "key": "isManagement",
+              "value": "true"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "out",
