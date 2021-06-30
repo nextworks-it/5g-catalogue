@@ -15,10 +15,12 @@
  */
 package it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.common;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.translators.SolToOsmTranslator;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.nsDescriptor.OsmNSPackage;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.vnfDescriptor.OsmVNFPackage;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -105,12 +107,33 @@ public class OsmArchiveBuilder {
         return compress(folder);
     }
 
+    public File makeNewArchive(SolToOsmTranslator.OsmVnfdSol006Wrapper vnfd, String readmeContent,
+                               File logoFile, File cloudInitFile, File monitoringFile) {
+        String vnfdId = vnfd.getVnfd().getId();
+        File folder = makeFolder(vnfdId);
+        makeReadme(readmeContent, folder);
+        makeDescriptor(vnfd, vnfdId, folder);
+        File iconsFolder = makeSubFolder(folder, "icons");
+        copyFile(iconsFolder, logoFile);
+        File cloudInitFolder = makeSubFolder(folder, "cloud_init");
+        if (cloudInitFile != null)
+            copyFile(cloudInitFolder, cloudInitFile);
+        File monitoringFolder = makeSubFolder(folder, "monitoring");
+        if(monitoringFile != null)
+            copyFile(monitoringFolder, monitoringFile);
+        return compress(folder);
+    }
+
     public File makeNewArchive(OsmVNFPackage ymlFile, File logoFile) {
         return makeNewArchive(ymlFile, "", logoFile, null, null);
     }
 
     public File makeNewArchive(OsmVNFPackage ymlFile, String readmeContent, File cloudInit, File monitoringFile) {
         return makeNewArchive(ymlFile, readmeContent, defaultLogo, cloudInit, monitoringFile);
+    }
+
+    public File makeNewArchive(SolToOsmTranslator.OsmVnfdSol006Wrapper vnfd, String readmeContent, File cloudInit, File monitoringFile) {
+        return makeNewArchive(vnfd, readmeContent, defaultLogo, cloudInit, monitoringFile);
     }
 
     public File makeNewArchive(OsmVNFPackage ymlFile) {
@@ -202,6 +225,23 @@ public class OsmArchiveBuilder {
         }
     }
 
+    private void makeDescriptor(SolToOsmTranslator.OsmVnfdSol006Wrapper vnfd, String vnfdId, File folder) {
+        File vnfdFile;
+
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
+        vnfdFile = new File(folder, vnfdId + ".yaml");
+
+        try {
+            mapper.writeValue(vnfdFile, vnfd);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not write vnd file " + vnfdFile.getAbsolutePath() +
+                    ". Error: " + e.getMessage());
+        }
+    }
+
     private void makeReadme(String readmeContent, File folder) {
         File readme = new File(folder, "README");
         List<String> strings = Arrays.asList(readmeContent.split("\n"));
@@ -231,6 +271,7 @@ public class OsmArchiveBuilder {
         try {
             Files.copy(file.toPath(), new File(fileFolder, file.getName()).toPath());
         } catch (IOException e) {
+            log.error(e.getMessage());
             String msg = String.format(
                     "Cannot copy icon file %s to folder %s",
                     file.getAbsolutePath(),

@@ -15,16 +15,20 @@
  */
 package it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.translators;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANOType;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NsVirtualLink.NsVirtualLinkNode;
+import it.nextworks.nfvmano.libs.descriptors.sol006.*;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import it.nextworks.nfvmano.libs.descriptors.templates.VirtualLinkPair;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VDU.VDUComputeNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VDU.VDUVirtualBlockStorageNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VnfExtCp.VnfExtCpNode;
+import it.nextworks.nfvmano.libs.osmr10DataModels.OsmVnfdSol006;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.nsDescriptor.*;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.vnfDescriptor.*;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.vnfDescriptor.ConnectionPoint;
@@ -40,6 +44,17 @@ import java.util.stream.Collectors;
 
 
 public class SolToOsmTranslator {
+
+    public static class OsmVnfdSol006Wrapper {
+
+        @JsonProperty("vnfd")
+        private final OsmVnfdSol006 vnfd;
+
+        @JsonCreator
+        public OsmVnfdSol006Wrapper(@JsonProperty("vnfd") OsmVnfdSol006 vnfd) { this.vnfd = vnfd; }
+
+        public Vnfd getVnfd() { return vnfd; }
+    }
 
     private static final Logger log = LoggerFactory.getLogger(SolToOsmTranslator.class);
     private static int interfacePosition = 0;
@@ -387,5 +402,118 @@ public class SolToOsmTranslator {
         VNFDCatalog vnfdCatalog = new VNFDCatalog();
         vnfdCatalog.setVnfd(vnfds);
         return new OsmVNFPackage().setVnfdCatalog(vnfdCatalog);
+    }
+
+    private static OsmVnfdSol006 convertVnfdToOsmVnfd(Vnfd vnfd) {
+        OsmVnfdSol006 osmVnfd = new OsmVnfdSol006();
+
+        osmVnfd.setSecurityGroupRule(vnfd.getSecurityGroupRule());
+        osmVnfd.setDefaultLocalizationLanguage(vnfd.getDefaultLocalizationLanguage());
+        osmVnfd.setExtCpd(vnfd.getExtCpd());
+        osmVnfd.setId(vnfd.getId());
+        osmVnfd.setSwImageDesc(vnfd.getSwImageDesc());
+        osmVnfd.setElementGroup(vnfd.getElementGroup());
+        osmVnfd.setVirtualStorageDesc(vnfd.getVirtualStorageDesc());
+        osmVnfd.setIndicator(vnfd.getIndicator());
+        osmVnfd.setVirtualComputeDesc(vnfd.getVirtualComputeDesc());
+        osmVnfd.setVnfmInfo(vnfd.getVnfmInfo());
+        osmVnfd.setProductInfoName(vnfd.getProductInfoName());
+        osmVnfd.setModifiableAttributes(vnfd.getModifiableAttributes());
+        osmVnfd.setVersion(vnfd.getVersion());
+        osmVnfd.setProvider(vnfd.getProvider());
+        osmVnfd.setProductName(vnfd.getProductName());
+        osmVnfd.setDf(vnfd.getDf());
+        osmVnfd.setSoftwareVersion(vnfd.getSoftwareVersion());
+        osmVnfd.setConfigurableProperties(vnfd.getConfigurableProperties());
+        osmVnfd.setAutoScale(vnfd.getAutoScale());
+        osmVnfd.setLifecycleManagementScript(vnfd.getLifecycleManagementScript());
+        osmVnfd.setVdu(vnfd.getVdu());
+        osmVnfd.setLocalizationLanguage(vnfd.getLocalizationLanguage());
+        osmVnfd.setIntVirtualLinkDesc(vnfd.getIntVirtualLinkDesc());
+        osmVnfd.setProductInfoDescription(vnfd.getProductInfoDescription());
+
+        return  osmVnfd;
+    }
+
+    private static void makeDf(OsmVnfdSol006 osmVnfd) {
+        List<VnfdDf> vnfdDfs = osmVnfd.getDf();
+        if(vnfdDfs == null)
+            vnfdDfs = new ArrayList<>();
+        if(vnfdDfs.isEmpty()) {
+            String vduId = osmVnfd.getVdu().get(0).getId();
+            VnfdDf vnfdDf = new VnfdDf()
+                    .id("default_df")
+                    .vduProfile(Collections.singletonList(new VnfdDfVduProfileItem()
+                            .id(vduId)
+                            .minNumberOfInstances("1")
+                            .maxNumberOfInstances("1")))
+                    .instantiationLevel(Collections.singletonList(new VnfdInstantiationlevel()
+                            .id("il-1")
+                            .vduLevel(Collections.singletonList(new VnfdVdulevel().vduId(vduId).numberOfInstances("1")))))
+                    .defaultInstantiationLevel("il-1");
+
+            osmVnfd.setDf(Collections.singletonList(vnfdDf));
+        } else {
+            for(VnfdDf vnfdDf : vnfdDfs) {
+                VnfdLcmoperationsconfiguration vnfdLcmoperationsconfiguration = vnfdDf.getLcmOperationsConfiguration();
+                if(vnfdLcmoperationsconfiguration == null)
+                    continue;
+                VnfdLcmoperationsconfigurationOperatevnfopconfig operateVnfOpConfig =
+                        vnfdLcmoperationsconfiguration.getOperateVnfOpConfig();
+                if(operateVnfOpConfig == null)
+                    continue;
+                // TODO add Day1-2 object for operateVnfOpConfig
+            }
+        }
+    }
+
+    public static OsmVnfdSol006Wrapper generateVnfDescriptor(Vnfd vnfd) throws MalformattedElementException {
+        OsmVnfdSol006 osmVnfd = convertVnfdToOsmVnfd(vnfd);
+
+        List<ExtCpd> extCpds = osmVnfd.getExtCpd();
+        if(extCpds == null || extCpds.isEmpty())
+            throw new MalformattedElementException("No External Connection Points defined");
+        List<String> mgmtCps = new ArrayList<>();
+        String mgmtId = null;
+        int i = 0;
+        for(ExtCpd extCpd : extCpds) {
+            List<VirtualNetworkInterfaceRequirementSchema> virtualNetworkInterfaceRequirements =
+                    extCpd.getVirtualNetworkInterfaceRequirementSchemas();
+            if(virtualNetworkInterfaceRequirements == null || virtualNetworkInterfaceRequirements.isEmpty())
+                continue;
+
+            int j = 0;
+            for(VirtualNetworkInterfaceRequirementSchema virtualNetworkInterfaceRequirement : virtualNetworkInterfaceRequirements) {
+                if(virtualNetworkInterfaceRequirement.getName() == null ||
+                        virtualNetworkInterfaceRequirement.getName().isEmpty())
+                    virtualNetworkInterfaceRequirement.setName("virtual-network-interface-requirement " + j + " of ext-cpd " + i);
+                j++;
+            }
+
+            VirtualNetworkInterfaceRequirementSchema virtualNetworkInterfaceRequirement =
+                    virtualNetworkInterfaceRequirements.get(0);
+            List<NetworkInterfaceRequirementsSchema> networkInterfaceRequirements =
+                    virtualNetworkInterfaceRequirement.getNetworkInterfaceRequirements();
+            mgmtCps = networkInterfaceRequirements
+                    .stream()
+                    .filter(nir -> nir.getKey().equals("isManagement") &&
+                            nir.getValue().equalsIgnoreCase("true"))
+                    .map(NetworkInterfaceRequirementsSchema::getValue)
+                    .collect(Collectors.toList());
+
+            mgmtId = extCpd.getId();
+            i++;
+        }
+
+        if(mgmtCps.size() == 0)
+            throw new MalformattedElementException("Please define a management Connection Point");
+        else if (mgmtCps.size() > 1)
+            throw new MalformattedElementException("Multiple management Connection Points are not allowed");
+
+        osmVnfd.setMgmtCp(mgmtId);
+
+        makeDf(osmVnfd);
+
+        return new OsmVnfdSol006Wrapper(osmVnfd);
     }
 }

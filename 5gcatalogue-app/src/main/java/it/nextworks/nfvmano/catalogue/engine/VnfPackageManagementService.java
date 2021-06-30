@@ -961,13 +961,13 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                     throw new MalformattedElementException("Multiple management Connection Points are not allowed");
             } else {
                 List<ExtCpd> extCpds = vnfd.getExtCpd();
-                if(extCpds.isEmpty())
+                if(extCpds == null || extCpds.isEmpty())
                     throw new MalformattedElementException("No External Connection Points defined");
                 List<String> mgmtCps = new ArrayList<>();
                 for(ExtCpd extCpd : extCpds) {
                     List<VirtualNetworkInterfaceRequirementSchema> virtualNetworkInterfaceRequirements =
                             extCpd.getVirtualNetworkInterfaceRequirementSchemas();
-                    if(virtualNetworkInterfaceRequirements.isEmpty())
+                    if(virtualNetworkInterfaceRequirements == null || virtualNetworkInterfaceRequirements.isEmpty())
                         continue;
                     List<NetworkInterfaceRequirementsSchema> networkInterfaceRequirements =
                             virtualNetworkInterfaceRequirements.get(0).getNetworkInterfaceRequirements();
@@ -1218,13 +1218,13 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                     throw new MalformattedElementException("Multiple management Connection Points are not allowed");
             } else {
                 List<ExtCpd> extCpds = vnfd.getExtCpd();
-                if(extCpds.isEmpty())
+                if(extCpds == null || extCpds.isEmpty())
                     throw new MalformattedElementException("No External Connection Points defined");
                 List<String> mgmtCps = new ArrayList<>();
                 for(ExtCpd extCpd : extCpds) {
                     List<VirtualNetworkInterfaceRequirementSchema> virtualNetworkInterfaceRequirements =
                             extCpd.getVirtualNetworkInterfaceRequirementSchemas();
-                    if(virtualNetworkInterfaceRequirements.isEmpty())
+                    if(virtualNetworkInterfaceRequirements == null || virtualNetworkInterfaceRequirements.isEmpty())
                         continue;
                     List<NetworkInterfaceRequirementsSchema> networkInterfaceRequirements =
                             virtualNetworkInterfaceRequirements.get(0).getNetworkInterfaceRequirements();

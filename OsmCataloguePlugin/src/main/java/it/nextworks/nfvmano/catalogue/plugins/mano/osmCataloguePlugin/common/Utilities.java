@@ -27,7 +27,7 @@ public class Utilities {
                 if (line == null) {
                     break;
                 } else {
-                    String regex = "^Entry-Definitions: (Definitions\\/[^\\\\]*\\.yaml)$";
+                    String regex = "^Entry-Definitions: (Definitions\\/[^\\\\]*\\.(yaml|json))$";
                     if (line.matches(regex)) {
                         Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
                         Matcher matcher = pattern.matcher(line);
