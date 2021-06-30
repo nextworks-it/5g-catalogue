@@ -295,11 +295,6 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
                                 "(" + tmp.getId() + ", " + tmp.getVersion() + ").");
                     SolToOsmTranslator.OsmVnfdSol006Wrapper vnfd = SolToOsmTranslator.generateVnfDescriptor(tmp);
 
-                    mapper = new ObjectMapper(new YAMLFactory());
-                    mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
-                    mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-                    log.debug("Translated VNFD: " + mapper.writeValueAsString(vnfd));
-
                     String osmDescriptorId = getOsmDescriptorId(vnfdId, version);
                     if(osmDescriptorId == null)
                         osmDescriptorId = vnfdId;
@@ -315,6 +310,11 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
                             osmDescriptorId = UUID.randomUUID().toString();
                             vnfd.getVnfd().setId(osmDescriptorId);
                         }
+
+                        mapper = new ObjectMapper(new YAMLFactory());
+                        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+                        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+                        log.debug("Translated VNFD: " + mapper.writeValueAsString(vnfd));
 
                         Set<String> fileNames = Utilities.listFiles(packagePath);
                         String manifestPath = fileNames.stream().filter(name -> name.endsWith(".mf")).findFirst().get();
