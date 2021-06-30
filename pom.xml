@@ -16,5 +16,6 @@
         <module>OnapCataloguePlugin</module>
         <module>FivegrowthCataloguePlugin</module>
         <module>5gcatalogue-app</module>
+        <module>OSMr10DataModels</module>
     </modules>
 </project>
