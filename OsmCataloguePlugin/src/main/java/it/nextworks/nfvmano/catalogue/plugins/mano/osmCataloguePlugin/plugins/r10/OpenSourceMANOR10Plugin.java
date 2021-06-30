@@ -368,22 +368,231 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
                     manoId, vnfdId, version, project, notification.getOpStatus().toString());
             if(notification.getPluginId().equals(manoId)) {
                 String osmDescriptorId = getOsmDescriptorId(vnfdId, version);
-                if(osmDescriptorId == null)
+                if (osmDescriptorId == null)
                     osmDescriptorId = vnfdId;
 
                 Optional<OsmInfoObject> osmInfoObject = osmInfoObjectRepository
                         .findByDescriptorIdAndVersionAndOsmId(osmDescriptorId, version, manoId);
-                if(osmInfoObject.isPresent())
-                    if(notification.getOpStatus().equals(OperationStatus.SUCCESSFULLY_DONE))
-                        translationInformationRepository.saveAndFlush(new OsmTranslationInformation(notification.getVnfPkgInfoId(),
+                if (osmInfoObject.isPresent()) {
+                    if (notification.getOpStatus().equals(OperationStatus.SUCCESSFULLY_DONE))
+                        translationInformationRepository.saveAndFlush(new OsmTranslationInformation(vnfPkgInfoId,
                                 osmInfoObject.get().getId(), vnfdId, osmInfoObject.get().getDescriptorId(), version, manoId));
+                }
             }
         }
+    }
+
+    private String getOsmInfoId(String catInfoId) {
+        if(catInfoId == null)
+            throw new IllegalArgumentException("The catalog descriptor ID specified cannot be null.");
+
+        Optional<OsmTranslationInformation> optionalTranslationInformation =
+                translationInformationRepository.findByCatInfoIdAndOsmManoId(catInfoId, osm.getManoId());
+        if(!optionalTranslationInformation.isPresent())
+            return null;
+
+        return optionalTranslationInformation.get().getOsmInfoId();
+    }
+
+    private boolean deleteTranslationInformationEntry(String catInfoId) {
+        if(catInfoId == null)
+            throw new IllegalArgumentException("The catalog descriptor ID specified cannot be null.");
+
+        Optional<OsmTranslationInformation> optionalTranslationInformation =
+                translationInformationRepository.findByCatInfoIdAndOsmManoId(catInfoId, osm.getManoId());
+        if(!optionalTranslationInformation.isPresent())
+            return false;
+
+        translationInformationRepository.delete(optionalTranslationInformation.get());
+        return true;
+    }
+
+    private boolean translationInformationContainsOsmInfoId(String osmInfoId) {
+        if(osmInfoId == null)
+            throw new IllegalArgumentException("The OSM info ID specified cannot be null.");
+
+        List<OsmTranslationInformation> translationInformationList = translationInformationRepository.findByOsmInfoIdAndOsmManoId(osmInfoId, osm.getManoId());
+        return translationInformationList.size() != 0;
+    }
+
+    private void deleteVnfd(String vnfdInfoId, String opId) throws FailedOperationException {
+        log.info("{} - Deleting vnfd {}, opId: {}", osm.getManoId(), vnfdInfoId, opId);
+        OSMHttpResponse httpResponse = osmClient.deleteVnfPackage(vnfdInfoId);
+        parseResponse(httpResponse, opId, null);
+        OsmInfoObject osmInfoObject =  osmInfoObjectRepository.findById(vnfdInfoId).get();
+        osmInfoObjectRepository.delete(osmInfoObject);
+        log.info("{} - Vnfd deleting successful. OpId: {}", osm.getManoId(), opId);
     }
 
     @Override
     public void acceptVnfPkgChangeNotification(VnfPkgChangeNotificationMessage notification) throws MethodNotImplementedException {
 
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+
+        try {
+            log.debug("RECEIVED MESSAGE: " + mapper.writeValueAsString(notification));
+        } catch (JsonProcessingException e) {
+            log.error("Unable to parse received vnfPkgChangeNotificationMessage: " + e.getMessage());
+        }
+
+        String manoId       = osm.getManoId();
+        String vnfPkgInfoId = notification.getVnfPkgInfoId();
+        String vnfdId       = notification.getVnfdId();
+        String version      = notification.getVnfdVersion();
+        String project      = notification.getProject();
+
+        if(notification.getScope() == ScopeType.LOCAL) {
+            log.info("{} - Received VNF Pkg change notification for Vnfd with ID {} and version {} for project {}",
+                    manoId, vnfdId, version, project);
+
+            if(Utilities.isTargetMano(notification.getSiteOrManoIds(), osm) &&
+                    this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
+
+                try {
+                    String osmInfoPkgId = getOsmInfoId(vnfPkgInfoId);
+                    if(osmInfoPkgId == null)
+                        throw new FailedOperationException("Could not find the corresponding Info ID in OSM");
+                    if(!deleteTranslationInformationEntry(vnfPkgInfoId))
+                        throw new FailedOperationException("Could not delete the specified entry");
+                    if(!translationInformationContainsOsmInfoId(osmInfoPkgId))
+                        deleteVnfd(osmInfoPkgId, notification.getOperationId().toString());
+                    log.info("{} - Successfully deleted Vnfd with ID {} and version {} for project {}", manoId, vnfdId, version, project);
+
+                    String packagePath = notification.getPackagePath().getKey();
+                    File descriptor;
+
+                    if (notification.getPackagePath().getValue().equals(PathType.LOCAL.toString())) {
+
+                        Set<String> files = Utilities.listFiles(packagePath);
+                        if(files.size() != 1) {
+                            Set<String> metadataFileNames = Utilities.listFiles(packagePath + "/TOSCA-Metadata/");
+                            String metadataFileName;
+
+                            Optional<String> opt = metadataFileNames.stream()
+                                    .filter(name -> name.endsWith(".meta")).findFirst();
+                            if(!opt.isPresent())
+                                throw new MalformattedElementException("Metadata file not found in " + packagePath +
+                                        "/TOSCA-Metadata/" + " for Vnfd with ID " + vnfdId + " and version " + version +
+                                        " for project " + project + ".");
+                            metadataFileName = opt.get();
+
+                            File metadata = new File(packagePath + "/TOSCA-Metadata/" + metadataFileName);
+                            descriptor = new File(packagePath + "/" + Utilities.getMainServiceTemplateFromMetadata(metadata));
+                        } else {
+                            String filename = files.iterator().next();
+                            if(filename.endsWith(".yaml") || filename.endsWith("yml") || filename.endsWith("json"))
+                                descriptor = new File(packagePath + "/" + filename);
+                            else
+                                throw new MalformattedElementException("Descriptor files not found");
+                        }
+                    } else
+                        throw new MethodNotImplementedException("Path Type not currently supported");
+
+                    log.info("{} - Onboarding Vnfd with ID {} and version {} for project {}", manoId, vnfdId, version, project);
+
+                    if(descriptor.getName().endsWith(".yaml"))
+                        mapper = new ObjectMapper(new YAMLFactory());
+
+                    Vnfd tmp = mapper.readValue(descriptor, Vnfd.class);
+                    if(!tmp.getId().equals(vnfdId) || !tmp.getVersion().equals(version))
+                        throw new MalformattedElementException("The VNFD ID and version specified in the notification " +
+                                "(" + vnfdId + ", " + version + ") do not match those of the stored descriptor " +
+                                "(" + tmp.getId() + ", " + tmp.getVersion() + ").");
+                    SolToOsmTranslator.OsmVnfdSol006Wrapper vnfd = SolToOsmTranslator.generateVnfDescriptor(tmp);
+
+                    String osmDescriptorId = getOsmDescriptorId(vnfdId, version);
+                    if(osmDescriptorId == null)
+                        osmDescriptorId = vnfdId;
+
+                    String osmInfoObjectId;
+                    Optional<OsmInfoObject> osmInfoObjectOptional = osmInfoObjectRepository
+                            .findByDescriptorIdAndVersionAndOsmId(osmDescriptorId, version, manoId);
+                    if(!osmInfoObjectOptional.isPresent()) {
+
+                        if(isTheFirstTranslationInformationEntry(vnfdId))
+                            osmDescriptorId = vnfdId;
+                        else {
+                            osmDescriptorId = UUID.randomUUID().toString();
+                            vnfd.getVnfd().setId(osmDescriptorId);
+                        }
+
+                        mapper = new ObjectMapper(new YAMLFactory());
+                        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+                        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+                        log.debug("Translated VNFD: " + mapper.writeValueAsString(vnfd));
+
+                        Set<String> fileNames = Utilities.listFiles(packagePath);
+                        String manifestPath = fileNames.stream().filter(name -> name.endsWith(".mf")).findFirst().get();
+                        File mf = new File(packagePath + "/" + manifestPath);
+
+                        String cloudInitPath = Utilities.getCloudInitFromManifest(mf);
+                        File cloudInit = null;
+                        if (cloudInitPath != null)
+                            cloudInit = new File(packagePath + "/" + cloudInitPath);
+                        else
+                            log.debug("{} - No cloud-init file found for VNF with ID {} and version {}", manoId, vnfdId, version);
+
+                        String monitoringPath = Utilities.getMonitoringFromManifest(mf);
+                        File monitoring = null;
+                        if (monitoringPath != null)
+                            monitoring = new File(packagePath + "/" + monitoringPath);
+                        else
+                            log.debug("{} - No monitoring file found for VNF with ID {} and version {}", manoId, vnfdId, version);
+
+                        File archive = new OsmArchiveBuilder(osmDir, logo)
+                                .makeNewArchive(vnfd, "Generated by NXW Catalogue", cloudInit, monitoring);
+                        osmInfoObjectId = onBoardVnfPackage(archive, notification.getOperationId().toString());
+                        log.info("{} - Successfully uploaded Vnfd with ID {} and version {} for project {}", manoId, vnfdId, version, project);
+                    }
+                    else
+                        osmInfoObjectId = osmInfoObjectOptional.get().getId();
+
+                    translationInformationRepository.saveAndFlush(new OsmTranslationInformation(vnfPkgInfoId,
+                            osmInfoObjectId, vnfdId, osmDescriptorId, version, manoId));
+                    sendNotification(new VnfPkgChangeNotificationMessage(vnfPkgInfoId, vnfdId, version, project,
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
+                            manoId, null,null));
+                } catch (Exception e) {
+                    log.error("{} - Could not change Vnfd: {}", manoId, e.getMessage());
+                    log.debug("Error details: ", e);
+                    sendNotification(new VnfPkgChangeNotificationMessage(vnfPkgInfoId, vnfdId, version, project,
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
+                            manoId, null,null));
+                }
+            } else {
+                if(this.getPluginOperationalState() == PluginOperationalState.DISABLED ||
+                        this.getPluginOperationalState() == PluginOperationalState.DELETING) {
+                    log.debug("{} - VNF Pkg change skipped", manoId);
+                    sendNotification(new VnfPkgOnBoardingNotificationMessage(vnfPkgInfoId, vnfdId, version, project,
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.RECEIVED,
+                            manoId, null,null));
+                }
+            }
+        } else if(notification.getScope() == ScopeType.SYNC) {
+            log.info("{} - Received Sync Pkg change notification for Vnfd with ID {} and version {} for project {} : {}",
+                    manoId, vnfdId, version, project, notification.getOpStatus().toString());
+            if(notification.getPluginId().equals(manoId)) {
+                String osmDescriptorId = getOsmDescriptorId(vnfdId, version);
+                if(osmDescriptorId == null)
+                    osmDescriptorId = vnfdId;
+
+                Optional<OsmInfoObject> osmInfoObject = osmInfoObjectRepository
+                        .findByDescriptorIdAndVersionAndOsmId(osmDescriptorId, version, manoId);
+                if(osmInfoObject.isPresent()) {
+                    if (notification.getOpStatus().equals(OperationStatus.SUCCESSFULLY_DONE)) {
+                        Optional<OsmTranslationInformation> translationInformationOptional =
+                                translationInformationRepository.findByCatInfoIdAndOsmManoId(vnfPkgInfoId, manoId);
+                        translationInformationOptional.ifPresent(osmTranslationInformation ->
+                                translationInformationRepository.delete(osmTranslationInformation));
+
+                        translationInformationRepository.saveAndFlush(new OsmTranslationInformation(vnfPkgInfoId,
+                                osmInfoObject.get().getId(), vnfdId, osmInfoObject.get().getDescriptorId(), version, manoId));
+                    }
+                }
+            }
+        }
     }
 
     @Override
