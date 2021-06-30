@@ -87,5 +87,29 @@
                 }
             ]
         }
+    ],
+    "df": [
+        {
+            "id": "default_df",
+            "vdu-profile": [
+                {
+                    "id": "edge_cache_vnfd-VM",
+                    "min-number-of-instances": "1",
+                    "max-number-of-instances": "1"
+                }
+            ],
+            "instantiation-level": [
+                {
+                    "id": "il-1",
+                    "vdu-level": [
+                        {
+                            "vdu-id": "edge_cache_vnfd-VM",
+                            "number-of-instances": "1"
+                        }
+                    ]
+                }
+            ],
+            "default-instantiation-level": "il-1"
+        }
     ]
 }
