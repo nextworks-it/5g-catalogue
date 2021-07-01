@@ -236,6 +236,12 @@ public class FileSystemStorageService {
         }
     }
 
+    public static void deleteDirIfEmpty(File file) {
+        File[] contents = file.listFiles();
+        if (contents != null && contents.length == 0)
+            file.delete();
+    }
+
     public static void deleteNsd(String project, String nsdId, String version) {
         log.debug("Removing NSD with nsdId {} and version {} from project {}", nsdId, version, project);
         if(project == null)
@@ -243,7 +249,7 @@ public class FileSystemStorageService {
         Path locationVersion = Paths.get(nsdsLocation + "/" + project + "/" + nsdId + "/" + version);
         FileSystemUtils.deleteRecursively(locationVersion.toFile());
         Path locationNsd = Paths.get(nsdsLocation + "/" + project + "/" + nsdId);
-        //TODO delete folder if no files are in there
+        deleteDirIfEmpty(locationNsd.toFile());
         log.debug("NSD with nsdId {} and version {} successfully removed from project {}", nsdId, version, project);
     }
 
@@ -254,7 +260,7 @@ public class FileSystemStorageService {
         Path locationVersion = Paths.get(vnfPkgsLocation + "/" + project + "/" + vnfdId + "/" + version);
         FileSystemUtils.deleteRecursively(locationVersion.toFile());
         Path locationVnfd = Paths.get(vnfPkgsLocation + "/" + project + "/" + vnfdId);
-        //TODO delete folder if no files are in there
+        deleteDirIfEmpty(locationVnfd.toFile());
         log.debug("VNF Pkg with vnfdId {} and version {} successfully removed from project {}", vnfdId, version, project);
     }
 

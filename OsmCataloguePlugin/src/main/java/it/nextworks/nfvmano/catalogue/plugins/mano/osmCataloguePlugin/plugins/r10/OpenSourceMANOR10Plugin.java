@@ -417,10 +417,17 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
 
     private void deleteVnfd(String vnfdInfoId, String opId) throws FailedOperationException {
         log.info("{} - Deleting vnfd {}, opId: {}", osm.getManoId(), vnfdInfoId, opId);
+
         OSMHttpResponse httpResponse = osmClient.deleteVnfPackage(vnfdInfoId);
         parseResponse(httpResponse, opId, null);
+
         OsmInfoObject osmInfoObject =  osmInfoObjectRepository.findById(vnfdInfoId).get();
+        String descriptorId = osmInfoObject.getDescriptorId();
         osmInfoObjectRepository.delete(osmInfoObject);
+
+        Utilities.deleteDir(new File(osmDir + "/" + descriptorId));
+        Utilities.deleteDir(new File(osmDir + "/" + descriptorId + ".tar.gz"));
+
         log.info("{} - Vnfd deleting successful. OpId: {}", osm.getManoId(), opId);
     }
 
