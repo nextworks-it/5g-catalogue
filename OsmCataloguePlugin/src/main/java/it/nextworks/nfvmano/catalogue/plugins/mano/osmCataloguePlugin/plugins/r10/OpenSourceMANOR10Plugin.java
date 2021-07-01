@@ -565,7 +565,7 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
                 if(this.getPluginOperationalState() == PluginOperationalState.DISABLED ||
                         this.getPluginOperationalState() == PluginOperationalState.DELETING) {
                     log.debug("{} - VNF Pkg change skipped", manoId);
-                    sendNotification(new VnfPkgOnBoardingNotificationMessage(vnfPkgInfoId, vnfdId, version, project,
+                    sendNotification(new VnfPkgChangeNotificationMessage(vnfPkgInfoId, vnfdId, version, project,
                             notification.getOperationId(), ScopeType.REMOTE, OperationStatus.RECEIVED,
                             manoId, null,null));
                 }
@@ -595,9 +595,73 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
         }
     }
 
+    private boolean translationInformationContainsCatInfoId(String catInfoId) {
+        if(catInfoId == null)
+            throw new IllegalArgumentException("The catalog descriptor ID specified cannot be null.");
+
+        Optional<OsmTranslationInformation> optionalTranslationInformation = translationInformationRepository.findByCatInfoIdAndOsmManoId(catInfoId, osm.getManoId());
+        return optionalTranslationInformation.isPresent();
+    }
+
     @Override
     public void acceptVnfPkgDeletionNotification(VnfPkgDeletionNotificationMessage notification) throws MethodNotImplementedException {
 
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+
+        try {
+            log.debug("RECEIVED MESSAGE: " + mapper.writeValueAsString(notification));
+        } catch (JsonProcessingException e) {
+            log.error("Unable to parse received vnfPkgChangeNotificationMessage: " + e.getMessage());
+        }
+
+        String manoId       = osm.getManoId();
+        String vnfPkgInfoId = notification.getVnfPkgInfoId();
+        String vnfdId       = notification.getVnfdId();
+        String version      = notification.getVnfdVersion();
+        String project      = notification.getProject();
+
+        if(notification.getScope() == ScopeType.LOCAL) {
+            log.info("{} - Received VNFD deletion notification for Vnfd with ID {} and version {} for project {}",
+                    manoId, vnfdId, version, project);
+
+            if(Utilities.isTargetMano(notification.getSiteOrManoIds(), osm) &&
+                    this.getPluginOperationalState() == PluginOperationalState.ENABLED &&
+                    translationInformationContainsCatInfoId(vnfPkgInfoId)) {
+
+                try {
+                    String osmInfoPkgId = getOsmInfoId(vnfPkgInfoId);
+                    if(osmInfoPkgId == null)
+                        throw new FailedOperationException("Could not find the corresponding Info ID in OSM");
+                    if(!deleteTranslationInformationEntry(vnfPkgInfoId))
+                        throw new FailedOperationException("Could not delete the specified entry");
+                    if(!translationInformationContainsOsmInfoId(osmInfoPkgId))
+                        deleteVnfd(osmInfoPkgId, notification.getOperationId().toString());
+                    log.info("{} - Successfully deleted Vnfd with ID {} and version {} for project {}", manoId, vnfdId, version, project);
+
+                    sendNotification(new VnfPkgDeletionNotificationMessage(vnfPkgInfoId, vnfdId, version, project,
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
+                            manoId, null));
+                } catch (Exception e) {
+                    log.error("{} - Could not delete Vnfd: {}", manoId, e.getMessage());
+                    log.debug("Error details: ", e);
+                    sendNotification(new VnfPkgDeletionNotificationMessage(vnfPkgInfoId, vnfdId, version, project,
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
+                            manoId, null));
+                }
+            } else {
+                if(this.getPluginOperationalState() == PluginOperationalState.DISABLED ||
+                        this.getPluginOperationalState() == PluginOperationalState.DELETING) {
+                    log.debug("{} - VNF Pkg deletion skipped", manoId);
+                    sendNotification(new VnfPkgDeletionNotificationMessage(vnfPkgInfoId, vnfdId, version, project,
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.RECEIVED,
+                            manoId, null));
+                }
+            }
+        } else if(notification.getScope() == ScopeType.SYNC)
+            log.info("{} - Received Sync Pkg deletion notification for Vnfd with ID {} and version {} for project {} : {}",
+                    manoId, vnfdId, version, project, notification.getOpStatus().toString());
     }
 
     @Override
