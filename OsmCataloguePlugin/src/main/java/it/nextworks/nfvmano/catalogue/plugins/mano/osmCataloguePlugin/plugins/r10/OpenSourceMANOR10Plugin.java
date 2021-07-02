@@ -31,6 +31,11 @@ import it.nextworks.nfvmano.libs.osmr4PlusClient.utilities.OSMHttpResponse;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.osmManagement.IdObject;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.osmManagement.OsmInfoObject;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.osmManagement.OsmObjectType;
+import it.nextworks.nfvmano.libs.osmr4PlusDataModel.osmManagement.RecordState;
+import org.rauschig.jarchivelib.ArchiveFormat;
+import org.rauschig.jarchivelib.Archiver;
+import org.rauschig.jarchivelib.ArchiverFactory;
+import org.rauschig.jarchivelib.CompressionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -45,6 +50,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class OpenSourceMANOR10Plugin extends MANOPlugin {
 
@@ -671,9 +677,150 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
                     manoId, vnfdId, version, project, notification.getOpStatus().toString());
     }
 
+    private void updateDB(boolean updateVNF, boolean updateNS, String project) throws FailedOperationException {
+        if(!updateVNF && !updateNS)
+            return;
+
+        String manoId = osm.getManoId();
+
+        OSMHttpResponse response;
+        List<OsmInfoObject> packageInfoList = new ArrayList<>();
+        List<OsmInfoObject> aux;
+        List<String> vnfPackageInfoIdList = new ArrayList<>();
+
+        if(updateVNF) {
+            log.info("{} - Updating Vnfs DB for project {}", manoId, project);
+
+            response = osmClient.getVnfPackageList();
+            aux = parseResponse(response, null, OsmInfoObject.class);
+            packageInfoList.addAll(aux);
+            vnfPackageInfoIdList = aux.stream()
+                    .map(OsmInfoObject::getId)
+                    .collect(Collectors.toList());
+        }
+
+        if(updateNS) {
+            log.info("{} - Updating Nss DB for project {}", manoId, project);
+
+            response = osmClient.getNsdInfoList();
+            aux = parseResponse(response, null, OsmInfoObject.class);
+            packageInfoList.addAll(aux);
+        }
+
+        for(OsmInfoObject packageInfo : packageInfoList) {
+
+            String pkgInfoId = packageInfo.getId();
+            String descriptorId = packageInfo.getDescriptorId();
+            String version = packageInfo.getVersion();
+
+            try {
+                Optional<OsmInfoObject> osmInfoObject = osmInfoObjectRepository.findById(pkgInfoId);
+                if(osmInfoObject.isPresent()) {
+                    log.info("{} - OSM Pkg with descriptor ID {} and version {} already present in project {}",
+                            manoId, descriptorId, version, project);
+
+                    if(packageInfo.getAdmin().getModified().compareTo(osmInfoObject.get().getAdmin().getModified()) <= 0) {
+                        osmInfoObject.get().setState(RecordState.UNCHANGED);
+                        osmInfoObject.get().setEpoch(Instant.now().getEpochSecond());
+                        osmInfoObjectRepository.saveAndFlush(osmInfoObject.get());
+                        continue;
+                    } else {
+                        packageInfo.setState(RecordState.CHANGED);
+                        if(!updateVNF || !updateNS)
+                            packageInfo.getAdmin().setModified(osmInfoObject.get().getAdmin().getModified());
+                    }
+                } else
+                    packageInfo.setState(RecordState.NEW);
+
+                String osmDirPath_string = osmDirPath.toString();
+
+                log.info("{} - Retrieving OSM Pkg with descriptor ID {} and version {} from project {}",
+                        manoId, descriptorId, version, project);
+                if(vnfPackageInfoIdList.contains(pkgInfoId)) {
+                    response = osmClient.getVnfPackageContent(pkgInfoId, osmDirPath_string);
+                    packageInfo.setType(OsmObjectType.VNF);
+                }
+                else {
+                    response = osmClient.getNsdContent(pkgInfoId, osmDirPath_string);
+                    packageInfo.setType(OsmObjectType.NS);
+                }
+                parseResponse(response, null, null);
+
+                File archive = new File(osmDirPath_string + "/" + packageInfo.getId() + ".tar.gz");
+                Archiver archiver = ArchiverFactory.createArchiver(ArchiveFormat.TAR, CompressionType.GZIP);
+                archiver.extract(archive, new File(osmDirPath_string));
+
+                packageInfo.setEpoch(Instant.now().getEpochSecond());
+                packageInfo.setOsmId(osm.getManoId());
+                osmInfoObjectRepository.saveAndFlush(packageInfo);
+            } catch(FailedOperationException | IOException | IllegalStateException | IllegalArgumentException e) {
+                log.error("{} - Sync error: {}", osm.getManoId(), e.getMessage());
+                log.debug(null, e);
+            }
+        }
+    }
+
+    private String getCatDescriptorId(String osmDescriptorId, String descriptorVersion) {
+        if(osmDescriptorId == null)
+            throw new IllegalArgumentException("The OSM descriptor ID specified cannot be null.");
+        if(descriptorVersion == null)
+            throw new IllegalArgumentException("The OSM descriptor version specified cannot be null.");
+
+        List<OsmTranslationInformation> translationInformationList =
+                translationInformationRepository.findByOsmDescriptorIdAndDescriptorVersionAndOsmManoId(osmDescriptorId,
+                        descriptorVersion, osm.getManoId());
+        if(translationInformationList.size() == 0)
+            return null;
+
+        return translationInformationList.get(0).getCatDescriptorId();
+    }
+
     @Override
     public Map<String, List<String>> getAllVnfd(String project) {
-        return null;
+        String manoId = osm.getManoId();
+        log.info("{} - Startup synchronization, started retrieving Osm Vnf Pkgs from project {}", manoId, project);
+
+        Long startSync = Instant.now().getEpochSecond();
+
+        try {
+            updateDB(true, false, project);
+        } catch(FailedOperationException e){
+            log.error("{} - {}", manoId, e.getMessage());
+            return null;
+        }
+
+        Map<String, List<String>> ids = new HashMap<>();
+        List<OsmInfoObject> osmInfoObjectList =
+                osmInfoObjectRepository.findByOsmIdAndType(manoId, OsmObjectType.VNF);
+        for(OsmInfoObject osmInfoObj : osmInfoObjectList) {
+            String descriptorId = osmInfoObj.getDescriptorId();
+            String version = osmInfoObj.getVersion();
+
+            if(osmInfoObj.getEpoch().compareTo(startSync) < 0) {
+                log.info("{} - Osm Vnf Pkg with descriptor ID {} and version {} no longer present in project {}",
+                        manoId, descriptorId, version, project);
+
+                osmInfoObjectRepository.delete(osmInfoObj);
+
+                Utilities.deleteDir(new File(osmDir + "/" + descriptorId));
+                Utilities.deleteDir(new File(osmDir + "/" + descriptorId + ".tar.gz"));
+
+                List<OsmTranslationInformation> translationInformationList =
+                        translationInformationRepository.findByOsmInfoIdAndOsmManoId(osmInfoObj.getId(), manoId);
+                for(OsmTranslationInformation translationInformation : translationInformationList)
+                    translationInformationRepository.delete(translationInformation);
+            } else {
+                String catDescriptorId = getCatDescriptorId(descriptorId, version);
+                if(catDescriptorId != null)
+                    ids.computeIfAbsent(catDescriptorId, k -> new ArrayList<>()).add(version);
+                else
+                    ids.computeIfAbsent(descriptorId, k -> new ArrayList<>()).add(version);
+            }
+        }
+
+        log.info("{} - Startup synchronization, finished retrieving Osm Vnf Pkgs from project {}", manoId, project);
+
+        return ids;
     }
 
     @Override
