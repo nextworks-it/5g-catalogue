@@ -18,10 +18,10 @@ package it.nextworks.nfvmano.catalogue.translators.tosca;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import it.nextworks.nfvmano.libs.descriptors.sol006.Nsd;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,6 +98,7 @@ public class DescriptorsParser {
             mapper = new ObjectMapper(new YAMLFactory());
         else
             mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         return mapper.readValue(descriptor, type);
     }

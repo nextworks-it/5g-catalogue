@@ -28,7 +28,8 @@ import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VDU.VDUComputeNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VDU.VDUVirtualBlockStorageNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VnfExtCp.VnfExtCpNode;
-import it.nextworks.nfvmano.libs.osmr10DataModels.OsmVnfdSol006;
+import it.nextworks.nfvmano.libs.osmr10DataModels.vnfd.OsmVduSol006;
+import it.nextworks.nfvmano.libs.osmr10DataModels.vnfd.OsmVnfdSol006;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.nsDescriptor.*;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.vnfDescriptor.*;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.vnfDescriptor.ConnectionPoint;
@@ -467,7 +468,41 @@ public class SolToOsmTranslator {
         }
     }
 
-    public static OsmVnfdSol006Wrapper generateVnfDescriptor(Vnfd vnfd) throws MalformattedElementException {
+    private static OsmVduSol006 convertVduToOsmVdu(VnfdVdu vdu) {
+        OsmVduSol006 osmVdu = new OsmVduSol006();
+
+        osmVdu.setVirtualStorageDesc(vdu.getVirtualStorageDesc());
+        osmVdu.setBootData(vdu.getBootData());
+        osmVdu.setDescription(vdu.getDescription());
+        osmVdu.setVirtualComputeDesc(vdu.getVirtualComputeDesc());
+        osmVdu.setIntCpd(vdu.getIntCpd());
+        osmVdu.setConfigurableProperties(vdu.getConfigurableProperties());
+        osmVdu.setId(vdu.getId());
+        osmVdu.setBootOrder(vdu.getBootOrder());
+        osmVdu.setNfviConstraint(vdu.getNfviConstraint());
+        osmVdu.setMonitoringParameter(vdu.getMonitoringParameter());
+        osmVdu.setSwImageDesc(vdu.getSwImageDesc());
+        osmVdu.setName(vdu.getName());
+
+        return osmVdu;
+    }
+
+    private static void setCloudInit(OsmVnfdSol006 osmVnfd, String cloudInitFile) {
+        List<VnfdVdu> osmVdus = new ArrayList<>();
+
+        for (VnfdVdu vdu : osmVnfd.getVdu()) {
+            OsmVduSol006 osmVdu = convertVduToOsmVdu(vdu);
+            osmVdu.setCloudInitFile(cloudInitFile);
+            osmVdus.add(osmVdu);
+        }
+
+        osmVnfd.getVdu().clear();
+        osmVnfd.getVdu().addAll(osmVdus);
+    }
+
+    public static OsmVnfdSol006Wrapper generateVnfDescriptor(Vnfd vnfd, File cloudInit)
+            throws MalformattedElementException {
+
         OsmVnfdSol006 osmVnfd = convertVnfdToOsmVnfd(vnfd);
 
         List<ExtCpd> extCpds = osmVnfd.getExtCpd();
@@ -513,6 +548,9 @@ public class SolToOsmTranslator {
         osmVnfd.setMgmtCp(mgmtId);
 
         makeDf(osmVnfd);
+
+        if(cloudInit != null)
+            setCloudInit(osmVnfd, cloudInit.getName());
 
         return new OsmVnfdSol006Wrapper(osmVnfd);
     }

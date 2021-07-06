@@ -1,4 +1,4 @@
-package it.nextworks.nfvmano.libs.osmr10DataModels;
+package it.nextworks.nfvmano.libs.osmr10DataModels.vnfd;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.nextworks.nfvmano.libs.descriptors.sol006.Vnfd;
