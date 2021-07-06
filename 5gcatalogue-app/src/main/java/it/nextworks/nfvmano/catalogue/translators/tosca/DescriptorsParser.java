@@ -98,7 +98,6 @@ public class DescriptorsParser {
             mapper = new ObjectMapper(new YAMLFactory());
         else
             mapper = new ObjectMapper();
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         return mapper.readValue(descriptor, type);
     }

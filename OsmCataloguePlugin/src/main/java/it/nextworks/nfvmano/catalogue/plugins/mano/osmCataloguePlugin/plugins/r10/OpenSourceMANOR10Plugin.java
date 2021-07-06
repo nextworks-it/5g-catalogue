@@ -296,7 +296,6 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
 
                     if(descriptor.getName().endsWith(".yaml"))
                         mapper = new ObjectMapper(new YAMLFactory());
-                    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
                     Vnfd tmp = mapper.readValue(descriptor, Vnfd.class);
                     if(!tmp.getId().equals(vnfdId) || !tmp.getVersion().equals(version))
@@ -508,7 +507,6 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
 
                     if(descriptor.getName().endsWith(".yaml"))
                         mapper = new ObjectMapper(new YAMLFactory());
-                    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
                     Vnfd tmp = mapper.readValue(descriptor, Vnfd.class);
                     if(!tmp.getId().equals(vnfdId) || !tmp.getVersion().equals(version))
