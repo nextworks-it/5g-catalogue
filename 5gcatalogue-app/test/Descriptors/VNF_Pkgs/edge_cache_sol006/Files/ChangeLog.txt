@@ -1,1 +1,1 @@
-28/05/2021 - edge_cache_vnfd new VNF Package according to ETSI GS NFV-SOL004 v 2.5.1
+06/07/2021 - edge_cache_vnfd new VNF Package according to ETSI GS NFV-SOL004 v 2.5.1
