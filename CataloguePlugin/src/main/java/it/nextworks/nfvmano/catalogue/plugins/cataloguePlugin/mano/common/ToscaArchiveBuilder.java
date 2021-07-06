@@ -193,7 +193,7 @@ public class ToscaArchiveBuilder {
                 strings.add("\nconfiguration:");
                 strings.add("\tcloud_init:");
                 for(Map.Entry<String, File> cloudInit : cloudInitMap.entrySet()) {
-                    strings.add("\t\t" + cloudInit.getKey() + ": Files/Scripts/" + cloudInit.getValue().getName());
+                    strings.add("\t\tSource: Files/Scripts/" + cloudInit.getValue().getName() + ":" + cloudInit.getKey());
                     copyFile(scripts, cloudInit.getValue());
                 }
             }

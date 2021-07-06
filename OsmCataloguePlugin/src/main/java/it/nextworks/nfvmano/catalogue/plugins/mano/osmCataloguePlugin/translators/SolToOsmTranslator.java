@@ -487,12 +487,16 @@ public class SolToOsmTranslator {
         return osmVdu;
     }
 
-    private static void setCloudInit(OsmVnfdSol006 osmVnfd, String cloudInitFile) {
+    private static void setCloudInit(OsmVnfdSol006 osmVnfd, Map<String, File> cloudInitMap) {
         List<VnfdVdu> osmVdus = new ArrayList<>();
 
         for (VnfdVdu vdu : osmVnfd.getVdu()) {
             OsmVduSol006 osmVdu = convertVduToOsmVdu(vdu);
-            osmVdu.setCloudInitFile(cloudInitFile);
+            String vduId = osmVdu.getId();
+            if (cloudInitMap.containsKey(vduId))
+                osmVdu.setCloudInitFile(cloudInitMap.get(vduId).getName());
+            else
+                log.debug("cloud.init mapping for VDU ID " + vduId + " not found in manifest, cloud init file not bound.");
             osmVdus.add(osmVdu);
         }
 
@@ -500,7 +504,7 @@ public class SolToOsmTranslator {
         osmVnfd.getVdu().addAll(osmVdus);
     }
 
-    public static OsmVnfdSol006Wrapper generateVnfDescriptor(Vnfd vnfd, File cloudInit)
+    public static OsmVnfdSol006Wrapper generateVnfDescriptor(Vnfd vnfd, Map<String, File> cloudInitMap)
             throws MalformattedElementException {
 
         OsmVnfdSol006 osmVnfd = convertVnfdToOsmVnfd(vnfd);
@@ -549,8 +553,8 @@ public class SolToOsmTranslator {
 
         makeDf(osmVnfd);
 
-        if(cloudInit != null)
-            setCloudInit(osmVnfd, cloudInit.getName());
+        if(!cloudInitMap.isEmpty())
+            setCloudInit(osmVnfd, cloudInitMap);
 
         return new OsmVnfdSol006Wrapper(osmVnfd);
     }

@@ -39,6 +39,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
 public class OsmArchiveBuilder {
@@ -107,8 +108,11 @@ public class OsmArchiveBuilder {
         return compress(folder);
     }
 
-    public File makeNewArchive(SolToOsmTranslator.OsmVnfdSol006Wrapper vnfd, String readmeContent,
-                               File logoFile, File cloudInitFile, File monitoringFile) {
+    public File makeNewArchive(SolToOsmTranslator.OsmVnfdSol006Wrapper vnfd,
+                               String readmeContent,
+                               File logoFile,
+                               Map<String, File> cloudInitMap,
+                               File monitoringFile) {
         String vnfdId = vnfd.getVnfd().getId();
         File folder = makeFolder(vnfdId);
         makeReadme(readmeContent, folder);
@@ -116,8 +120,10 @@ public class OsmArchiveBuilder {
         File iconsFolder = makeSubFolder(folder, "icons");
         copyFile(iconsFolder, logoFile);
         File cloudInitFolder = makeSubFolder(folder, "cloud_init");
-        if (cloudInitFile != null)
-            copyFile(cloudInitFolder, cloudInitFile);
+        if (!cloudInitMap.isEmpty()) {
+            for(Map.Entry<String, File> cloudInit : cloudInitMap.entrySet())
+                copyFile(cloudInitFolder, cloudInit.getValue());
+        }
         File monitoringFolder = makeSubFolder(folder, "monitoring");
         if(monitoringFile != null)
             copyFile(monitoringFolder, monitoringFile);
@@ -132,8 +138,11 @@ public class OsmArchiveBuilder {
         return makeNewArchive(ymlFile, readmeContent, defaultLogo, cloudInit, monitoringFile);
     }
 
-    public File makeNewArchive(SolToOsmTranslator.OsmVnfdSol006Wrapper vnfd, String readmeContent, File cloudInit, File monitoringFile) {
-        return makeNewArchive(vnfd, readmeContent, defaultLogo, cloudInit, monitoringFile);
+    public File makeNewArchive(SolToOsmTranslator.OsmVnfdSol006Wrapper vnfd,
+                               String readmeContent,
+                               Map<String, File> cloudInitMap,
+                               File monitoringFile) {
+        return makeNewArchive(vnfd, readmeContent, defaultLogo, cloudInitMap, monitoringFile);
     }
 
     public File makeNewArchive(OsmVNFPackage ymlFile) {
