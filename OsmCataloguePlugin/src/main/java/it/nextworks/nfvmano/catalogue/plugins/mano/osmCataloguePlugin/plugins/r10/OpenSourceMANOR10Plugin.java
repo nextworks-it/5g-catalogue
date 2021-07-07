@@ -930,12 +930,13 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
 
     @Override
     public void notifyDelete(String infoId, String descriptorId, String descriptorVersion, String project, OperationStatus opStatus) {
-
+        log.info("{} - Received Sync Pkg deletion notification for Descriptor with ID {} and version {} for project {} : {}",
+                osm.getManoId(), descriptorId, descriptorVersion, project, opStatus.toString());
     }
 
     @Override
     public String getManoPkgInfoId(String catalogueInfoId) {
-        return null;
+        return  getOsmInfoId(catalogueInfoId);
     }
 
     @Override
