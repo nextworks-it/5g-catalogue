@@ -1,0 +1,44 @@
+id: "ae3c115c-0423-40b3-8623-a993de1e9d03"
+invariant-id: "ae3c115c-0423-40b3-8623-a993de1e9d03"
+name: edge_cache_nsd
+designer: NXW
+version: '1.0'
+vnfd-id:
+- "5d14868f-4603-4fd9-a540-ec9939d340e3"
+virtual-link-desc:
+- id: upf-net
+  description: Network represents upf-net
+  connectivity-type:
+    layer-protocol:
+    - ethernet
+  df:
+  - id: normal
+- id: cdn-net
+  description: Network represents cdn-net
+  connectivity-type:
+    layer-protocol:
+    - ethernet
+  df:
+  - id: normal
+df:
+- id: normal
+  vnf-profile:
+  - id: edge_cache_vnf_profile
+    vnfd-id: "5d14868f-4603-4fd9-a540-ec9939d340e3"
+    flavour-id: normal
+    virtual-link-connectivity:
+    - virtual-link-profile-id: adminnet1
+      constituent-cpd-id:
+      - constituent-base-element-id: edge_cache_vnf_profile
+        constituent-cpd-id: ens3
+    - virtual-link-profile-id: centralCDN_sb_vl
+      constituent-cpd-id:
+      - constituent-base-element-id: edge_cache_vnf_profile
+        constituent-cpd-id: ens7
+  virtual-link-profile:
+  - id: adminnet1
+    virtual-link-desc-id: upf-net
+    flavour-id: normal
+  - id: centralCDN_sb_vl
+    virtual-link-desc-id: cdn-net
+    flavour-id: normal
