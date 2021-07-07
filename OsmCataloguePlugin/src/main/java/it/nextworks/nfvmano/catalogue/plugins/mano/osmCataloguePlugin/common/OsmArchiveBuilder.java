@@ -76,6 +76,28 @@ public class OsmArchiveBuilder {
         return compress(folder);
     }
 
+    public File makeNewArchive(SolToOsmTranslator.OsmNsWrapper nsd,
+                               String readmeContent,
+                               File logoFile,
+                               List<File> scripts,
+                               File monitoringFile) {
+        String nsdId = nsd.getNsd().getNsds().get(0).getId();
+        File folder = makeFolder(nsdId);
+        makeReadme(readmeContent, folder);
+        makeDescriptor(nsd, nsdId, folder);
+        makeSubFolder(folder, "ns_config");
+        File scriptsFolder = makeSubFolder(folder, "scripts");
+        makeSubFolder(folder, "vnf_config");
+        File iconsFolder = makeSubFolder(folder, "icons");
+        File monitoringFolder = makeSubFolder(folder, "monitoring");
+        copyFile(iconsFolder, logoFile);
+        if(monitoringFile != null)
+            copyFile(monitoringFolder, monitoringFile);
+        for(File script : scripts)
+            copyFile(scriptsFolder, script);
+        return compress(folder);
+    }
+
     public File makeNewArchive(OsmNSPackage ymlFile, File logoFile) {
         return makeNewArchive(ymlFile, "", logoFile, null, null);
     }
@@ -86,6 +108,13 @@ public class OsmArchiveBuilder {
 
     public File makeNewArchive(OsmNSPackage ymlFile) {
         return makeNewArchive(ymlFile, "", defaultLogo, null, null);
+    }
+
+    public File makeNewArchive(SolToOsmTranslator.OsmNsWrapper nsd,
+                               String readmeContent,
+                               List<File> scripts,
+                               File monitoringFile) {
+        return makeNewArchive(nsd, readmeContent, defaultLogo, scripts, monitoringFile);
     }
 
     public File makeNewArchive(OsmVNFPackage ymlFile, String readmeContent, File logoFile, File cloudInitFile, File monitoringFile) {
@@ -247,6 +276,23 @@ public class OsmArchiveBuilder {
             mapper.writeValue(vnfdFile, vnfd);
         } catch (IOException e) {
             throw new IllegalStateException("Could not write vnd file " + vnfdFile.getAbsolutePath() +
+                    ". Error: " + e.getMessage());
+        }
+    }
+
+    private void makeDescriptor(SolToOsmTranslator.OsmNsWrapper nsd, String nsdId, File folder) {
+        File nsdFile;
+
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
+        nsdFile = new File(folder, nsdId + ".yaml");
+
+        try {
+            mapper.writeValue(nsdFile, nsd);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not write nsd file " + nsdFile.getAbsolutePath() +
                     ". Error: " + e.getMessage());
         }
     }

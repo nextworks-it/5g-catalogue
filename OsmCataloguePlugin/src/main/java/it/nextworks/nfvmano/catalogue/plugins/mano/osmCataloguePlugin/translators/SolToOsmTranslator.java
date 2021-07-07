@@ -57,6 +57,35 @@ public class SolToOsmTranslator {
         public Vnfd getVnfd() { return vnfd; }
     }
 
+    public static class OsmNsWrapper {
+
+        @JsonProperty("nsd")
+        private final OsmNsdsSol006Wrapper nsd;
+
+        @JsonCreator
+        public OsmNsWrapper(@JsonProperty("nsd") OsmNsdsSol006Wrapper nsd) { this.nsd = nsd; }
+
+        public OsmNsdsSol006Wrapper getNsd() { return nsd; }
+    }
+
+    public static class OsmNsdsSol006Wrapper {
+
+        @JsonProperty("nsd")
+        private List<Nsd> nsds;
+
+        @JsonCreator
+        public OsmNsdsSol006Wrapper(@JsonProperty("nsd") List<Nsd> nsds) { this.nsds = nsds; }
+
+        public void addNsd(Nsd nsd) {
+            if(nsds == null)
+                nsds = new ArrayList<>();
+
+            nsds.add(nsd);
+        }
+
+        public List<Nsd> getNsds() { return nsds; }
+    }
+
     private static final Logger log = LoggerFactory.getLogger(SolToOsmTranslator.class);
     private static int interfacePosition = 0;
 
@@ -557,5 +586,9 @@ public class SolToOsmTranslator {
             setCloudInit(osmVnfd, cloudInitMap);
 
         return new OsmVnfdSol006Wrapper(osmVnfd);
+    }
+
+    public static OsmNsWrapper generateNsDescriptor(Nsd nsd) {
+        return new OsmNsWrapper(new OsmNsdsSol006Wrapper(Collections.singletonList(nsd)));
     }
 }

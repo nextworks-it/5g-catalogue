@@ -27,6 +27,7 @@ import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
+import it.nextworks.nfvmano.libs.descriptors.sol006.Nsd;
 import it.nextworks.nfvmano.libs.descriptors.sol006.Vnfd;
 import it.nextworks.nfvmano.libs.osmr4PlusClient.OSMr4PlusClient;
 import it.nextworks.nfvmano.libs.osmr4PlusClient.utilities.OSMHttpResponse;
@@ -129,9 +130,235 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
         }
     }
 
+    private String onBoardNsPackage(File file, String opId) throws FailedOperationException {
+        log.info("{} - Onboarding ns package, opId: {}", osm.getManoId(), opId);
+
+        OSMHttpResponse httpResponse = osmClient.createNsd();
+        IdObject content = parseResponse(httpResponse, opId, IdObject.class).get(0);
+        String osmNsdInfoId = content.getId();
+
+        httpResponse = osmClient.uploadNsdContent(osmNsdInfoId, file);
+        try {
+            parseResponse(httpResponse, opId, null);
+        } catch(FailedOperationException e){
+            osmClient.deleteNsd(osmNsdInfoId);
+            throw new FailedOperationException(e);
+        }
+
+        httpResponse = osmClient.getNsdInfo(osmNsdInfoId);
+        OsmInfoObject osmInfoObject = parseResponse(httpResponse, opId, OsmInfoObject.class).get(0);
+        osmInfoObject.setEpoch(Instant.now().getEpochSecond());
+        osmInfoObject.setOsmId(osm.getManoId());
+        osmInfoObject.setType(OsmObjectType.NS);
+        osmInfoObjectRepository.saveAndFlush(osmInfoObject);
+
+        log.info("{} - Package onboarding successful. OpId: {}", osm.getManoId(), opId);
+        return osmNsdInfoId;
+    }
+
     @Override
     public void acceptNsdOnBoardingNotification(NsdOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
 
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+
+        try {
+            log.debug("RECEIVED MESSAGE: " + mapper.writeValueAsString(notification));
+        } catch (JsonProcessingException e) {
+            log.error("Unable to parse received nsdOnboardingNotificationMessage: " + e.getMessage());
+        }
+
+        String manoId = osm.getManoId();
+        String nsdInfoId = notification.getNsdInfoId();
+        String nsdId = notification.getNsdId();
+        String version = notification.getNsdVersion();
+        String project = notification.getProject();
+
+        if (notification.getScope() == ScopeType.LOCAL) {
+            log.info("{} - Received NSD onboarding notification for Nsd with ID {} and version {} for project {}",
+                    manoId, nsdId, version, project);
+
+            boolean forceOnboard = false;
+            if (nsdInfoId.endsWith("_update")) {
+                forceOnboard = true;
+                nsdInfoId = nsdInfoId.replace("_update", "");
+            }
+
+            if(Utilities.isTargetMano(notification.getSiteOrManoIds(), osm) &&
+                    this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
+
+                try {
+                    String packagePath = notification.getPackagePath().getKey();
+
+                    Set<String> metadataFileNames;
+                    String metadataFileName;
+
+                    File metadata;
+                    File descriptor;
+
+                    if (notification.getPackagePath().getValue().equals(PathType.LOCAL.toString())) {
+
+                        Set<String> files = Utilities.listFiles(packagePath);
+
+                        if (files.size() != 1) {
+                            metadataFileNames = Utilities.listFiles(packagePath + "/TOSCA-Metadata/");
+
+                            Optional<String> opt = metadataFileNames.stream()
+                                    .filter(name -> name.endsWith(".meta")).findFirst();
+                            if (!opt.isPresent())
+                                throw new MalformattedElementException("Metadata file not found in " + packagePath +
+                                        "/TOSCA-Metadata/" + " for Nsd with ID " + nsdId + " and version " + version +
+                                        " for project " + project + ".");
+                            metadataFileName = opt.get();
+
+                            metadata = new File(packagePath + "/TOSCA-Metadata/" + metadataFileName);
+                            descriptor = new File(packagePath + "/" + Utilities.getMainServiceTemplateFromMetadata(metadata));
+                        } else if (files.iterator().next().endsWith(".yaml")
+                                || files.iterator().next().endsWith(".yml")
+                                || files.iterator().next().endsWith(".json"))
+                            descriptor = new File(packagePath + "/" + files.iterator().next());
+                        else
+                            throw new MalformattedElementException("Descriptor files not found");
+                    } else
+                        throw new MethodNotImplementedException("Path Type not currently supported");
+
+                    if (descriptor.getName().endsWith(".yaml") || descriptor.getName().endsWith(".yml"))
+                        mapper = new ObjectMapper(new YAMLFactory());
+
+                    Nsd tmp = mapper.readValue(descriptor, Nsd.class);
+                    if (!tmp.getId().equals(nsdId) || !tmp.getVersion().equals(version))
+                        throw new MalformattedElementException("The NSD ID and version specified in the notification " +
+                                "(" + nsdId + ", " + version + ") do not match those of the stored descriptor " +
+                                "(" + tmp.getId() + ", " + tmp.getVersion() + ").");
+
+                    String osmDescriptorId = getOsmDescriptorId(nsdId, version);
+                    if (osmDescriptorId == null)
+                        osmDescriptorId = nsdId;
+
+                    String osmInfoObjectId;
+                    Optional<OsmInfoObject> osmInfoObjectOptional = osmInfoObjectRepository
+                            .findByDescriptorIdAndVersionAndOsmId(osmDescriptorId, version, manoId);
+                    if (!osmInfoObjectOptional.isPresent() || forceOnboard) {
+
+                        if(isTheFirstTranslationInformationEntry(nsdId))
+                            osmDescriptorId = nsdId;
+                        else {
+                            osmDescriptorId = UUID.randomUUID().toString();
+                            tmp.setId(osmDescriptorId);
+                        }
+
+                        List<String> osmVnfdIds = new ArrayList<>();
+                        for (KeyValuePair vnfPathPair : notification.getIncludedVnfds().values()) {
+                            if (vnfPathPair.getValue().equals(PathType.LOCAL.toString())) {
+                                packagePath = vnfPathPair.getKey();
+                                metadataFileNames = Utilities.listFiles(packagePath + "/TOSCA-Metadata/");
+
+                                Optional<String> opt = metadataFileNames.stream()
+                                        .filter(name -> name.endsWith(".meta")).findFirst();
+                                if (!opt.isPresent())
+                                    throw new MalformattedElementException("Metadata file not found for included vnf in " +
+                                            packagePath + "/TOSCA-Metadata/" + " for Nsd with ID " + nsdId +
+                                            " and version " + version + " for project " + project + ".");
+                                metadataFileName = opt.get();
+
+                                metadata = new File(packagePath + "/TOSCA-Metadata/" + metadataFileName);
+                                descriptor = new File(packagePath + "/" + Utilities.getMainServiceTemplateFromMetadata(metadata));
+                            } else
+                                throw new MethodNotImplementedException("Path Type not currently supported");
+
+                            if (descriptor.getName().endsWith(".yaml") || descriptor.getName().endsWith(".yml"))
+                                mapper = new ObjectMapper(new YAMLFactory());
+                            else
+                                mapper = new ObjectMapper();
+
+                            Vnfd vnfd = mapper.readValue(descriptor, Vnfd.class);
+                            String vnfdOsmDescriptorId = getOsmDescriptorId(vnfd.getId(), vnfd.getVersion());
+                            if (vnfdOsmDescriptorId == null)
+                                throw new FailedOperationException("Could not find the corresponding Descriptor ID in OSM");
+
+                            osmVnfdIds.add(vnfdOsmDescriptorId);
+                        }
+                        tmp.setVnfdId(osmVnfdIds);
+
+                        packagePath = notification.getPackagePath().getKey();
+                        Set<String> fileNames = Utilities.listFiles(packagePath);
+
+                        File monitoring = null;
+                        List<File> scripts = new ArrayList<>();
+
+                        if (fileNames.stream().filter(name -> name.endsWith(".mf")).count() != 0) {
+                            String manifestPath = fileNames.stream().filter(name -> name.endsWith(".mf")).findFirst().get();
+                            File mf = new File(packagePath + "/" + manifestPath);
+
+                            String monitoringPath = Utilities.getMonitoringFromManifest(mf);
+
+                            if (monitoringPath != null)
+                                monitoring = new File(packagePath + "/" + monitoringPath);
+                            else
+                                log.debug("{} - No monitoring file found for NSD with ID {} and version {}", manoId, nsdId, version);
+
+                            List<String> scriptPaths = Utilities.getScriptsFromManifest(mf);
+                            if (scriptPaths.size() > 0) {
+                                for (String scriptPath : scriptPaths)
+                                    scripts.add(new File(packagePath + "/" + scriptPath));
+                            } else
+                                log.debug("{} - No script files found for NS with ID {} and version {}", manoId, nsdId, version);
+                        }
+
+                        SolToOsmTranslator.OsmNsWrapper nsd = SolToOsmTranslator.generateNsDescriptor(tmp);
+                        mapper = new ObjectMapper(new YAMLFactory());
+                        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+                        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+                        log.debug("{} - Translated NSD:\n{}", manoId, mapper.writeValueAsString(nsd));
+
+                        File archive = new OsmArchiveBuilder(osmDir, logo)
+                                .makeNewArchive(nsd, "Generated by NXW Catalogue", scripts, monitoring);
+                        osmInfoObjectId = onBoardNsPackage(archive, notification.getOperationId().toString());
+
+                        log.info("{} - Successfully uploaded Nsd with ID {} and version {} for project {}", manoId, nsdId, version, project);
+                    } else
+                        osmInfoObjectId = osmInfoObjectOptional.get().getId();
+
+                    translationInformationRepository.saveAndFlush(new OsmTranslationInformation(nsdInfoId,
+                            osmInfoObjectId, nsdId, osmDescriptorId, version, manoId));
+                    sendNotification(new NsdOnBoardingNotificationMessage(nsdInfoId, nsdId, version, project,
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
+                            manoId, null,null));
+                } catch (Exception e) {
+                    log.error("{} - Could not onboard Nsd: {}", manoId, e.getMessage());
+                    log.debug("Error details: ", e);
+                    sendNotification(new NsdOnBoardingNotificationMessage(nsdInfoId, nsdId, version, project,
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
+                            manoId, null,null));
+                }
+            } else {
+                if (this.getPluginOperationalState() == PluginOperationalState.DISABLED
+                        || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
+                    log.debug("{} - NSD onboarding skipped", manoId);
+                    sendNotification(new NsdOnBoardingNotificationMessage(nsdInfoId, nsdId, version, project,
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.RECEIVED,
+                            manoId, null,null));
+                }
+            }
+        } else if (notification.getScope() == ScopeType.SYNC) {
+            log.info("{} - Received Sync Pkg onboarding notification for NSD with ID {} and version {} for project {} : {}",
+                    manoId, nsdId, version, project, notification.getOpStatus().toString());
+
+            if (notification.getPluginId().equals(manoId)) {
+                String osmDescriptorId = getOsmDescriptorId(nsdId, version);
+                if (osmDescriptorId == null)
+                    osmDescriptorId = nsdId;
+
+                Optional<OsmInfoObject> osmInfoObject = osmInfoObjectRepository
+                        .findByDescriptorIdAndVersionAndOsmId(osmDescriptorId, version, manoId);
+                if (osmInfoObject.isPresent()) {
+                    if (notification.getOpStatus().equals(OperationStatus.SUCCESSFULLY_DONE))
+                        translationInformationRepository.saveAndFlush(new OsmTranslationInformation(nsdInfoId,
+                                osmInfoObject.get().getId(), nsdId, osmInfoObject.get().getDescriptorId(), version, manoId));
+                }
+            }
+        }
     }
 
     @Override
