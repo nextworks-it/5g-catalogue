@@ -111,7 +111,9 @@ public class ArchiveParser {
                     } else if (fileName.toLowerCase().endsWith(".meta")) {
                         metadata = outStream;
                         csarInfo.setMetaFilename(fileName);
-                    } else if (fileName.toLowerCase().endsWith(".yaml") || fileName.toLowerCase().endsWith(".json")) {
+                    } else if (fileName.toLowerCase().endsWith(".yaml")
+                            || fileName.toLowerCase().endsWith(".yml")
+                            || fileName.toLowerCase().endsWith(".json")) {
                         templates.put(fileName, outStream);
                     } else {
                         // TODO: process remaining content

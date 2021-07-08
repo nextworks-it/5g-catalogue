@@ -521,7 +521,7 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
                     } else
                         throw new MethodNotImplementedException("Path Type not currently supported");
 
-                    if(descriptor.getName().endsWith(".yaml"))
+                    if(descriptor.getName().endsWith(".yaml") || descriptor.getName().endsWith(".yml"))
                         mapper = new ObjectMapper(new YAMLFactory());
 
                     Vnfd tmp = mapper.readValue(descriptor, Vnfd.class);
@@ -732,7 +732,7 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
 
                     log.info("{} - Onboarding Vnfd with ID {} and version {} for project {}", manoId, vnfdId, version, project);
 
-                    if(descriptor.getName().endsWith(".yaml"))
+                    if(descriptor.getName().endsWith(".yaml") || descriptor.getName().endsWith(".yml"))
                         mapper = new ObjectMapper(new YAMLFactory());
 
                     Vnfd tmp = mapper.readValue(descriptor, Vnfd.class);

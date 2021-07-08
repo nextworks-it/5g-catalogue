@@ -70,7 +70,7 @@ public class DescriptorsParser {
 
         ObjectMapper mapper;
 
-        if(file.getName().endsWith(".yaml"))
+        if(file.getName().endsWith(".yaml") || file.getName().endsWith(".yml"))
             mapper = new ObjectMapper(new YAMLFactory());
         else
             mapper = new ObjectMapper();
@@ -94,7 +94,7 @@ public class DescriptorsParser {
 
         ObjectMapper mapper;
 
-        if(mstName.endsWith(".yaml"))
+        if(mstName.endsWith(".yaml") || mstName.endsWith(".yml"))
             mapper = new ObjectMapper(new YAMLFactory());
         else
             mapper = new ObjectMapper();
