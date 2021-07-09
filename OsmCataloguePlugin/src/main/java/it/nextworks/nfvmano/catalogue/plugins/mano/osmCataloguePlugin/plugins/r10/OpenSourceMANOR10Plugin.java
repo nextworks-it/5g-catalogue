@@ -598,6 +598,63 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
     @Override
     public void acceptNsdDeletionNotification(NsdDeletionNotificationMessage notification) throws MethodNotImplementedException {
 
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+
+        try {
+            log.debug("RECEIVED MESSAGE: " + mapper.writeValueAsString(notification));
+        } catch (JsonProcessingException e) {
+            log.error("Unable to parse received nsdOnboardingNotificationMessage: " + e.getMessage());
+        }
+
+        String manoId = osm.getManoId();
+        String nsdInfoId = notification.getNsdInfoId();
+        String nsdId = notification.getNsdId();
+        String version = notification.getNsdVersion();
+        String project = notification.getProject();
+
+        if (notification.getScope() == ScopeType.LOCAL) {
+            log.info("{} - Received Nsd deletion notification for Nsd with ID {} and version {} for project {}",
+                    manoId, nsdId, version, project);
+
+            if(Utilities.isTargetMano(notification.getSiteOrManoIds(), osm)
+                    && translationInformationContainsCatInfoId(nsdInfoId)
+                    && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
+
+                try {
+                    String osmInfoPkgId = getOsmInfoId(nsdInfoId);
+                    if(osmInfoPkgId == null)
+                        throw new FailedOperationException("Could not find the corresponding Info ID in OSM");
+                    if(!deleteTranslationInformationEntry(nsdInfoId))
+                        throw new FailedOperationException("Could not delete the specified entry");
+                    if(!translationInformationContainsOsmInfoId(osmInfoPkgId))
+                        deleteNsd(osmInfoPkgId, notification.getOperationId().toString());
+
+                    log.info("{} - Successfully deleted Nsd with ID {} and version {} for project {}", manoId, nsdId, version, project);
+
+                    sendNotification(new NsdDeletionNotificationMessage(nsdInfoId, nsdId, version, project,
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
+                            manoId, null));
+                } catch (Exception e) {
+                    log.error("{} - Could not onboard Nsd: {}", manoId, e.getMessage());
+                    log.debug("Error details: ", e);
+                    sendNotification(new NsdDeletionNotificationMessage(nsdInfoId, nsdId, version, project,
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
+                            manoId, null));
+                }
+            } else {
+                if (this.getPluginOperationalState() == PluginOperationalState.DISABLED
+                        || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
+                    log.debug("{} - NSD deletion skipped", manoId);
+                    sendNotification(new NsdDeletionNotificationMessage(nsdInfoId, nsdId, version, project,
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.RECEIVED,
+                            manoId, null));
+                }
+            }
+        } else if (notification.getScope() == ScopeType.SYNC)
+            log.info("{} - Received Sync Pkg deletion notification for NSD with ID {} and version {} for project {} : {}",
+                    manoId, nsdId, version, project, notification.getOpStatus().toString());
     }
 
     @Override
