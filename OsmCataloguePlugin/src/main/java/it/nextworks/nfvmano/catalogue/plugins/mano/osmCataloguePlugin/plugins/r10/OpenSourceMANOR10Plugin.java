@@ -1335,7 +1335,50 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
 
     @Override
     public Map<String, List<String>> getAllNsd(String project) {
-        return null;
+        String manoId = osm.getManoId();
+        log.info("{} - Startup synchronization, started retrieving Osm Ns Pkgs from project {}", manoId, project);
+
+        Long startSync = Instant.now().getEpochSecond();
+
+        try {
+            updateDB(false, true, project);
+        } catch(FailedOperationException e){
+            log.error("{} - {}", manoId, e.getMessage());
+            return null;
+        }
+
+        Map<String, List<String>> ids = new HashMap<>();
+        List<OsmInfoObject> osmInfoObjectList =
+                osmInfoObjectRepository.findByOsmIdAndType(manoId, OsmObjectType.NS);
+        for(OsmInfoObject osmInfoObj : osmInfoObjectList) {
+            String descriptorId = osmInfoObj.getDescriptorId();
+            String version = osmInfoObj.getVersion();
+
+            if(osmInfoObj.getEpoch().compareTo(startSync) < 0) {
+                log.info("{} - Osm Ns Pkg with descriptor ID {} and version {} no longer present in project {}",
+                        manoId, descriptorId, version, project);
+
+                osmInfoObjectRepository.delete(osmInfoObj);
+
+                Utilities.deleteDir(new File(osmDir + "/" + descriptorId));
+                Utilities.deleteDir(new File(osmDir + "/" + descriptorId + ".tar.gz"));
+
+                List<OsmTranslationInformation> translationInformationList =
+                        translationInformationRepository.findByOsmInfoIdAndOsmManoId(osmInfoObj.getId(), manoId);
+                for(OsmTranslationInformation translationInformation : translationInformationList)
+                    translationInformationRepository.delete(translationInformation);
+            } else {
+                String catDescriptorId = getCatDescriptorId(descriptorId, version);
+                if(catDescriptorId != null)
+                    ids.computeIfAbsent(catDescriptorId, k -> new ArrayList<>()).add(version);
+                else
+                    ids.computeIfAbsent(descriptorId, k -> new ArrayList<>()).add(version);
+            }
+        }
+
+        log.info("{} - Startup synchronization, finished retrieving Osm Ns Pkgs from project {}", manoId, project);
+
+        return ids;
     }
 
     private String createVnfPkgSol006(OsmInfoObject vnfPackageInfo) throws IOException {
