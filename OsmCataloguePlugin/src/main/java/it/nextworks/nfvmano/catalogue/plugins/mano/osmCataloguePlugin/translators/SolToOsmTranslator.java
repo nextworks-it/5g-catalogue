@@ -28,6 +28,7 @@ import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VDU.VDUComputeNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VDU.VDUVirtualBlockStorageNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VnfExtCp.VnfExtCpNode;
+import it.nextworks.nfvmano.libs.osmr10DataModels.nsd.OsmNsdSol006;
 import it.nextworks.nfvmano.libs.osmr10DataModels.vnfd.OsmVduSol006;
 import it.nextworks.nfvmano.libs.osmr10DataModels.vnfd.OsmVnfdSol006;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.nsDescriptor.*;
@@ -71,25 +72,25 @@ public class SolToOsmTranslator {
     public static class OsmNsdsSol006Wrapper {
 
         @JsonProperty("nsd")
-        private List<Nsd> nsds;
+        private List<OsmNsdSol006> nsds;
 
         @JsonCreator
-        public OsmNsdsSol006Wrapper(@JsonProperty("nsd") List<Nsd> nsds) { this.nsds = nsds; }
+        public OsmNsdsSol006Wrapper(@JsonProperty("nsd") List<OsmNsdSol006> nsds) { this.nsds = nsds; }
 
-        public void addNsd(Nsd nsd) {
+        public void addNsd(OsmNsdSol006 nsd) {
             if(nsds == null)
                 nsds = new ArrayList<>();
 
             nsds.add(nsd);
         }
 
-        public List<Nsd> getNsds() { return nsds; }
+        public List<OsmNsdSol006> getNsds() { return nsds; }
     }
 
     private static final Logger log = LoggerFactory.getLogger(SolToOsmTranslator.class);
     private static int interfacePosition = 0;
 
-    /* VNF private fuctions */
+    /* VNF private functions */
 
     private static VNFDConnectionPointReference makeCPRef(String vnfdId, int memberIndex, String cpId) {
         VNFDConnectionPointReference cpr = new VNFDConnectionPointReference();
@@ -434,37 +435,6 @@ public class SolToOsmTranslator {
         return new OsmVNFPackage().setVnfdCatalog(vnfdCatalog);
     }
 
-    private static OsmVnfdSol006 convertVnfdToOsmVnfd(Vnfd vnfd) {
-        OsmVnfdSol006 osmVnfd = new OsmVnfdSol006();
-
-        osmVnfd.setSecurityGroupRule(vnfd.getSecurityGroupRule());
-        osmVnfd.setDefaultLocalizationLanguage(vnfd.getDefaultLocalizationLanguage());
-        osmVnfd.setExtCpd(vnfd.getExtCpd());
-        osmVnfd.setId(vnfd.getId());
-        osmVnfd.setSwImageDesc(vnfd.getSwImageDesc());
-        osmVnfd.setElementGroup(vnfd.getElementGroup());
-        osmVnfd.setVirtualStorageDesc(vnfd.getVirtualStorageDesc());
-        osmVnfd.setIndicator(vnfd.getIndicator());
-        osmVnfd.setVirtualComputeDesc(vnfd.getVirtualComputeDesc());
-        osmVnfd.setVnfmInfo(vnfd.getVnfmInfo());
-        osmVnfd.setProductInfoName(vnfd.getProductInfoName());
-        osmVnfd.setModifiableAttributes(vnfd.getModifiableAttributes());
-        osmVnfd.setVersion(vnfd.getVersion());
-        osmVnfd.setProvider(vnfd.getProvider());
-        osmVnfd.setProductName(vnfd.getProductName());
-        osmVnfd.setDf(vnfd.getDf());
-        osmVnfd.setSoftwareVersion(vnfd.getSoftwareVersion());
-        osmVnfd.setConfigurableProperties(vnfd.getConfigurableProperties());
-        osmVnfd.setAutoScale(vnfd.getAutoScale());
-        osmVnfd.setLifecycleManagementScript(vnfd.getLifecycleManagementScript());
-        osmVnfd.setVdu(vnfd.getVdu());
-        osmVnfd.setLocalizationLanguage(vnfd.getLocalizationLanguage());
-        osmVnfd.setIntVirtualLinkDesc(vnfd.getIntVirtualLinkDesc());
-        osmVnfd.setProductInfoDescription(vnfd.getProductInfoDescription());
-
-        return  osmVnfd;
-    }
-
     private static void makeDf(OsmVnfdSol006 osmVnfd) {
         List<VnfdDf> vnfdDfs = osmVnfd.getDf();
         if(vnfdDfs == null)
@@ -536,7 +506,9 @@ public class SolToOsmTranslator {
     public static OsmVnfdSol006Wrapper generateVnfDescriptor(Vnfd vnfd, Map<String, File> cloudInitMap)
             throws MalformattedElementException {
 
-        OsmVnfdSol006 osmVnfd = convertVnfdToOsmVnfd(vnfd);
+        OsmVnfdSol006 osmVnfd = new OsmVnfdSol006(vnfd);
+
+        osmVnfd.setDescription(osmVnfd.getProductInfoDescription());
 
         List<ExtCpd> extCpds = osmVnfd.getExtCpd();
         if(extCpds == null || extCpds.isEmpty())
@@ -589,6 +561,8 @@ public class SolToOsmTranslator {
     }
 
     public static OsmNsWrapper generateNsDescriptor(Nsd nsd) {
-        return new OsmNsWrapper(new OsmNsdsSol006Wrapper(Collections.singletonList(nsd)));
+        OsmNsdSol006 osmNsd = new OsmNsdSol006(nsd);
+        osmNsd.setDescription(osmNsd.getName() + " version " + osmNsd.getVersion());
+        return new OsmNsWrapper(new OsmNsdsSol006Wrapper(Collections.singletonList(osmNsd)));
     }
 }
