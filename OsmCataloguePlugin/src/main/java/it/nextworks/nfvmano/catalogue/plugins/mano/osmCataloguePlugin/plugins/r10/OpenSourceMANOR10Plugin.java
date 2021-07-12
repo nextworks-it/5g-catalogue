@@ -21,6 +21,7 @@ import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.common.Uti
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.elements.OsmTranslationInformation;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.repos.OsmInfoObjectRepository;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.repos.TranslationInformationRepository;
+import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.translators.OsmToSolTranslator;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.translators.SolToOsmTranslator;
 import it.nextworks.nfvmano.libs.common.elements.KeyValuePair;
 import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
@@ -1388,7 +1389,7 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
         String version = vnfPackageInfo.getVersion();
         String osmDirPath_string = osmDirPath.toString();
 
-        log.info("{} - Creating TOSCA VNF Descriptor with ID {} and version {}",
+        log.info("{} - Creating VNF Descriptor with ID {} and version {}",
                 manoId, descriptorId, version);
 
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
@@ -1427,8 +1428,28 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
                 mapper.convertValue(osmVnfd, Vnfd.class), tmpDirPath_string, cloudInitMap);
     }
 
-    private String createNsPkgSol006(OsmInfoObject nsPackageInfo) {
-        return null;
+    private String createNsPkgSol006(OsmInfoObject nsPackageInfo) throws IOException {
+
+        String manoId = osm.getManoId();
+        String descriptorId = nsPackageInfo.getDescriptorId();
+        String version = nsPackageInfo.getVersion();
+        String osmDirPath_string = osmDirPath.toString();
+
+        log.info("{} - Creating NS Descriptor with ID {} and version {}",
+                manoId, descriptorId, version);
+
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        JsonNode osmNsdWrapper = mapper.readTree(new File(osmDirPath_string + "/" +
+                nsPackageInfo.getAdmin().getStorage().getDescriptor()));
+
+        List<OsmInfoObject> vnfInfoList = osmInfoObjectRepository.findByOsmIdAndType(manoId, OsmObjectType.VNF);
+        List<OsmTranslationInformation> translationInformationList = translationInformationRepository.findByOsmManoId(manoId);
+
+        Nsd nsdSol = OsmToSolTranslator.generateNsDescriptor(osmNsdWrapper, vnfInfoList, translationInformationList, osmDirPath);
+
+        log.info("{} - Creating TOSCA NS Pkg with descriptor ID {} and version {}", manoId, descriptorId, version);
+
+        return ToscaArchiveBuilder.createNSCSAR(nsPackageInfo.getId(), nsdSol, tmpDirPath.toString());
     }
 
     @Override

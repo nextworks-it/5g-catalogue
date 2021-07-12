@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
+import it.nextworks.nfvmano.libs.descriptors.sol006.Nsd;
 import it.nextworks.nfvmano.libs.descriptors.sol006.Vnfd;
 import it.nextworks.nfvmano.libs.descriptors.templates.DescriptorTemplate;
 import org.slf4j.Logger;
@@ -231,6 +232,73 @@ public class ToscaArchiveBuilder {
 
             log.debug("Creating CSAR archive");
             return compress(root.toPath().toString());//returns package path
+        } catch (IOException e) {
+            throw new IllegalStateException(String.format("Could not write files. Error: %s", e.getMessage()));
+        }
+    }
+
+    public static String createNSCSAR(String packageIdentifier, Nsd nsd, String tmpDir) {
+
+        Date date = new Date();
+        long time = date.getTime();
+        Timestamp ts = new Timestamp(time);
+        List<String> strings = new ArrayList<>();
+
+        try {
+            String nsName = nsd.getName();
+
+            log.debug("Creating folder structure");
+
+            File root = makeFolder(tmpDir,nsName + "_" + packageIdentifier);
+            File definitions = makeSubFolder(root, "Definitions");
+            File files = makeSubFolder(root, "Files");
+            File licenses = makeSubFolder(files, "Licences");
+            File monitoring = makeSubFolder(files, "Monitoring");
+            File scripts = makeSubFolder(files, "Scripts");
+            File tests = makeSubFolder(files, "Tests");
+            File metadata = makeSubFolder(root, "TOSCA-Metadata");
+
+            File manifest = new File(root, nsName + ".mf");
+            strings.add("metadata:");
+            strings.add("\tns_name: " + nsName);
+            strings.add("\tns_vendor_id: " + nsd.getDesigner());
+            strings.add("\tns_version: " + nsd.getVersion());
+            strings.add(String.format("\tns_release_date_time: %1$TD %1$TT", ts));
+            strings.add("\tdatamodel_spec: SOL006");
+            Files.write(manifest.toPath(), strings);
+            strings.clear();
+
+            File license = new File(licenses, "LICENSE");
+            Files.write(license.toPath(), strings);
+
+            File changeLog = new File(files, "ChangeLog.txt");
+            strings.add(String.format("%1$TD %1$TT - New NS Package according to ETSI GS NFV-SOL004 v 2.5.1", ts));
+            Files.write(changeLog.toPath(), strings);
+            strings.clear();
+
+            File certificate = new File(files, nsName + ".cert");
+            Files.write(certificate.toPath(), strings);
+
+            File toscaMetadata = new File(metadata, "TOSCA.meta");
+            strings.add("TOSCA-Meta-File-Version: 1.0");
+            strings.add("CSAR-Version: 1.1");
+            strings.add("CreatedBy: 5G Apps & Services Catalogue");
+            strings.add("Entry-Definitions: Definitions/"+ nsName + ".yaml");
+            Files.write(toscaMetadata.toPath(), strings);
+            strings.clear();
+
+            File descriptorFile = new File(definitions, nsName + ".yaml");
+            final YAMLFactory yamlFactory = new YAMLFactory()
+                    .configure(YAMLGenerator.Feature.USE_NATIVE_TYPE_ID, false)
+                    .configure(YAMLGenerator.Feature.USE_NATIVE_OBJECT_ID, false)
+                    .configure(YAMLGenerator.Feature.WRITE_DOC_START_MARKER, false);
+            ObjectMapper mapper = new ObjectMapper(yamlFactory);
+            mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+            mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+            mapper.writeValue(descriptorFile, nsd);
+
+            log.debug("Creating CSAR archive");
+            return compress(root.toPath().toString());
         } catch (IOException e) {
             throw new IllegalStateException(String.format("Could not write files. Error: %s", e.getMessage()));
         }
