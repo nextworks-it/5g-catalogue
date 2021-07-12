@@ -46,7 +46,6 @@ import org.springframework.kafka.core.KafkaTemplate;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -1494,5 +1493,194 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
     @Override
     public void RuntimeSynchronization() {
 
+        String manoId = osm.getManoId();
+        log.info("{} - Runtime synchronization, started retrieving Osm Vnf and Ns Pkgs", manoId);
+
+        Long startSync = Instant.now().getEpochSecond();
+
+        try {
+            updateDB(true, true, "all");
+        } catch(FailedOperationException e){
+            log.error("{} - {}", manoId, e.getMessage());
+            return;
+        }
+
+        List<OsmInfoObject> osmVnfList = osmInfoObjectRepository.findByOsmIdAndType(manoId, OsmObjectType.VNF);
+        List<OsmInfoObject> osmNsList = osmInfoObjectRepository.findByOsmIdAndType(manoId, OsmObjectType.NS);
+
+        UUID operationId;
+        String descriptorId;
+        String version;
+        String pkgPath;
+
+        for(OsmInfoObject osmInfoObject : osmVnfList) {
+
+            if(osmInfoObject.getEpoch().compareTo(startSync) < 0) {
+
+                operationId = UUID.randomUUID();
+                descriptorId = osmInfoObject.getDescriptorId();
+                version = osmInfoObject.getVersion();
+
+                log.info("{} - Osm Vnf Pkg with descriptor ID {} and version {} no longer present, deleting it",
+                        manoId, descriptorId, version);
+
+                String catDescriptorId = getCatDescriptorId(descriptorId, version);
+                if(catDescriptorId == null)
+                    catDescriptorId = descriptorId;
+                sendNotification(new VnfPkgDeletionNotificationMessage(null, catDescriptorId, version,
+                        "all", operationId, ScopeType.SYNC, OperationStatus.SENT, manoId, null));
+
+                osmInfoObjectRepository.delete(osmInfoObject);
+
+                Utilities.deleteDir(new File(osmDir + "/" + descriptorId));
+                Utilities.deleteDir(new File(osmDir + "/" + descriptorId + ".tar.gz"));
+
+                List<OsmTranslationInformation> translationInformationList =
+                        translationInformationRepository.findByOsmInfoIdAndOsmManoId(osmInfoObject.getId(), manoId);
+                for(OsmTranslationInformation translationInformation : translationInformationList)
+                    translationInformationRepository.delete(translationInformation);
+
+            } else if(osmInfoObject.getState().equals(RecordState.NEW)) {
+
+                operationId = UUID.randomUUID();
+                descriptorId = osmInfoObject.getDescriptorId();
+                version = osmInfoObject.getVersion();
+
+                try {
+                    pkgPath = createVnfPkgSol006(osmInfoObject);
+                } catch(Exception e) {
+                    log.error("{} - Unable to generate TOSCA Vnf Pkg with descriptor ID {} and version {}: {}",
+                            manoId, descriptorId, version, e.getMessage());
+                    log.debug("error details:\n", e);
+                    continue;
+                }
+
+                log.info("{} - Uploading TOSCA Vnf Pkg with descriptor ID {} and version {}", manoId, descriptorId, version);
+
+                sendNotification(new VnfPkgOnBoardingNotificationMessage(null, descriptorId, version,
+                        "all", operationId, ScopeType.SYNC, OperationStatus.SENT, manoId, null,
+                        new KeyValuePair(pkgPath, PathType.LOCAL.toString())));
+
+            } else if(osmInfoObject.getState().equals(RecordState.CHANGED)) {
+
+                operationId = UUID.randomUUID();
+                descriptorId = osmInfoObject.getDescriptorId();
+                version = osmInfoObject.getVersion();
+
+                try {
+                    pkgPath = createVnfPkgSol006(osmInfoObject);
+                } catch(Exception e) {
+                    log.error("{} - Unable to generate TOSCA Vnf Pkg with descriptor ID {} and version {}: {}",
+                            manoId, descriptorId, version, e.getMessage());
+                    log.debug("error details:\n", e);
+                    continue;
+                }
+
+                List<OsmTranslationInformation> translationInformationList =
+                        translationInformationRepository.findByOsmInfoIdAndOsmManoId(osmInfoObject.getId(), manoId);
+                String catDescriptorId;
+                String catVersion;
+
+                if(!translationInformationList.isEmpty()) {
+                    catDescriptorId = translationInformationList.get(0).getCatDescriptorId();
+                    catVersion = translationInformationList.get(0).getDescriptorVersion();
+                }else{
+                    catDescriptorId = descriptorId;
+                    catVersion = version;
+                }
+
+                log.info("{} - Updating TOSCA Vnf Pkg with descriptor ID {} and version {}", manoId, descriptorId, version);
+
+                sendNotification(new VnfPkgChangeNotificationMessage(null, catDescriptorId, catVersion,
+                        "all", operationId, ScopeType.SYNC, OperationStatus.SENT, manoId, null,
+                        new KeyValuePair(pkgPath, PathType.LOCAL.toString())));
+            }
+        }
+
+        for(OsmInfoObject osmInfoObject : osmNsList) {
+
+            if(osmInfoObject.getEpoch().compareTo(startSync) < 0) {
+
+                operationId = UUID.randomUUID();
+                descriptorId = osmInfoObject.getDescriptorId();
+                version = osmInfoObject.getVersion();
+
+                log.info("{} - Osm Ns Pkg with descriptor ID {} and version {} no longer present, deleting it",
+                        manoId, descriptorId, version);
+
+                String catDescriptorId = getCatDescriptorId(descriptorId, version);
+                if(catDescriptorId == null)
+                    catDescriptorId = descriptorId;
+                sendNotification(new NsdDeletionNotificationMessage(null, catDescriptorId, version,
+                        "all", operationId, ScopeType.SYNC, OperationStatus.SENT, manoId, null));
+
+                osmInfoObjectRepository.delete(osmInfoObject);
+
+                Utilities.deleteDir(new File(osmDir + "/" + descriptorId));
+                Utilities.deleteDir(new File(osmDir + "/" + descriptorId + ".tar.gz"));
+
+                List<OsmTranslationInformation> translationInformationList =
+                        translationInformationRepository.findByOsmInfoIdAndOsmManoId(osmInfoObject.getId(), manoId);
+                for(OsmTranslationInformation translationInformation : translationInformationList)
+                    translationInformationRepository.delete(translationInformation);
+
+            } else if(osmInfoObject.getState().equals(RecordState.NEW)) {
+
+                operationId = UUID.randomUUID();
+                descriptorId = osmInfoObject.getDescriptorId();
+                version = osmInfoObject.getVersion();
+
+                try {
+                    pkgPath = createNsPkgSol006(osmInfoObject);
+                } catch(Exception e) {
+                    log.error("{} - Unable to generate TOSCA Ns Pkg with descriptor ID {} and version {}: {}",
+                            manoId, descriptorId, version, e.getMessage());
+                    log.debug("error details:\n", e);
+                    continue;
+                }
+
+                log.info("{} - Uploading TOSCA Ns Pkg with descriptor ID {} and version {}", manoId, descriptorId, version);
+
+                sendNotification(new NsdOnBoardingNotificationMessage(null, descriptorId, version,
+                        "all", operationId, ScopeType.SYNC, OperationStatus.SENT, manoId, null,
+                        new KeyValuePair(pkgPath, PathType.LOCAL.toString())));
+
+            } else if(osmInfoObject.getState().equals(RecordState.CHANGED)) {
+
+                operationId = UUID.randomUUID();
+                descriptorId = osmInfoObject.getDescriptorId();
+                version = osmInfoObject.getVersion();
+
+                try {
+                    pkgPath = createNsPkgSol006(osmInfoObject);
+                } catch(Exception e) {
+                    log.error("{} - Unable to generate TOSCA Ns Pkg with descriptor ID {} and version {}: {}",
+                            manoId, descriptorId, version, e.getMessage());
+                    log.debug("error details:\n", e);
+                    continue;
+                }
+
+                List<OsmTranslationInformation> translationInformationList =
+                        translationInformationRepository.findByOsmInfoIdAndOsmManoId(osmInfoObject.getId(), manoId);
+                String catDescriptorId;
+                String catVersion;
+
+                if(!translationInformationList.isEmpty()) {
+                    catDescriptorId = translationInformationList.get(0).getCatDescriptorId();
+                    catVersion = translationInformationList.get(0).getDescriptorVersion();
+                }else{
+                    catDescriptorId = descriptorId;
+                    catVersion = version;
+                }
+
+                log.info("{} - Updating TOSCA Ns Pkg with descriptor ID {} and version {}", manoId, descriptorId, version);
+
+                sendNotification(new NsdChangeNotificationMessage(null, catDescriptorId, catVersion,
+                        "all", operationId, ScopeType.SYNC, OperationStatus.SENT, manoId, null,
+                        new KeyValuePair(pkgPath, PathType.LOCAL.toString())));
+            }
+        }
+
+        log.info("{} - Runtime synchronization, finished retrieving Osm Vnf and Ns Pkgs", manoId);
     }
 }
