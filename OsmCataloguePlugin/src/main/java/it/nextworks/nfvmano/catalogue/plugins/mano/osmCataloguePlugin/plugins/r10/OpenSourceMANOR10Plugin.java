@@ -1387,45 +1387,21 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
         String manoId = osm.getManoId();
         String descriptorId = vnfPackageInfo.getDescriptorId();
         String version = vnfPackageInfo.getVersion();
-        String osmDirPath_string = osmDirPath.toString();
 
         log.info("{} - Creating VNF Descriptor with ID {} and version {}",
                 manoId, descriptorId, version);
 
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        JsonNode osmVnfdWrapper = mapper.readTree(new File(osmDirPath_string + "/" +
+        JsonNode osmVnfdWrapper = mapper.readTree(new File(osmDirPath.toString() + "/" +
                 vnfPackageInfo.getAdmin().getStorage().getDescriptor()));
 
-        JsonNode osmVnfd = osmVnfdWrapper.get("vnfd");
-        JsonNode vdus = osmVnfd.get("vdu");
-
-        Map<String, File> cloudInitMap = new HashMap<>();
-        String pkgDirPath = vnfPackageInfo.getAdmin().getStorage().getPkgDir();
-        String tmpDirPath_string = tmpDirPath.toString();
-
-        int i = 0;
-        for(JsonNode vdu : vdus) {
-            JsonNode cloudInitFilename = vdu.get("cloud-init-file");
-            JsonNode cloudInit = vdu.get("cloud-init");
-            if(cloudInitFilename != null) {
-                File cloudInitFile = new File(osmDirPath_string + "/" + pkgDirPath + "/cloud_init/" + cloudInitFilename.asText());
-                cloudInitMap.put(vdu.get("id").asText(), cloudInitFile);
-            } else if(cloudInit != null) {
-                File cloudInitFile = new File(tmpDirPath_string + "/cloud" + i + ".init");
-                try (PrintWriter out = new PrintWriter(cloudInitFile)) {
-                    out.println(cloudInit.asText());
-                    cloudInitMap.put(vdu.get("id").asText(), cloudInitFile);
-                    i++;
-                }
-            }
-        }
+        OsmToSolTranslator.GenerateVnfOutput output =
+                OsmToSolTranslator.generateVnfDescriptor(osmVnfdWrapper, vnfPackageInfo, tmpDirPath, osmDirPath);
 
         log.info("{} - Creating VNF Pkg with descriptor ID {} and version {}", manoId, descriptorId, version);
 
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-        return ToscaArchiveBuilder.createVNFCSAR(vnfPackageInfo.getId(),
-                mapper.convertValue(osmVnfd, Vnfd.class), tmpDirPath_string, cloudInitMap);
+        return ToscaArchiveBuilder.createVNFCSAR(vnfPackageInfo.getId(), output.getVnfd(),
+                tmpDirPath.toString(), output.getCloudInitMap());
     }
 
     private String createNsPkgSol006(OsmInfoObject nsPackageInfo) throws IOException {
@@ -1433,13 +1409,12 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
         String manoId = osm.getManoId();
         String descriptorId = nsPackageInfo.getDescriptorId();
         String version = nsPackageInfo.getVersion();
-        String osmDirPath_string = osmDirPath.toString();
 
         log.info("{} - Creating NS Descriptor with ID {} and version {}",
                 manoId, descriptorId, version);
 
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        JsonNode osmNsdWrapper = mapper.readTree(new File(osmDirPath_string + "/" +
+        JsonNode osmNsdWrapper = mapper.readTree(new File(osmDirPath.toString() + "/" +
                 nsPackageInfo.getAdmin().getStorage().getDescriptor()));
 
         List<OsmInfoObject> vnfInfoList = osmInfoObjectRepository.findByOsmIdAndType(manoId, OsmObjectType.VNF);
