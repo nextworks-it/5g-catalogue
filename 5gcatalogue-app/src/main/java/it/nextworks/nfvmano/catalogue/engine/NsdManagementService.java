@@ -243,10 +243,40 @@ public class NsdManagementService implements NsdManagementInterface {
                                         throw new FailedOperationException("Found more than one file for NSD in YAML format. Error");
                                     }
                                     String nsdFilename = nsdFilenames.get(0);
+
+                                    String manifestFilename = nsdInfoResource.getManifestFilename();
+                                    DataModelSpec dms =
+                                            FileSystemStorageService.getDataModelSpecFromManifest(project.getProjectId(),
+                                                    nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(),
+                                                    manifestFilename, DescriptorType.NSD);
+
                                     Resource dtFile = FileSystemStorageService.loadFileAsResource(project.getProjectId(), nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(), nsdFilename, DescriptorType.NSD);
-                                    DescriptorTemplate dt = mapper.readValue(dtFile.getFile(), DescriptorTemplate.class);
-                                    Map<String, KeyValuePair> includedVnfds = checkVNFPkgs(dt, project.getProjectId());
-                                    Map<String, KeyValuePair> includedPnfds = checkPNFDs(dt, project.getProjectId());
+
+                                    if(nsdFilename.endsWith(".json")) {
+                                        mapper = new ObjectMapper();
+                                        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+                                        mapper.setSerializationInclusion(Include.NON_EMPTY);
+                                    }
+
+                                    DescriptorTemplate dt = null;
+                                    Nsd nsd = null;
+
+                                    if(dms == DataModelSpec.SOL001)
+                                        dt = mapper.readValue(dtFile.getFile(), DescriptorTemplate.class);
+                                    else
+                                        nsd = mapper.readValue(dtFile.getFile(), Nsd.class);
+
+                                    Map<String, KeyValuePair> includedVnfds;
+                                    Map<String, KeyValuePair> includedPnfds;
+
+                                    if(dms == DataModelSpec.SOL001) {
+                                        includedVnfds = checkVNFPkgs(dt, project.getProjectId());
+                                        includedPnfds = checkPNFDs(dt, project.getProjectId());
+                                    } else {
+                                        includedVnfds = checkVNFPkgsSol006(nsd, project.getProjectId());
+                                        includedPnfds = checkPNFDsSol006(nsd, project.getProjectId());
+                                    }
+
                                     List<String> siteOrManoIds = new ArrayList<>();
                                     siteOrManoIds.add(manoPlugin.getPluginId());
                                     NsdOnBoardingNotificationMessage msg =
@@ -273,10 +303,40 @@ public class NsdManagementService implements NsdManagementInterface {
                                     throw new FailedOperationException("Found more than one file for NSD in YAML format. Error");
                                 }
                                 String nsdFilename = nsdFilenames.get(0);
+
+                                String manifestFilename = nsdInfoResource.getManifestFilename();
+                                DataModelSpec dms =
+                                        FileSystemStorageService.getDataModelSpecFromManifest(project.getProjectId(),
+                                                nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(),
+                                                manifestFilename, DescriptorType.NSD);
+
                                 Resource dtFile = FileSystemStorageService.loadFileAsResource(project.getProjectId(), nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(), nsdFilename, DescriptorType.NSD);
-                                DescriptorTemplate dt = mapper.readValue(dtFile.getFile(), DescriptorTemplate.class);
-                                Map<String, KeyValuePair> includedVnfds = checkVNFPkgs(dt, project.getProjectId());
-                                Map<String, KeyValuePair> includedPnfds = checkPNFDs(dt, project.getProjectId());
+
+                                if(nsdFilename.endsWith(".json")) {
+                                    mapper = new ObjectMapper();
+                                    mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+                                    mapper.setSerializationInclusion(Include.NON_EMPTY);
+                                }
+
+                                DescriptorTemplate dt = null;
+                                Nsd nsd = null;
+
+                                if(dms == DataModelSpec.SOL001)
+                                    dt = mapper.readValue(dtFile.getFile(), DescriptorTemplate.class);
+                                else
+                                    nsd = mapper.readValue(dtFile.getFile(), Nsd.class);
+
+                                Map<String, KeyValuePair> includedVnfds;
+                                Map<String, KeyValuePair> includedPnfds;
+
+                                if(dms == DataModelSpec.SOL001) {
+                                    includedVnfds = checkVNFPkgs(dt, project.getProjectId());
+                                    includedPnfds = checkPNFDs(dt, project.getProjectId());
+                                } else {
+                                    includedVnfds = checkVNFPkgsSol006(nsd, project.getProjectId());
+                                    includedPnfds = checkPNFDsSol006(nsd, project.getProjectId());
+                                }
+
                                 List<String> siteOrManoIds = new ArrayList<>();
                                 siteOrManoIds.add(manoPlugin.getPluginId());
                                 NsdOnBoardingNotificationMessage msg =
@@ -395,10 +455,40 @@ public class NsdManagementService implements NsdManagementInterface {
                                 throw new FailedOperationException("Found more than one file for NSD in YAML format. Error");
                             }
                             String nsdFilename = nsdFilenames.get(0);
+
+                            String manifestFilename = nsdInfoResource.getManifestFilename();
+                            DataModelSpec dms =
+                                    FileSystemStorageService.getDataModelSpecFromManifest(project,
+                                            nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(),
+                                            manifestFilename, DescriptorType.NSD);
+
                             Resource dtFile = FileSystemStorageService.loadFileAsResource(project, nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(), nsdFilename, DescriptorType.NSD);
-                            DescriptorTemplate dt = mapper.readValue(dtFile.getFile(), DescriptorTemplate.class);
-                            Map<String, KeyValuePair> includedVnfds = checkVNFPkgs(dt, project);
-                            Map<String, KeyValuePair> includedPnfds = checkPNFDs(dt, project);
+
+                            if(nsdFilename.endsWith(".json")) {
+                                mapper = new ObjectMapper();
+                                mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+                                mapper.setSerializationInclusion(Include.NON_EMPTY);
+                            }
+
+                            DescriptorTemplate dt = null;
+                            Nsd nsd = null;
+
+                            if(dms == DataModelSpec.SOL001)
+                                dt = mapper.readValue(dtFile.getFile(), DescriptorTemplate.class);
+                            else
+                                nsd = mapper.readValue(dtFile.getFile(), Nsd.class);
+
+                            Map<String, KeyValuePair> includedVnfds;
+                            Map<String, KeyValuePair> includedPnfds;
+
+                            if(dms == DataModelSpec.SOL001) {
+                                includedVnfds = checkVNFPkgs(dt, project);
+                                includedPnfds = checkPNFDs(dt, project);
+                            } else {
+                                includedVnfds = checkVNFPkgsSol006(nsd, project);
+                                includedPnfds = checkPNFDsSol006(nsd, project);
+                            }
+
                             List<String> siteOrManoIds = new ArrayList<>();
                             siteOrManoIds.add(notification.getPluginId());
                             NsdOnBoardingNotificationMessage msg1 = new NsdOnBoardingNotificationMessage(nsdInfoResource.getId().toString(), nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(), project, UUID.randomUUID(), ScopeType.LOCAL, OperationStatus.SENT, siteOrManoIds, new KeyValuePair(rootDir + ConfigurationParameters.storageNsdsSubfolder + "/" + project + "/" + nsdInfoResource.getNsdId() + "/" + nsdInfoResource.getNsdVersion(), PathType.LOCAL.toString()));
@@ -431,10 +521,40 @@ public class NsdManagementService implements NsdManagementInterface {
                             throw new FailedOperationException("Found more than one file for NSD in YAML format. Error");
                         }
                         String nsdFilename = nsdFilenames.get(0);
+
+                        String manifestFilename = nsdInfoResource.getManifestFilename();
+                        DataModelSpec dms =
+                                FileSystemStorageService.getDataModelSpecFromManifest(project,
+                                        nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(),
+                                        manifestFilename, DescriptorType.NSD);
+
                         Resource dtFile = FileSystemStorageService.loadFileAsResource(project, nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(), nsdFilename, DescriptorType.NSD);
-                        DescriptorTemplate dt = mapper.readValue(dtFile.getFile(), DescriptorTemplate.class);
-                        Map<String, KeyValuePair> includedVnfds = checkVNFPkgs(dt, project);
-                        Map<String, KeyValuePair> includedPnfds = checkPNFDs(dt, project);
+
+                        if(nsdFilename.endsWith(".json")) {
+                            mapper = new ObjectMapper();
+                            mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+                            mapper.setSerializationInclusion(Include.NON_EMPTY);
+                        }
+
+                        DescriptorTemplate dt = null;
+                        Nsd nsd = null;
+
+                        if(dms == DataModelSpec.SOL001)
+                            dt = mapper.readValue(dtFile.getFile(), DescriptorTemplate.class);
+                        else
+                            nsd = mapper.readValue(dtFile.getFile(), Nsd.class);
+
+                        Map<String, KeyValuePair> includedVnfds;
+                        Map<String, KeyValuePair> includedPnfds;
+
+                        if(dms == DataModelSpec.SOL001) {
+                            includedVnfds = checkVNFPkgs(dt, project);
+                            includedPnfds = checkPNFDs(dt, project);
+                        } else {
+                            includedVnfds = checkVNFPkgsSol006(nsd, project);
+                            includedPnfds = checkPNFDsSol006(nsd, project);
+                        }
+
                         List<String> siteOrManoIds = new ArrayList<>();
                         siteOrManoIds.add(notification.getPluginId());
                         NsdOnBoardingNotificationMessage msg = new NsdOnBoardingNotificationMessage(nsdInfoResource.getId().toString(), nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(), project, UUID.randomUUID(), ScopeType.LOCAL, OperationStatus.SENT, siteOrManoIds, new KeyValuePair(rootDir + ConfigurationParameters.storageNsdsSubfolder + "/" + project + "/" + nsdInfoResource.getNsdId() + "/" + nsdInfoResource.getNsdVersion(), PathType.LOCAL.toString()));
@@ -541,10 +661,40 @@ public class NsdManagementService implements NsdManagementInterface {
                     }
                     log.debug("Project {} - Sending on-boarding request for NSD with ID {} and version {}", project, nsdInfoResource.getNsdId(), nsdInfoResource.getNsdVersion());
                     String nsdFilename = nsdFilenames.get(0);
+
+                    String manifestFilename = nsdInfoResource.getManifestFilename();
+                    DataModelSpec dms =
+                            FileSystemStorageService.getDataModelSpecFromManifest(project,
+                                    nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(),
+                                    manifestFilename, DescriptorType.NSD);
+
                     Resource dtFile = FileSystemStorageService.loadFileAsResource(project, nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(), nsdFilename, DescriptorType.NSD);
-                    DescriptorTemplate dt = mapper.readValue(dtFile.getFile(), DescriptorTemplate.class);
-                    Map<String, KeyValuePair> includedVnfds = checkVNFPkgs(dt, project);
-                    Map<String, KeyValuePair> includedPnfds = checkPNFDs(dt, project);
+
+                    if(nsdFilename.endsWith(".json")) {
+                        mapper = new ObjectMapper();
+                        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+                        mapper.setSerializationInclusion(Include.NON_EMPTY);
+                    }
+
+                    DescriptorTemplate dt = null;
+                    Nsd nsd = null;
+
+                    if(dms == DataModelSpec.SOL001)
+                        dt = mapper.readValue(dtFile.getFile(), DescriptorTemplate.class);
+                    else
+                        nsd = mapper.readValue(dtFile.getFile(), Nsd.class);
+
+                    Map<String, KeyValuePair> includedVnfds;
+                    Map<String, KeyValuePair> includedPnfds;
+
+                    if(dms == DataModelSpec.SOL001) {
+                        includedVnfds = checkVNFPkgs(dt, project);
+                        includedPnfds = checkPNFDs(dt, project);
+                    } else {
+                        includedVnfds = checkVNFPkgsSol006(nsd, project);
+                        includedPnfds = checkPNFDsSol006(nsd, project);
+                    }
+
                     List<String> siteOrManoIds = new ArrayList<>();
                     siteOrManoIds.add(notification.getPluginId());
                     NsdOnBoardingNotificationMessage msg = new NsdOnBoardingNotificationMessage(nsdInfoResource.getId().toString() + "_update", nsdInfoResource.getNsdId().toString(), nsdInfoResource.getNsdVersion(), project, UUID.randomUUID(), ScopeType.LOCAL, OperationStatus.SENT, siteOrManoIds, new KeyValuePair(rootDir + ConfigurationParameters.storageNsdsSubfolder + "/" + project + "/" + nsdInfoResource.getNsdId() + "/" + nsdInfoResource.getNsdVersion(), PathType.LOCAL.toString()));

@@ -16,6 +16,7 @@
 package it.nextworks.nfvmano.catalogue.storage;
 
 import it.nextworks.nfvmano.catalogue.common.ConfigurationParameters;
+import it.nextworks.nfvmano.catalogue.common.enums.DataModelSpec;
 import it.nextworks.nfvmano.catalogue.common.enums.DescriptorType;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
@@ -34,6 +35,8 @@ import javax.annotation.PostConstruct;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.nio.file.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -277,6 +280,59 @@ public class FileSystemStorageService {
         log.debug("New file created for zip entry: " + filename);
 
         return destFile;
+    }
+
+    public static DataModelSpec getDataModelSpecFromManifest(String project, String id,
+                                                             String version, String filename,
+                                                             DescriptorType descriptorType)
+            throws IOException, MalformattedElementException, NotExistingEntityException {
+
+        log.debug("Loading manifest " + filename + ".");
+
+        Path file;
+        if (descriptorType == DescriptorType.VNFD) {
+            file = loadFile(vnfPkgsLocation, project, id, version, filename);
+        } else {
+            file = loadFile(nsdsLocation, project, id, version, filename);
+        }
+
+        Resource resource = new UrlResource(file.toUri());
+        if (resource.exists() || resource.isReadable())
+            log.debug("Found file " + filename);
+        else
+            throw new NotExistingEntityException("Could not read file: " + filename);
+
+        String dataModelSpec = null;
+
+        String line;
+        String regex = "^[ \t]*datamodel_spec: ([^\\\\]*)$";
+        Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+        boolean found = false;
+
+        try (BufferedReader br = new BufferedReader(new FileReader(file.toFile()))) {
+            while((line = br.readLine()) != null) {
+                if(line.matches(regex)) {
+                    Matcher matcher = pattern.matcher(line);
+                    if(matcher.find()) {
+                        dataModelSpec = matcher.group(1);
+                        found = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if(!found)
+            return DataModelSpec.SOL001;
+
+        DataModelSpec dms = DataModelSpec.fromValue(dataModelSpec);
+        if(dms == null) {
+            String msg = "Invalid datamodel_spec field inside " + filename + ": specify SOL001 or SOL006.";
+            log.error(msg);
+            throw new MalformattedElementException(msg);
+        }
+
+        return dms;
     }
 
     @PostConstruct
