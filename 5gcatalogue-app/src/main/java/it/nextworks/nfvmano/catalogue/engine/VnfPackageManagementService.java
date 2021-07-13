@@ -969,14 +969,18 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                             extCpd.getVirtualNetworkInterfaceRequirementSchemas();
                     if(virtualNetworkInterfaceRequirements == null || virtualNetworkInterfaceRequirements.isEmpty())
                         continue;
-                    List<NetworkInterfaceRequirementsSchema> networkInterfaceRequirements =
-                            virtualNetworkInterfaceRequirements.get(0).getNetworkInterfaceRequirements();
-                    mgmtCps = networkInterfaceRequirements
-                            .stream()
-                            .filter(nir -> nir.getKey().equals("isManagement") &&
-                                    nir.getValue().equalsIgnoreCase("true"))
-                            .map(NetworkInterfaceRequirementsSchema::getValue)
-                            .collect(Collectors.toList());
+                    for(VirtualNetworkInterfaceRequirementSchema virtualNetworkInterfaceRequirement : virtualNetworkInterfaceRequirements) {
+                        List<NetworkInterfaceRequirementsSchema> networkInterfaceRequirements =
+                                virtualNetworkInterfaceRequirement.getNetworkInterfaceRequirements();
+                        if(networkInterfaceRequirements == null || networkInterfaceRequirements.isEmpty())
+                            continue;
+                        mgmtCps = networkInterfaceRequirements
+                                .stream()
+                                .filter(nir -> nir.getKey().equals("isManagement") &&
+                                        nir.getValue().equalsIgnoreCase("true"))
+                                .map(NetworkInterfaceRequirementsSchema::getValue)
+                                .collect(Collectors.toList());
+                    }
                 }
                 if(mgmtCps.size() == 0)
                     throw new MalformattedElementException("Please define a management Connection Point");

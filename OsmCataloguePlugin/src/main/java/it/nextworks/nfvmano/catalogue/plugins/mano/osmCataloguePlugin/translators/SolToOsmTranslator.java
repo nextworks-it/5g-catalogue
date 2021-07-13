@@ -528,27 +528,24 @@ public class SolToOsmTranslator {
                         virtualNetworkInterfaceRequirement.getName().isEmpty())
                     virtualNetworkInterfaceRequirement.setName("virtual-network-interface-requirement " + j + " of ext-cpd " + i);
                 j++;
+
+                List<NetworkInterfaceRequirementsSchema> networkInterfaceRequirements =
+                        virtualNetworkInterfaceRequirement.getNetworkInterfaceRequirements();
+                if(networkInterfaceRequirements == null || networkInterfaceRequirements.isEmpty())
+                    continue;
+                mgmtCps = networkInterfaceRequirements
+                        .stream()
+                        .filter(nir -> nir.getKey().equals("isManagement") &&
+                                nir.getValue().equalsIgnoreCase("true"))
+                        .map(NetworkInterfaceRequirementsSchema::getValue)
+                        .collect(Collectors.toList());
+
+                if(mgmtCps.size() == 1)
+                    mgmtId = extCpd.getId();
             }
 
-            VirtualNetworkInterfaceRequirementSchema virtualNetworkInterfaceRequirement =
-                    virtualNetworkInterfaceRequirements.get(0);
-            List<NetworkInterfaceRequirementsSchema> networkInterfaceRequirements =
-                    virtualNetworkInterfaceRequirement.getNetworkInterfaceRequirements();
-            mgmtCps = networkInterfaceRequirements
-                    .stream()
-                    .filter(nir -> nir.getKey().equals("isManagement") &&
-                            nir.getValue().equalsIgnoreCase("true"))
-                    .map(NetworkInterfaceRequirementsSchema::getValue)
-                    .collect(Collectors.toList());
-
-            mgmtId = extCpd.getId();
             i++;
         }
-
-        if(mgmtCps.size() == 0)
-            throw new MalformattedElementException("Please define a management Connection Point");
-        else if (mgmtCps.size() > 1)
-            throw new MalformattedElementException("Multiple management Connection Points are not allowed");
 
         osmVnfd.setMgmtCp(mgmtId);
 
