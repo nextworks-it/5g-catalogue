@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.elements.OsmTranslationInformation;
 import it.nextworks.nfvmano.libs.common.enums.CpRole;
@@ -292,11 +293,11 @@ public class OsmToSolTranslator {
                                                           Path osmDirPath) throws IOException {
 
         JsonNode osmVnfd = osmVnfdWrapper.get("vnfd");
-        JsonNode vdus = osmVnfd.get("vdu");
 
+        ArrayNode vdus = (ArrayNode) osmVnfd.get("vdu");
         Map<String, File> cloudInitMap = new HashMap<>();
-
         int i = 0;
+
         for(JsonNode vdu : vdus) {
             JsonNode cloudInitFilename = vdu.get("cloud-init-file");
             JsonNode cloudInit = vdu.get("cloud-init");
@@ -310,6 +311,28 @@ public class OsmToSolTranslator {
                     out.println(cloudInit.asText());
                     cloudInitMap.put(vdu.get("id").asText(), cloudInitFile);
                     i++;
+                }
+            }
+
+            JsonNode monitoringParameterNode = vdu.get("monitoring-parameter");
+            if(monitoringParameterNode != null) {
+                ArrayNode monitoringParameters = (ArrayNode) monitoringParameterNode;
+                for(JsonNode monitoringParameter : monitoringParameters)
+                    ((ObjectNode) monitoringParameter)
+                            .put("performance-metric", "AllOfvnfd_vduMonitoringParameterItems");
+            }
+        }
+
+        JsonNode dfNode = osmVnfdWrapper.get("df");
+        if(dfNode != null) {
+            ArrayNode dfs = (ArrayNode) dfNode;
+            for(JsonNode df : dfs) {
+                JsonNode monitoringParameterNode = df.get("monitoring-parameter");
+                if(monitoringParameterNode != null) {
+                    ArrayNode monitoringParameters = (ArrayNode) monitoringParameterNode;
+                    for(JsonNode monitoringParameter : monitoringParameters)
+                        ((ObjectNode) monitoringParameter)
+                                .put("performance-metric", "AllOfvnfd_dfMonitoringParameterItems");
                 }
             }
         }
