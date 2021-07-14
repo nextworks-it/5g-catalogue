@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.translators.SolToOsmTranslator;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.nsDescriptor.OsmNSPackage;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.vnfDescriptor.OsmVNFPackage;
@@ -266,7 +267,9 @@ public class OsmArchiveBuilder {
     private void makeDescriptor(SolToOsmTranslator.OsmVnfdSol006Wrapper vnfd, String vnfdId, File folder) {
         File vnfdFile;
 
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        YAMLFactory yamlFactory = new YAMLFactory();
+        yamlFactory.disable(YAMLGenerator.Feature.USE_NATIVE_TYPE_ID);
+        ObjectMapper mapper = new ObjectMapper(yamlFactory);
         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
@@ -283,7 +286,9 @@ public class OsmArchiveBuilder {
     private void makeDescriptor(SolToOsmTranslator.OsmNsWrapper nsd, String nsdId, File folder) {
         File nsdFile;
 
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        YAMLFactory yamlFactory = new YAMLFactory();
+        yamlFactory.disable(YAMLGenerator.Feature.USE_NATIVE_TYPE_ID);
+        ObjectMapper mapper = new ObjectMapper(yamlFactory);
         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 

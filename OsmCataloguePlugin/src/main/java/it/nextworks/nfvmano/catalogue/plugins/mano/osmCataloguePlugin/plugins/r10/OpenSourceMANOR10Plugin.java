@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.*;
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.PathType;
 import it.nextworks.nfvmano.catalogue.catalogueNotificaton.messages.elements.ScopeType;
@@ -307,7 +308,9 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
                         }
 
                         SolToOsmTranslator.OsmNsWrapper nsd = SolToOsmTranslator.generateNsDescriptor(tmp);
-                        mapper = new ObjectMapper(new YAMLFactory());
+                        YAMLFactory yamlFactory = new YAMLFactory();
+                        yamlFactory.disable(YAMLGenerator.Feature.USE_NATIVE_TYPE_ID);
+                        mapper = new ObjectMapper(yamlFactory);
                         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
                         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
                         log.debug("{} - Translated NSD:\n{}", manoId, mapper.writeValueAsString(nsd));
@@ -535,7 +538,9 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
                         }
 
                         SolToOsmTranslator.OsmNsWrapper nsd = SolToOsmTranslator.generateNsDescriptor(tmp);
-                        mapper = new ObjectMapper(new YAMLFactory());
+                        YAMLFactory yamlFactory = new YAMLFactory();
+                        yamlFactory.disable(YAMLGenerator.Feature.USE_NATIVE_TYPE_ID);
+                        mapper = new ObjectMapper(yamlFactory);
                         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
                         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
                         log.debug("{} - Translated NSD:\n{}", manoId, mapper.writeValueAsString(nsd));
@@ -848,7 +853,9 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
                             log.debug("{} - No monitoring file found for VNF with ID {} and version {}", manoId, vnfdId, version);
 
                         SolToOsmTranslator.OsmVnfdSol006Wrapper vnfd = SolToOsmTranslator.generateVnfDescriptor(tmp, cloudInitMap);
-                        mapper = new ObjectMapper(new YAMLFactory());
+                        YAMLFactory yamlFactory = new YAMLFactory();
+                        yamlFactory.disable(YAMLGenerator.Feature.USE_NATIVE_TYPE_ID);
+                        mapper = new ObjectMapper(yamlFactory);
                         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
                         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
                         log.debug("Translated VNFD: \n" + mapper.writeValueAsString(vnfd));
@@ -1059,7 +1066,9 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
                             log.debug("{} - No monitoring file found for VNF with ID {} and version {}", manoId, vnfdId, version);
 
                         SolToOsmTranslator.OsmVnfdSol006Wrapper vnfd = SolToOsmTranslator.generateVnfDescriptor(tmp, cloudInitMap);
-                        mapper = new ObjectMapper(new YAMLFactory());
+                        YAMLFactory yamlFactory = new YAMLFactory();
+                        yamlFactory.disable(YAMLGenerator.Feature.USE_NATIVE_TYPE_ID);
+                        mapper = new ObjectMapper(yamlFactory);
                         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
                         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
                         log.debug("Translated VNFD: " + mapper.writeValueAsString(vnfd));
