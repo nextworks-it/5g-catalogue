@@ -1601,8 +1601,13 @@ public class NsdManagementService implements NsdManagementInterface {
 
         if(dms == DataModelSpec.SOL001)
             nsdInfo.setNsdInvariantId(UUID.fromString(dt.getMetadata().getDescriptorId()));
-        else
-            nsdInfo.setNsdInvariantId(UUID.fromString(nsdSol006.getInvariantId()));
+        else {
+            String invariantId = nsdSol006.getInvariantId();
+            if(invariantId != null)
+                nsdInfo.setNsdInvariantId(UUID.fromString(invariantId));
+            else
+                nsdInfo.setNsdInvariantId(nsdId);
+        }
 
         String nsdName;
         if(dms == DataModelSpec.SOL001)
