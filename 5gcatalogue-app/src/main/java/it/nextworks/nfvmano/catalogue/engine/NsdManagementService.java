@@ -1601,13 +1601,8 @@ public class NsdManagementService implements NsdManagementInterface {
 
         if(dms == DataModelSpec.SOL001)
             nsdInfo.setNsdInvariantId(UUID.fromString(dt.getMetadata().getDescriptorId()));
-        else {
-            String invariantId = nsdSol006.getInvariantId();
-            if(invariantId != null)
-                nsdInfo.setNsdInvariantId(UUID.fromString(invariantId));
-            else
-                nsdInfo.setNsdInvariantId(nsdId);
-        }
+        else
+            nsdInfo.setNsdInvariantId(UUID.fromString(nsdSol006.getInvariantId()));
 
         String nsdName;
         if(dms == DataModelSpec.SOL001)
@@ -1851,7 +1846,7 @@ public class NsdManagementService implements NsdManagementInterface {
                     if (optionalNsdInfoResource.isPresent())
                         throw new AlreadyExistingEntityException("A SOL006 NSD with the same id already exists in the project");
 
-                    if(!oldNsdVersion.equals(version) && !nsdInfo.getNsdInvariantId().equals(nsdSol006.getInvariantId()))
+                    if(!oldNsdVersion.equals(version) && !nsdInfo.getNsdInvariantId().equals(UUID.fromString(nsdSol006.getInvariantId())))
                         throw new MalformattedElementException("Invariant ID must not change when the version is changed.");
                 }
             }
