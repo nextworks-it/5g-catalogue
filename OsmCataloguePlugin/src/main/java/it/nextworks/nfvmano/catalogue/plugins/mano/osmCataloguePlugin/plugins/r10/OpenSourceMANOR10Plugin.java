@@ -1523,33 +1523,8 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
         String pkgPath;
 
         for(OsmInfoObject osmInfoObject : osmVnfList) {
-
-            if(osmInfoObject.getEpoch().compareTo(startSync) < 0) {
-
-                operationId = UUID.randomUUID();
-                descriptorId = osmInfoObject.getDescriptorId();
-                version = osmInfoObject.getVersion();
-
-                log.info("{} - Osm Vnf Pkg with descriptor ID {} and version {} no longer present, deleting it",
-                        manoId, descriptorId, version);
-
-                String catDescriptorId = getCatDescriptorId(descriptorId, version);
-                if(catDescriptorId == null)
-                    catDescriptorId = descriptorId;
-                sendNotification(new VnfPkgDeletionNotificationMessage(null, catDescriptorId, version,
-                        "all", operationId, ScopeType.SYNC, OperationStatus.SENT, manoId, null));
-
-                osmInfoObjectRepository.delete(osmInfoObject);
-
-                Utilities.deleteDir(new File(osmDir + "/" + descriptorId));
-                Utilities.deleteDir(new File(osmDir + "/" + descriptorId + ".tar.gz"));
-
-                List<OsmTranslationInformation> translationInformationList =
-                        translationInformationRepository.findByOsmInfoIdAndOsmManoId(osmInfoObject.getId(), manoId);
-                for(OsmTranslationInformation translationInformation : translationInformationList)
-                    translationInformationRepository.delete(translationInformation);
-
-            } else if(osmInfoObject.getState().equals(RecordState.NEW)) {
+            if(osmInfoObject.getState().equals(RecordState.NEW)
+                     && osmInfoObject.getEpoch().compareTo(startSync) >= 0) {
 
                 operationId = UUID.randomUUID();
                 descriptorId = osmInfoObject.getDescriptorId();
@@ -1570,7 +1545,8 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
                         "all", operationId, ScopeType.SYNC, OperationStatus.SENT, manoId, null,
                         new KeyValuePair(pkgPath, PathType.LOCAL.toString())));
 
-            } else if(osmInfoObject.getState().equals(RecordState.CHANGED)) {
+            } else if(osmInfoObject.getState().equals(RecordState.CHANGED)
+                     && osmInfoObject.getEpoch().compareTo(startSync) >= 0) {
 
                 operationId = UUID.randomUUID();
                 descriptorId = osmInfoObject.getDescriptorId();
@@ -1687,6 +1663,34 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
                 sendNotification(new NsdChangeNotificationMessage(null, catDescriptorId, catVersion,
                         "all", operationId, ScopeType.SYNC, OperationStatus.SENT, manoId, null,
                         new KeyValuePair(pkgPath, PathType.LOCAL.toString())));
+            }
+        }
+
+        for(OsmInfoObject osmInfoObject : osmVnfList) {
+            if (osmInfoObject.getEpoch().compareTo(startSync) < 0) {
+
+                operationId = UUID.randomUUID();
+                descriptorId = osmInfoObject.getDescriptorId();
+                version = osmInfoObject.getVersion();
+
+                log.info("{} - Osm Vnf Pkg with descriptor ID {} and version {} no longer present, deleting it",
+                        manoId, descriptorId, version);
+
+                String catDescriptorId = getCatDescriptorId(descriptorId, version);
+                if (catDescriptorId == null)
+                    catDescriptorId = descriptorId;
+                sendNotification(new VnfPkgDeletionNotificationMessage(null, catDescriptorId, version,
+                        "all", operationId, ScopeType.SYNC, OperationStatus.SENT, manoId, null));
+
+                osmInfoObjectRepository.delete(osmInfoObject);
+
+                Utilities.deleteDir(new File(osmDir + "/" + descriptorId));
+                Utilities.deleteDir(new File(osmDir + "/" + descriptorId + ".tar.gz"));
+
+                List<OsmTranslationInformation> translationInformationList =
+                        translationInformationRepository.findByOsmInfoIdAndOsmManoId(osmInfoObject.getId(), manoId);
+                for (OsmTranslationInformation translationInformation : translationInformationList)
+                    translationInformationRepository.delete(translationInformation);
             }
         }
 
