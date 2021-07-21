@@ -89,8 +89,8 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
 
         super(manoType, mano, kafkaBootstrapServers, localTopic, remoteTopic, kafkaTemplate, manoSync);
 
-        if(manoType != MANOType.OSMR10)
-            throw new IllegalArgumentException("OSM R10 requires an OSM R10 type MANO");
+        if(manoType != MANOType.OSMR9 && manoType != MANOType.OSMR10)
+            throw new IllegalArgumentException("OSM R10 requires an OSM R9 or R10 type MANO");
 
         osm = (OSM) mano;
         this.osmInfoObjectRepository = osmInfoObjectRepository;

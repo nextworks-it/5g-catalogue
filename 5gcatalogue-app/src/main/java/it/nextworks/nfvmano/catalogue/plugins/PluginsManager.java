@@ -395,7 +395,7 @@ public class PluginsManager {
         } else if (mano.getManoType().equals(MANOType.OSMR4) || mano.getManoType().equals(MANOType.OSMR5) || mano.getManoType().equals(MANOType.OSMR6) || mano.getManoType().equals(MANOType.OSMR7) || mano.getManoType().equals(MANOType.OSMR8)) {
             Path osmr4PlusDir = Paths.get(manoDir, "/" + mano.getManoType().toString().toLowerCase());
             return new OpenSourceMANOR4PlusPlugin(mano.getManoType(), mano, bootstrapServers, osmInfoObjectRepository, translationInformationRepository, localNotificationTopic, remoteNotificationTopic, kafkaTemplate, osmr4PlusDir, Paths.get(tmpDir), logo, runtimeSync, manoSyncPeriod, useOsmVimNetworkName);
-        } else if (mano.getManoType().equals(MANOType.OSMR10)) {
+        } else if (mano.getManoType().equals(MANOType.OSMR9) || mano.getManoType().equals(MANOType.OSMR10)) {
             Path osmr10Dir = Paths.get(manoDir, "/" + mano.getManoType().toString().toLowerCase());
             return new OpenSourceMANOR10Plugin(mano.getManoType(), mano, bootstrapServers, localNotificationTopic,
                     remoteNotificationTopic, kafkaTemplate, runtimeSync, osmInfoObjectRepository,
@@ -427,7 +427,7 @@ public class PluginsManager {
         log.debug("RECEIVED MANO:\nMANO ID: " + manoId + "\nMANO TYPE: " + type);
 
         if (type == MANOType.OSMR3 || type == MANOType.OSMR4 || type == MANOType.OSMR5 || type == MANOType.OSMR6 ||
-                type == MANOType.OSMR7 || type == MANOType.OSMR8 || type == MANOType.OSMR10) {
+                type == MANOType.OSMR7 || type == MANOType.OSMR8 || type == MANOType.OSMR9 || type == MANOType.OSMR10) {
             log.debug("Processing request for creating " + type + " Plugin");
             OSM osm = (OSM) mano;
             OSM targetOsm = new OSM(
