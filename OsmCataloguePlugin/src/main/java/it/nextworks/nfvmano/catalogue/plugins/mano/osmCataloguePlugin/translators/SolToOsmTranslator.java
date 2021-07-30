@@ -513,7 +513,7 @@ public class SolToOsmTranslator {
         List<ExtCpd> extCpds = osmVnfd.getExtCpd();
         if(extCpds == null || extCpds.isEmpty())
             throw new MalformattedElementException("No External Connection Points defined");
-        List<String> mgmtCps = new ArrayList<>();
+        List<String> mgmtCps;
         String mgmtId = null;
         int i = 0;
         for(ExtCpd extCpd : extCpds) {
@@ -553,6 +553,86 @@ public class SolToOsmTranslator {
 
         if(!cloudInitMap.isEmpty())
             setCloudInit(osmVnfd, cloudInitMap);
+
+        return new OsmVnfdSol006Wrapper(osmVnfd);
+    }
+
+    public static OsmVnfdSol006Wrapper generateVnfDescriptor(Pnfd pnfd, String mgmtCp) {
+
+        Vnfd vnfd = new Vnfd();
+
+        vnfd.setSecurityGroupRule(pnfd.getSecurityGroupRule());
+        vnfd.setProductName(pnfd.getName());
+
+        List<ExtCpd> extCpds = null;
+        List<Cpd> pnfdCpds = pnfd.getExtCpd();
+        if(pnfdCpds != null) {
+            extCpds = new ArrayList<>();
+
+            for(Cpd pnfdCpd : pnfdCpds) {
+                ExtCpd extCpd = new ExtCpd();
+
+                List<ProtocolSchema> protocolSchemas;
+                List<CpdProtocol> pnfdCpdProtocol = pnfdCpd.getProtocol();
+                if(pnfdCpdProtocol != null) {
+                    protocolSchemas = new ArrayList<>();
+
+                    for(CpdProtocol cpdProtocol : pnfdCpdProtocol) {
+                        ProtocolSchema protocolSchema = new ProtocolSchema()
+                                .addressData(cpdProtocol.getAddressData())
+                                .associatedLayerProtocol(cpdProtocol.getAssociatedLayerProtocol());
+
+                        protocolSchemas.add(protocolSchema);
+                    }
+
+                    extCpd.setProtocolSchemas(protocolSchemas);
+                }
+
+                extCpd.setDescription(pnfdCpd.getDescription());
+                extCpd.setLayerProtocols(pnfdCpd.getLayerProtocol());
+                extCpd.setTrunkMode(pnfdCpd.isTrunkMode());
+                extCpd.setRole(pnfdCpd.getRole());
+                extCpd.setId(pnfdCpd.getId());
+
+                extCpd.setIntCpdSchema(new IntCpdSchema()
+                        .cpd(pnfdCpd.getId())
+                        .vduId("default_vdu"));
+
+                extCpds.add(extCpd);
+            }
+
+            vnfd.setExtCpd(extCpds);
+        }
+
+        vnfd.setVersion(pnfd.getVersion());
+        vnfd.setProvider(pnfd.getProvider());
+        vnfd.setId(pnfd.getId());
+
+        VnfdDf df = new VnfdDf().id("default_df");
+        vnfd.setDf(Collections.singletonList(df));
+
+        if(extCpds != null) {
+            VnfdVdu vdu = new VnfdVdu().id("default_vdu").name("default_vdu");
+            List<VnfdVduIntCpdItem> intCpd = new ArrayList<>();
+
+            for (ExtCpd extCpd : extCpds) {
+                String extCpdId = extCpd.getId();
+
+                VnfdVduIntCpdItem intCpdItem = new VnfdVduIntCpdItem().id(extCpdId);
+                intCpdItem.setVirtualNetworkInterfaceRequirement(Collections
+                                .singletonList(new VirtualNetworkInterfaceRequirementSchema().name(extCpdId)));
+
+                intCpd.add(intCpdItem);
+            }
+
+            vdu.setIntCpd(intCpd);
+            vnfd.setVdu(Collections.singletonList(vdu));
+        }
+
+        OsmVnfdSol006 osmVnfd = new OsmVnfdSol006(vnfd);
+
+        osmVnfd.setDescription(pnfd.getFunctionDescription());
+        osmVnfd.setMgmtCp(mgmtCp);
 
         return new OsmVnfdSol006Wrapper(osmVnfd);
     }

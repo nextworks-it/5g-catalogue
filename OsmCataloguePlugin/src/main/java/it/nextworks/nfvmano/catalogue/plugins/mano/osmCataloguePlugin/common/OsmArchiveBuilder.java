@@ -160,6 +160,18 @@ public class OsmArchiveBuilder {
         return compress(folder);
     }
 
+    public File makeNewArchive(SolToOsmTranslator.OsmVnfdSol006Wrapper vnfd,
+                               String readmeContent,
+                               File logoFile) {
+        String pnfdId = vnfd.getVnfd().getId();
+        File folder = makeFolder(pnfdId);
+        makeReadme(readmeContent, folder);
+        makeDescriptor(vnfd, pnfdId, folder);
+        File iconsFolder = makeSubFolder(folder, "icons");
+        copyFile(iconsFolder, logoFile);
+        return compress(folder);
+    }
+
     public File makeNewArchive(OsmVNFPackage ymlFile, File logoFile) {
         return makeNewArchive(ymlFile, "", logoFile, null, null);
     }
@@ -173,6 +185,10 @@ public class OsmArchiveBuilder {
                                Map<String, File> cloudInitMap,
                                File monitoringFile) {
         return makeNewArchive(vnfd, readmeContent, defaultLogo, cloudInitMap, monitoringFile);
+    }
+
+    public File makeNewArchive(SolToOsmTranslator.OsmVnfdSol006Wrapper pnfd, String readmeContent) {
+        return makeNewArchive(pnfd, readmeContent, defaultLogo);
     }
 
     public File makeNewArchive(OsmVNFPackage ymlFile) {

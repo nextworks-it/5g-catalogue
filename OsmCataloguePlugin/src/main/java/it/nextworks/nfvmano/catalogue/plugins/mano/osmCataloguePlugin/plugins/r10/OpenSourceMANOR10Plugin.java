@@ -29,7 +29,9 @@ import it.nextworks.nfvmano.libs.common.enums.OperationStatus;
 import it.nextworks.nfvmano.libs.common.exceptions.FailedOperationException;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.common.exceptions.MethodNotImplementedException;
+import it.nextworks.nfvmano.libs.descriptors.sol006.Cpd;
 import it.nextworks.nfvmano.libs.descriptors.sol006.Nsd;
+import it.nextworks.nfvmano.libs.descriptors.sol006.Pnfd;
 import it.nextworks.nfvmano.libs.descriptors.sol006.Vnfd;
 import it.nextworks.nfvmano.libs.osmr4PlusClient.OSMr4PlusClient;
 import it.nextworks.nfvmano.libs.osmr4PlusClient.utilities.OSMHttpResponse;
@@ -665,6 +667,168 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
     @Override
     public void acceptPnfdOnBoardingNotification(PnfdOnBoardingNotificationMessage notification) throws MethodNotImplementedException {
 
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+
+        try {
+            log.debug("RECEIVED MESSAGE: " + mapper.writeValueAsString(notification));
+        } catch (JsonProcessingException e) {
+            log.error("Unable to parse received pnfOnboardingNotificationMessage: " + e.getMessage());
+        }
+
+        String manoId = osm.getManoId();
+        String pnfdInfoId = notification.getPnfdInfoId();
+        String pnfdId = notification.getPnfdId();
+        String version = notification.getPnfdVersion();
+        String project = notification.getProject();
+
+        if(notification.getScope() == ScopeType.LOCAL) {
+            log.info("{} - Received PNFD onboarding notification for Pnfd with ID {} and version {} for project {}",
+                    manoId, pnfdId, version, project);
+
+            boolean forceOnboard = false;
+            if(pnfdInfoId.endsWith("_update")) {
+                forceOnboard = true;
+                pnfdInfoId = pnfdInfoId.replace("_update", "");
+            }
+
+            if(Utilities.isTargetMano(notification.getSiteOrManoIds(), osm) &&
+                    this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
+
+                try {
+                    String packagePath = notification.getPackagePath().getKey();
+
+                    Set<String> metadataFileNames;
+                    String metadataFileName;
+
+                    File metadata;
+                    File descriptor;
+
+                    if(notification.getPackagePath().getValue().equals(PathType.LOCAL.toString())) {
+
+                        Set<String> files = Utilities.listFiles(packagePath);
+
+                        if(files.size() != 1) {
+                            metadataFileNames = Utilities.listFiles(packagePath + "/TOSCA-Metadata/");
+
+                            Optional<String> opt = metadataFileNames.stream()
+                                    .filter(name -> name.endsWith(".meta")).findFirst();
+                            if(!opt.isPresent())
+                                throw new MalformattedElementException("Metadata file not found in " + packagePath +
+                                        "/TOSCA-Metadata/" + " for Pnfd with ID " + pnfdId + " and version " + version +
+                                        " for project " + project + ".");
+                            metadataFileName = opt.get();
+
+                            metadata = new File(packagePath + "/TOSCA-Metadata/" + metadataFileName);
+                            descriptor = new File(packagePath + "/" + Utilities.getMainServiceTemplateFromMetadata(metadata));
+                        } else if(files.iterator().next().endsWith(".yaml")
+                                || files.iterator().next().endsWith(".yml")
+                                || files.iterator().next().endsWith(".json"))
+                            descriptor = new File(packagePath + "/" + files.iterator().next());
+                        else
+                            throw new MalformattedElementException("Descriptor files not found");
+                    } else
+                        throw new MethodNotImplementedException("Path Type not currently supported");
+
+                    if(descriptor.getName().endsWith(".yaml") || descriptor.getName().endsWith(".yml"))
+                        mapper = new ObjectMapper(new YAMLFactory());
+
+                    Pnfd pnfd = mapper.readValue(descriptor, Pnfd.class);
+                    if(!pnfd.getId().equals(pnfdId) || !pnfd.getVersion().equals(version))
+                        throw new MalformattedElementException("The PNFD ID and version specified in the notification " +
+                                "(" + pnfdId + ", " + version + ") do not match those of the stored descriptor " +
+                                "(" + pnfd.getId() + ", " + pnfd.getVersion() + ").");
+
+                    String osmDescriptorId = getOsmDescriptorId(pnfdId, version);
+                    if(osmDescriptorId == null)
+                        osmDescriptorId = pnfdId;
+
+                    String osmInfoObjectId;
+                    Optional<OsmInfoObject> osmInfoObjectOptional = osmInfoObjectRepository
+                            .findByDescriptorIdAndVersionAndOsmId(osmDescriptorId, version, manoId);
+                    if(!osmInfoObjectOptional.isPresent() || forceOnboard) {
+
+                        if(isTheFirstTranslationInformationEntry(pnfdId))
+                            osmDescriptorId = pnfdId;
+                        else {
+                            osmDescriptorId = UUID.randomUUID().toString();
+                            pnfd.setId(osmDescriptorId);
+                        }
+
+                        packagePath = notification.getPackagePath().getKey();
+                        Set<String> fileNames = Utilities.listFiles(packagePath);
+                        String mgmtCp = null;
+
+                        if (fileNames.stream().filter(name -> name.endsWith(".mf")).count() != 0) {
+                            String manifestPath = fileNames.stream().filter(name -> name.endsWith(".mf")).findFirst().get();
+                            File mf = new File(packagePath + "/" + manifestPath);
+
+                            mgmtCp = Utilities.getMgmtCpFromManifest(mf);
+                        } else {
+                            log.warn("Missing manifest, using the first ext-cpd as management.");
+                            List<Cpd> cpds = pnfd.getExtCpd();
+                            if(cpds == null || cpds.isEmpty())
+                                throw new MalformattedElementException("Cannot deduce the mgmt-cp parameter, empty ext-cpd list.");
+
+                            mgmtCp = cpds.get(0).getId();
+                        }
+
+                        SolToOsmTranslator.OsmVnfdSol006Wrapper vnfd = SolToOsmTranslator.generateVnfDescriptor(pnfd, mgmtCp);
+                        YAMLFactory yamlFactory = new YAMLFactory();
+                        yamlFactory.disable(YAMLGenerator.Feature.USE_NATIVE_TYPE_ID);
+                        mapper = new ObjectMapper(yamlFactory);
+                        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+                        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+                        log.debug("{} - Translated PNFD:\n{}", manoId, mapper.writeValueAsString(vnfd));
+
+                        File archive = new OsmArchiveBuilder(osmDir, logo)
+                                .makeNewArchive(vnfd, "Generated by NXW Catalogue");
+                        osmInfoObjectId = onBoardVnfPackage(archive, notification.getOperationId().toString());
+
+                        log.info("{} - Successfully uploaded Pnfd with ID {} and version {} for project {}", manoId, pnfdId, version, project);
+                    } else
+                        osmInfoObjectId = osmInfoObjectOptional.get().getId();
+
+                    translationInformationRepository.saveAndFlush(new OsmTranslationInformation(pnfdInfoId,
+                            osmInfoObjectId, pnfdId, osmDescriptorId, version, manoId));
+                    sendNotification(new PnfdOnBoardingNotificationMessage(pnfdInfoId, pnfdId, version, project,
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
+                            manoId, null,null));
+                } catch (Exception e) {
+                    log.error("{} - Could not onboard Nsd: {}", manoId, e.getMessage());
+                    log.debug("Error details: ", e);
+                    sendNotification(new PnfdOnBoardingNotificationMessage(pnfdInfoId, pnfdId, version, project,
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
+                            manoId, null,null));
+                }
+            } else {
+                if(this.getPluginOperationalState() == PluginOperationalState.DISABLED
+                        || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
+                    log.debug("{} - PNFD onboarding skipped", manoId);
+                    sendNotification(new PnfdOnBoardingNotificationMessage(pnfdInfoId, pnfdId, version, project,
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.RECEIVED,
+                            manoId, null,null));
+                }
+            }
+        } else if(notification.getScope() == ScopeType.SYNC) {
+            log.info("{} - Received Sync Pkg onboarding notification for PNFD with ID {} and version {} for project {} : {}",
+                    manoId, pnfdId, version, project, notification.getOpStatus().toString());
+
+            if(notification.getPluginId().equals(manoId)) {
+                String osmDescriptorId = getOsmDescriptorId(pnfdId, version);
+                if(osmDescriptorId == null)
+                    osmDescriptorId = pnfdId;
+
+                Optional<OsmInfoObject> osmInfoObject = osmInfoObjectRepository
+                        .findByDescriptorIdAndVersionAndOsmId(osmDescriptorId, version, manoId);
+                if(osmInfoObject.isPresent()) {
+                    if(notification.getOpStatus().equals(OperationStatus.SUCCESSFULLY_DONE))
+                        translationInformationRepository.saveAndFlush(new OsmTranslationInformation(pnfdInfoId,
+                                osmInfoObject.get().getId(), pnfdId, osmInfoObject.get().getDescriptorId(), version, manoId));
+                }
+            }
+        }
     }
 
     @Override

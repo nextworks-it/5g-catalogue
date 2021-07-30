@@ -168,6 +168,36 @@ public class Utilities {
         return scriptsFilename;
     }
 
+    public static String getMgmtCpFromManifest(File mf) throws IOException, MalformattedElementException {
+
+        String mgmtCp = null;
+
+        try(BufferedReader br = new BufferedReader(new FileReader(mf))) {
+            String line;
+            String regexRoot = "mgmt-cp:";
+            String regex = "^ext-cpd: ([\\s\\S]*)$";
+            while((line = br.readLine()) != null) {
+                line = line.trim();
+                if(line.matches(regexRoot)) {
+                    while((line = br.readLine()) != null) {
+                        line = line.trim();
+                        if(line.matches(regex)) {
+                            Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+                            Matcher matcher = pattern.matcher(line.trim());
+                            if(matcher.find())
+                                mgmtCp = matcher.group(1);
+                        }
+                    }
+                }
+            }
+        }
+
+        if(mgmtCp == null)
+            throw new MalformattedElementException("Missing mgmt-cp configuration information in manifest.");
+
+        return mgmtCp;
+    }
+
     public static Set<String> listFiles(String dir) throws IOException {
         Set<String> fileList = new HashSet<>();
         Files.walkFileTree(Paths.get(dir), new SimpleFileVisitor<Path>() {
