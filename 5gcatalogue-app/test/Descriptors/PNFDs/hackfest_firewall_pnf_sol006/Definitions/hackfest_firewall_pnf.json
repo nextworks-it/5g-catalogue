@@ -1,0 +1,16 @@
+{
+  "ext-cpd": [
+    {
+      "id": "gateway_public"
+    },
+    {
+      "id": "vnf_internal"
+    }
+  ],
+  "function-description": "PNF entry for a firewall router",
+  "id": "ffa1ef83-bcbf-4214-8aa2-62f117beb22e",
+  "invariant-id": "ffa1ef83-bcbf-4214-8aa2-62f117beb22e",
+  "name": "hackfest_firewall_pnf",
+  "provider": "NXW",
+  "version": "1.0"
+}

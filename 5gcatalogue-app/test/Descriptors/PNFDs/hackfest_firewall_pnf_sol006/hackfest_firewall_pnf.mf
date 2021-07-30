@@ -1,6 +1,10 @@
 metadata:
-    vnf_product_name: test_pnf_sol006
+    vnf_product_name: hackfest_firewall_pnf
     vnf_provider_id: NXW
     vnf_package_version: 1.0
     vnf_release_date_time: 2021-06-01T15:16+02:00
     datamodel_spec: SOL006
+    
+configuration:
+	mgmt-cp:
+		ext-cpd: gateway_public
