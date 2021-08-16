@@ -644,7 +644,7 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
                             notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
                             manoId, null));
                 } catch (Exception e) {
-                    log.error("{} - Could not onboard Nsd: {}", manoId, e.getMessage());
+                    log.error("{} - Could not delete Nsd: {}", manoId, e.getMessage());
                     log.debug("Error details: ", e);
                     sendNotification(new NsdDeletionNotificationMessage(nsdInfoId, nsdId, version, project,
                             notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
@@ -834,6 +834,64 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
     @Override
     public void acceptPnfdDeletionNotification(PnfdDeletionNotificationMessage notification) throws MethodNotImplementedException {
 
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+
+        try {
+            log.debug("RECEIVED MESSAGE: " + mapper.writeValueAsString(notification));
+        } catch (JsonProcessingException e) {
+            log.error("Unable to parse received PnfdDeletionNotificationMessage: " + e.getMessage());
+        }
+
+        String manoId = osm.getManoId();
+        String pnfdInfoId = notification.getPnfdInfoId();
+        String pnfdId = notification.getPnfdId();
+        String version = notification.getPnfdVersion();
+        String project = notification.getProject();
+
+        if(notification.getScope() == ScopeType.LOCAL) {
+            log.info("{} - Received PNFD deletion notification for Pnfd with ID {} and version {} for project {}",
+                    manoId, pnfdId, version, project);
+
+            if(Utilities.isTargetMano(notification.getSiteOrManoIds(), osm)
+                    && translationInformationContainsCatInfoId(pnfdInfoId)
+                    && this.getPluginOperationalState() == PluginOperationalState.ENABLED) {
+
+                try {
+                    String osmInfoPkgId = getOsmInfoId(pnfdInfoId);
+                    if(osmInfoPkgId == null)
+                        throw new FailedOperationException("Could not find the corresponding Info ID in OSM");
+                    if(!deleteTranslationInformationEntry(pnfdInfoId))
+                        throw new FailedOperationException("Could not delete the specified entry");
+                    if(!translationInformationContainsOsmInfoId(osmInfoPkgId))
+                        deleteVnfd(osmInfoPkgId, notification.getOperationId().toString());
+
+                    log.info("{} - Successfully deleted Pnfd with ID {} and version {} for project {}", manoId, pnfdId, version, project);
+
+                    sendNotification(new PnfdDeletionNotificationMessage(pnfdInfoId, pnfdId, version, project,
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.SUCCESSFULLY_DONE,
+                            manoId, null));
+                } catch (Exception e) {
+                    log.error("{} - Could not delete Pnfd: {}", manoId, e.getMessage());
+                    log.debug("Error details: ", e);
+                    sendNotification(new PnfdDeletionNotificationMessage(pnfdInfoId, pnfdId, version, project,
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.FAILED,
+                            manoId, null));
+                }
+            } else {
+                if(this.getPluginOperationalState() == PluginOperationalState.DISABLED
+                        || this.getPluginOperationalState() == PluginOperationalState.DELETING) {
+                    log.debug("{} - PNFD deletion skipped", manoId);
+                    sendNotification(new PnfdDeletionNotificationMessage(pnfdInfoId, pnfdId, version, project,
+                            notification.getOperationId(), ScopeType.REMOTE, OperationStatus.RECEIVED,
+                            manoId, null));
+                }
+            }
+        } else if(notification.getScope() == ScopeType.SYNC) {
+            log.info("{} - Received Sync Pkg deletion notification for PNFD with ID {} and version {} for project {} : {}",
+                    manoId, pnfdId, version, project, notification.getOpStatus().toString());
+        }
     }
 
     private String getOsmDescriptorId(String catDescriptorId, String descriptorVersion) {
