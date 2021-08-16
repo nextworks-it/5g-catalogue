@@ -190,7 +190,7 @@ public class ToscaArchiveBuilder {
             strings.add("\tvnf_package_version: " + vnfd.getVersion());
             strings.add(String.format("\tvnf_release_date_time: %1$TD %1$TT", ts));
             strings.add("\tdatamodel_spec: SOL006");
-            if(cloudInitMap != null) {
+            if(cloudInitMap != null && !cloudInitMap.entrySet().isEmpty()) {
                 strings.add("\nconfiguration:");
                 strings.add("\tcloud_init:");
                 for(Map.Entry<String, File> cloudInit : cloudInitMap.entrySet()) {
