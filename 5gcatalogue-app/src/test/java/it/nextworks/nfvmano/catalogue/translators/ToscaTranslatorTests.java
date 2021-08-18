@@ -94,6 +94,7 @@ public class ToscaTranslatorTests {
     }
 
     @Test
+    @Ignore
     public void parseArchive() throws Exception {
         ClassLoader classLoader = getClass().getClassLoader();
         File archive = new File(classLoader.getResource("Descriptors/cirros_vnf/cirros_vnf.zip").getFile());
@@ -111,6 +112,7 @@ public class ToscaTranslatorTests {
     }
 
     @Test
+    @Ignore
     public void parseVnfArchiveWithSOL006Descriptor() throws Exception {
         ClassLoader classLoader = getClass().getClassLoader();
         File archive = new File(classLoader.getResource("Descriptors/csr_vnf/csr_vnf.zip").getFile());
