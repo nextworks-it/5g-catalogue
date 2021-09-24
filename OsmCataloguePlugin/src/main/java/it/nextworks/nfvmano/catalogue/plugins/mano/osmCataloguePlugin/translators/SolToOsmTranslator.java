@@ -29,8 +29,7 @@ import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VDU.VDUVirtualBlockStora
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VnfExtCp.VnfExtCpNode;
 import it.nextworks.nfvmano.libs.osmr10DataModels.nsd.OsmNsdSol006;
-import it.nextworks.nfvmano.libs.osmr10DataModels.vnfd.OsmVduSol006;
-import it.nextworks.nfvmano.libs.osmr10DataModels.vnfd.OsmVnfdSol006;
+import it.nextworks.nfvmano.libs.osmr10DataModels.vnfd.OsmVnfdSol006Wrapper;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.nsDescriptor.*;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.vnfDescriptor.*;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.vnfDescriptor.ConnectionPoint;
@@ -46,17 +45,6 @@ import java.util.stream.Collectors;
 
 
 public class SolToOsmTranslator {
-
-    public static class OsmVnfdSol006Wrapper {
-
-        @JsonProperty("vnfd")
-        private final OsmVnfdSol006 vnfd;
-
-        @JsonCreator
-        public OsmVnfdSol006Wrapper(@JsonProperty("vnfd") OsmVnfdSol006 vnfd) { this.vnfd = vnfd; }
-
-        public Vnfd getVnfd() { return vnfd; }
-    }
 
     public static class OsmNsWrapper {
 
@@ -435,7 +423,7 @@ public class SolToOsmTranslator {
         return new OsmVNFPackage().setVnfdCatalog(vnfdCatalog);
     }
 
-    private static void makeDf(OsmVnfdSol006 osmVnfd) {
+    private static void makeDf(Vnfd osmVnfd) {
         List<VnfdDf> vnfdDfs = osmVnfd.getDf();
         if(vnfdDfs == null)
             vnfdDfs = new ArrayList<>();
@@ -453,108 +441,70 @@ public class SolToOsmTranslator {
                     .defaultInstantiationLevel("il-1");
 
             osmVnfd.setDf(Collections.singletonList(vnfdDf));
-        } else {
-            for(VnfdDf vnfdDf : vnfdDfs) {
-                VnfdLcmoperationsconfiguration vnfdLcmoperationsconfiguration = vnfdDf.getLcmOperationsConfiguration();
-                if(vnfdLcmoperationsconfiguration == null)
-                    continue;
-                VnfdLcmoperationsconfigurationOperatevnfopconfig operateVnfOpConfig =
-                        vnfdLcmoperationsconfiguration.getOperateVnfOpConfig();
-                if(operateVnfOpConfig == null)
-                    continue;
-                // TODO add Day1-2 object for operateVnfOpConfig
-            }
         }
     }
 
-    private static OsmVduSol006 convertVduToOsmVdu(VnfdVdu vdu) {
-        OsmVduSol006 osmVdu = new OsmVduSol006();
-
-        osmVdu.setVirtualStorageDesc(vdu.getVirtualStorageDesc());
-        osmVdu.setBootData(vdu.getBootData());
-        osmVdu.setDescription(vdu.getDescription());
-        osmVdu.setVirtualComputeDesc(vdu.getVirtualComputeDesc());
-        osmVdu.setIntCpd(vdu.getIntCpd());
-        osmVdu.setConfigurableProperties(vdu.getConfigurableProperties());
-        osmVdu.setId(vdu.getId());
-        osmVdu.setBootOrder(vdu.getBootOrder());
-        osmVdu.setNfviConstraint(vdu.getNfviConstraint());
-        osmVdu.setMonitoringParameter(vdu.getMonitoringParameter());
-        osmVdu.setSwImageDesc(vdu.getSwImageDesc());
-        osmVdu.setName(vdu.getName());
-
-        return osmVdu;
-    }
-
-    private static void setCloudInit(OsmVnfdSol006 osmVnfd, Map<String, File> cloudInitMap) {
-        List<VnfdVdu> osmVdus = new ArrayList<>();
-
+    private static void setCloudInit(Vnfd osmVnfd, Map<String, File> cloudInitMap) {
         for (VnfdVdu vdu : osmVnfd.getVdu()) {
-            OsmVduSol006 osmVdu = convertVduToOsmVdu(vdu);
-            String vduId = osmVdu.getId();
+            String vduId = vdu.getId();
             if (cloudInitMap.containsKey(vduId))
-                osmVdu.setCloudInitFile(cloudInitMap.get(vduId).getName());
+                vdu.setCloudInitFile(cloudInitMap.get(vduId).getName());
             else
                 log.debug("cloud.init mapping for VDU ID " + vduId + " not found in manifest, cloud init file not bound.");
-            osmVdus.add(osmVdu);
         }
-
-        osmVnfd.getVdu().clear();
-        osmVnfd.getVdu().addAll(osmVdus);
     }
 
     public static OsmVnfdSol006Wrapper generateVnfDescriptor(Vnfd vnfd, Map<String, File> cloudInitMap)
             throws MalformattedElementException {
 
-        OsmVnfdSol006 osmVnfd = new OsmVnfdSol006(vnfd);
-
-        osmVnfd.setDescription(osmVnfd.getProductInfoDescription());
-
-        List<ExtCpd> extCpds = osmVnfd.getExtCpd();
-        if(extCpds == null || extCpds.isEmpty())
-            throw new MalformattedElementException("No External Connection Points defined");
-        List<String> mgmtCps;
-        String mgmtId = null;
-        int i = 0;
-        for(ExtCpd extCpd : extCpds) {
-            List<VirtualNetworkInterfaceRequirementSchema> virtualNetworkInterfaceRequirements =
-                    extCpd.getVirtualNetworkInterfaceRequirementSchemas();
-            if(virtualNetworkInterfaceRequirements == null || virtualNetworkInterfaceRequirements.isEmpty())
-                continue;
-
-            int j = 0;
-            for(VirtualNetworkInterfaceRequirementSchema virtualNetworkInterfaceRequirement : virtualNetworkInterfaceRequirements) {
-                if(virtualNetworkInterfaceRequirement.getName() == null ||
-                        virtualNetworkInterfaceRequirement.getName().isEmpty())
-                    virtualNetworkInterfaceRequirement.setName("virtual-network-interface-requirement " + j + " of ext-cpd " + i);
-                j++;
-
-                List<NetworkInterfaceRequirementsSchema> networkInterfaceRequirements =
-                        virtualNetworkInterfaceRequirement.getNetworkInterfaceRequirements();
-                if(networkInterfaceRequirements == null || networkInterfaceRequirements.isEmpty())
+        String mgmtCp = vnfd.getMgmtCp();
+        if(mgmtCp == null || mgmtCp.isEmpty()) {
+            List<ExtCpd> extCpds = vnfd.getExtCpd();
+            if (extCpds == null || extCpds.isEmpty())
+                throw new MalformattedElementException("No External Connection Points defined");
+            List<String> mgmtCps;
+            String mgmtId = null;
+            int i = 0;
+            for (ExtCpd extCpd : extCpds) {
+                List<VirtualNetworkInterfaceRequirementSchema> virtualNetworkInterfaceRequirements =
+                        extCpd.getVirtualNetworkInterfaceRequirementSchemas();
+                if (virtualNetworkInterfaceRequirements == null || virtualNetworkInterfaceRequirements.isEmpty())
                     continue;
-                mgmtCps = networkInterfaceRequirements
-                        .stream()
-                        .filter(nir -> nir.getKey().equals("isManagement") &&
-                                nir.getValue().equalsIgnoreCase("true"))
-                        .map(NetworkInterfaceRequirementsSchema::getValue)
-                        .collect(Collectors.toList());
 
-                if(mgmtCps.size() == 1)
-                    mgmtId = extCpd.getId();
+                int j = 0;
+                for (VirtualNetworkInterfaceRequirementSchema virtualNetworkInterfaceRequirement : virtualNetworkInterfaceRequirements) {
+                    if (virtualNetworkInterfaceRequirement.getName() == null ||
+                            virtualNetworkInterfaceRequirement.getName().isEmpty())
+                        virtualNetworkInterfaceRequirement.setName("virtual-network-interface-requirement " + j + " of ext-cpd " + i);
+                    j++;
+
+                    List<NetworkInterfaceRequirementsSchema> networkInterfaceRequirements =
+                            virtualNetworkInterfaceRequirement.getNetworkInterfaceRequirements();
+                    if (networkInterfaceRequirements == null || networkInterfaceRequirements.isEmpty())
+                        continue;
+                    mgmtCps = networkInterfaceRequirements
+                            .stream()
+                            .filter(nir -> nir.getKey().equals("isManagement") &&
+                                    nir.getValue().equalsIgnoreCase("true"))
+                            .map(NetworkInterfaceRequirementsSchema::getValue)
+                            .collect(Collectors.toList());
+
+                    if (mgmtCps.size() == 1)
+                        mgmtId = extCpd.getId();
+                }
+
+                i++;
             }
 
-            i++;
+            vnfd.setMgmtCp(mgmtId);
         }
 
-        osmVnfd.setMgmtCp(mgmtId);
-
-        makeDf(osmVnfd);
+        makeDf(vnfd);
 
         if(!cloudInitMap.isEmpty())
-            setCloudInit(osmVnfd, cloudInitMap);
+            setCloudInit(vnfd, cloudInitMap);
 
-        return new OsmVnfdSol006Wrapper(osmVnfd);
+        return new OsmVnfdSol006Wrapper(vnfd);
     }
 
     public static OsmVnfdSol006Wrapper generateVnfDescriptor(Pnfd pnfd, String mgmtCp) {
@@ -629,12 +579,10 @@ public class SolToOsmTranslator {
             vnfd.setVdu(Collections.singletonList(vdu));
         }
 
-        OsmVnfdSol006 osmVnfd = new OsmVnfdSol006(vnfd);
+        vnfd.setDescription(pnfd.getFunctionDescription());
+        vnfd.setMgmtCp(mgmtCp);
 
-        osmVnfd.setDescription(pnfd.getFunctionDescription());
-        osmVnfd.setMgmtCp(mgmtCp);
-
-        return new OsmVnfdSol006Wrapper(osmVnfd);
+        return new OsmVnfdSol006Wrapper(vnfd);
     }
 
     public static OsmNsWrapper generateNsDescriptor(Nsd nsd) {

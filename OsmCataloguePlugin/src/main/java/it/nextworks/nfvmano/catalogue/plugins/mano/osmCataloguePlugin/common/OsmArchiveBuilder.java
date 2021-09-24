@@ -22,6 +22,9 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.translators.SolToOsmTranslator;
+import it.nextworks.nfvmano.libs.descriptors.sol006.Vnfd;
+import it.nextworks.nfvmano.libs.descriptors.sol006.VnfdVdu;
+import it.nextworks.nfvmano.libs.osmr10DataModels.vnfd.OsmVnfdSol006Wrapper;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.nsDescriptor.OsmNSPackage;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.vnfDescriptor.OsmVNFPackage;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -40,7 +43,6 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
 public class OsmArchiveBuilder {
@@ -138,29 +140,34 @@ public class OsmArchiveBuilder {
         return compress(folder);
     }
 
-    public File makeNewArchive(SolToOsmTranslator.OsmVnfdSol006Wrapper vnfd,
+    public File makeNewArchive(OsmVnfdSol006Wrapper osmVnfdSol006Wrapper,
                                String readmeContent,
                                File logoFile,
-                               Map<String, File> cloudInitMap,
+                               String packagePath,
                                File monitoringFile) {
-        String vnfdId = vnfd.getVnfd().getId();
+        Vnfd vnfd = osmVnfdSol006Wrapper.getVnfd();
+        String vnfdId = vnfd.getId();
         File folder = makeFolder(vnfdId);
         makeReadme(readmeContent, folder);
-        makeDescriptor(vnfd, vnfdId, folder);
+        makeDescriptor(osmVnfdSol006Wrapper, vnfdId, folder);
         File iconsFolder = makeSubFolder(folder, "icons");
         copyFile(iconsFolder, logoFile);
         File cloudInitFolder = makeSubFolder(folder, "cloud_init");
-        if (!cloudInitMap.isEmpty()) {
-            for(Map.Entry<String, File> cloudInit : cloudInitMap.entrySet())
-                copyFile(cloudInitFolder, cloudInit.getValue());
+
+        for(VnfdVdu vdu : vnfd.getVdu()) {
+           String cloudInitFile = vdu.getCloudInitFile();
+           if(cloudInitFile != null)
+               copyFile(cloudInitFolder, new File(packagePath + "/Files/Scripts/" + cloudInitFile));
         }
+
         File monitoringFolder = makeSubFolder(folder, "monitoring");
         if(monitoringFile != null)
             copyFile(monitoringFolder, monitoringFile);
+
         return compress(folder);
     }
 
-    public File makeNewArchive(SolToOsmTranslator.OsmVnfdSol006Wrapper vnfd,
+    public File makeNewArchive(OsmVnfdSol006Wrapper vnfd,
                                String readmeContent,
                                File logoFile) {
         String pnfdId = vnfd.getVnfd().getId();
@@ -180,14 +187,14 @@ public class OsmArchiveBuilder {
         return makeNewArchive(ymlFile, readmeContent, defaultLogo, cloudInit, monitoringFile);
     }
 
-    public File makeNewArchive(SolToOsmTranslator.OsmVnfdSol006Wrapper vnfd,
+    public File makeNewArchive(OsmVnfdSol006Wrapper vnfd,
                                String readmeContent,
-                               Map<String, File> cloudInitMap,
+                               String packagePath,
                                File monitoringFile) {
-        return makeNewArchive(vnfd, readmeContent, defaultLogo, cloudInitMap, monitoringFile);
+        return makeNewArchive(vnfd, readmeContent, defaultLogo, packagePath, monitoringFile);
     }
 
-    public File makeNewArchive(SolToOsmTranslator.OsmVnfdSol006Wrapper pnfd, String readmeContent) {
+    public File makeNewArchive(OsmVnfdSol006Wrapper pnfd, String readmeContent) {
         return makeNewArchive(pnfd, readmeContent, defaultLogo);
     }
 
@@ -280,7 +287,7 @@ public class OsmArchiveBuilder {
         }
     }
 
-    private void makeDescriptor(SolToOsmTranslator.OsmVnfdSol006Wrapper vnfd, String vnfdId, File folder) {
+    private void makeDescriptor(OsmVnfdSol006Wrapper vnfd, String vnfdId, File folder) {
         File vnfdFile;
 
         YAMLFactory yamlFactory = new YAMLFactory();

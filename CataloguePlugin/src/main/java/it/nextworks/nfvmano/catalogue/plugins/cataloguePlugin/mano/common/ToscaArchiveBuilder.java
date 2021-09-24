@@ -191,12 +191,8 @@ public class ToscaArchiveBuilder {
             strings.add(String.format("\tvnf_release_date_time: %1$TD %1$TT", ts));
             strings.add("\tdatamodel_spec: SOL006");
             if(cloudInitMap != null && !cloudInitMap.entrySet().isEmpty()) {
-                strings.add("\nconfiguration:");
-                strings.add("\tcloud_init:");
-                for(Map.Entry<String, File> cloudInit : cloudInitMap.entrySet()) {
-                    strings.add("\t\tSource: Files/Scripts/" + cloudInit.getValue().getName() + ":" + cloudInit.getKey());
+                for(Map.Entry<String, File> cloudInit : cloudInitMap.entrySet())
                     copyFile(scripts, cloudInit.getValue());
-                }
             }
             Files.write(manifest.toPath(), strings);
             strings.clear();

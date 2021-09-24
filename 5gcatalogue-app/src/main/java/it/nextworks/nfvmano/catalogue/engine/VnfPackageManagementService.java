@@ -853,8 +853,16 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
     }
 
     @Override
-    public void uploadVnfPkg(String vnfPkgInfoId, MultipartFile vnfPkg, ContentType contentType, boolean isInternalRequest, String project) throws FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException, NotAuthorizedOperationException {
+    public void uploadVnfPkg(String vnfPkgInfoId,
+                             MultipartFile vnfPkg,
+                             ContentType contentType,
+                             boolean isInternalRequest,
+                             String project)
+            throws FailedOperationException, AlreadyExistingEntityException, NotExistingEntityException,
+            MalformattedElementException, NotPermittedOperationException, NotAuthorizedOperationException {
+
         log.debug("Processing request to upload VNF Pkg content for VNFD info " + vnfPkgInfoId);
+
         if (project != null) {
             Optional<ProjectResource> projectOptional = projectRepository.findByProjectId(project);
             if (!projectOptional.isPresent()) {
@@ -963,29 +971,39 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                 List<ExtCpd> extCpds = vnfd.getExtCpd();
                 if(extCpds == null || extCpds.isEmpty())
                     throw new MalformattedElementException("No External Connection Points defined");
-                List<String> mgmtCps = new ArrayList<>();
-                for(ExtCpd extCpd : extCpds) {
-                    List<VirtualNetworkInterfaceRequirementSchema> virtualNetworkInterfaceRequirements =
-                            extCpd.getVirtualNetworkInterfaceRequirementSchemas();
-                    if(virtualNetworkInterfaceRequirements == null || virtualNetworkInterfaceRequirements.isEmpty())
-                        continue;
-                    for(VirtualNetworkInterfaceRequirementSchema virtualNetworkInterfaceRequirement : virtualNetworkInterfaceRequirements) {
-                        List<NetworkInterfaceRequirementsSchema> networkInterfaceRequirements =
-                                virtualNetworkInterfaceRequirement.getNetworkInterfaceRequirements();
-                        if(networkInterfaceRequirements == null || networkInterfaceRequirements.isEmpty())
+
+                String mgmtCp = vnfd.getMgmtCp();
+                if(mgmtCp != null && !mgmtCp.isEmpty()) {
+                    long count = extCpds.stream().filter(extCpd -> extCpd.getId().equals(mgmtCp)).count();
+                    if(count == 0)
+                        throw new MalformattedElementException("Please, specify an existent External Connection Point");
+                    else if (count > 1)
+                        throw new MalformattedElementException("Multiple External Connection Points with same ID are not allowed");
+                } else {
+                    List<String> mgmtCps = new ArrayList<>();
+                    for(ExtCpd extCpd : extCpds) {
+                        List<VirtualNetworkInterfaceRequirementSchema> virtualNetworkInterfaceRequirements =
+                                extCpd.getVirtualNetworkInterfaceRequirementSchemas();
+                        if(virtualNetworkInterfaceRequirements == null || virtualNetworkInterfaceRequirements.isEmpty())
                             continue;
-                        mgmtCps = networkInterfaceRequirements
-                                .stream()
-                                .filter(nir -> nir.getKey().equals("isManagement") &&
-                                        nir.getValue().equalsIgnoreCase("true"))
-                                .map(NetworkInterfaceRequirementsSchema::getValue)
-                                .collect(Collectors.toList());
+                        for(VirtualNetworkInterfaceRequirementSchema virtualNetworkInterfaceRequirement : virtualNetworkInterfaceRequirements) {
+                            List<NetworkInterfaceRequirementsSchema> networkInterfaceRequirements =
+                                    virtualNetworkInterfaceRequirement.getNetworkInterfaceRequirements();
+                            if(networkInterfaceRequirements == null || networkInterfaceRequirements.isEmpty())
+                                continue;
+                            mgmtCps = networkInterfaceRequirements
+                                    .stream()
+                                    .filter(nir -> nir.getKey().equals("isManagement") &&
+                                            nir.getValue().equalsIgnoreCase("true"))
+                                    .map(NetworkInterfaceRequirementsSchema::getValue)
+                                    .collect(Collectors.toList());
+                        }
                     }
+                    if(mgmtCps.size() == 0)
+                        throw new MalformattedElementException("Please define a management Connection Point");
+                    else if (mgmtCps.size() > 1)
+                        throw new MalformattedElementException("Multiple management Connection Points are not allowed");
                 }
-                if(mgmtCps.size() == 0)
-                    throw new MalformattedElementException("Please define a management Connection Point");
-                else if (mgmtCps.size() > 1)
-                    throw new MalformattedElementException("Multiple management Connection Points are not allowed");
             }
 
             if(dms == DataModelSpec.SOL001) {
@@ -1107,8 +1125,17 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
     }
 
     @Override
-    public void updateVnfPkg(String vnfPkgInfoId, MultipartFile vnfPkg, ContentType contentType, boolean isInternalRequest, String originalPluginId, String project) throws Exception, FailedOperationException, NotExistingEntityException, AlreadyExistingEntityException, MalformattedElementException, NotPermittedOperationException, MethodNotImplementedException{
+    public void updateVnfPkg(String vnfPkgInfoId,
+                             MultipartFile vnfPkg,
+                             ContentType contentType,
+                             boolean isInternalRequest,
+                             String originalPluginId,
+                             String project)
+            throws FailedOperationException, NotExistingEntityException, AlreadyExistingEntityException,
+            MalformattedElementException, NotPermittedOperationException, NotAuthorizedOperationException {
+
         log.debug("Processing request to update VNF Package content for VNF Pkg info " + vnfPkgInfoId);
+
         if (project != null) {
             Optional<ProjectResource> projectOptional = projectRepository.findByProjectId(project);
             if (!projectOptional.isPresent()) {
@@ -1224,25 +1251,39 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
                 List<ExtCpd> extCpds = vnfd.getExtCpd();
                 if(extCpds == null || extCpds.isEmpty())
                     throw new MalformattedElementException("No External Connection Points defined");
-                List<String> mgmtCps = new ArrayList<>();
-                for(ExtCpd extCpd : extCpds) {
-                    List<VirtualNetworkInterfaceRequirementSchema> virtualNetworkInterfaceRequirements =
-                            extCpd.getVirtualNetworkInterfaceRequirementSchemas();
-                    if(virtualNetworkInterfaceRequirements == null || virtualNetworkInterfaceRequirements.isEmpty())
-                        continue;
-                    List<NetworkInterfaceRequirementsSchema> networkInterfaceRequirements =
-                            virtualNetworkInterfaceRequirements.get(0).getNetworkInterfaceRequirements();
-                    mgmtCps = networkInterfaceRequirements
-                            .stream()
-                            .filter(nir -> nir.getKey().equals("isManagement") &&
-                                    nir.getValue().equalsIgnoreCase("true"))
-                            .map(NetworkInterfaceRequirementsSchema::getValue)
-                            .collect(Collectors.toList());
+
+                String mgmtCp = vnfd.getMgmtCp();
+                if(mgmtCp != null && !mgmtCp.isEmpty()) {
+                    long count = extCpds.stream().filter(extCpd -> extCpd.getId().equals(mgmtCp)).count();
+                    if(count == 0)
+                        throw new MalformattedElementException("Please, specify an existent External Connection Point");
+                    else if (count > 1)
+                        throw new MalformattedElementException("Multiple External Connection Points with same ID are not allowed");
+                } else {
+                    List<String> mgmtCps = new ArrayList<>();
+                    for(ExtCpd extCpd : extCpds) {
+                        List<VirtualNetworkInterfaceRequirementSchema> virtualNetworkInterfaceRequirements =
+                                extCpd.getVirtualNetworkInterfaceRequirementSchemas();
+                        if(virtualNetworkInterfaceRequirements == null || virtualNetworkInterfaceRequirements.isEmpty())
+                            continue;
+                        for(VirtualNetworkInterfaceRequirementSchema virtualNetworkInterfaceRequirement : virtualNetworkInterfaceRequirements) {
+                            List<NetworkInterfaceRequirementsSchema> networkInterfaceRequirements =
+                                    virtualNetworkInterfaceRequirement.getNetworkInterfaceRequirements();
+                            if(networkInterfaceRequirements == null || networkInterfaceRequirements.isEmpty())
+                                continue;
+                            mgmtCps = networkInterfaceRequirements
+                                    .stream()
+                                    .filter(nir -> nir.getKey().equals("isManagement") &&
+                                            nir.getValue().equalsIgnoreCase("true"))
+                                    .map(NetworkInterfaceRequirementsSchema::getValue)
+                                    .collect(Collectors.toList());
+                        }
+                    }
+                    if(mgmtCps.size() == 0)
+                        throw new MalformattedElementException("Please define a management Connection Point");
+                    else if (mgmtCps.size() > 1)
+                        throw new MalformattedElementException("Multiple management Connection Points are not allowed");
                 }
-                if(mgmtCps.size() == 0)
-                    throw new MalformattedElementException("Please define a management Connection Point");
-                else if (mgmtCps.size() > 1)
-                    throw new MalformattedElementException("Multiple management Connection Points are not allowed");
             }
 
             oldVnfdId = vnfPkgInfoResource.getVnfdId();

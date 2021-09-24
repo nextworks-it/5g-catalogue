@@ -289,7 +289,6 @@ public class OsmToSolTranslator {
 
     public static GenerateVnfOutput generateVnfDescriptor(JsonNode osmVnfdWrapper,
                                                           OsmInfoObject vnfPackageInfo,
-                                                          Path tmpDirPath,
                                                           Path osmDirPath) throws IOException {
 
         JsonNode osmVnfd = osmVnfdWrapper.get("vnfd");
@@ -299,21 +298,12 @@ public class OsmToSolTranslator {
         JsonNode vduNode = osmVnfd.get("vdu");
         if(vduNode != null) {
             ArrayNode vdus = (ArrayNode) vduNode;
-            int i = 0;
             for (JsonNode vdu : vdus) {
                 JsonNode cloudInitFilename = vdu.get("cloud-init-file");
-                JsonNode cloudInit = vdu.get("cloud-init");
                 if (cloudInitFilename != null) {
                     File cloudInitFile = new File(osmDirPath.toString() + "/" +
                             vnfPackageInfo.getAdmin().getStorage().getPkgDir() + "/cloud_init/" + cloudInitFilename.asText());
                     cloudInitMap.put(vdu.get("id").asText(), cloudInitFile);
-                } else if (cloudInit != null) {
-                    File cloudInitFile = new File(tmpDirPath.toString() + "/cloud" + i + ".init");
-                    try (PrintWriter out = new PrintWriter(cloudInitFile)) {
-                        out.println(cloudInit.asText());
-                        cloudInitMap.put(vdu.get("id").asText(), cloudInitFile);
-                        i++;
-                    }
                 }
 
                 JsonNode monitoringParameterNode = vdu.get("monitoring-parameter");
@@ -336,53 +326,6 @@ public class OsmToSolTranslator {
                     for(JsonNode monitoringParameter : monitoringParameters)
                         ((ObjectNode) monitoringParameter)
                                 .put("performance-metric", "AllOfvnfd_dfMonitoringParameterItems");
-                }
-            }
-        }
-
-        String mgmtCp = osmVnfd.get("mgmt-cp").asText();
-        JsonNode extCpdNode = osmVnfd.get("ext-cpd");
-        if(extCpdNode != null) {
-            ArrayNode extCpds = (ArrayNode) extCpdNode;
-            for(JsonNode extCpd : extCpds) {
-                if(extCpd.get("id").asText().equals(mgmtCp)) {
-                    JsonNode vnirNode = extCpd.get("virtual-network-interface-requirement");
-                    if(vnirNode == null) {
-                        String vnirMgmt = "{ \"network-interface-requirements\": " +
-                                "[{ \"key\": \"isManagement\", \"value\": \"true\" }], " +
-                                "\"name\": \"" + extCpd.get("id").asText() + "-mgmt\" }";
-                        JsonNode vnirMgmtNode = new ObjectMapper().readTree(vnirMgmt);
-                        ((ObjectNode) extCpd).putArray("virtual-network-interface-requirement");
-                        ArrayNode vnirs = (ArrayNode) extCpd.get("virtual-network-interface-requirement");
-                        vnirs.add(vnirMgmtNode);
-                    } else {
-                        ArrayNode vnirs = (ArrayNode) vnirNode;
-                        boolean found = false;
-                        for(JsonNode vnir : vnirs) {
-                            JsonNode nirNode = vnir.get("network-interface-requirements");
-                            if(nirNode != null) {
-                                ArrayNode nirs = (ArrayNode) nirNode;
-                                for(JsonNode nir : nirs) {
-                                    JsonNode key = nir.get("key");
-                                    JsonNode value = nir.get("value");
-                                    if(key != null && key.asText().equals("isManagement")
-                                            && value != null && value.asText().equals("true"))
-                                        found = true;
-                                }
-                            }
-                        }
-
-                        if(!found) {
-                            String vnirMgmt = "{ \"network-interface-requirements\": " +
-                                    "[{ \"key\": \"isManagement\", \"value\": \"true\" }], " +
-                                    "\"name\": \"" + extCpd.get("id").asText() + "-mgmt\" }";
-                            JsonNode vnirMgmtNode = new ObjectMapper().readTree(vnirMgmt);
-                            vnirs.add(vnirMgmtNode);
-                        } else
-                            log.debug("Management key - value identifier found.");
-                    }
-
-                    break;
                 }
             }
         }
