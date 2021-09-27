@@ -24,6 +24,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.translators.SolToOsmTranslator;
 import it.nextworks.nfvmano.libs.descriptors.sol006.Vnfd;
 import it.nextworks.nfvmano.libs.descriptors.sol006.VnfdVdu;
+import it.nextworks.nfvmano.libs.osmr10DataModels.nsd.OsmNsWrapper;
 import it.nextworks.nfvmano.libs.osmr10DataModels.vnfd.OsmVnfdSol006Wrapper;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.nsDescriptor.OsmNSPackage;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.vnfDescriptor.OsmVNFPackage;
@@ -79,7 +80,7 @@ public class OsmArchiveBuilder {
         return compress(folder);
     }
 
-    public File makeNewArchive(SolToOsmTranslator.OsmNsWrapper nsd,
+    public File makeNewArchive(OsmNsWrapper nsd,
                                String readmeContent,
                                File logoFile,
                                List<File> scripts,
@@ -113,7 +114,7 @@ public class OsmArchiveBuilder {
         return makeNewArchive(ymlFile, "", defaultLogo, null, null);
     }
 
-    public File makeNewArchive(SolToOsmTranslator.OsmNsWrapper nsd,
+    public File makeNewArchive(OsmNsWrapper nsd,
                                String readmeContent,
                                List<File> scripts,
                                File monitoringFile) {
@@ -306,7 +307,7 @@ public class OsmArchiveBuilder {
         }
     }
 
-    private void makeDescriptor(SolToOsmTranslator.OsmNsWrapper nsd, String nsdId, File folder) {
+    private void makeDescriptor(OsmNsWrapper nsd, String nsdId, File folder) {
         File nsdFile;
 
         YAMLFactory yamlFactory = new YAMLFactory();

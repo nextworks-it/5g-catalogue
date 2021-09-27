@@ -33,6 +33,7 @@ import it.nextworks.nfvmano.libs.descriptors.sol006.Cpd;
 import it.nextworks.nfvmano.libs.descriptors.sol006.Nsd;
 import it.nextworks.nfvmano.libs.descriptors.sol006.Pnfd;
 import it.nextworks.nfvmano.libs.descriptors.sol006.Vnfd;
+import it.nextworks.nfvmano.libs.osmr10DataModels.nsd.OsmNsWrapper;
 import it.nextworks.nfvmano.libs.osmr10DataModels.vnfd.OsmVnfdSol006Wrapper;
 import it.nextworks.nfvmano.libs.osmr4PlusClient.OSMr4PlusClient;
 import it.nextworks.nfvmano.libs.osmr4PlusClient.utilities.OSMHttpResponse;
@@ -310,7 +311,7 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
                                 log.debug("{} - No script files found for NS with ID {} and version {}", manoId, nsdId, version);
                         }
 
-                        SolToOsmTranslator.OsmNsWrapper nsd = SolToOsmTranslator.generateNsDescriptor(tmp);
+                        OsmNsWrapper nsd = SolToOsmTranslator.generateNsDescriptor(tmp);
                         YAMLFactory yamlFactory = new YAMLFactory();
                         yamlFactory.disable(YAMLGenerator.Feature.USE_NATIVE_TYPE_ID);
                         mapper = new ObjectMapper(yamlFactory);
@@ -540,7 +541,7 @@ public class OpenSourceMANOR10Plugin extends MANOPlugin {
                                 log.debug("{} - No script files found for NS with ID {} and version {}", manoId, nsdId, version);
                         }
 
-                        SolToOsmTranslator.OsmNsWrapper nsd = SolToOsmTranslator.generateNsDescriptor(tmp);
+                        OsmNsWrapper nsd = SolToOsmTranslator.generateNsDescriptor(tmp);
                         YAMLFactory yamlFactory = new YAMLFactory();
                         yamlFactory.disable(YAMLGenerator.Feature.USE_NATIVE_TYPE_ID);
                         mapper = new ObjectMapper(yamlFactory);

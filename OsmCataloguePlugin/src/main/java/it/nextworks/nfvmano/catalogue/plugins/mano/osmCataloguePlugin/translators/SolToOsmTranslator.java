@@ -15,8 +15,6 @@
  */
 package it.nextworks.nfvmano.catalogue.plugins.mano.osmCataloguePlugin.translators;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import it.nextworks.nfvmano.catalogue.plugins.cataloguePlugin.mano.MANOType;
 import it.nextworks.nfvmano.libs.common.exceptions.MalformattedElementException;
 import it.nextworks.nfvmano.libs.descriptors.nsd.nodes.NS.NSNode;
@@ -28,7 +26,8 @@ import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VDU.VDUComputeNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VDU.VDUVirtualBlockStorageNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VNF.VNFNode;
 import it.nextworks.nfvmano.libs.descriptors.vnfd.nodes.VnfExtCp.VnfExtCpNode;
-import it.nextworks.nfvmano.libs.osmr10DataModels.nsd.OsmNsdSol006;
+import it.nextworks.nfvmano.libs.osmr10DataModels.nsd.OsmNsWrapper;
+import it.nextworks.nfvmano.libs.osmr10DataModels.nsd.OsmNsdsSol006Wrapper;
 import it.nextworks.nfvmano.libs.osmr10DataModels.vnfd.OsmVnfdSol006Wrapper;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.nsDescriptor.*;
 import it.nextworks.nfvmano.libs.osmr4PlusDataModel.vnfDescriptor.*;
@@ -42,38 +41,7 @@ import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
-
-
 public class SolToOsmTranslator {
-
-    public static class OsmNsWrapper {
-
-        @JsonProperty("nsd")
-        private final OsmNsdsSol006Wrapper nsd;
-
-        @JsonCreator
-        public OsmNsWrapper(@JsonProperty("nsd") OsmNsdsSol006Wrapper nsd) { this.nsd = nsd; }
-
-        public OsmNsdsSol006Wrapper getNsd() { return nsd; }
-    }
-
-    public static class OsmNsdsSol006Wrapper {
-
-        @JsonProperty("nsd")
-        private List<OsmNsdSol006> nsds;
-
-        @JsonCreator
-        public OsmNsdsSol006Wrapper(@JsonProperty("nsd") List<OsmNsdSol006> nsds) { this.nsds = nsds; }
-
-        public void addNsd(OsmNsdSol006 nsd) {
-            if(nsds == null)
-                nsds = new ArrayList<>();
-
-            nsds.add(nsd);
-        }
-
-        public List<OsmNsdSol006> getNsds() { return nsds; }
-    }
 
     private static final Logger log = LoggerFactory.getLogger(SolToOsmTranslator.class);
     private static int interfacePosition = 0;
@@ -586,8 +554,6 @@ public class SolToOsmTranslator {
     }
 
     public static OsmNsWrapper generateNsDescriptor(Nsd nsd) {
-        OsmNsdSol006 osmNsd = new OsmNsdSol006(nsd);
-        osmNsd.setDescription(osmNsd.getName() + " version " + osmNsd.getVersion());
-        return new OsmNsWrapper(new OsmNsdsSol006Wrapper(Collections.singletonList(osmNsd)));
+        return new OsmNsWrapper(new OsmNsdsSol006Wrapper(Collections.singletonList(nsd)));
     }
 }
