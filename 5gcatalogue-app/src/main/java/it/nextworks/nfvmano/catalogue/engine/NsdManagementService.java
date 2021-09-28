@@ -1640,6 +1640,9 @@ public class NsdManagementService implements NsdManagementInterface {
         else
             nsdInfo.setPublished(false);
 
+        if(dms == DataModelSpec.SOL006)
+            nsdInfo.setDescription(nsdSol006.getDescription());
+
         List<Appd> appds = appdManagementService.getAssociatedAppD(nsdInfo.getId());
         //Update AppD if any
         for(Appd appd : appds){
@@ -1961,6 +1964,9 @@ public class NsdManagementService implements NsdManagementInterface {
             pnfdIds.add(UUID.fromString(pnfdInfoId));
         }
         nsdInfo.setPnfdInfoIds(pnfdIds);
+
+        if(dms == DataModelSpec.SOL006)
+            nsdInfo.setDescription(nsdSol006.getDescription());
 
         List<Appd> appds = appdManagementService.getAssociatedAppD(nsdInfo.getId());
         //Update AppD if any
@@ -2553,6 +2559,9 @@ public class NsdManagementService implements NsdManagementInterface {
         else
             pnfdInfo.setPublished(false);
 
+        if(dms == DataModelSpec.SOL006)
+            pnfdInfo.setDescription(pnfdSol006.getFunctionDescription());
+
         pnfdInfoRepo.saveAndFlush(pnfdInfo);
         log.debug("PNFD info updated");
 
@@ -3048,6 +3057,8 @@ public class NsdManagementService implements NsdManagementInterface {
             nsdInfo.setC2cOnboardingState(C2COnboardingStateType.UNPUBLISHED);
         }
 
+        nsdInfo.setDescription(nsdInfoResource.getDescription());
+
         return nsdInfo;
     }
 
@@ -3166,6 +3177,8 @@ public class NsdManagementService implements NsdManagementInterface {
         } else {
             pnfdInfo.setC2cOnboardingState(C2COnboardingStateType.UNPUBLISHED);
         }
+
+        pnfdInfo.setDescription(pnfdInfoResource.getDescription());
 
         return pnfdInfo;
     }

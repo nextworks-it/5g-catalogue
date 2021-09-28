@@ -58,6 +58,8 @@ public class PnfdInfoResource {
 
     private boolean isPublished;
 
+    private String description;
+
     public PnfdInfoResource() {
     }
 
@@ -210,6 +212,10 @@ public class PnfdInfoResource {
     public void setPublished(boolean published) {
         isPublished = published;
     }
+
+    public String getDescription() { return description; }
+
+    public void setDescription(String description) { this.description = description; }
 
     public void isDeletable() throws NotPermittedOperationException {
         if (pnfdUsageState != PnfdUsageStateType.NOT_IN_USE)

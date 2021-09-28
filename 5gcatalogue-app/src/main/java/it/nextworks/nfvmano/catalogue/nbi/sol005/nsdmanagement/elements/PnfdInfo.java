@@ -78,6 +78,9 @@ public class PnfdInfo {
     @JsonProperty("projectId")
     private String projectId;
 
+    @JsonProperty("description")
+    private String description = null;
+
     public PnfdInfo id(UUID id) {
         this.id = id;
         return this;
@@ -343,6 +346,10 @@ public class PnfdInfo {
     public void setProjectId(String projectId) {
         this.projectId = projectId;
     }
+
+    public String getDescription() { return description; }
+
+    public void setDescription(String description) { this.description = description; }
 
     @Override
     public boolean equals(java.lang.Object o) {

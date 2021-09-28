@@ -89,6 +89,9 @@ public class VnfPkgInfo {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Map<String, String> manoInfoIds = new HashMap<>();
 
+    @JsonProperty("description")
+    private String description = null;
+
     public VnfPkgInfo id(UUID id) {
         this.id = id;
         return this;
@@ -439,6 +442,10 @@ public class VnfPkgInfo {
     public void setManoInfoIds(Map<String, String> manoInfoIds) {
         this.manoInfoIds = manoInfoIds;
     }
+
+    public String getDescription() { return description; }
+
+    public void setDescription(String description) { this.description = description; }
 
     @Override
     public boolean equals(java.lang.Object o) {

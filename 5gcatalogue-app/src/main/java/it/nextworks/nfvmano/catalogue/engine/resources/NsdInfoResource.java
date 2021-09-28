@@ -96,6 +96,8 @@ public class NsdInfoResource {
 
     private boolean multiSite;
 
+    private String description;
+
     public NsdInfoResource() {
     }
 
@@ -301,6 +303,10 @@ public class NsdInfoResource {
     public void setMultiSite(boolean multiSite) {
         this.multiSite = multiSite;
     }
+
+    public String getDescription() { return description; }
+
+    public void setDescription(String description) { this.description = description; }
 
     public void isDeletable() throws NotPermittedOperationException {
         if (nsdOnboardingState != NsdOnboardingStateType.FAILED && nsdOperationalState != NsdOperationalStateType.DISABLED)

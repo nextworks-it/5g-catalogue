@@ -63,6 +63,8 @@ public class VnfPkgInfoResource {
 
     private boolean isRetrievedFromMANO;
 
+    private String description;
+
     public VnfPkgInfoResource() {
     }
 
@@ -263,6 +265,10 @@ public class VnfPkgInfoResource {
     public void setRetrievedFromMANO(boolean retrievedFromMANO) {
         isRetrievedFromMANO = retrievedFromMANO;
     }
+
+    public String getDescription() { return description; }
+
+    public void setDescription(String description) { this.description = description; }
 
     public void isDeletable() throws NotPermittedOperationException {
         if (onboardingState != PackageOnboardingStateType.FAILED && operationalState != PackageOperationalStateType.DISABLED)

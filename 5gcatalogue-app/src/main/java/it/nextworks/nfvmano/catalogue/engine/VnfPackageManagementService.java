@@ -1089,6 +1089,9 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         else
             vnfPkgInfoResource.setPublished(false);
 
+        if(dms == DataModelSpec.SOL006)
+            vnfPkgInfoResource.setDescription(vnfd.getDescription());
+
         // send notification over kafka bus
         if(!vnfPkgInfoResource.isRetrievedFromMANO()) {
             List<String> siteOrManoIds = new ArrayList<>();
@@ -1384,6 +1387,9 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
 
         vnfPkgInfoResource.setPublished(isInternalRequest);
 
+        if(dms == DataModelSpec.SOL006)
+            vnfPkgInfoResource.setDescription(vnfd.getDescription());
+
         // send notification over kafka bus
         List<String> alreadyOnboardedManoIds = new ArrayList<>();
         List<String> failedOnboardedManoIds = new ArrayList<>();
@@ -1489,6 +1495,8 @@ public class VnfPackageManagementService implements VnfPackageManagementInterfac
         } else {
             vnfPkgInfo.setC2cOnboardingState(C2COnboardingStateType.UNPUBLISHED);
         }
+
+        vnfPkgInfo.setDescription(vnfPkgInfoResource.getDescription());
 
         return vnfPkgInfo;
     }
