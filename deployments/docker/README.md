@@ -2,6 +2,11 @@
 
 ## Getting Started
 
+### Hardware requirements
+- 4 vCPU@1GHz
+- 4GB RAM
+- 20GB storage
+
 ### Prerequisites
 
 * [Docker Engine] - Docker Engine Community version 17.06.0+
