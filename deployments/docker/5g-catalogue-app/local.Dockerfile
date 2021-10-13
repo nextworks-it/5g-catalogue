@@ -80,11 +80,11 @@ RUN rm /home/5g-catalogue/5gcatalogue-app/src/main/resources/catalogueConfigurat
 RUN cp /home/5g-catalogue/deployments/docker/5g-catalogue-app/templates/publicCatalogue.json /home/5g-catalogue/5gcatalogue-app/src/main/resources/catalogueConfigurations/
 RUN sed -i "s|_PUBLIC_CATALOGUE_ID_|${public_catalogue_id}|g" /home/5g-catalogue/5gcatalogue-app/src/main/resources/catalogueConfigurations/publicCatalogue.json \
     && sed -i "s|_PUBLIC_CATALOGUE_URL_|${public_catalogue_url}|g" /home/5g-catalogue/5gcatalogue-app/src/main/resources/catalogueConfigurations/publicCatalogue.json
-WORKDIR /home/5g-catalogue
-RUN mvn clean install
-
 RUN cp -r /home/5g-catalogue/deployments/docker/5g-catalogue-app/logos /home/logos
 RUN cp /home/5g-catalogue/deployments/docker/5g-catalogue-app/templates/application.properties /home/5g-catalogue/5gcatalogue-app/src/main/resources/
+
+WORKDIR /home/5g-catalogue
+RUN mvn clean install
 
 # Configure environment
 RUN mkdir -p /var/log/5gcatalogue/ \
