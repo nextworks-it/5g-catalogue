@@ -12,6 +12,11 @@ NFV-SDN Catalogue capable of storing and  versioning:
 
 ## Getting Started
 
+### Hardware requirements
+- 4 vCPU@1GHz
+- 4GB RAM
+- 20GB storage
+
 ### Prerequisites
 
 * [Oracle-Java8] - Oracle version 8 is preferred, otherwise [OpenJDK-8] + [OpenJFX]
